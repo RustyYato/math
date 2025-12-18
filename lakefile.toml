@@ -1,0 +1,10 @@
+name = "LeanMath"
+version = "0.1.0"
+defaultTargets = ["leanmath"]
+
+[[lean_lib]]
+name = "LeanMath"
+
+[[lean_exe]]
+name = "leanmath"
+root = "Main"
