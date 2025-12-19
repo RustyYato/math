@@ -3,6 +3,9 @@ import Lean.Elab.Term
 
 open Lean Elab Term
 
+notation "ℕ" => Nat
+notation "ℤ" => Int
+
 elab "Sort*" : term => do
   let u ← Lean.Meta.mkFreshLevelMVar
   Elab.Term.levelMVarToParam (.sort u)
