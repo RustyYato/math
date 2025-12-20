@@ -70,9 +70,9 @@ def map_mul (f: F) (a₀ a₁: α) : f (a₀ * a₁) =f a₀ * f a₁ := IsMulHo
 
 def map_add (f: F) (a₀ a₁: α) : f (a₀ + a₁) = f a₀ + f a₁ := IsAddHom.map_add f a₀ a₁
 
-def map_add_to_mul (f: F) (a₀ a₁: α) : f (a₀ * a₁) = f a₀ + f a₁ := IsLogHom.map_mul_to_add f a₀ a₁
+def map_mul_to_add (f: F) (a₀ a₁: α) : f (a₀ * a₁) = f a₀ + f a₁ := IsLogHom.map_mul_to_add f a₀ a₁
 
-def map_mul_to_add (f: F) (a₀ a₁: α) : f (a₀ + a₁) = f a₀ * f a₁ := IsExpHom.map_add_to_mul f a₀ a₁
+def map_add_to_mul (f: F) (a₀ a₁: α) : f (a₀ + a₁) = f a₀ * f a₁ := IsExpHom.map_add_to_mul f a₀ a₁
 
 instance (priority := 10000) : FunLike (Hom α β) α β where
 instance (priority := 10000) : FunLike (α →*ₙ β) α β where
@@ -103,6 +103,12 @@ def MulOfAdd.getHomₙ : MulOfAdd α →*+ₙ α where
   toFun := MulOfAdd.get
   map_mul_to_add _ _ := rfl
 
+def AddOfMul.mk_get_homₙ (a: α) : getHomₙ (mkHomₙ a) = a := rfl
+def MulOfAdd.mk_get_homₙ (a: α) : getHomₙ (mkHomₙ a) = a := rfl
+
+def AddOfMul.get_mk_homₙ (a: AddOfMul α) : mkHomₙ (getHomₙ a) = a := rfl
+def MulOfAdd.get_mk_homₙ (a: MulOfAdd α) : mkHomₙ (getHomₙ a) = a := rfl
+
 end
 
 instance : IsSemigroup Nat where
@@ -131,3 +137,35 @@ instance [Mul α] [IsComm α] : Std.Commutative (α := α) (· * ·) where
   comm _ _ := mul_comm _ _
 instance [Add α] [IsAddComm α] : Std.Commutative (α := α) (· + ·) where
   comm _ _ := add_comm _ _
+
+section
+
+variable [Add α] [Mul α] [IsSemigroup α] [IsAddSemigroup α]
+
+instance : IsSemigroup (MulOfAdd α) where
+  mul_assoc := IsAddSemigroup.add_assoc (α := α)
+instance : IsAddSemigroup (AddOfMul α) where
+  add_assoc := IsSemigroup.mul_assoc (α := α)
+
+instance [IsAddComm α] : IsComm (MulOfAdd α) where
+  mul_comm := IsAddComm.add_comm (α := α)
+instance [IsComm α] : IsAddComm (AddOfMul α) where
+  add_comm := IsComm.mul_comm (α := α)
+
+instance (a b: α) [IsAddCommAt a b] : IsCommAt (MulOfAdd.mkHomₙ a) (MulOfAdd.mkHomₙ b) where
+  mul_comm := IsAddCommAt.add_comm (a := a) (b := b)
+instance (a b: α) [IsCommAt a b] : IsAddCommAt (AddOfMul.mkHomₙ a) (AddOfMul.mkHomₙ b) where
+  add_comm := IsCommAt.mul_comm (a := a) (b := b)
+
+def mul_left_comm (a b c: α) [IsCommAt a b] : a * (b * c) = b * (a * c) := by
+  rw [←mul_assoc, mul_comm a, mul_assoc]
+def mul_right_comm (a b c: α) [IsCommAt b c] : a * (b * c) = a * c * b := by
+  rw [mul_assoc, mul_comm b, ←mul_assoc]
+
+def add_left_comm (a b c: α) [IsAddCommAt a b] : a + (b + c) = b + (a + c) :=
+  mul_left_comm (a := MulOfAdd.mkHomₙ a) (b := MulOfAdd.mkHomₙ b) (c := MulOfAdd.mkHomₙ c)
+
+def add_right_comm (a b c: α) [IsAddCommAt b c] : a + (b + c) = a + c + b :=
+  mul_right_comm (a := MulOfAdd.mkHomₙ a) (b := MulOfAdd.mkHomₙ b) (c := MulOfAdd.mkHomₙ c)
+
+end
