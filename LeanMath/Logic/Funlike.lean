@@ -1,8 +1,15 @@
 import LeanMath.Tactic.TypeStar
 
 class DFunLike (F: Type*) (α: outParam Sort*) (β: outParam (α -> Sort*)) where
-  coeFun (f: F) (a: α) : β a
-  coeInj: Function.Injective coeFun
+  coeFun (f: F) (a: α) : β a := by intro f; exact f.toFun
+  coeInj: Function.Injective coeFun := by
+    intro a b h
+    cases a; cases b
+    dsimp at h
+    congr
+    try
+      apply DFunLike.coeInj
+      assumption
 
 abbrev FunLike (F: Type*) (α β: Sort*) := DFunLike F α (fun _ => β)
 
