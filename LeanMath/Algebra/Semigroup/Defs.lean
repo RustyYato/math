@@ -1,5 +1,6 @@
 import LeanMath.Logic.Funlike
 import LeanMath.Data.AddMul
+import LeanMath.Data.Cong.Defs
 
 class IsSemigroup (α: Type*) [Mul α] : Prop where
   protected mul_assoc (a b c: α) : (a * b) * c = a * (b * c)
@@ -182,3 +183,38 @@ def add_right_comm (a b c: α) [IsAddCommAt b c] : a + (b + c) = a + c + b :=
   mul_right_comm (a := MulOfAdd.mkHomₙ a) (b := MulOfAdd.mkHomₙ b) (c := MulOfAdd.mkHomₙ c)
 
 end
+
+instance [RelLike R α] [Mul α] [IsMulCon R] (r: R) : IsMulHom (AlgQuot.MkHom r) α (AlgQuot r) where
+  map_mul _ _ _ := rfl
+instance [RelLike R α] [Add α] [IsAddCon R] (r: R) : IsAddHom (AlgQuot.MkHom r) α (AlgQuot r) where
+  map_add _ _ _ := rfl
+
+instance [RelLike R α] [Mul α] [IsMulCon R] [IsSemigroup α] (r: R) : IsSemigroup (AlgQuot r) where
+  mul_assoc a b c := by
+    induction a with | mk a =>
+    induction b with | mk b =>
+    induction c with | mk c =>
+    iterate 4 rw [←map_mul]
+    rw [mul_assoc]
+
+instance [RelLike R α] [Add α] [IsAddCon R] [IsAddSemigroup α] (r: R) : IsAddSemigroup (AlgQuot r) where
+  add_assoc a b c := by
+    induction a with | mk a =>
+    induction b with | mk b =>
+    induction c with | mk c =>
+    iterate 4 rw [←map_add]
+    rw [add_assoc]
+
+instance [RelLike R α] [Mul α] [IsMulCon R] [IsComm α] (r: R) : IsComm (AlgQuot r) where
+  mul_comm a b := by
+    induction a with | mk a =>
+    induction b with | mk b =>
+    iterate 2 rw [←map_mul]
+    rw [mul_comm]
+
+instance [RelLike R α] [Add α] [IsAddCon R] [IsAddComm α] (r: R) : IsAddComm (AlgQuot r) where
+  add_comm a b := by
+    induction a with | mk a =>
+    induction b with | mk b =>
+    iterate 2 rw [←map_add]
+    rw [add_comm]

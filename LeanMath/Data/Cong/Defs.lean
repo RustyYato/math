@@ -12,9 +12,13 @@ class IsMulCon (R: Sort*) {α: Type*} [RelLike R α] [Mul α] extends IsCon R wh
 class IsSMulCon (R: Sort*) (S: Type*) {α: Type*} [RelLike R α] [SMul S α] extends IsCon R where
   protected resp_smul (r: R) (s: S) {a b: α} : r a b -> r (s • a) (s • b) := by intro r; exact r.resp_smul
 
+class IsPowCon (R: Sort*) (S: Type*) {α: Type*} [RelLike R α] [Pow α S] extends IsCon R where
+  protected resp_pow (r: R) (s: S) {a b: α} : r a b -> r (a ^ s) (b ^ s) := by intro r; exact r.resp_pow
+
 def resp_add [RelLike R α] [Add α] [IsAddCon R] (r: R): ∀{a b c d: α}, r a c -> r b d -> r (a + b) (c + d) := IsAddCon.resp_add _
 def resp_mul [RelLike R α] [Mul α] [IsMulCon R] (r: R): ∀{a b c d: α}, r a c -> r b d -> r (a * b) (c * d) := IsMulCon.resp_mul _
 def resp_smul [RelLike R α] [SMul S α] [IsSMulCon R S] (r: R): ∀(s: S) {a b: α}, r a b -> r (s • a) (s • b) := IsSMulCon.resp_smul _
+def resp_pow [RelLike R α] [Pow α S] [IsPowCon R S] (r: R): ∀(s: S) {a b: α}, r a b -> r (a ^ s) (b ^ s) := IsPowCon.resp_pow _
 
 structure Con (α: Type*) where
   toFun: α -> α -> Prop
@@ -44,6 +48,9 @@ def AddCon.generate [Add α] (r: α -> α -> Prop) : AddCon α where
   ⟩
   resp_add := AddCon.GenerateRel.add _ _ _ _
 
+def AddCon.generate_of [Add α] {r: α -> α -> Prop} (h: r a b) : AddCon.generate r a b :=
+  AddCon.GenerateRel.of _ _ h
+
 structure MulCon (α: Type*) [Mul α] extends Con α where
   resp_mul {a b c d: α} : toFun a c -> toFun b d -> toFun (a * b) (c * d)
 
@@ -66,6 +73,9 @@ def MulCon.generate [Mul α] (r: α -> α -> Prop) : MulCon α where
   ⟩
   resp_mul := MulCon.GenerateRel.mul _ _ _ _
 
+def MulCon.generate_of [Mul α] {r: α -> α -> Prop} (h: r a b) : MulCon.generate r a b :=
+  MulCon.GenerateRel.of _ _ h
+
 structure SMulCon (S α: Type*) [SMul S α] extends Con α where
   resp_smul (s: S) {a b: α} : toFun a b -> toFun (s • a) (s • b)
 
@@ -87,6 +97,9 @@ def SMulCon.generate [SMul S α] (r: α -> α -> Prop) : SMulCon S α where
     SMulCon.GenerateRel.trans _ _ _,
   ⟩
   resp_smul := SMulCon.GenerateRel.smul
+
+def SMulCon.generate_of [SMul S α] {r: α -> α -> Prop} (h: r a b) : SMulCon.generate (S := S) r a b :=
+  SMulCon.GenerateRel.of _ _ h
 
 structure RingCon (α: Type*) [Add α] [Mul α] extends AddCon α, MulCon α where
 
@@ -112,6 +125,9 @@ def RingCon.generate [Add α] [Mul α] (r: α -> α -> Prop) : RingCon α where
   resp_add := RingCon.GenerateRel.add _ _ _ _
   resp_mul := RingCon.GenerateRel.mul _ _ _ _
 
+def RingCon.generate_of [Add α] [Mul α] {r: α -> α -> Prop} (h: r a b) : RingCon.generate r a b :=
+  RingCon.GenerateRel.of _ _ h
+
 structure ModuleCon (S α: Type*) [Add α] [SMul S α] extends AddCon α, SMulCon S α where
 
 instance [Add α] [SMul S α] : RelLike (ModuleCon S α) α where
@@ -136,12 +152,30 @@ def ModuleCon.generate [Add α] [SMul S α] (r: α -> α -> Prop) : ModuleCon S 
   resp_add := ModuleCon.GenerateRel.add _ _ _ _
   resp_smul := ModuleCon.GenerateRel.smul
 
+def ModuleCon.generate_of [Add α] [SMul S α] {r: α -> α -> Prop} (h: r a b) : ModuleCon.generate (S := S) r a b :=
+  ModuleCon.GenerateRel.of _ _ h
+
 def AlgQuot {R α: Sort*} [RelLike R α] [IsCon R] (r: R) := Quotient ⟨r, IsCon.eqv r⟩
 
 variable {R: Sort*} {α: Type*} [RelLike R α] [IsCon R] (r: R)
 
-def AlgQuot.mk : α -> AlgQuot r := Quotient.mk _
-def AlgQuot.sound (a b: α) : r a b -> mk r a = mk r b := Quotient.sound (s := ⟨_ ,_⟩)
+namespace AlgQuot
+
+structure MkHom (r: R) where
+
+instance : FunLike (MkHom r) α (AlgQuot r) where
+  coeFun _ := Quotient.mk _
+  coeInj _ _ _ := rfl
+
+def mk : MkHom r := ⟨⟩
+def sound (a b: α) : r a b -> mk r a = mk r b := Quotient.sound (s := ⟨_ ,_⟩)
+@[induction_eliminator]
+def ind {motive: AlgQuot r -> Prop} (mk: ∀x, motive (AlgQuot.mk r x)) (q: AlgQuot r) : motive q := Quotient.ind mk q
+
+instance [Zero α] [IsCon R] : Zero (AlgQuot r) where
+  zero := AlgQuot.mk r 0
+instance [One α] [IsCon R] : One (AlgQuot r) where
+  one := AlgQuot.mk r 1
 
 instance [Add α] [IsAddCon R] : Add (AlgQuot r) where
   add := by
@@ -171,3 +205,14 @@ instance [SMul S α] [IsSMulCon R S] : SMul S (AlgQuot r) where
     apply AlgQuot.sound
     apply resp_smul
     assumption
+
+instance [Pow α S] [IsPowCon R S] : Pow (AlgQuot r) S where
+  pow := flip fun s => by
+    refine Quotient.lift ?_ ?_
+    exact fun a => AlgQuot.mk r (a ^ s)
+    intros
+    apply AlgQuot.sound
+    apply resp_pow
+    assumption
+
+end AlgQuot

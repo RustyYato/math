@@ -366,3 +366,108 @@ def npow_eq_npowAtHom (a: α) (n: ℕ) : a ^ n = npowAtHom a n := rfl
 def nsmul_eq_nsmulAtHom (a: α) (n: ℕ) : n • a = nsmulAtHom a n := rfl
 
 end
+
+section
+
+variable [RelLike R α] [One α] [Mul α] [IsMulCon R] (r: R)
+
+instance : IsOneHom (AlgQuot.MkHom r) α (AlgQuot r) where
+  map_one _ := rfl
+
+instance [IsLawfulOneMul α] : IsLawfulOneMul (AlgQuot r) where
+  one_mul a := by
+    induction a with | mk a =>
+    rw [←map_one (AlgQuot.mk r), ←map_mul, one_mul]
+  mul_one a := by
+    induction a with | mk a =>
+    rw [←map_one (AlgQuot.mk r), ←map_mul, mul_one]
+
+end
+
+section
+
+variable [RelLike R α] [Zero α] [Add α] [IsAddCon R] (r: R)
+
+instance : IsZeroHom (AlgQuot.MkHom r) α (AlgQuot r) where
+  map_zero _ := rfl
+
+instance [IsLawfulZeroAdd α] : IsLawfulZeroAdd (AlgQuot r) where
+  zero_add a := by
+    induction a with | mk a =>
+    rw [←map_zero (AlgQuot.mk r), ←map_add, zero_add]
+  add_zero a := by
+    induction a with | mk a =>
+    rw [←map_zero (AlgQuot.mk r), ←map_add, add_zero]
+
+end
+
+section
+
+variable [RelLike R α] [MonoidOps α] [IsMulCon R] (r: R)
+
+def resp_npow [IsLawfulPowN α] (r: R) (n: ℕ) (a b: α) : r a b -> r (a ^ n) (b ^ n) := by
+  intro rab
+  induction n with
+  | zero =>
+    rw [npow_zero, npow_zero]
+    apply (IsCon.eqv r).refl
+  | succ n ih =>
+    rw [npow_succ, npow_succ]
+    apply resp_mul
+    assumption
+    assumption
+
+instance [IsLawfulPowN α] : IsPowCon R ℕ where
+  resp_pow := by
+    intro r s a b
+    apply resp_npow
+
+instance [IsLawfulPowN α] : IsLawfulPowN (AlgQuot r) where
+  npow_zero a := by
+    induction a with | mk a =>
+    show AlgQuot.mk r (a ^ 0) = _
+    rw [npow_zero, map_one]
+  npow_succ a n := by
+    induction a with | mk a =>
+    show AlgQuot.mk r (a ^ (n + 1)) = _
+    rw [npow_succ]
+    rfl
+
+instance [IsMonoid α] : IsMonoid (AlgQuot r) where
+
+end
+
+section
+
+variable [RelLike R α] [AddMonoidOps α] [IsAddCon R] (r: R)
+
+def resp_nsmul [IsLawfulNSMul α] (r: R) (n: ℕ) (a b: α) : r a b -> r (n • a) (n • b) := by
+  intro rab
+  induction n with
+  | zero =>
+    rw [zero_nsmul, zero_nsmul]
+    apply (IsCon.eqv r).refl
+  | succ n ih =>
+    rw [succ_nsmul, succ_nsmul]
+    apply resp_add
+    assumption
+    assumption
+
+instance [IsLawfulNSMul α] : IsSMulCon R ℕ where
+  resp_smul := by
+    intro r s a b
+    apply resp_nsmul
+
+instance [IsLawfulNSMul α] : IsLawfulNSMul (AlgQuot r) where
+  zero_nsmul a := by
+    induction a with | mk a =>
+    show AlgQuot.mk r (0 • a) = _
+    rw [zero_nsmul, map_zero]
+  succ_nsmul n a := by
+    induction a with | mk a =>
+    show AlgQuot.mk r ((n + 1) • a) = _
+    rw [succ_nsmul]
+    rfl
+instance [IsAddMonoid α] : IsAddMonoid (AlgQuot r) where
+
+end

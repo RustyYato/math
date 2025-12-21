@@ -132,3 +132,165 @@ def map_zsmul (f: F) (a: α) (z: ℤ) : f (z • a) = z • f a :=
   map_zpow (map_add_group_hom_to_group_hom f) _ _
 
 end
+
+section
+
+variable [RelLike R α] [Mul α] [Inv α] [One α] [IsMulCon R] [Add α] [Neg α] [Zero α] [IsAddCon R]
+  (r: R)
+
+end
+
+section
+
+variable [RelLike R α] [GroupOps α] [IsGroup α] [IsMulCon R]
+  (r: R)
+
+def resp_inv (r: R) (a b: α) : r a b -> r a⁻¹ b⁻¹ := by
+  intro h
+  have raa : r a⁻¹ a⁻¹ := (IsCon.eqv _).refl _
+  have rbb : r b⁻¹ b⁻¹ := (IsCon.eqv _).refl _
+  have := resp_mul r (resp_mul r raa h) rbb
+  rw [inv_mul_cancel a, mul_assoc, mul_inv_cancel, mul_one, one_mul] at this
+  apply (IsCon.eqv _).symm
+  assumption
+
+def resp_div (r: R) (a b c d: α) : r a c -> r b d -> r (a / b) (c / d) := by
+  intro h g
+  rw [div_eq_mul_inv, div_eq_mul_inv]
+  apply resp_mul
+  assumption
+  apply resp_inv
+  assumption
+
+def resp_zpow (r: R) (z: ℤ) (a b: α) : r a b  -> r (a ^ z) (b ^ z) := by
+  intro h
+  cases z <;> rename_i z
+  rw [zpow_ofNat, zpow_ofNat]
+  apply resp_npow
+  assumption
+  rw [zpow_negSucc, zpow_negSucc]
+  apply resp_inv
+  apply resp_npow
+  assumption
+
+instance: Inv (AlgQuot r) where
+  inv := by
+    refine Quotient.lift ?_ ?_
+    exact fun a => AlgQuot.mk r (a⁻¹)
+    intros
+    apply AlgQuot.sound
+    apply resp_inv
+    assumption
+
+instance: Div (AlgQuot r) where
+  div := by
+    refine Quotient.lift₂ ?_ ?_
+    exact fun a b => AlgQuot.mk r (a / b)
+    intros
+    apply AlgQuot.sound
+    apply resp_div
+    assumption
+    assumption
+
+instance : IsPowCon R ℤ where
+  resp_pow := by
+    intros; apply resp_zpow
+    assumption
+
+instance : IsGroup (AlgQuot r) where
+  div_eq_mul_inv a b := by
+    induction a with | mk a =>
+    induction b with | mk b =>
+    show (AlgQuot.mk r (a / b)) = (AlgQuot.mk r (a * b⁻¹))
+    rw [div_eq_mul_inv]
+  zpow_ofNat a n := by
+    induction a with | mk a =>
+    show (AlgQuot.mk r (a ^ (n: ℤ))) = (AlgQuot.mk r (a ^ n))
+    rw [zpow_ofNat]
+  zpow_negSucc a n := by
+    induction a with | mk a =>
+    show (AlgQuot.mk r (a ^ (Int.negSucc n))) = (AlgQuot.mk r ((a ^ (n + 1: ℕ))⁻¹))
+    rw [zpow_negSucc]
+  mul_inv_cancel a := by
+    induction a with | mk a =>
+    show (AlgQuot.mk r (a * a⁻¹)) = 1
+    rw [mul_inv_cancel, map_one]
+
+end
+section
+
+variable [RelLike R α] [AddGroupOps α] [IsAddGroup α] [IsAddCon R]
+  (r: R)
+
+def resp_neg (r: R) (a b: α) : r a b -> r (-a) (-b) := by
+  intro h
+  have raa : r (-a) (-a) := (IsCon.eqv _).refl _
+  have rbb : r (-b) (-b) := (IsCon.eqv _).refl _
+  have := resp_add r (resp_add r raa h) rbb
+  rw [neg_add_cancel a, add_assoc, add_neg_cancel, add_zero, zero_add] at this
+  apply (IsCon.eqv _).symm
+  assumption
+
+def resp_sub (r: R) (a b c d: α) : r a c -> r b d -> r (a - b) (c - d) := by
+  intro h g
+  rw [sub_eq_add_neg, sub_eq_add_neg]
+  apply resp_add
+  assumption
+  apply resp_neg
+  assumption
+
+def resp_zsmul (r: R) (z: ℤ) (a b: α) : r a b  -> r (z • a) (z • b) := by
+  intro h
+  cases z <;> rename_i z
+  rw [ofNat_zsmul, ofNat_zsmul]
+  apply resp_nsmul
+  assumption
+  rw [negSucc_zsmul, negSucc_zsmul]
+  apply resp_neg
+  apply resp_nsmul
+  assumption
+
+instance: Neg (AlgQuot r) where
+  neg := by
+    refine Quotient.lift ?_ ?_
+    exact fun a => AlgQuot.mk r (-a)
+    intros
+    apply AlgQuot.sound
+    apply resp_neg
+    assumption
+
+instance: Sub (AlgQuot r) where
+  sub := by
+    refine Quotient.lift₂ ?_ ?_
+    exact fun a b => AlgQuot.mk r (a - b)
+    intros
+    apply AlgQuot.sound
+    apply resp_sub
+    assumption
+    assumption
+
+instance : IsSMulCon R ℤ where
+  resp_smul := by
+    intros; apply resp_zsmul
+    assumption
+
+instance : IsAddGroup (AlgQuot r) where
+  sub_eq_add_neg a b := by
+    induction a with | mk a =>
+    induction b with | mk b =>
+    show (AlgQuot.mk r (a - b)) = (AlgQuot.mk r (a + -b))
+    rw [sub_eq_add_neg]
+  ofNat_zsmul a n := by
+    induction a with | mk a =>
+    show (AlgQuot.mk r ((n: ℤ) • a)) = (AlgQuot.mk r (n • a))
+    rw [ofNat_zsmul]
+  negSucc_zsmul a n := by
+    induction a with | mk a =>
+    show (AlgQuot.mk r ((Int.negSucc n) • a)) = (AlgQuot.mk r (-((n + 1: ℕ) • a)))
+    rw [negSucc_zsmul]
+  add_neg_cancel a := by
+    induction a with | mk a =>
+    show (AlgQuot.mk r (a + -a)) = 0
+    rw [add_neg_cancel, map_zero]
+
+end
