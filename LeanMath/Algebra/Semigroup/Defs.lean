@@ -49,16 +49,16 @@ structure MulHom (α β: Type*) [Mul α] [Mul β] extends Hom α β where
 structure AddHom (α β: Type*) [Add α] [Add β] extends Hom α β where
   protected map_add (a₀ a₁): toFun (a₀ + a₁) = toFun a₀ + toFun a₁
 
-structure LogHom (α β: Type*) [Mul α] [Add β] extends Hom α β where
+structure PreLogHom (α β: Type*) [Mul α] [Add β] extends Hom α β where
   protected map_mul_to_add (a₀ a₁): toFun (a₀ * a₁) = toFun a₀ + toFun a₁
 
-structure ExpHom (α β: Type*) [Add α] [Mul β] extends Hom α β where
+structure PreExpHom (α β: Type*) [Add α] [Mul β] extends Hom α β where
   protected map_add_to_mul (a₀ a₁): toFun (a₀ + a₁) = toFun a₀ * toFun a₁
 
 infixr:80 " →*ₙ " => MulHom
 infixr:80 " →+ₙ " => AddHom
-infixr:80 " →*+ₙ " => LogHom
-infixr:80 " →+*ₙ " => ExpHom
+infixr:80 " →*+ₙ " => PreLogHom
+infixr:80 " →+*ₙ " => PreExpHom
 
 section
 

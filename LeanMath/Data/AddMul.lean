@@ -11,6 +11,9 @@ def MulOfAdd.get : MulOfAdd α -> α := id
 
 attribute [local irreducible] AddOfMul MulOfAdd
 
+def AddOfMul.induction {motive: AddOfMul α -> Prop} (mk: ∀a, motive (.mk a)) (a: AddOfMul α) : motive a := mk a.get
+def MulOfAdd.induction {motive: MulOfAdd α -> Prop} (mk: ∀a, motive (.mk a)) (a: MulOfAdd α) : motive a := mk a.get
+
 instance [One α] : Zero (AddOfMul α) where
   zero := .mk 1
 instance [Mul α] : Add (AddOfMul α) where
