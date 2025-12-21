@@ -1,0 +1,106 @@
+import LeanMath.Algebra.Monoid.Defs
+import LeanMath.Data.Embedding.Defs
+import LeanMath.Data.Equiv.Defs
+
+structure FreeMonoid (α: Type*) where
+  ofList :: toList : List α
+
+namespace FreeMonoid
+
+instance : One (FreeMonoid α) where
+  one := .ofList []
+instance : Mul (FreeMonoid α) where
+  mul a b := .ofList <| a.toList ++ b.toList
+instance : Pow (FreeMonoid α) ℕ := defaultPowN
+
+def ι : α ↪ FreeMonoid α where
+  toFun x := .ofList [x]
+  inj _ _ h := (List.cons.inj (FreeMonoid.ofList.inj h)).left
+
+instance : IsSemigroup (FreeMonoid α) where
+  mul_assoc := by
+    intro a b c
+    cases a with | ofList a =>
+    cases b with | ofList b =>
+    cases c with | ofList c =>
+    show FreeMonoid.ofList (a ++ b ++ c) = FreeMonoid.ofList (a ++ (b ++ c))
+    rw [List.append_assoc]
+
+instance : IsLawfulOneMul (FreeMonoid α) where
+  one_mul _ := rfl
+  mul_one a := by
+    cases a with | ofList a =>
+    show FreeMonoid.ofList (a ++ []) = FreeMonoid.ofList a
+    rw [List.append_nil]
+
+instance : IsMonoid (FreeMonoid α) where
+
+variable [MonoidOps M] [IsMonoid M]
+
+private def preLift (f: α -> M) : List α -> M
+| [] => 1
+| a::as => f a * preLift f as
+
+private def preLift_nil (f: α -> M) : preLift f [] = 1 := rfl
+private def preLift_mul (f: α -> M) (as bs: List α) : preLift f (as ++ bs) = preLift f as * preLift f bs := by
+  induction as with
+  | nil => rw [preLift_nil, one_mul]; rfl
+  | cons a as ih => rw [List.cons_append, preLift, preLift, ih, mul_assoc]
+private def preLift_ι (f: α -> M) (a: α) : preLift f [a] = f a := by rw [preLift, preLift_nil, mul_one]
+
+def lift [MonoidOps M] [IsMonoid M] : (α -> M) ≃ (FreeMonoid α →* M) where
+  toFun f := {
+    toFun x := preLift f x.toList
+    map_one := rfl
+    map_mul _ _ := by apply preLift_mul
+  }
+  invFun f := f ∘ ι
+  leftInv f := by
+    ext x
+    cases x with | ofList x =>
+    show preLift (f ∘ ι) x = _
+    induction x with
+    | nil => show 1 = f 1; rw [map_one]
+    | cons x xs ih =>
+      rw [preLift]; dsimp
+      show _ = f (ι x * .ofList xs)
+      rw [map_mul, ih]
+  rightInv f := by
+    ext x
+    apply preLift_ι
+
+def lift_ι (f: α -> M) (x: α) : lift f (ι x) = f x := by
+  apply preLift_ι
+
+@[induction_eliminator]
+def induction
+  (motive: FreeMonoid α -> Prop)
+  (one: motive 1)
+  (ι: ∀x, motive (ι x))
+  (mul: ∀a b, motive a -> motive b -> motive (a * b))
+  (a: FreeMonoid α) : motive a := by
+  cases a with | ofList a =>
+  induction a with
+  | nil => apply one
+  | cons x xs ih =>
+    apply mul (.ι x)
+    apply ι
+    assumption
+
+attribute [irreducible] lift ι
+
+def lift_ι' : lift ι = GroupHom.id (FreeMonoid α) := by
+  ext x; simp
+  induction x with
+  | one => rw [map_one]
+  | ι x => rw [lift_ι]
+  | mul a b iha ihb => rw [map_mul, iha, ihb]
+
+def lift_comp [MonoidOps N] [IsMonoid N] (f: M →* N) (g: α -> M) : lift (f ∘ g) = f ∘ lift g := by
+  ext x; simp
+  induction x with
+  | one => rw [map_one, map_one, map_one]
+  | ι x => rw [lift_ι, lift_ι]; rfl
+  | mul a b iha ihb => rw [map_mul, map_mul, map_mul, iha, ihb]
+
+end FreeMonoid

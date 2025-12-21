@@ -167,6 +167,18 @@ instance (priority := 10000) : IsAddHom (α →+ β) α β where
 instance (priority := 10000) : IsLogHom (α →*+ β) α β where
 instance (priority := 10000) : IsExpHom (α →+* β) α β where
 
+protected def GroupHom.id (α: Type*) [One α] [Mul α] : α →* α where
+  toFun := id
+  map_one := rfl
+  map_mul _ _ := rfl
+
+@[simp] def GroupHom.apply_id (x: α) : GroupHom.id α x = x := rfl
+
+@[ext] def GroupHom.ext (f g: α →* β) (h: ∀x, f x = g x) : f = g := DFunLike.ext f g h
+@[ext] def AddGroupHom.ext (f g: α →+ β) (h: ∀x, f x = g x) : f = g := DFunLike.ext f g h
+@[ext] def LogHom.ext (f g: α →*+ β) (h: ∀x, f x = g x) : f = g := DFunLike.ext f g h
+@[ext] def ExpHom.ext (f g: α →+* β) (h: ∀x, f x = g x) : f = g := DFunLike.ext f g h
+
 def AddOfMul.mkHom : α →*+ AddOfMul α where
   toFun := mk
   map_one_to_zero := rfl
