@@ -284,20 +284,52 @@ instance [IsMonoid α] : IsAddMonoid (AddOfMul α) where
 
 variable [IsMonoid α] [IsAddMonoid α]
 
-def npowHom [IsComm α] (n: ℕ) : α →* α where
-  toFun a := a ^ n
-  map_one := by
+instance (a b: α) (n: ℕ) [IsCommAt a b] : IsCommAt (a ^ n) b where
+  mul_comm := by
+    induction n with
+    | zero => rw [npow_zero, one_mul, mul_one]
+    | succ n ih => rw [npow_succ, mul_assoc, mul_comm a b, ←mul_assoc, ih, mul_assoc]
+
+instance (a b: α) (n: ℕ) [IsCommAt a b] : IsCommAt b (a ^ n) where
+  mul_comm := by
+    symm
+    rw [mul_comm]
+
+instance (a b: α) (n: ℕ) [IsAddCommAt a b] : IsAddCommAt (n • a) b where
+  add_comm := mul_comm (MulOfAdd.mkHomₙ a ^ n) (MulOfAdd.mkHomₙ b)
+
+instance (a b: α) (n: ℕ) [IsAddCommAt a b] : IsAddCommAt b (n • a) where
+  add_comm := mul_comm (MulOfAdd.mkHomₙ b) (MulOfAdd.mkHomₙ a ^ n)
+
+def one_npow (n: ℕ) : (1: α) ^ n = 1 := by
     induction n with
     | zero => rw [npow_zero]
     | succ n ih => rw [npow_succ, mul_one, ih]
-  map_mul a b := by
+
+def mul_npow (a b: α) (n: ℕ) [IsCommAt a b] : (a * b) ^ n = a ^ n * b ^ n := by
     induction n with
     | zero => rw [npow_zero, npow_zero, npow_zero, mul_one]
     | succ n ih =>
-      rw [npow_succ, npow_succ, npow_succ, ih]
-      ac_rfl
+      rw [npow_succ, npow_succ, ih]
+      rw [mul_assoc _ a, mul_comm a (b ^ _), npow_succ, mul_assoc, mul_assoc,
+        mul_comm b]
 
-def npowExpHom (a: α) : ℕ →+* α where
+def nsmul_zero (n: ℕ) : n • (0: α) = 0 :=
+  one_npow (α := MulOfAdd α) _
+
+def nsmul_add (a b: α) (n: ℕ) [IsAddCommAt a b] : n • (a + b) = n • a + n • b :=
+  mul_npow (α := MulOfAdd α) (MulOfAdd.mkHomₙ a) (MulOfAdd.mkHomₙ b) n
+
+instance (a b: α) (m n: ℕ) [IsCommAt a b] : IsCommAt (a ^ m) (b ^ n) := inferInstance
+
+instance (a b: α) (m n: ℕ) [IsAddCommAt a b] : IsAddCommAt (m • a) (n • b) := inferInstance
+
+def npowHom [IsComm α] (n: ℕ) : α →* α where
+  toFun a := a ^ n
+  map_one := by rw [one_npow]
+  map_mul a b := by rw [mul_npow]
+
+def npowAtHom (a: α) : ℕ →+* α where
   toFun n := a ^ n
   map_zero_to_one := by rw [npow_zero]
   map_add_to_mul n m := by
@@ -305,6 +337,20 @@ def npowExpHom (a: α) : ℕ →+* α where
     | zero => rw [add_zero, npow_zero, mul_one]
     | succ m ih => rw [Nat.add_succ, npow_succ, npow_succ, ←mul_assoc, ih]
 
-def npow_eq_npowExpHom (a: α) (n: ℕ) : a ^ n = npowExpHom a n := rfl
+def nsmulHom [IsAddComm α] (n: ℕ) : α →+ α where
+  toFun a := n • a
+  map_zero := by rw [nsmul_zero]
+  map_add a b := by rw [nsmul_add]
+
+def nsmulAtHom (a: α) : ℕ →+ α where
+  toFun n := n • a
+  map_zero := by rw [zero_nsmul]
+  map_add n m := by
+    induction m with
+    | zero => rw [add_zero, zero_nsmul, add_zero]
+    | succ m ih => rw [Nat.add_succ, succ_nsmul, succ_nsmul, ←add_assoc, ih]
+
+def npow_eq_npowAtHom (a: α) (n: ℕ) : a ^ n = npowAtHom a n := rfl
+def nsmul_eq_nsmulAtHom (a: α) (n: ℕ) : n • a = nsmulAtHom a n := rfl
 
 end

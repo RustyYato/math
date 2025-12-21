@@ -17,6 +17,11 @@ class IsCommAt {α: Type*} [Mul α] (a b: α) where
 class IsAddCommAt {α: Type*} [Add α] (a b: α) where
   protected add_comm : a + b = b + a
 
+instance [Mul α] (a: α) : IsCommAt a a where
+  mul_comm := rfl
+instance [Add α] (a: α) : IsAddCommAt a a where
+  add_comm := rfl
+
 class IsComm (α: Type*) [Mul α] where
   protected mul_comm (a b: α) : a * b = b * a
 class IsAddComm (α: Type*) [Add α] where
@@ -30,6 +35,14 @@ instance (priority := 1000000) [Add α] [IsAddComm α] (a b: α) : IsAddCommAt a
 
 def mul_comm [Mul α] (a b: α) [IsCommAt a b] : a * b = b * a := IsCommAt.mul_comm
 def add_comm [Add α] (a b: α) [IsAddCommAt a b] : a + b = b + a := IsAddCommAt.add_comm
+
+instance (priority := 10) [Mul α] (a b: α) [IsCommAt a b] : IsCommAt b a where
+  mul_comm := by
+    rw [mul_comm a]
+
+instance (priority := 10) [Add α] (a b: α) [IsAddCommAt a b] : IsAddCommAt b a where
+  add_comm := by
+    rw [add_comm a]
 
 class IsMulHom (F α β: Type*) [FunLike F α β] [Mul α] [Mul β] where
   protected map_mul (f: F) (a₀ a₁: α) : f (a₀ * a₁) = f a₀ * f a₁ := by intro f; exact f.map_mul
