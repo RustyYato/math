@@ -69,9 +69,20 @@ def lift [MonoidOps M] [IsMonoid M] : (α -> M) ≃ (FreeMonoid α →* M) where
     ext x
     apply preLift_ι
 
-def lift_ι (f: α -> M) (x: α) : lift f (ι x) = f x := by
+@[simp] def lift_ι (f: α -> M) (x: α) : lift f (ι x) = f x := by
   apply preLift_ι
 
+def ι_induction
+  (motive: FreeMonoid α -> Prop)
+  (one: motive 1)
+  (ι_mul: ∀a b, motive b -> motive (ι a * b))
+  (a: FreeMonoid α) : motive a := by
+  cases a with | ofList a =>
+  induction a with
+  | nil => apply one
+  | cons x xs ih =>
+    apply ι_mul
+    assumption
 @[induction_eliminator]
 def induction
   (motive: FreeMonoid α -> Prop)
@@ -87,7 +98,29 @@ def induction
     apply ι
     assumption
 
-attribute [irreducible] lift ι
+private def preReverse (m: FreeMonoid α) : FreeMonoid α where
+  toList := m.toList.reverse
+
+private def preReverse_one : preReverse (α := α) 1 = 1 := rfl
+private def preReverse_ι (a: α) : preReverse (ι a) = ι a := rfl
+private def preReverse_ι_mul (a: α) (b: FreeMonoid α) : preReverse (ι a * b) = preReverse b * preReverse (ι a) := by
+  rw [preReverse]
+  show (FreeMonoid.ofList ([a] ++ b.toList).reverse) = _
+  rw [List.reverse_append]
+  rfl
+private def preReverse_mul (a b: FreeMonoid α) : preReverse (a * b) = preReverse b * preReverse a := by
+  induction a using ι_induction generalizing b with
+  | one => rw [one_mul, preReverse_one, mul_one]
+  | ι_mul x as ih₀ => rw [mul_assoc, preReverse_ι_mul, ih₀, preReverse_ι_mul, mul_assoc]
+
+def reverse : FreeMonoid α →* MulOpp (FreeMonoid α) where
+  toFun x := MulOpp.mk x.preReverse
+  map_one := rfl
+  map_mul := preReverse_mul
+
+@[simp] def reverse_ι (a: α) : reverse (ι a) = MulOpp.mk (ι a) := rfl
+
+attribute [irreducible] lift ι reverse
 
 def lift_ι' : lift ι = GroupHom.id (FreeMonoid α) := by
   ext x; simp

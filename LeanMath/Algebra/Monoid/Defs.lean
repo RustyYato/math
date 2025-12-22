@@ -174,6 +174,13 @@ protected def GroupHom.id (α: Type*) [One α] [Mul α] : α →* α where
 
 @[simp] def GroupHom.apply_id (x: α) : GroupHom.id α x = x := rfl
 
+protected def GroupHom.comp [Mul γ] [One γ] (f: β →* γ) (g: α →* β) : α →* γ where
+  toFun := f ∘ g
+  map_one := by dsimp; rw [map_one, map_one]
+  map_mul _ _ := by dsimp; rw [map_mul g, map_mul]
+
+@[simp] def GroupHom.apply_comp [Mul γ] [One γ] (f: β →* γ) (g: α →* β) (x: α) : f.comp g x = f (g x) := rfl
+
 @[ext] def GroupHom.ext (f g: α →* β) (h: ∀x, f x = g x) : f = g := DFunLike.ext f g h
 @[ext] def AddGroupHom.ext (f g: α →+ β) (h: ∀x, f x = g x) : f = g := DFunLike.ext f g h
 @[ext] def LogHom.ext (f g: α →*+ β) (h: ∀x, f x = g x) : f = g := DFunLike.ext f g h
@@ -294,6 +301,10 @@ instance [IsLawfulPowN α] : IsLawfulNSMul (AddOfMul α) where
 instance [IsAddMonoid α] : IsMonoid (MulOfAdd α) where
 instance [IsMonoid α] : IsAddMonoid (AddOfMul α) where
 
+instance [IsLawfulOneMul α] : IsLawfulOneMul (MulOpp α) where
+  one_mul := mul_one (α := α)
+  mul_one := one_mul (α := α)
+
 variable [IsMonoid α] [IsAddMonoid α]
 
 instance (a b: α) (n: ℕ) [IsCommAt a b] : IsCommAt (a ^ n) b where
@@ -312,6 +323,16 @@ instance (a b: α) (n: ℕ) [IsAddCommAt a b] : IsAddCommAt (n • a) b where
 
 instance (a b: α) (n: ℕ) [IsAddCommAt a b] : IsAddCommAt b (n • a) where
   add_comm := mul_comm (MulOfAdd.mkHomₙ b) (MulOfAdd.mkHomₙ a ^ n)
+
+instance : IsMonoid (MulOpp α) where
+  npow_zero a := by
+    induction a using MulOpp.induction with | mk a =>
+    show MulOpp.mk (a ^ 0) = MulOpp.mk 1
+    rw [npow_zero]
+  npow_succ a n := by
+    induction a using MulOpp.induction with | mk a =>
+    show MulOpp.mk (a ^ (n + 1)) = MulOpp.mk (a * a ^ n)
+    rw [npow_succ, mul_comm]
 
 def one_npow (n: ℕ) : (1: α) ^ n = 1 := by
     induction n with
@@ -364,6 +385,27 @@ def nsmulAtHom (a: α) : ℕ →+ α where
 
 def npow_eq_npowAtHom (a: α) (n: ℕ) : a ^ n = npowAtHom a n := rfl
 def nsmul_eq_nsmulAtHom (a: α) (n: ℕ) : n • a = nsmulAtHom a n := rfl
+
+end
+
+section
+
+variable
+  [FunLike F α β] [Zero α] [Zero β] [One α] [One β]
+  [IsOneHom F α β] [IsZeroHom F α β] [IsLogOneHom F α β] [IsExpZeroHom F α β]
+
+variable [Add α] [Add β] [Mul α] [Mul β]
+  [IsAddHom F α β] [IsMulHom F α β] [IsLogHom F α β] [IsExpHom F α β]
+
+def MulOpp.liftGroupHom (f: F) : MulOpp α →* MulOpp β where
+  toFun x := MulOpp.mk (f x.get)
+  map_one := map_one f
+  map_mul a b := by
+    show mk (f (b.get * a.get)) = _
+    rw [map_mul]
+    rfl
+
+@[simp] def MulOpp.apply_liftGroupHom (f: F) (x: MulOpp α) : MulOpp.liftGroupHom f x = MulOpp.mk (f x.get) := rfl
 
 end
 

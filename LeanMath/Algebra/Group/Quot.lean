@@ -1,4 +1,5 @@
 import LeanMath.Algebra.Group.Defs
+import LeanMath.Data.Equiv.Defs
 
 structure GroupQuot [MonoidOps G] [IsMonoid G] (r: G -> G -> Prop) where
   ofQuot :: toQuot : AlgQuot (MulCon.generate r)
@@ -76,6 +77,55 @@ instance [GroupOps G] [IsGroup G] : IsGroup (GroupQuot r) where
     induction a with | mk a =>
     show mk r (a * a⁻¹) = mk r 1
     rw [mul_inv_cancel]
+
+variable [MonoidOps G] [IsMonoid G] [MonoidOps M] [IsMonoid M]
+
+def sound {r: G -> G -> Prop} {a b: G} : r a b -> mk r a = mk r b := by
+  intro h
+  unfold mk
+  show ofQuot _ = ofQuot _
+  congr 1
+  apply Quotient.sound
+  apply MulCon.generate_of
+  assumption
+
+def lift : { f: G →* M // ∀x y: G, r x y -> f x = f y } ≃ GroupQuot r →* M where
+  toFun f := {
+    toFun g := g.toQuot.liftOn f.val <| by
+      intro a b h
+      induction h with
+      | refl => rfl
+      | symm => symm; assumption
+      | trans _ _ _ _ _ ih₀ ih₁ => rw [ih₀, ih₁]
+      | mul a b _ _ _ _ ih₀ ih₁ => rw [map_mul, map_mul, ih₀, ih₁]
+      | of a b =>
+        apply f.property
+        assumption
+    map_one := map_one f.val
+    map_mul a b := by
+      induction a; induction b
+      apply map_mul f.val
+  }
+  invFun f := {
+    val := {
+      toFun g := f (mk _ g)
+      map_one := by rw [map_one, map_one]
+      map_mul a b := by rw [map_mul, map_mul]
+    }
+    property a b h := by
+      show f (mk r a) = f (mk r b)
+      rw [GroupQuot.sound h]
+  }
+  leftInv f := by
+    ext x; induction x with | mk x =>
+    rfl
+  rightInv f := by
+    ext x
+    rfl
+
+@[simp] def lift_mk (f: { f: G →* M // ∀x y: G, r x y -> f x = f y }) (x: G) : lift r f (mk r x) = f.val x := rfl
+
+attribute [irreducible] lift
 
 end GroupQuot
 

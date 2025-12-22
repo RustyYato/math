@@ -161,6 +161,14 @@ instance : IsSemigroup (MulOfAdd α) where
 instance : IsAddSemigroup (AddOfMul α) where
   add_assoc := IsSemigroup.mul_assoc (α := α)
 
+instance : IsSemigroup (MulOpp α) where
+  mul_assoc a b c := by
+    induction a using MulOpp.induction with | mk a =>
+    induction b using MulOpp.induction with | mk b =>
+    induction c using MulOpp.induction with | mk c =>
+    show (MulOpp.mk (c * (b * a))) = MulOpp.mk ((c * b) * a)
+    rw [mul_assoc]
+
 instance [IsAddComm α] : IsComm (MulOfAdd α) where
   mul_comm := IsAddComm.add_comm (α := α)
 instance [IsComm α] : IsAddComm (AddOfMul α) where
