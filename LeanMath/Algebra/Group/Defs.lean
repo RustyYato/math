@@ -383,9 +383,25 @@ def zpow_add (a: α) (n m: ℤ) : a ^ (n + m) = a ^ n * a ^ m := by
   | succ m ih => rw [←add_assoc, zpow_succ, zpow_succ, ih, mul_assoc]
   | pred m ih => rw [←Int.add_sub_assoc, zpow_pred, zpow_pred, ih, mul_assoc]
 
+def zpow_sub (a: α) (n m: ℤ) : a ^ (n - m) = a ^ n / a ^ m := by
+  rw [div_eq_mul_inv, sub_eq_add_neg, zpow_add]
+  congr
+  apply eq_inv_of_mul
+  rw [←zpow_add, neg_add_cancel, zpow_zero]
+
+def zpow_one (a: α) : a ^ (1: ℤ) = a := by
+  show (a ^ (0 + 1: ℤ)) = a
+  rw [zpow_succ, zpow_zero, one_mul]
+
 def zpowAtHom (a: α) : ℤ →+* α where
   toFun z := a ^ z
   map_zero_to_one := by rw [zpow_zero]
   map_add_to_mul n m := by rw [zpow_add]
+
+def zpow_mul (a: α) (n m: ℤ) : a ^ (n * m) = (a ^ n) ^ m := by
+  induction m using Int.succ_pred_induction with
+  | zero => rw [Int.mul_zero, zpow_zero, zpow_zero]
+  | succ m ih => rw [Int.mul_add, mul_one, zpow_add, zpow_succ, ih]
+  | pred m ih => rw [Int.mul_sub, mul_one, zpow_sub, zpow_pred, ih, div_eq_mul_inv]
 
 end

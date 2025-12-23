@@ -84,7 +84,7 @@ instance [GroupOps G] [IsGroup G] : IsGroup (GroupQuot r) where
     show mk r (a * a⁻¹) = mk r 1
     rw [mul_inv_cancel]
 
-variable [MonoidOps G] [IsMonoid G] [MonoidOps M] [IsMonoid M]
+variable [MonoidOps G] [IsMonoid G] [MonoidOps M] [IsMonoid M] [AddMonoidOps N] [IsAddMonoid N]
 
 def sound {r: G -> G -> Prop} {a b: G} : r a b -> mk r a = mk r b := by
   intro h
@@ -129,7 +129,42 @@ def lift : { f: G →* M // ∀x y: G, r x y -> f x = f y } ≃ GroupQuot r →*
     ext x
     rfl
 
+def liftLog : { f: G →*+ N // ∀x y: G, r x y -> f x = f y } ≃ GroupQuot r →*+ N where
+  toFun f := {
+    toFun g := g.toQuot.liftOn f.val <| by
+      intro a b h
+      induction h with
+      | refl => rfl
+      | symm => symm; assumption
+      | trans _ _ _ _ _ ih₀ ih₁ => rw [ih₀, ih₁]
+      | mul a b _ _ _ _ ih₀ ih₁ => rw [map_mul_to_add, map_mul_to_add, ih₀, ih₁]
+      | of a b =>
+        apply f.property
+        assumption
+    map_one_to_zero := map_one_to_zero f.val
+    map_mul_to_add a b := by
+      induction a; induction b
+      apply map_mul_to_add f.val
+  }
+  invFun f := {
+    val := {
+      toFun g := f (mk _ g)
+      map_one_to_zero := by rw [map_one, map_one_to_zero]
+      map_mul_to_add a b := by rw [map_mul, map_mul_to_add]
+    }
+    property a b h := by
+      show f (mk r a) = f (mk r b)
+      rw [GroupQuot.sound h]
+  }
+  leftInv f := by
+    ext x; induction x with | mk x =>
+    rfl
+  rightInv f := by
+    ext x
+    rfl
+
 @[simp] def lift_mk (f: { f: G →* M // ∀x y: G, r x y -> f x = f y }) (x: G) : lift r f (mk r x) = f.val x := rfl
+@[simp] def liftLog_mk (f: { f: G →*+ N // ∀x y: G, r x y -> f x = f y }) (x: G) : liftLog r f (mk r x) = f.val x := rfl
 
 attribute [irreducible] lift
 
