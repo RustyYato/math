@@ -35,6 +35,12 @@ def ind [MonoidOps G] [IsMonoid G] { motive: GroupQuot r -> Prop } (mk: ∀x, mo
   induction g with | mk g =>
   apply mk g
 
+instance [MonoidOps G] [IsMonoid G] [IsComm G] : IsComm (GroupQuot r) where
+  mul_comm a b := by
+    induction a with | mk a =>
+    induction b with | mk b =>
+    rw [←map_mul, ←map_mul, mul_comm]
+
 instance [MonoidOps G] [IsMonoid G] : IsMonoid (GroupQuot r) where
   mul_assoc a b c := by
     induction a with | mk a =>
@@ -126,6 +132,12 @@ def lift : { f: G →* M // ∀x y: G, r x y -> f x = f y } ≃ GroupQuot r →*
 @[simp] def lift_mk (f: { f: G →* M // ∀x y: G, r x y -> f x = f y }) (x: G) : lift r f (mk r x) = f.val x := rfl
 
 attribute [irreducible] lift
+
+instance [MonoidOps G] [IsMonoid G] [Subsingleton G] : Subsingleton (GroupQuot r) where
+  allEq a b := by
+    induction a; induction b
+    rename_i a b
+    rw [Subsingleton.allEq (α := G) a b]
 
 end GroupQuot
 

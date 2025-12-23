@@ -136,4 +136,15 @@ def lift_comp [MonoidOps N] [IsMonoid N] (f: M →* N) (g: α -> M) : lift (f �
   | ι x => rw [lift_ι, lift_ι]; rfl
   | mul a b iha ihb => rw [map_mul, map_mul, map_mul, iha, ihb]
 
+instance [Subsingleton α] : IsComm (FreeMonoid α) where
+  mul_comm a b := by
+    induction a with
+    | one => rw [mul_one, one_mul]
+    | ι a =>
+      induction b with
+      | one => rw [mul_one, one_mul]
+      | ι b => rw [Subsingleton.allEq a b]
+      | mul b₀ b₁ ih₀ ih₁ => rw [←mul_assoc, ih₀, mul_assoc, ih₁, mul_assoc]
+    | mul a₀ a₁ ih₀ ih₁ => rw [mul_assoc, ih₁, ←mul_assoc, ih₀, mul_assoc]
+
 end FreeMonoid

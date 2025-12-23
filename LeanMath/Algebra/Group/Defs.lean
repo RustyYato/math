@@ -294,3 +294,98 @@ instance : IsAddGroup (AlgQuot r) where
     rw [add_neg_cancel, map_zero]
 
 end
+
+section
+
+variable [GroupOps α] [IsGroup α]
+
+def inv_mul_rev (a b: α) : (a * b)⁻¹ = b⁻¹ * a⁻¹ := by
+  symm; apply eq_inv_of_mul
+  rw [mul_assoc, ←mul_assoc _ a, inv_mul_cancel, one_mul, inv_mul_cancel]
+
+def inv_inv (a: α) : a⁻¹⁻¹ = a := by
+  symm; apply eq_inv_of_mul
+  rw [mul_inv_cancel]
+
+def one_inv : (1: α) ⁻¹ = 1 := by
+  symm; apply eq_inv_of_mul
+  rw [mul_one]
+
+def one_zpow (z: ℤ) : (1: α) ^ z = 1 := by
+  cases z
+  rw [zpow_ofNat, one_npow]
+  rw [zpow_negSucc, one_npow, one_inv]
+
+def mul_zpow (a b: α) (z: ℤ) [IsCommAt a b] : (a * b) ^ z = a ^ z * b ^ z := by
+  cases z
+  iterate 3 rw [zpow_ofNat]
+  rw [mul_npow]
+  iterate 3 rw [zpow_negSucc]
+  rw [mul_npow, mul_comm, inv_mul_rev]
+
+def zpowHom [IsComm α] (z: ℤ) : α →* α where
+  toFun a := a ^ z
+  map_one := by rw [one_zpow]
+  map_mul a b := by rw [mul_zpow]
+
+def zpow_zero (a: α) : a ^ (0: ℤ) = 1 := by
+  rw [←npow_zero a, ←zpow_ofNat a 0]
+  rfl
+
+def zpow_neg_one (a: α) : a ^ (-1) = a⁻¹ := by
+  erw [zpow_negSucc a 0]
+  rw [npow_succ, npow_zero, one_mul]
+
+instance (a b: α) [IsCommAt a b] : IsCommAt (a⁻¹) b where
+  mul_comm := by
+    rw (occs := [2]) [←inv_inv b]
+    rw [←inv_mul_rev]
+    apply eq_inv_of_mul
+    rw [mul_assoc, ←mul_assoc _ a, ←mul_comm a, mul_assoc,
+      mul_inv_cancel, mul_one, inv_mul_cancel]
+
+instance (a b: α) [IsCommAt a b] : IsCommAt b (a⁻¹) where
+  mul_comm := by symm; rw [mul_comm]
+
+def inv_zpow (a: α) (n: ℤ) : a⁻¹ ^ n = a ^ (-n) := by
+  cases n <;> rename_i n
+  rw [zpow_ofNat]
+  cases n
+  rw [npow_zero, Int.ofNat_zero, Int.neg_zero, zpow_zero]
+  erw [←Int.negSucc_eq]
+  rw [zpow_negSucc]
+  apply eq_inv_of_mul
+  rw [←mul_npow, inv_mul_cancel, one_npow]
+  rw [zpow_negSucc, Int.neg_negSucc, zpow_ofNat]
+  symm; apply eq_inv_of_mul
+  rw [←mul_npow, mul_inv_cancel, one_npow]
+
+def zpow_succ (a: α) (n: ℤ) : a ^ (n + 1) = a ^ n * a := by
+  cases n
+  erw [Int.ofNat_add_ofNat]; rw [zpow_ofNat, zpow_ofNat, npow_succ]
+  rename_i n
+  cases n
+  simp; rw [zpow_zero, zpow_neg_one]
+  rw [inv_mul_cancel]
+  erw [Int.negSucc_add_ofNat, zpow_negSucc, zpow_negSucc]
+  rename_i n
+  symm; apply eq_inv_of_mul
+  rw [mul_assoc, mul_comm a, ←npow_succ, inv_mul_cancel]
+
+def zpow_pred (a: α) (n: ℤ) : a ^ (n - 1) = a ^ n * a⁻¹ := by
+  have := zpow_succ (a⁻¹) (-n)
+  repeat rw [inv_zpow] at this
+  rwa [Int.neg_neg, Int.neg_add, Int.neg_neg, ←sub_eq_add_neg] at this
+
+def zpow_add (a: α) (n m: ℤ) : a ^ (n + m) = a ^ n * a ^ m := by
+  induction m using Int.succ_pred_induction with
+  | zero => rw [add_zero, zpow_zero, mul_one]
+  | succ m ih => rw [←add_assoc, zpow_succ, zpow_succ, ih, mul_assoc]
+  | pred m ih => rw [←Int.add_sub_assoc, zpow_pred, zpow_pred, ih, mul_assoc]
+
+def zpowAtHom (a: α) : ℤ →+* α where
+  toFun z := a ^ z
+  map_zero_to_one := by rw [zpow_zero]
+  map_add_to_mul n m := by rw [zpow_add]
+
+end

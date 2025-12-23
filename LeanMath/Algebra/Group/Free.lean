@@ -175,4 +175,21 @@ def lift : (α -> G) ≃ (FreeGroup α →* G) where
 
 attribute [irreducible] invHom lift ι
 
+instance [Subsingleton α] : IsComm (FreeGroup α) where
+  mul_comm a b := by
+    induction a with
+    | one => rw [mul_one, one_mul]
+    | ι a =>
+      induction b with
+      | one => rw [mul_one, one_mul]
+      | ι b => rw [Subsingleton.allEq a b]
+      | inv b ih =>
+        have : IsCommAt (ι a) b := ⟨ih⟩
+        rw [mul_comm]
+      | mul b₀ b₁ ih₀ ih₁ => rw [←mul_assoc, ih₀, mul_assoc, ih₁, mul_assoc]
+    | inv a ih =>
+      have : IsCommAt a b := ⟨ih⟩
+      rw [mul_comm]
+    | mul a₀ a₁ ih₀ ih₁ => rw [mul_assoc, ih₁, ←mul_assoc, ih₀, mul_assoc]
+
 end FreeGroup

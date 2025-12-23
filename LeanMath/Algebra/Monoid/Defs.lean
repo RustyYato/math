@@ -386,6 +386,10 @@ def nsmulAtHom (a: α) : ℕ →+ α where
 def npow_eq_npowAtHom (a: α) (n: ℕ) : a ^ n = npowAtHom a n := rfl
 def nsmul_eq_nsmulAtHom (a: α) (n: ℕ) : n • a = nsmulAtHom a n := rfl
 
+def npow_add (a: α) (n m: ℕ) : a ^ (n + m) = a ^ n * a ^ m := by
+  repeat rw [npow_eq_npowAtHom]
+  rw [map_add_to_mul]
+
 end
 
 section
