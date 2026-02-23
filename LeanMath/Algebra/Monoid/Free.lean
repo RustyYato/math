@@ -120,6 +120,22 @@ def reverse : FreeMonoid α →* MulOpp (FreeMonoid α) where
 
 @[simp] def reverse_ι (a: α) : reverse (ι a) = MulOpp.mk (ι a) := rfl
 
+def ι_eq_mul (a: α) (x y: FreeMonoid α) : ι a = x * y -> x = 1 ∧ y = ι a ∨ x = ι a ∧ y = 1 := by
+  intro h
+  cases x with | ofList x =>
+  cases y with | ofList y =>
+  unfold ι at h
+  replace h : [a] = x ++ y := ofList.inj h
+  replace h := List.singleton_eq_append_iff.mp h
+  rcases h with ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩
+  left; apply And.intro rfl rfl
+  right; apply And.intro rfl rfl
+
+def ι_ne_one (a: α) : ι a ≠ 1 := by
+  intro h
+  have := ofList.inj h
+  contradiction
+
 attribute [irreducible] lift ι reverse
 
 def lift_ι' : lift ι = GroupHom.id (FreeMonoid α) := by

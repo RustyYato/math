@@ -174,6 +174,11 @@ instance [MonoidOps G] [IsMonoid G] [Subsingleton G] : Subsingleton (GroupQuot r
     rename_i a b
     rw [Subsingleton.allEq (α := G) a b]
 
+def exact : mk r a = mk r b -> MulCon.generate r a b := by
+  intro h
+  apply Quotient.exact (s := ⟨MulCon.generate r, IsCon.eqv _⟩)
+  exact ofQuot.inj h
+
 end GroupQuot
 
 structure AddGroupQuot [AddMonoidOps G] [IsAddMonoid G] (r: G -> G -> Prop) where

@@ -192,4 +192,47 @@ instance [Subsingleton α] : IsComm (FreeGroup α) where
       rw [mul_comm]
     | mul a₀ a₁ ih₀ ih₁ => rw [mul_assoc, ih₁, ←mul_assoc, ih₀, mul_assoc]
 
+def ι_inj : Function.Injective (ι (α := α)) := by
+  intro a b h
+  unfold ι at h
+  replace h := GroupQuot.exact _ (ofQuot.inj h)
+  generalize ha':FreeMonoid.ι (false, a) = a'
+  generalize hb':FreeMonoid.ι (false, b) = b'
+  rw [ha', hb'] at h
+  induction h generalizing a b with
+  | of _ _ h =>
+    cases h
+    rcases FreeMonoid.ι_eq_mul _ _ _ ha' with ⟨h, _⟩ | ⟨_, h⟩
+    have := FreeMonoid.ι_ne_one _ h
+    contradiction
+    have := FreeMonoid.ι_ne_one _ h
+    contradiction
+  | refl =>
+    rw [←hb'] at ha'
+    cases FreeMonoid.ι.inj ha'
+    rfl
+  | symm _ _ _ ih =>
+    rw [ih hb' ha']
+  | trans x y z _ _ ih₀ ih₁ =>
+    subst x
+    subst z
+
+    sorry
+    -- rw [ih₀ ha', ←ih₁ _ hb']
+    -- exact a
+    -- sorry
+    -- sorry
+  | mul  _ _ _ _ _ _ ih₀ ih₁ =>
+    rcases FreeMonoid.ι_eq_mul _ _ _ ha' with ⟨rfl, ha''⟩ | ⟨ha'', rfl⟩ <;> subst ha''
+    <;> rcases FreeMonoid.ι_eq_mul _ _ _ hb' with ⟨rfl, hb''⟩ | ⟨hb'', rfl⟩ <;> subst hb''
+    -- all_goals clear ha' hb'
+    apply ih₁
+    rfl
+    rfl
+    · sorry
+    · sorry
+    apply ih₀
+    rfl
+    rfl
+
 end FreeGroup
