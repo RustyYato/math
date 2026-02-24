@@ -1,4 +1,5 @@
 import LeanMath.Tactic.AxiomBlame
+import LeanMath.Data.Nat.Div
 
 private def Bool.and_eq_true_iff' {x y : Bool} : (x && y) = true ↔ x = true ∧ y = true := by decide +revert
 
@@ -52,6 +53,9 @@ def equiv_cons_nil  : as ≈ nil a ↔ cons a as ≈ nil a := by
   exact h n
   intro h n
   exact h (n + 1)
+def of_equiv_cons  : cons a as ≈ cons b bs -> as ≈ bs := by
+  intro h n
+  apply h (n + 1)
 def equiv_cons  : as ≈ bs ↔ cons a as ≈ cons a bs := by
   apply Iff.intro
   intro h n
@@ -126,6 +130,11 @@ def beq_iff_equiv (as bs: Bits) : as == bs ↔ as ≈ bs := by
       apply h (n + 1)
 
 instance (a b: Bits) : Decidable (a ≈ b) := decidable_of_bool (a == b) (beq_iff_equiv _ _)
+
+def equiv_cons_head_tail (as: Bits) : as ≈ cons as.head as.tail := by
+  cases as with
+  | nil a => decide +revert
+  | cons a as => rfl
 
 instance : ReflBEq Bits where
   rfl := by
@@ -277,6 +286,136 @@ def testBit_bitwise_binary (f: Bool -> Bool -> Bool) (as bs: Bits) : testBit (bi
       | zero => rfl
       | succ n => apply ih
 
+def ofNat : Nat -> Bits :=
+  nat_div2_rec (motive := fun _ => Bits)
+     (base := .nil false)
+     (fun n _ ih => .cons (n % 2 == 1) ih)
+
+instance : OfNat Bits n := ⟨ofNat n⟩
+
+def ofNat_0 : ofNat 0 = .nil false := rfl
+def ofNat_ind (n: Nat) (h: n ≠ 0) : ofNat n = .cons (n % 2 == 1) (ofNat (n / 2)) :=
+  nat_div2_rec_ind _ _ _ h
+
+def of_ofNat_equiv_nil_false : ofNat n ≈ nil false -> n = 0 := by
+  intro h
+  induction n using nat_div2_rec with
+  | base => rfl
+  | ind n g ih =>
+    rw [ofNat_ind _ g] at h
+    have : (n % 2 == 1) = false := h 0
+    cases Or.symm (nat_mod2_eq_zero_or_one n) <;> rename_i hn
+    · rw [hn] at this
+      contradiction
+    · clear this
+      rw [hn] at h
+      have hn' := ih (equiv_cons_nil.mpr h)
+      rw [←nat_div_add_mod n 2, hn, hn']
+
+def ofNat_not_equiv_nil_true : ¬ofNat n ≈ nil true := by
+  induction n using nat_div2_rec with
+  | base => decide
+  | ind n g ih =>
+    rw [ofNat_ind _ g]
+    intro h
+    have : (n % 2 == 1) = true := h 0
+    cases nat_mod2_eq_zero_or_one n <;> rename_i hn
+    · rw [hn] at this
+      contradiction
+    · clear this
+      rw [hn] at h
+      exact ih (equiv_cons_nil.mpr h)
+
+def ofNat_minimal (n: Nat) : (ofNat n).IsMinimal := by
+  induction n using nat_div2_rec with
+  | base =>
+    rw [ofNat_0]
+    intro _ _
+    apply Nat.zero_le
+  | ind n h ih =>
+    rw [ofNat_ind _ h]
+    intro bs h
+    cases bs with
+    | cons b bs =>
+      apply Nat.succ_le_succ
+      apply ih
+      have : (n % 2 == 1) = b := h 0
+      subst b
+      exact equiv_cons.mpr h
+    | nil b =>
+      exfalso
+      rename_i n_ne_zero
+      apply n_ne_zero
+      have : (n % 2 == 1) = b := h 0
+      subst b
+      cases nat_mod2_eq_zero_or_one n <;> rename_i hn
+      · rw [hn] at h
+        simp at h
+        have := of_ofNat_equiv_nil_false (equiv_cons_nil.mpr h)
+        have h' := equiv_cons_nil.mpr h
+        rw [←nat_div_add_mod n 2, hn, this]
+      · exfalso
+        rw [hn] at h
+        replace h : _ ≈ nil true := equiv_cons_nil.mpr h
+        exact ofNat_not_equiv_nil_true h
+
+def toInt : Bits -> Int
+| .nil a => if a then -1 else 0
+| .cons a b => 2 * b.toInt + if a then 1 else 0
+
+def toInt_rec (bs: Bits) : bs.toInt = 2 * bs.tail.toInt + if bs.head then 1 else 0 := by
+  cases bs with
+  | nil b => decide +revert
+  | cons b bs => rfl
+
+def toInt_spec (a b: Bits) : a ≈ b -> a.toInt = b.toInt := by
+  intro h
+  induction a generalizing b with
+  | nil a =>
+    cases a
+    · show 0 = _
+      replace h (n: Nat) : b.testBit n = false := (h n).symm
+      induction b with
+      | nil =>
+        cases h 0
+        rfl
+      | cons b bs ih =>
+        cases h 0
+        unfold toInt
+        dsimp; rw [←ih]
+        rfl
+        intro
+        apply h (_ + 1)
+    · show -1 = _
+      replace h (n: Nat) : b.testBit n = true := (h n).symm
+      induction b with
+      | nil =>
+        cases h 0
+        rfl
+      | cons b bs ih =>
+        cases h 0
+        unfold toInt
+        dsimp; rw [←ih]
+        rfl
+        intro
+        apply h (_ + 1)
+  | cons a as ih =>
+    rw [toInt_rec b, toInt]
+    congr 1
+    · congr 1
+      apply ih
+      replace h := trans h (equiv_cons_head_tail _)
+      exact of_equiv_cons h
+    · split; subst a
+      rw [if_pos]
+      exact (h 0).symm
+      rw [if_neg]
+      intro g
+      replace h := trans h (equiv_cons_head_tail _)
+      have : a = b.head := h 0
+      rw [←this] at g
+      contradiction
+
 end BitInt.Bits
 
 structure BitInt where
@@ -367,5 +506,10 @@ instance : XorOp BitInt where
 
 instance : Complement BitInt where
   complement := bitwise_unary Bool.not
+
+instance : NatCast BitInt := ⟨fun n => ⟨.ofNat n, Bits.ofNat_minimal _⟩⟩
+instance : OfNat BitInt n := ⟨n⟩
+
+def toInt : BitInt -> Int := lift Bits.toInt Bits.toInt_spec
 
 end BitInt
