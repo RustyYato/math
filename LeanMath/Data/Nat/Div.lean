@@ -12,7 +12,7 @@ private theorem div.go.fuel_congr (x y fuel1 fuel2 : Nat) (hy : 0 < y) (h1 : x <
     next => rfl
 termination_by structural fuel1
 
-private theorem div_eq (x y : Nat) : x / y = if 0 < y ∧ y ≤ x then (x - y) / y + 1 else 0 := by
+theorem nat_div_eq (x y : Nat) : x / y = if 0 < y ∧ y ≤ x then (x - y) / y + 1 else 0 := by
   change Nat.div _ _ = ite _ (Nat.div _ _ + 1) _
   unfold Nat.div
   split
@@ -78,15 +78,15 @@ private theorem modCore_eq_mod (n m : Nat) : Nat.modCore n m = n % m := by
     rw [modCore_eq]
     exact if_neg fun ⟨_hlt, hle⟩ => h hle
 
-private theorem mod_eq (x y : Nat) : x % y = if 0 < y ∧ y ≤ x then (x - y) % y else x := by
+theorem nat_mod_eq (x y : Nat) : x % y = if 0 < y ∧ y ≤ x then (x - y) % y else x := by
   rw [←modCore_eq_mod, ←modCore_eq_mod, modCore_eq]
 
 def nat_div_add_mod (a b: Nat) : b * (a / b) + a % b = a := by
   induction a, b using Nat.div.inductionOn with
   | base a b h =>
-    rw [div_eq, if_neg h, mod_eq, if_neg h, Nat.mul_zero, Nat.zero_add]
+    rw [nat_div_eq, if_neg h, nat_mod_eq, if_neg h, Nat.mul_zero, Nat.zero_add]
   | ind a b h ih =>
-    rw [div_eq, if_pos h, mod_eq, if_pos h]
+    rw [nat_div_eq, if_pos h, nat_mod_eq, if_pos h]
     rw [Nat.mul_succ, Nat.add_comm _ b, Nat.add_assoc, ih, Nat.add_comm]
     clear ih
     obtain ⟨g, h⟩ := h
@@ -193,10 +193,10 @@ def nat_div2_rec_ind
 def mod_lt (a b: Nat) (h: 0 < b) : a % b < b := by
   induction a, b using Nat.div.inductionOn with
   | base a b g =>
-    rw [mod_eq, if_neg g]
+    rw [nat_mod_eq, if_neg g]
     exact Nat.lt_of_not_le (fun ha => g ⟨h, ha⟩)
   | ind a b g ih =>
-    rw [mod_eq, if_pos g]
+    rw [nat_mod_eq, if_pos g]
     apply ih
     assumption
 

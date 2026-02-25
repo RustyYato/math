@@ -52,9 +52,14 @@ abbrev trans (f: α ≃ β) (g: β ≃ γ) : α ≃ γ := g.comp f
 @[simp] def apply_comp (f: β ≃ γ) (g: α ≃ β) (x: α) : (f.comp g) x = f (g x) := rfl
 @[simp] def apply_trans (f: β ≃ γ) (g: α ≃ β) (x: α) : (g.trans f) x = f (g x) := rfl
 
+def inj (f: α ≃ β) : Function.Injective f := f.rightInv.injective
+def surj (f: α ≃ β) : Function.Surjective f := f.symm.rightInv.surjective
+
 def toBij (f: α ≃ β) : α ↭ β where
   toFun := f
-  inj' := f.rightInv.injective
-  surj' := Function.RightInverse.surjective f.leftInv
+  inj' := f.inj
+  surj' := f.surj
+
+@[simp] def apply_toBij (f: α ≃ β) : f.toBij x = f x := rfl
 
 end Equiv

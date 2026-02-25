@@ -7,7 +7,7 @@ inductive POption (α: Sort u) where
 | some (a: α)
 | none
 
-class Fintype.Repr (α: Sort u) (n: Nat) where
+structure Fintype.Repr (α: Sort u) (n: Nat) where
   bij: Fin n ↭ α
   try_decode: POption ({ f: α -> Fin n // Function.LeftInverse f bij })
 
