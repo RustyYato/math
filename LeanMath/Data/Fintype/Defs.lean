@@ -149,6 +149,15 @@ instance : Fintype (Fin n) where
     }
   }
 
+private def cases_fin2 (motive: Fin 2 -> Sort u)
+  (zero: motive ⟨0, by decide⟩)
+  (one: motive ⟨1, by decide⟩) (x: Fin 2) : motive x :=
+  match x with
+  | ⟨0, _⟩ => zero
+  | ⟨1, _⟩ => one
+  | ⟨n + 2, g⟩ => by
+    nomatch Nat.lt_of_succ_lt_succ (Nat.lt_of_succ_lt_succ g)
+
 instance : Fintype Bool where
   card := 2
   repr := Trunc.mk {
@@ -161,24 +170,10 @@ instance : Fintype Bool where
         contradiction
       inj' := by
         intro a b h
-        refine match a with
-        | ⟨0, _⟩ => ?_
-        | ⟨1, _⟩ => ?_
-        | ⟨n + 2, g⟩ => by
-          clear h; exfalso
-          replace g := Nat.lt_of_succ_lt_succ (Nat.lt_of_succ_lt_succ g)
-          contradiction
-        all_goals refine match b with
-        | ⟨0, _⟩ => ?_
-        | ⟨1, _⟩ => ?_
-        | ⟨n + 2, g⟩ => by
-          clear h; exfalso
-          replace g := Nat.lt_of_succ_lt_succ (Nat.lt_of_succ_lt_succ g)
-          contradiction
-        rfl
-        contradiction
-        contradiction
-        rfl
+        cases a using cases_fin2 <;>
+        cases b using cases_fin2
+        any_goals rfl
+        all_goals contradiction
       surj' := by
         intro b
         cases b
@@ -191,13 +186,7 @@ instance : Fintype Bool where
       | true => ⟨1, by decide⟩
       property := by
         intro x
-        refine match x with
-        | ⟨0, _⟩ => ?_
-        | ⟨1, _⟩ => ?_
-        | ⟨n + 2, g⟩ => by
-          exfalso
-          replace g := Nat.lt_of_succ_lt_succ (Nat.lt_of_succ_lt_succ g)
-          contradiction
+        cases x using cases_fin2
         rfl
         rfl
     }
@@ -258,5 +247,22 @@ def ofEquiv [ft: Fintype α] (f: α ≃ β) : Fintype β where
             rw [f.coe_symm, d.property]
         }
     }
+
+instance : Fintype Prop :=
+  ofBij (α := Bool) {
+    toFun b := b
+    inj' := by
+      intro a b h
+      cases a <;> cases b
+      rfl; contradiction
+      contradiction; rfl
+    surj' := by
+      intro P
+      by_cases P
+      exists true
+      simpa
+      exists false
+      simpa
+  }
 
 end Fintype
