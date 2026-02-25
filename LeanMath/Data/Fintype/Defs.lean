@@ -1,4 +1,5 @@
 import LeanMath.Data.Bijection.Defs
+import LeanMath.Data.Equiv.Defs
 import LeanMath.Data.Trunc.Defs
 import LeanMath.Tactic.AxiomBlame
 
@@ -231,5 +232,31 @@ instance instUnique [Subsingleton α] [Inhabited α] : Fintype α where
         rfl
     }
   }
+
+def ofBij [ft: Fintype α] (f: α ↭ β) : Fintype β where
+  card := card α
+  repr :=
+    ft.repr.map <| fun r => {
+      bij := f.comp r.bij
+      try_decode := .none
+    }
+
+def ofEquiv [ft: Fintype α] (f: α ≃ β) : Fintype β where
+  card := card α
+  repr :=
+    ft.repr.map <| fun r => {
+      bij := f.toBij.comp r.bij
+      try_decode :=
+        match r.try_decode with
+        | .none => .none
+        | .some d => .some {
+          val b := d.val (f.symm b)
+          property := by
+            intro x
+            dsimp
+            show d.val (f.symm (f _)) = _
+            rw [f.coe_symm, d.property]
+        }
+    }
 
 end Fintype

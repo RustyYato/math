@@ -1,4 +1,5 @@
 import LeanMath.Logic.Funlike
+import LeanMath.Data.Bijection.Defs
 
 structure Equiv (α β: Sort*) where
   toFun: α -> β
@@ -6,7 +7,7 @@ structure Equiv (α β: Sort*) where
   leftInv: Function.LeftInverse toFun invFun
   rightInv: Function.RightInverse toFun invFun
 
-infixr:80 " ≃ " => Equiv
+infixr:20 " ≃ " => Equiv
 
 namespace Equiv
 
@@ -50,5 +51,10 @@ abbrev trans (f: α ≃ β) (g: β ≃ γ) : α ≃ γ := g.comp f
 @[simp] def apply_id (α: Sort*) (x: α) : Equiv.id α x = x := rfl
 @[simp] def apply_comp (f: β ≃ γ) (g: α ≃ β) (x: α) : (f.comp g) x = f (g x) := rfl
 @[simp] def apply_trans (f: β ≃ γ) (g: α ≃ β) (x: α) : (g.trans f) x = f (g x) := rfl
+
+def toBij (f: α ≃ β) : α ↭ β where
+  toFun := f
+  inj' := f.rightInv.injective
+  surj' := Function.RightInverse.surjective f.leftInv
 
 end Equiv

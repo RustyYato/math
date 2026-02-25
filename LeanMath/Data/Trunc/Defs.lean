@@ -28,4 +28,12 @@ instance : Subsingleton (Trunc α) where
     apply Quotient.sound
     exact True.intro
 
+def bind (f: α -> Trunc β) : Trunc α -> Trunc β :=
+  lift f <| by
+    intro a b
+    apply Subsingleton.allEq
+
+def map (f: α -> β) : Trunc α -> Trunc β :=
+  bind (mk ∘ f)
+
 end Trunc

@@ -4,7 +4,7 @@ structure Embedding (α β: Sort*) where
   toFun: α -> β
   inj: Function.Injective toFun
 
-infixr:80 " ↪ " => Embedding
+infixr:20 " ↪ " => Embedding
 
 namespace Embedding
 
