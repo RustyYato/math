@@ -2,6 +2,7 @@ import LeanMath.Data.Bijection.Defs
 import LeanMath.Data.Equiv.Defs
 import LeanMath.Data.Trunc.Defs
 import LeanMath.Tactic.AxiomBlame
+import LeanMath.Logic.IsEmpty
 
 inductive POption (α: Sort u) where
 | some (a: α)
@@ -192,7 +193,7 @@ instance : Fintype Bool where
     }
   }
 
-instance instUnique [Subsingleton α] [Inhabited α] : Fintype α where
+instance (priority := 100) instUnique [Subsingleton α] [Inhabited α] : Fintype α where
   card := 1
   repr := Trunc.mk {
     bij := {
@@ -219,6 +220,20 @@ instance instUnique [Subsingleton α] [Inhabited α] : Fintype α where
         | ⟨_ + 1, h⟩ => nomatch Nat.lt_of_succ_lt_succ h
         | ⟨0, h⟩ =>
         rfl
+    }
+  }
+
+instance (priority := 100) [IsEmpty α] : Fintype α where
+  card := 0
+  repr := Trunc.mk {
+    bij := {
+      toFun := elim_empty
+      inj' := rec_elim_empty
+      surj' := rec_elim_empty
+    }
+    try_decode := .some <| {
+      val := rec_elim_empty
+      property := rec_elim_empty
     }
   }
 
