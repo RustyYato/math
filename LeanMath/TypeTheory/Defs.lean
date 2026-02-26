@@ -651,49 +651,17 @@ private def parallelStrongConfluence {a b c: Term} (ab: ParallelBeta a b) (ac: P
 def confluence {a b c: Term} (ab: BetaReduction a b) (ac: BetaReduction a c) : ∃d, b.BetaReduction d ∧ c.BetaReduction d := by
   replace ab := BetaReduction.toParallelReduction ab
   replace ac := BetaReduction.toParallelReduction ac
-  suffices ∃d, b.ParallelBetaReduction d ∧ c.ParallelBetaReduction d by
-    obtain ⟨d, l, r⟩ := this
-    exact ⟨d, .ofParallelReduction l, .ofParallelReduction r⟩
-  replace ⟨ab⟩ := ParallelBetaReduction.iffChain.mp ab
-  replace ⟨ac⟩ := ParallelBetaReduction.iffChain.mp ac
-  let ⟨n, hn⟩ : ∃n, ab.length + ac.length ≤ n := ⟨_, Nat.le_refl _⟩
-  induction n using Nat.strongRecOn generalizing a b c with
-  | ind n ih =>
-    cases ab with
-    | refl =>
-      exists c
-      apply And.intro
-      apply ParallelBetaReduction.iffChain.mpr
-      exact ⟨ac⟩
-      apply Relation.ReflTransGen.refl
-    | cons _ x _ ax xb =>
-      cases ac with
-      | refl =>
-        exists b
-        apply And.intro
-        apply Relation.ReflTransGen.refl
-        apply ParallelBetaReduction.iffChain.mpr
-        refine ⟨?_⟩
-        apply ParallelBetaReductionChain.cons <;> assumption
-      | cons a₀ b₀ c₀ ab₀ b₀c =>
-        dsimp [ParallelBetaReductionChain.length] at hn
-        rw [Nat.succ_add] at hn
-        replace hn : xb.length + b₀c.length + 2 ≤ n := hn
-        match n with
-        | n + 2 =>
-        have ⟨y₀, l₀, r₀⟩ := parallelStrongConfluence ax ab₀
-
-        -- have ⟨y₁, l₁, r₁⟩ := ih (n + 1) (by omega) xb (.of l₀) (by
-        --   apply Nat.add_le_add
-        --   omega
-        --   apply Nat.le_refl)
-        -- have ⟨y₂, l₂, r₂⟩ := ih (n + 1) (by omega) b₀c (.of r₀) (by
-        --   apply Nat.add_le_add
-        --   omega
-        --   apply Nat.le_refl)
-
-
-        sorry
+  have ⟨d, l, r⟩ := Relation.church_rosser ?_ ab ac
+  refine ⟨d, ?_, ?_⟩
+  exact .ofParallelReduction l
+  exact .ofParallelReduction r
+  intro a b c ab ac
+  have ⟨d, bd, cd⟩ := parallelStrongConfluence ab ac
+  refine ⟨d, ?_, ?_⟩
+  apply Relation.ReflGen.of
+  assumption
+  apply Relation.ReflTransGen.of
+  assumption
 
 end Term
 
