@@ -371,6 +371,53 @@ def Beta.canonical (a: Term) (h: IsClosed a 0) (g: ¬IsValue a) : Σb, Beta a b 
 -- a simplest term where the canonical beta reduction equals itself
 def Ω : Term  := .app (.lam (.app (.var 0) (.var 0))) (.lam (.app (.var 0) (.var 0)))
 
+def subst_all (n: Nat) (args: List Term) : Term -> Term :=
+  args.foldl (subst n)
+
+@[simp] def subst_all_nil : subst_all n [] term = term := rfl
+@[simp] def subst_all_cons (arg: Term) (args: List Term) : subst_all n (arg::args) term = subst_all n args (term.subst n arg) := rfl
+
+def susbt_all_closed (a: Term) (args: List Term) (h: IsClosed a 0) : subst_all n args a = a := by
+  induction args with
+  | nil => rfl
+  | cons arg args ih => simp [ih, subst_closed _ _ h]
+
+def subst_all_var (args: List Term) (hargs: ∀arg ∈ args, arg.IsClosed 0) (index: Nat) (h: index < args.length) :
+  subst_all 0 args (.var index) = args[index] := by
+  induction args generalizing index with
+  | nil => contradiction
+  | cons arg args ih =>
+    cases index
+    simp [subst_var_eq]
+    rw [susbt_all_closed]
+    apply hargs
+    simp
+    simp
+    apply ih
+    intro arg h
+    apply hargs
+    simp [h]
+
+def subst_all_lam (args: List Term) (hargs: ∀arg ∈ args, arg.IsClosed 0) (body: Term) :
+  subst_all n args body.lam = (subst_all (n + 1) args body).lam := by
+  induction args generalizing body with
+  | nil => rfl
+  | cons arg args ih =>
+    simp; rw [ih]
+    congr
+    rw [weaken_closed]
+    apply hargs
+    simp
+    intro _ h
+    apply hargs
+    simp [h]
+
+def subst_all_app (args: List Term) (func arg: Term) :
+  subst_all n args (func.app arg)  = (subst_all n args func).app (subst_all n args arg) := by
+  induction args generalizing func arg with
+  | nil => rfl
+  | cons arg args ih => simp [ih]
+
 end Term
 
 end TypeTheory
