@@ -51,6 +51,7 @@ inductive Beta : Term -> Term -> Type where
 | Lam (body body': Term) : Beta body body' -> Beta body.lam body'.lam
 | AppFunc (func func' arg: Term) : Beta func func' -> Beta (func.app arg) (func'.app arg)
 | AppArg (func arg arg': Term) : Beta arg arg' -> Beta (func.app arg) (func.app arg')
+deriving Repr
 
 inductive BetaReduction : Term -> Term -> Prop where
 | refl (t: Term) : BetaReduction t t
@@ -253,6 +254,122 @@ def subst_comm (body arg arg': Term) (h: n ≤ m) : subst n (subst (m + 1) body 
         subst_var_gt, subst_var_gt _ _ g']
         rfl
         omega
+
+inductive IsValue : Term -> Prop where
+| lam (body: Term) : IsValue (.lam body)
+
+instance : ∀a, Decidable (IsValue a)
+| .lam _ => .isTrue (.lam _)
+| .var _ | .app _ _ => .isFalse nofun
+
+-- `IsClosed a pos` means that the term `a` only contains free variables
+-- strictly smaller than `pos`. In particular, `IsClosed a 0` means
+-- that the term `a` contains no free variables
+inductive IsClosed : Term -> Nat -> Prop where
+| var (pos index: Nat) : index < pos -> IsClosed (.var index) pos
+| lam (pos: Nat) (body: Term) : IsClosed body (pos + 1) -> IsClosed (.lam body) pos
+| app (pos: Nat) (func arg: Term) : IsClosed func pos -> IsClosed arg pos -> IsClosed (.app func arg) pos
+
+def weaken_closed' (n m: Nat) (a: Term) (h: IsClosed a m) (g: m ≤ n) : weaken n a = a := by
+  induction h generalizing n with
+  | var _ index =>
+    rcases Nat.lt_or_ge index n with g' | g'
+    rw [weaken_var_lt _ _ g']
+    omega
+  | lam pos body _ ih =>
+    dsimp; congr
+    apply ih
+    omega
+  | app pos func arg _ _ ihf iha =>
+    dsimp; congr
+    apply ihf
+    assumption
+    apply iha
+    assumption
+
+def subst_closed' (n m: Nat) (a b: Term) (h: IsClosed a m) (g: m ≤ n) : subst n a b = a := by
+  induction h generalizing n b with
+  | var _ index =>
+    rcases Nat.lt_or_ge index n with g' | g'
+    rw [subst_var_lt _ _ g']
+    omega
+  | lam pos body _ ih =>
+    dsimp; congr
+    apply ih
+    omega
+  | app pos func arg _ _ ihf iha =>
+    dsimp; congr
+    apply ihf
+    assumption
+    apply iha
+    assumption
+
+def weaken_closed (a: Term) (h: IsClosed a 0) : weaken n a = a := by
+  apply weaken_closed'
+  assumption
+  apply Nat.zero_le
+
+def subst_closed (a b: Term) (h: IsClosed a 0) : subst n a b = a := by
+  apply subst_closed'
+  assumption
+  apply Nat.zero_le
+
+private def is_closed_at (n: Nat) : Term -> Bool
+| .var index => index < n
+| .app func arg => func.is_closed_at n && arg.is_closed_at n
+| .lam body => body.is_closed_at (n + 1)
+
+private def is_closed_at_spec (n: Nat) (a: Term) : a.is_closed_at n ↔ a.IsClosed n := by
+  induction a generalizing n with
+  | var index =>
+    simp [is_closed_at]
+    apply Iff.intro
+    intro h
+    apply IsClosed.var
+    assumption
+    intro (.var _ _ h)
+    exact h
+  | lam body ih =>
+    apply (ih _).trans
+    apply Iff.intro
+    apply IsClosed.lam
+    intro h; cases h
+    assumption
+  | app func arg ihf iha =>
+    simp [is_closed_at]
+    apply Iff.intro
+    intro ⟨h ,g⟩
+    apply IsClosed.app
+    apply (ihf _).mp h
+    apply (iha _).mp g
+    intro h; cases h
+    apply And.intro
+    apply (ihf _).mpr
+    assumption
+    apply (iha _).mpr
+    assumption
+
+instance : Decidable (IsClosed a n) :=
+  decidable_of_bool (is_closed_at n a) (is_closed_at_spec _ _)
+
+-- the canonical next beta reduction of a closed non-value term
+def Beta.canonical (a: Term) (h: IsClosed a 0) (g: ¬IsValue a) : Σb, Beta a b :=
+  match a with
+  | .lam _ => nomatch g (.lam _)
+  | .app func arg =>
+    if hv:func.IsValue then
+      if ha:arg.IsValue then
+        match func with
+        | .lam body => ⟨_, Beta.Subst _ _⟩
+      else
+        have ⟨arg', h⟩ := Beta.canonical arg (by cases h; assumption) ha
+        ⟨_, Beta.AppArg _ _ _ h⟩
+    else
+      have ⟨func', h⟩ := Beta.canonical func (by cases h; assumption) hv
+      ⟨_, Beta.AppFunc _ _ _ h⟩
+
+-- a simplest term where the canonical beta reduction equals itself
+def Ω : Term  := .app (.lam (.app (.var 0) (.var 0))) (.lam (.app (.var 0) (.var 0)))
 
 end Term
 
