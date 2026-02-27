@@ -68,4 +68,8 @@ variable {n: ℕ}
   intro h; cases a;cases b; cases h; rfl
   apply ZMod.mk.inj
 
+def natCast_degree (n: ℕ) : (n: ZMod n) = 0 := by
+  apply ZMod.val_inj.mp
+  dsimp; rw [Int.emod_self]
+
 end ZMod

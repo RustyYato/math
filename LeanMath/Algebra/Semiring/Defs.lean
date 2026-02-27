@@ -58,6 +58,30 @@ instance (priority := 10000) : IsAddHom (α ≃+* β) α β where
 instance (priority := 10000) : IsOneHom (α ≃+* β) α β where
 instance (priority := 10000) : IsMulHom (α ≃+* β) α β where
 
+def RingEquiv.symm (f: α ≃+* β) : β ≃+* α := {
+  f.toEquiv.symm with
+  map_zero := by
+    apply f.inj
+    show f.toEquiv (f.toEquiv.symm 0) = f 0
+    rw [Equiv.symm_coe, map_zero]
+  map_one := by
+    apply f.inj
+    show f.toEquiv (f.toEquiv.symm 1) = f 1
+    rw [Equiv.symm_coe, map_one]
+  map_add a b := by
+    apply f.inj
+    show f.toEquiv (f.toEquiv.symm (a + b)) = f (f.toEquiv.symm a + f.toEquiv.symm b)
+    rw [Equiv.symm_coe, map_add]
+    show _ = f.toEquiv (f.toEquiv.symm a) + f.toEquiv (f.toEquiv.symm b)
+    rw [Equiv.symm_coe, Equiv.symm_coe]
+  map_mul a b := by
+    apply f.inj
+    show f.toEquiv (f.toEquiv.symm (a * b)) = f (f.toEquiv.symm a * f.toEquiv.symm b)
+    rw [Equiv.symm_coe, map_mul]
+    show _ = f.toEquiv (f.toEquiv.symm a) * f.toEquiv (f.toEquiv.symm b)
+    rw [Equiv.symm_coe, Equiv.symm_coe]
+}
+
 end
 
 section
