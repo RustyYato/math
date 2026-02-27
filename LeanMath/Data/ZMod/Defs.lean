@@ -63,4 +63,9 @@ variable {n: ℕ}
 @[simp] def zsmul_val (a: ℤ) (b: ZMod n) : (a • b).val = (a * b.val) % n := rfl
 @[simp] def npow_val (a: ℕ) (b: ZMod n) : (b ^ a).val = (b.val ^ a) % n := rfl
 
+@[simp] def val_inj {a b: ZMod n} : a.val = b.val ↔ a = b := by
+  apply Iff.intro
+  intro h; cases a;cases b; cases h; rfl
+  apply ZMod.mk.inj
+
 end ZMod
