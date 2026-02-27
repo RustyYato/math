@@ -3,6 +3,10 @@ import LeanMath.Algebra.AddMonoidWithOne.Defs
 
 class AddGroupWithOneOps (α: Type*) extends AddMonoidWithOneOps α, AddGroupOps α, IntCast α where
 
+instance (priority := 1100)
+  [AddMonoidWithOneOps α] [AddGroupOps α] [IntCast α]
+  : AddGroupWithOneOps α where
+
 class IsLawfulIntCast (α: Type*) [NatCast α] [IntCast α] [Neg α] where
   protected intCast_ofNat (n: ℕ) : (n: ℤ) = (n: α)
   protected intCast_negSucc (n: ℕ) : (Int.negSucc n) = -((n + 1: ℕ): α)
@@ -57,4 +61,12 @@ def map_intCast (f: F) (n: ℤ) : f n = n := by
   | ofNat n => rw [intCast_ofNat, intCast_ofNat, map_natCast]
   | negSucc n => rw [intCast_negSucc,intCast_negSucc, map_neg, map_natCast]
 
+def intCastHom₀ : ℤ →+₁ α where
+  toFun n := n
+  map_zero := intCast_zero
+  map_one := intCast_one
+  map_add := intCast_add
+
 end
+
+instance : IsAddGroupWithOne ℤ where
