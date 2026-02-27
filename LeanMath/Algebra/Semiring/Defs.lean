@@ -35,7 +35,12 @@ structure RingHom (α β: Type*)
   [Add α] [Add β] [Zero α] [Zero β]
   [Mul α] [Mul β] [One α] [One β] extends Hom α β, MulHom α β, AddHom α β, α →₀ β, α →₁ β, α →* β, α →+ β, α →+₁ β where
 
+structure RingEquiv (α β: Type*)
+  [Add α] [Add β] [Zero α] [Zero β]
+  [Mul α] [Mul β] [One α] [One β] extends α ≃ β, RingHom α β where
+
 infixr:80 " →+* " => RingHom
+infixr:80 " ≃+* " => RingEquiv
 
 variable
   [Add α] [Add β] [Zero α] [Zero β]
@@ -46,6 +51,12 @@ instance (priority := 10000) : IsZeroHom (α →+* β) α β where
 instance (priority := 10000) : IsAddHom (α →+* β) α β where
 instance (priority := 10000) : IsOneHom (α →+* β) α β where
 instance (priority := 10000) : IsMulHom (α →+* β) α β where
+
+instance (priority := 10000) : FunLike (α ≃+* β) α β where
+instance (priority := 10000) : IsZeroHom (α ≃+* β) α β where
+instance (priority := 10000) : IsAddHom (α ≃+* β) α β where
+instance (priority := 10000) : IsOneHom (α ≃+* β) α β where
+instance (priority := 10000) : IsMulHom (α ≃+* β) α β where
 
 end
 

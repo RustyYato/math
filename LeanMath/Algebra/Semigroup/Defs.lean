@@ -1,4 +1,6 @@
 import LeanMath.Logic.Funlike
+import LeanMath.Data.Embedding.Defs
+import LeanMath.Data.Equiv.Defs
 import LeanMath.Data.AddMul
 import LeanMath.Data.Cong.Defs
 

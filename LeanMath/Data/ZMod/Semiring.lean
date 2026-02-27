@@ -9,3 +9,16 @@ instance : IsLeftDistrib (ZMod n) where
     rw [mul_add]
 instance : IsRightDistrib (ZMod n) := inferInstance
 instance : IsSemiring (ZMod n) where
+
+def ZMod.equivInt : ZMod 0 ≃+* Int where
+  toFun x := x.val
+  invFun x := {
+    val := x
+    mod_eq_self := Int.emod_zero _
+  }
+  leftInv _ := rfl
+  rightInv _ := rfl
+  map_zero := rfl
+  map_one := rfl
+  map_add _ _ := Int.emod_zero _
+  map_mul _ _ := Int.emod_zero _
