@@ -17,6 +17,15 @@ variable [Add α] [Zero α] [One α] [NatCast α] [IsLawfulNatCast α]
   [Add β] [Zero β] [One β] [NatCast β] [IsLawfulNatCast β]
   [FunLike F α β] [IsAddHom F α β] [IsZeroHom F α β] [IsOneHom F α β]
 
+structure AddGroupWithOneHom (α β: Type*) [Zero α] [Zero β] [One α] [One β] [Add α] [Add β] extends Hom α β, α →₀ β, α →₁ β, α →+ₙ β, α →+ β where
+
+infixr:80 " →+₁ " => AddGroupWithOneHom
+
+instance : FunLike (α →+₁ β) α β where
+instance : IsZeroHom (α →+₁ β) α β where
+instance : IsOneHom (α →+₁ β) α β where
+instance : IsAddHom (α →+₁ β) α β where
+
 def natCast_zero : (0: ℕ) = (0: α) := IsLawfulNatCast.natCast_zero
 def natCast_one : (1: ℕ) = (1: α) := IsLawfulNatCast.natCast_one
 def natCast_succ (n: ℕ) : (n + 1: ℕ) = (n: α) + 1 := IsLawfulNatCast.natCast_succ _
@@ -31,9 +40,10 @@ def map_natCast (f: F) (n: ℕ) : f n = n := by
   | zero => rw [natCast_zero, natCast_zero, map_zero]
   | succ n ih => rw [natCast_succ, natCast_succ, map_add, map_one, ih]
 
-def natCastHom₀ [IsLawfulZeroAdd α] [IsAddSemigroup α] : ℕ →+ α where
+def natCastHom₀ [IsLawfulZeroAdd α] [IsAddSemigroup α] : ℕ →+₁ α where
   toFun n := n
   map_zero := natCast_zero
+  map_one := natCast_one
   map_add := natCast_add
 
 end
