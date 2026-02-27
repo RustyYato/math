@@ -137,13 +137,13 @@ infixr:80 " →₀₁ " => ExpZeroHom
 
 structure GroupHom (α β: Type*) [One α] [One β] [Mul α] [Mul β] extends Hom α β, α →₁ β, α →*ₙ β where
 structure AddGroupHom (α β: Type*) [Zero α] [Zero β] [Add α] [Add β] extends Hom α β, α →₀ β, α →+ₙ β where
-structure LogHom (α β: Type*) [One α] [Zero β] [Mul α] [Add β] extends Hom α β, α →₁₀ β, α →*+ₙ β where
-structure ExpHom (α β: Type*) [Zero α] [One β] [Add α] [Mul β] extends Hom α β, α →₀₁ β, α →+*ₙ β where
+structure LogHom (α β: Type*) [One α] [Zero β] [Mul α] [Add β] extends Hom α β, α →₁₀ β, α →ₘ+ₙ β where
+structure ExpHom (α β: Type*) [Zero α] [One β] [Add α] [Mul β] extends Hom α β, α →₀₁ β, α →ₐ*ₙ β where
 
 infixr:80 " →* " => GroupHom
 infixr:80 " →+ " => AddGroupHom
-infixr:80 " →*+ " => LogHom
-infixr:80 " →+* " => ExpHom
+infixr:80 " →ₘ+ " => LogHom
+infixr:80 " →ₐ* " => ExpHom
 
 variable
   [FunLike F α β] [Zero α] [Zero β] [One α] [One β]
@@ -169,18 +169,18 @@ variable [Add α] [Add β] [Mul α] [Mul β]
 
 instance (priority := 10000) : FunLike (α →* β) α β where
 instance (priority := 10000) : FunLike (α →+ β) α β where
-instance (priority := 10000) : FunLike (α →+* β) α β where
-instance (priority := 10000) : FunLike (α →*+ β) α β where
+instance (priority := 10000) : FunLike (α →ₐ* β) α β where
+instance (priority := 10000) : FunLike (α →ₘ+ β) α β where
 
 instance (priority := 10000) : IsOneHom (α →* β) α β where
 instance (priority := 10000) : IsZeroHom (α →+ β) α β where
-instance (priority := 10000) : IsLogOneHom (α →*+ β) α β where
-instance (priority := 10000) : IsExpZeroHom (α →+* β) α β where
+instance (priority := 10000) : IsLogOneHom (α →ₘ+ β) α β where
+instance (priority := 10000) : IsExpZeroHom (α →ₐ* β) α β where
 
 instance (priority := 10000) : IsMulHom (α →* β) α β where
 instance (priority := 10000) : IsAddHom (α →+ β) α β where
-instance (priority := 10000) : IsLogHom (α →*+ β) α β where
-instance (priority := 10000) : IsExpHom (α →+* β) α β where
+instance (priority := 10000) : IsLogHom (α →ₘ+ β) α β where
+instance (priority := 10000) : IsExpHom (α →ₐ* β) α β where
 
 protected def GroupHom.id (α: Type*) [One α] [Mul α] : α →* α where
   toFun := id
@@ -198,25 +198,25 @@ protected def GroupHom.comp [Mul γ] [One γ] (f: β →* γ) (g: α →* β) : 
 
 @[ext] def GroupHom.ext (f g: α →* β) (h: ∀x, f x = g x) : f = g := DFunLike.ext f g h
 @[ext] def AddGroupHom.ext (f g: α →+ β) (h: ∀x, f x = g x) : f = g := DFunLike.ext f g h
-@[ext] def LogHom.ext (f g: α →*+ β) (h: ∀x, f x = g x) : f = g := DFunLike.ext f g h
-@[ext] def ExpHom.ext (f g: α →+* β) (h: ∀x, f x = g x) : f = g := DFunLike.ext f g h
+@[ext] def LogHom.ext (f g: α →ₘ+ β) (h: ∀x, f x = g x) : f = g := DFunLike.ext f g h
+@[ext] def ExpHom.ext (f g: α →ₐ* β) (h: ∀x, f x = g x) : f = g := DFunLike.ext f g h
 
-def AddOfMul.mkHom : α →*+ AddOfMul α where
+def AddOfMul.mkHom : α →ₘ+ AddOfMul α where
   toFun := mk
   map_one_to_zero := rfl
   map_mul_to_add _ _ := rfl
 
-def AddOfMul.getHom : AddOfMul α →+* α where
+def AddOfMul.getHom : AddOfMul α →ₐ* α where
   toFun := get
   map_zero_to_one := rfl
   map_add_to_mul _ _ := rfl
 
-def MulOfAdd.mkHom : α →+* MulOfAdd α where
+def MulOfAdd.mkHom : α →ₐ* MulOfAdd α where
   toFun := mk
   map_zero_to_one := rfl
   map_add_to_mul _ _ := rfl
 
-def MulOfAdd.getHom : MulOfAdd α →*+ α where
+def MulOfAdd.getHom : MulOfAdd α →ₘ+ α where
   toFun := get
   map_one_to_zero := rfl
   map_mul_to_add _ _ := rfl
@@ -377,7 +377,7 @@ def npowHom [IsComm α] (n: ℕ) : α →* α where
   map_one := by rw [one_npow]
   map_mul a b := by rw [mul_npow]
 
-def npowAtHom (a: α) : ℕ →+* α where
+def npowAtHom (a: α) : ℕ →ₐ* α where
   toFun n := a ^ n
   map_zero_to_one := by rw [npow_zero]
   map_add_to_mul n m := by

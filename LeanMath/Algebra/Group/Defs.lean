@@ -386,7 +386,7 @@ def zpow_one (a: α) : a ^ (1: ℤ) = a := by
   show (a ^ (0 + 1: ℤ)) = a
   rw [zpow_succ, zpow_zero, one_mul]
 
-def zpowAtHom (a: α) : ℤ →+* α where
+def zpowAtHom (a: α) : ℤ →ₐ* α where
   toFun z := a ^ z
   map_zero_to_one := by rw [zpow_zero]
   map_add_to_mul n m := by rw [zpow_add]

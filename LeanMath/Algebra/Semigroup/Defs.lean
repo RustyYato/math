@@ -71,8 +71,8 @@ structure PreExpHom (α β: Type*) [Add α] [Mul β] extends Hom α β where
 
 infixr:80 " →*ₙ " => MulHom
 infixr:80 " →+ₙ " => AddHom
-infixr:80 " →*+ₙ " => PreLogHom
-infixr:80 " →+*ₙ " => PreExpHom
+infixr:80 " →ₘ+ₙ " => PreLogHom
+infixr:80 " →ₐ*ₙ " => PreExpHom
 
 section
 
@@ -91,29 +91,29 @@ def map_add_to_mul (f: F) (a₀ a₁: α) : f (a₀ + a₁) = f a₀ * f a₁ :=
 instance (priority := 10000) : FunLike (Hom α β) α β where
 instance (priority := 10000) : FunLike (α →*ₙ β) α β where
 instance (priority := 10000) : FunLike (α →+ₙ β) α β where
-instance (priority := 10000) : FunLike (α →+*ₙ β) α β where
-instance (priority := 10000) : FunLike (α →*+ₙ β) α β where
+instance (priority := 10000) : FunLike (α →ₐ*ₙ β) α β where
+instance (priority := 10000) : FunLike (α →ₘ+ₙ β) α β where
 
 instance (priority := 10000) : IsMulHom (α →*ₙ β) α β where
 instance (priority := 10000) : IsAddHom (α →+ₙ β) α β where
-instance (priority := 10000) : IsLogHom (α →*+ₙ β) α β where
-instance (priority := 10000) : IsExpHom (α →+*ₙ β) α β where
+instance (priority := 10000) : IsLogHom (α →ₘ+ₙ β) α β where
+instance (priority := 10000) : IsExpHom (α →ₐ*ₙ β) α β where
 
 attribute [local irreducible] AddOfMul MulOfAdd
 
-def AddOfMul.mkHomₙ : α →*+ₙ AddOfMul α where
+def AddOfMul.mkHomₙ : α →ₘ+ₙ AddOfMul α where
   toFun := AddOfMul.mk
   map_mul_to_add _ _ := rfl
 
-def AddOfMul.getHomₙ : AddOfMul α →+*ₙ α where
+def AddOfMul.getHomₙ : AddOfMul α →ₐ*ₙ α where
   toFun := AddOfMul.get
   map_add_to_mul _ _ := rfl
 
-def MulOfAdd.mkHomₙ : α →+*ₙ MulOfAdd α where
+def MulOfAdd.mkHomₙ : α →ₐ*ₙ MulOfAdd α where
   toFun := MulOfAdd.mk
   map_add_to_mul _ _ := rfl
 
-def MulOfAdd.getHomₙ : MulOfAdd α →*+ₙ α where
+def MulOfAdd.getHomₙ : MulOfAdd α →ₘ+ₙ α where
   toFun := MulOfAdd.get
   map_mul_to_add _ _ := rfl
 

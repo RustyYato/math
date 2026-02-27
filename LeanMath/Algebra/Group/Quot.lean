@@ -129,7 +129,7 @@ def lift : { f: G →* M // ∀x y: G, r x y -> f x = f y } ≃ GroupQuot r →*
     ext x
     rfl
 
-def liftLog : { f: G →*+ N // ∀x y: G, r x y -> f x = f y } ≃ GroupQuot r →*+ N where
+def liftLog : { f: G →ₘ+ N // ∀x y: G, r x y -> f x = f y } ≃ GroupQuot r →ₘ+ N where
   toFun f := {
     toFun g := g.toQuot.liftOn f.val <| by
       intro a b h
@@ -164,7 +164,7 @@ def liftLog : { f: G →*+ N // ∀x y: G, r x y -> f x = f y } ≃ GroupQuot r 
     rfl
 
 @[simp] def lift_mk (f: { f: G →* M // ∀x y: G, r x y -> f x = f y }) (x: G) : lift r f (mk r x) = f.val x := rfl
-@[simp] def liftLog_mk (f: { f: G →*+ N // ∀x y: G, r x y -> f x = f y }) (x: G) : liftLog r f (mk r x) = f.val x := rfl
+@[simp] def liftLog_mk (f: { f: G →ₘ+ N // ∀x y: G, r x y -> f x = f y }) (x: G) : liftLog r f (mk r x) = f.val x := rfl
 
 attribute [irreducible] lift
 
