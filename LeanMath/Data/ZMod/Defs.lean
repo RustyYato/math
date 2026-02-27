@@ -68,8 +68,19 @@ variable {n: ℕ}
   intro h; cases a;cases b; cases h; rfl
   apply ZMod.mk.inj
 
-def natCast_degree (n: ℕ) : (n: ZMod n) = 0 := by
+def intCast_eq_emod (m: ℤ) (n: ℕ) : (m: ZMod n) = (m % n: ℤ) := by
   apply ZMod.val_inj.mp
-  dsimp; rw [Int.emod_self]
+  dsimp; rw [Int.emod_emod]
+
+def natCast_eq_mod (m n: ℕ) : (m: ZMod n) = (m % n: ℕ) := by
+  apply intCast_eq_emod
+
+def natCast_degree (n: ℕ) : (n: ZMod n) = 0 := by
+  rw [natCast_eq_mod, Nat.mod_self]; rfl
+
+def exists_intCast (x: ZMod n) : ∃y: ℤ, x = y := by
+  exists x.val
+  apply ZMod.val_inj.mp
+  exact x.mod_eq_self.symm
 
 end ZMod
