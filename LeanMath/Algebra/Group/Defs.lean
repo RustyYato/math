@@ -135,13 +135,6 @@ end
 
 section
 
-variable [RelLike R α] [Mul α] [Inv α] [One α] [IsMulCon R] [Add α] [Neg α] [Zero α] [IsAddCon R]
-  (r: R)
-
-end
-
-section
-
 variable [RelLike R α] [GroupOps α] [IsGroup α] [IsMulCon R]
   (r: R)
 
@@ -403,5 +396,77 @@ def zpow_mul (a: α) (n m: ℤ) : a ^ (n * m) = (a ^ n) ^ m := by
   | zero => rw [Int.mul_zero, zpow_zero, zpow_zero]
   | succ m ih => rw [Int.mul_add, mul_one, zpow_add, zpow_succ, ih]
   | pred m ih => rw [Int.mul_sub, mul_one, zpow_sub, zpow_pred, ih, div_eq_mul_inv]
+
+def zpow_neg (a: α) (n: ℤ) : a ^ (-n) = (a ^ n)⁻¹ := by
+  apply eq_inv_of_mul
+  rw [←zpow_add, neg_add_cancel, zpow_zero]
+
+end
+
+section
+
+variable [AddGroupOps α] [IsAddGroup α]
+
+def neg_add_rev (a b: α) : -(a + b) = -b + -a :=
+  inv_mul_rev (α := MulOfAdd α) _ _
+
+def neg_neg (a: α) : - -a = a :=
+  inv_inv (α := MulOfAdd α) _
+
+def neg_zero : -(0: α) = 0 :=
+  one_inv (α := MulOfAdd α)
+
+def zsmul_zero (z: ℤ) : z • (0: α) = 0 :=
+  one_zpow (α := MulOfAdd α) _
+
+def zsmul_add (a b: α) (z: ℤ) [IsAddCommAt a b] : z • (a + b) = z • a + z • b :=
+  mul_zpow (α := MulOfAdd α) (MulOfAdd.mkHomₙ _) (MulOfAdd.mkHomₙ _) _
+
+def zsmulHom [IsAddComm α] (z: ℤ) : α →+ α where
+  toFun a := z • a
+  map_zero := by rw [zsmul_zero]
+  map_add a b := by rw [zsmul_add]
+
+def zero_zsmul (a: α) : (0: ℤ) • a = 0 :=
+  zpow_zero (α := MulOfAdd α) _
+
+def neg_one_zsmul (a: α) : (-1) • a = -a :=
+  zpow_neg_one (α := MulOfAdd α) _
+
+instance (a b: α) [IsAddCommAt a b] : IsAddCommAt (-a) b where
+  add_comm :=
+    mul_comm (α := MulOfAdd α) (MulOfAdd.mkHomₙ a)⁻¹ (MulOfAdd.mkHomₙ b)
+
+instance (a b: α) [IsAddCommAt a b] : IsAddCommAt b (-a) where
+  add_comm := by symm; rw [add_comm]
+
+def zsmul_neg (a: α) (n: ℤ) : n • -a = (-n) • a :=
+  inv_zpow (α := MulOfAdd α) _ _
+
+def succ_zsmul (a: α) (n: ℤ) : (n + 1) • a = n • a + a :=
+  zpow_succ (α := MulOfAdd α) _ _
+
+def pred_zsmul (a: α) (n: ℤ) : (n - 1) • a = n • a + -a :=
+  zpow_pred (α := MulOfAdd α) _ _
+
+def add_zsmul (a: α) (n m: ℤ) : (n + m) • a = n • a + m • a :=
+  zpow_add (α := MulOfAdd α) _ _ _
+
+def sub_zsmul (a: α) (n m: ℤ) : (n - m) • a = n • a - m • a :=
+  zpow_sub (α := MulOfAdd α) _ _ _
+
+def one_zsul (a: α) : (1: ℤ) • a = a :=
+  zpow_one (α := MulOfAdd α) _
+
+def zsmulAtHom (a: α) : ℤ →+ α where
+  toFun z := z • a
+  map_zero := by rw [zero_zsmul]
+  map_add n m := by rw [add_zsmul]
+
+def mul_zsmul (a: α) (n m: ℤ) : (n * m) • a = m • n • a :=
+  zpow_mul (α := MulOfAdd α) _ _ _
+
+def neg_zsmul (a: α) (n: ℤ) : (-n) • a = -(n • a) :=
+  zpow_neg (α := MulOfAdd α) _ _
 
 end
