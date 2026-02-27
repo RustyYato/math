@@ -83,6 +83,11 @@ def Normalizing.acc : Normalizing a ↔ Acc (fun a b => Nonempty (Beta b a)) a :
     apply ih
     exact ⟨h⟩
 
+def Normalizing.apply : Normalizing a -> ∀{b}, Beta a b -> Normalizing b := by
+  intro h
+  cases h
+  assumption
+
 def BetaReduction.Lam : BetaReduction a b -> BetaReduction a.lam b.lam
 | .refl _ => .refl _
 | .cons _ _ _ ab bc => .cons _ _ _ ab.Lam bc.Lam
@@ -417,6 +422,12 @@ def subst_all_app (args: List Term) (func arg: Term) :
   induction args generalizing func arg with
   | nil => rfl
   | cons arg args ih => simp [ih]
+
+-- a single step of beta reduction
+inductive RestrictedBeta : Term -> Term -> Prop where
+| Subst (body arg: Term) : arg.IsValue -> RestrictedBeta (.app body.lam arg) (body.subst 0 arg)
+| AppFunc (func func' arg: Term) : RestrictedBeta func func' -> RestrictedBeta (func.app arg) (func'.app arg)
+| AppArg (func arg arg': Term) : func.IsValue -> RestrictedBeta arg arg' -> RestrictedBeta (func.app arg) (func.app arg')
 
 end Term
 
