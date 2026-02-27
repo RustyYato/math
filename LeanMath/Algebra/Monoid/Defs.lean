@@ -48,6 +48,13 @@ class IsLawfulPowN (α: Type*) [MonoidOps α] where
 def npow_zero [MonoidOps α] [IsLawfulPowN α] (a: α) : a ^ 0 = 1 := IsLawfulPowN.npow_zero _
 def npow_succ [MonoidOps α] [IsLawfulPowN α] (a: α) (n: ℕ) : a ^ (n + 1) = a ^ n * a := IsLawfulPowN.npow_succ _ _
 
+class IsLawfulZeroMul (α: Type*) [Zero α] [Mul α] where
+  protected zero_mul (a: α) : 0 * a = 0
+  protected mul_zero (a: α) : a * 0 = 0
+
+def zero_mul [Zero α] [Mul α] [IsLawfulZeroMul α] (a: α) : 0 * a = 0 := IsLawfulZeroMul.zero_mul _
+def mul_zero [Zero α] [Mul α] [IsLawfulZeroMul α] (a: α) : a * 0 = 0 := IsLawfulZeroMul.mul_zero _
+
 class IsLawfulZeroAdd (α: Type*) [Zero α] [Add α] where
   protected zero_add (a: α) : 0 + a = a
   protected add_zero (a: α) : a + 0 = a
@@ -90,6 +97,14 @@ instance : IsAddMonoid ℤ where
   succ_nsmul n a := by
     show ((n + 1: ℕ): ℤ) * a = n * a + a
     rw [Int.natCast_succ, Int.add_mul, Int.one_mul]
+
+instance : IsLawfulZeroMul ℕ where
+  mul_zero := Nat.mul_zero
+  zero_mul := Nat.zero_mul
+
+instance : IsLawfulZeroMul ℤ where
+  mul_zero := Int.mul_zero
+  zero_mul := Int.zero_mul
 
 section
 
@@ -389,6 +404,17 @@ def nsmul_eq_nsmulAtHom (a: α) (n: ℕ) : n • a = nsmulAtHom a n := rfl
 def npow_add (a: α) (n m: ℕ) : a ^ (n + m) = a ^ n * a ^ m := by
   repeat rw [npow_eq_npowAtHom]
   rw [map_add_to_mul]
+
+def add_nsmul (a: α) (n m: ℕ) : (n + m) • a = n • a + m • a :=
+  npow_add (α := MulOfAdd α) _ _ _
+
+def npow_mul (a: α) (n m: ℕ) : a ^ (n * m) = (a ^ n) ^ m := by
+  induction m with
+  | zero => rw [mul_zero, npow_zero, npow_zero]
+  | succ m ih => rw [Nat.mul_succ, npow_add, npow_succ, ih]
+
+def mul_nsmul (a: α) (n m: ℕ) : (n * m) • a = m • n • a :=
+  npow_mul (α := MulOfAdd α) _ _ _
 
 end
 

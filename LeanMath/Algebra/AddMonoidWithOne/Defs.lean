@@ -31,6 +31,11 @@ def map_natCast (f: F) (n: ℕ) : f n = n := by
   | zero => rw [natCast_zero, natCast_zero, map_zero]
   | succ n ih => rw [natCast_succ, natCast_succ, map_add, map_one, ih]
 
+def natCastHom₀ [IsLawfulZeroAdd α] [IsAddSemigroup α] : ℕ →+ α where
+  toFun n := n
+  map_zero := natCast_zero
+  map_add := natCast_add
+
 end
 
 section
@@ -42,7 +47,6 @@ def natCast_eq_nsmul_one (n: ℕ) : (n: α) = n • 1 := by
   induction n with
   | zero => rw [natCast_zero, zero_nsmul]
   | succ n ih =>  rw [natCast_succ, ih, succ_nsmul]
-
 
 end
 
