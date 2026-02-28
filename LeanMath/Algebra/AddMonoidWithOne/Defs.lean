@@ -1,5 +1,52 @@
 import LeanMath.Algebra.Monoid.Defs
 
+noncomputable def defaultNatCastFun (α: Type*) [AddMonoidOps α] [IsAddMonoid α] [One α] : Nat -> α
+| 0 => 0
+| n + 1 => defaultNatCastFun α n + 1
+
+private def fast_defaultNatCastFun (α: Type*) [AddMonoidOps α] [IsAddMonoid α] [One α] (n: ℕ) : α :=
+  if n = 0 then 0 else
+  let na := fast_defaultNatCastFun α (n / 2)
+  if n % 2 = 0 then na + na else na + na + 1
+
+private def defaultNatCastFun_eq_smul_one [AddMonoidOps α] [IsAddMonoid α] [One α] (n: ℕ) : defaultNatCastFun α n = n • 1 := by
+  induction n with
+  | zero =>
+    rw [zero_nsmul]
+    rfl
+  | succ n ih =>
+    rw [succ_nsmul, ←ih]
+    rfl
+
+private def fast_defaultNatCastFun_eq_smul_one [AddMonoidOps α] [IsAddMonoid α] [One α] (n: ℕ) : fast_defaultNatCastFun α n = n • 1 := by
+  induction n using Nat.strongRecOn with
+  | _ n ih =>
+  match n with
+  | 0 => simp [fast_defaultNatCastFun, zero_nsmul]
+  | 1 => simp [fast_defaultNatCastFun, zero_add, one_nsmul]
+  | n + 2 =>
+    unfold fast_defaultNatCastFun
+    rw [if_neg nofun]
+    rw [ih _ (by omega)]
+    simp
+    split <;> rename_i h
+    · rw [←add_nsmul, ←Nat.two_mul, Nat.mul_add, mul_one,
+        Nat.mul_div_cancel' (Nat.dvd_of_mod_eq_zero h)]
+    · rw (occs := [3]) [←one_nsmul (1: α)]
+      rw [←add_nsmul, ←add_nsmul, ←Nat.two_mul]
+      rw (occs := [2]) [show 1 = (n + 2) % 2 by omega]
+      rw [←Nat.add_mul_div_left, mul_one]
+      rw [Nat.div_add_mod]
+      omega
+
+@[csimp]
+private def defaultNatCastFun_eq_fast : defaultNatCastFun = fast_defaultNatCastFun := by
+  ext α _ _ _ n
+  rw [defaultNatCastFun_eq_smul_one]
+  rw [fast_defaultNatCastFun_eq_smul_one]
+
+def defaultNatCast (α: Type*) [AddMonoidOps α] [IsAddMonoid α] [One α] : NatCast α := ⟨defaultNatCastFun α⟩
+
 class AddMonoidWithOneOps (α: Type*) extends AddMonoidOps α, One α, NatCast α where
 
 instance (priority := 1100) [AddMonoidOps α] [One α] [NatCast α] : AddMonoidWithOneOps α where

@@ -1,6 +1,11 @@
 import LeanMath.Algebra.Group.Defs
 import LeanMath.Algebra.AddMonoidWithOne.Defs
 
+def defaultIntCast (α: Type*) [Neg α] [NatCast α] : IntCast α where
+  intCast
+  | .ofNat x => (x: α)
+  | .negSucc x => -((x + 1: ℕ): α)
+
 class AddGroupWithOneOps (α: Type*) extends AddMonoidWithOneOps α, AddGroupOps α, IntCast α where
 
 instance (priority := 1100)
