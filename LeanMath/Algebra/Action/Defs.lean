@@ -47,6 +47,3 @@ instance [Mul R] [IsComm R] [SMul R α]
 
 instance [Mul R] [SMul R α] [IsLawfulMulSMul R α] : IsScalarTower R R α where
   smul_assoc r s a := by rw [←mul_smul]; rfl
-
-instance [Mul R] [IsComm R] [SMul R α] : IsCentralScalar R α where
-  rsmul_eq_lsmul _ _ := rfl

@@ -23,3 +23,14 @@ instance [AddGroupOps α] [IsAddGroup α] : IsScalarTower ℤ ℤ α where
   smul_assoc r s a := by
     show (r * s) • a = _
     rw [mul_comm, mul_zsmul]
+
+def smul_neg [AddGroupOps α] [IsAddGroup α] [IsAddComm α] [SMul R α]
+  [IsRightDistribSMul R α] [IsLawfulSMulZero R α]
+  (r: R) (a: α) : r • (-a) = -(r • a) := by
+  apply eq_neg_of_add
+  rw [←smul_add, neg_add_cancel, smul_zero]
+
+def smul_sub [AddGroupOps α] [IsAddGroup α] [IsAddComm α] [SMul R α]
+  [IsRightDistribSMul R α] [IsLawfulSMulZero R α]
+  (r: R) (a b: α) : r • (a - b) = r • a - r • b := by
+  rw [sub_eq_add_neg, smul_add, smul_neg, ←sub_eq_add_neg]
