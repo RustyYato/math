@@ -455,7 +455,7 @@ def add_zsmul (a: α) (n m: ℤ) : (n + m) • a = n • a + m • a :=
 def sub_zsmul (a: α) (n m: ℤ) : (n - m) • a = n • a - m • a :=
   zpow_sub (α := MulOfAdd α) _ _ _
 
-def one_zsul (a: α) : (1: ℤ) • a = a :=
+def one_zsmul (a: α) : (1: ℤ) • a = a :=
   zpow_one (α := MulOfAdd α) _
 
 def zsmulAtHom (a: α) : ℤ →+ α where

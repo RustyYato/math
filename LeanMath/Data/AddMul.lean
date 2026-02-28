@@ -19,6 +19,18 @@ def MulOpp.get : MulOpp α -> α := id
 def AddOpp.mk : α -> AddOpp α := id
 def AddOpp.get : AddOpp α -> α := id
 
+postfix:max "ᵃᵒᵖ" => AddOpp
+postfix:max "ᵐᵒᵖ" => MulOpp
+
+def lsmul [SMul R A] (r: R) (a: A) := r • a
+def rsmul [SMul Rᵐᵒᵖ A] (a: A) (r: R) := MulOpp.mk r • a
+
+infixr:73 " •> " => lsmul
+infixl:73 " <• " => rsmul
+
+def lsmul_eq_smul [SMul R A] (r: R) (a: A) : r •> a = r • a := rfl
+def rsmul_eq_smul [SMul Rᵐᵒᵖ A] (r: R) (a: A) : a <• r = MulOpp.mk r • a := rfl
+
 attribute [local irreducible] AddOfMul MulOfAdd MulOpp AddOpp
 
 def AddOfMul.equiv : α ≃ AddOfMul α where

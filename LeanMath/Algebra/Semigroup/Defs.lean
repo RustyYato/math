@@ -331,3 +331,6 @@ instance [RelLike R α] [Add α] [IsAddCon R] [IsAddComm α] (r: R) : IsAddComm 
     induction b with | mk b =>
     iterate 2 rw [←map_add]
     rw [add_comm]
+
+instance [Mul R] [IsComm R] [SMul R α] : SMul Rᵐᵒᵖ α where
+  smul r a := r.get • a
