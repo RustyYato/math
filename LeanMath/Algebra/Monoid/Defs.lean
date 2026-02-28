@@ -631,14 +631,22 @@ instance [IsLawfulOneMul α] : IsLawfulOneMul (AlgQuot r) where
     induction a with | mk a =>
     rw [←map_one (AlgQuot.mk r), ←map_mul, mul_one]
 
+instance [IsCon R] [Zero α] : IsZeroHom (AlgQuot.MkHom r) α (AlgQuot r) where
+  map_zero _ := rfl
+
+instance [Zero α] [IsLawfulZeroMul α] : IsLawfulZeroMul (AlgQuot r) where
+  zero_mul a := by
+    induction a with | mk a =>
+    rw [←map_zero (AlgQuot.mk r), ←map_mul, zero_mul]
+  mul_zero a := by
+    induction a with | mk a =>
+    rw [←map_zero (AlgQuot.mk r), ←map_mul, mul_zero]
+
 end
 
 section
 
 variable [RelLike R α] [Zero α] [Add α] [IsAddCon R] (r: R)
-
-instance : IsZeroHom (AlgQuot.MkHom r) α (AlgQuot r) where
-  map_zero _ := rfl
 
 instance [IsLawfulZeroAdd α] : IsLawfulZeroAdd (AlgQuot r) where
   zero_add a := by

@@ -215,4 +215,9 @@ instance [Pow α S] [IsPowCon R S] : Pow (AlgQuot r) S where
     apply resp_pow
     assumption
 
+instance [NatCast α] : NatCast (AlgQuot r) where
+  natCast n := AlgQuot.mk r n
+instance [IntCast α] : IntCast (AlgQuot r) where
+  intCast n := AlgQuot.mk r n
+
 end AlgQuot

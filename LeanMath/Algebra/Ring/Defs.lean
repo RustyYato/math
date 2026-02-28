@@ -3,7 +3,7 @@ import LeanMath.Algebra.AddGroupWithOne.Defs
 
 class RingOps (α: Type*) extends SemiringOps α, AddGroupWithOneOps α where
 
-instance (priority := 1100) [SemiringOps α] [AddGroupWithOneOps α] : RingOps α where
+instance (priority := 1100) [MonoidOps α] [AddGroupWithOneOps α] : RingOps α where
 
 class IsRing (α: Type*) [RingOps α] : Prop extends IsSemiring α, IsAddGroupWithOne α where
 
@@ -47,6 +47,10 @@ def intCastHom : ℤ →+* α := {
 
 def intCast_npow (n: ℤ) (m: ℕ) : (n ^ m: ℤ) = (n: α) ^ m :=
   map_npow (f := intCastHom) _ _
+
+variable [RelLike R α] [IsCon R] [IsAddCon R] [IsMulCon R] (r: R)
+
+instance : IsRing (AlgQuot r) where
 
 end
 

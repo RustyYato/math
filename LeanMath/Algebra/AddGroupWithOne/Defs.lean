@@ -72,6 +72,16 @@ def intCastHom₀ : ℤ →+₁ α where
   map_one := intCast_one
   map_add := intCast_add
 
+variable [RelLike R α] [IsCon R] [IsAddCon R] (r: R)
+
+instance : IsAddGroupWithOne (AlgQuot r) where
+  intCast_ofNat n := by
+    show AlgQuot.mk r _ = AlgQuot.mk r _
+    rw [intCast_ofNat]
+  intCast_negSucc n := by
+    show AlgQuot.mk r _ = AlgQuot.mk r _
+    rw [intCast_negSucc]
+
 end
 
 instance : IsAddGroupWithOne ℤ where

@@ -105,6 +105,19 @@ def natCast_eq_nsmul_one (n: ℕ) : (n: α) = n • 1 := by
   | zero => rw [natCast_zero, zero_nsmul]
   | succ n ih =>  rw [natCast_succ, ih, succ_nsmul]
 
+variable [RelLike R α] [IsCon R] [IsAddCon R] (r: R)
+
+instance : IsAddMonoidWithOne (AlgQuot r) where
+  natCast_zero := by
+    show AlgQuot.mk r _ = AlgQuot.mk r _
+    rw [natCast_zero]
+  natCast_one := by
+    show AlgQuot.mk r _ = AlgQuot.mk r _
+    rw [natCast_one]
+  natCast_succ n := by
+    show AlgQuot.mk r _ = AlgQuot.mk r _ + AlgQuot.mk r _
+    rw [natCast_succ, map_add]
+
 end
 
 instance : IsLawfulNatCast ℕ where

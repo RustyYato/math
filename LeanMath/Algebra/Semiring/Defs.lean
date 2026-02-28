@@ -126,6 +126,40 @@ end
 
 section
 
+variable [Add α] [Mul α]
+
+variable [RelLike R α] [IsCon R] [IsAddCon R] [IsMulCon R] (r: R)
+
+instance [IsLeftDistrib α] : IsLeftDistrib (AlgQuot r) where
+  mul_add k a b := by
+    induction k using AlgQuot.ind with | _ k =>
+    induction a using AlgQuot.ind with | _ a =>
+    induction b using AlgQuot.ind with | _ b =>
+    show AlgQuot.mk r _ = AlgQuot.mk r _
+    rw [mul_add]
+
+instance [IsRightDistrib α] : IsRightDistrib (AlgQuot r) where
+  add_mul a b k := by
+    induction k using AlgQuot.ind with | _ k =>
+    induction a using AlgQuot.ind with | _ a =>
+    induction b using AlgQuot.ind with | _ b =>
+    show AlgQuot.mk r _ = AlgQuot.mk r _
+    rw [add_mul]
+
+end
+
+section
+
+variable [SemiringOps α] [IsSemiring α]
+
+variable [RelLike R α] [IsCon R] [IsAddCon R] [IsMulCon R] (r: R)
+
+instance : IsSemiring (AlgQuot r) where
+
+end
+
+section
+
 instance : IsLeftDistrib ℕ where
   mul_add := Nat.mul_add
 instance : IsRightDistrib ℕ := inferInstance
