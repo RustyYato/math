@@ -27,7 +27,7 @@ instance (priority := 100) [Mul α] [Add α] [IsComm α] [IsRightDistrib α]
     repeat rw [mul_comm k]
     rw [add_mul]
 
-class IsSemiring (α: Type*) [SemiringOps α] : Prop extends IsAddMonoidWithOne α, IsMonoid α, IsLeftDistrib α, IsRightDistrib α, IsLawfulZeroMul α where
+class IsSemiring (α: Type*) [SemiringOps α] : Prop extends IsAddMonoidWithOne α, IsMonoid α, IsLeftDistrib α, IsRightDistrib α, IsLawfulZeroMul α, IsAddComm α where
 
 section
 

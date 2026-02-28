@@ -12,7 +12,7 @@ class SetLike (S: Type*) (α: outParam Type*) where
     dsimp at h
     congr
     try
-      apply DFunLike.coeInj
+      apply SetLike.coeInj
       assumption
 
 @[coe] def Set.coe [SetLike S α] (s: S) : Set α := SetLike.coeSet s
@@ -280,3 +280,8 @@ instance : @Std.Associative (Set α) (· ∪ ·) := ⟨union_assoc⟩
 @[simp] def scompl_scompl (s: Set α) : sᶜᶜ = s := by ext; simp
 
 end Set
+
+def Subtype.val_inj {P: α -> Prop} : Function.Injective (Subtype.val (p := P)) := by
+  intro a b h
+  cases a; cases b; cases h
+  rfl
