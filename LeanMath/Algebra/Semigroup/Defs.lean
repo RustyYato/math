@@ -71,15 +71,25 @@ structure PreLogHom (α β: Type*) [Mul α] [Add β] extends Hom α β where
 structure PreExpHom (α β: Type*) [Add α] [Mul β] extends Hom α β where
   protected map_add_to_mul (a₀ a₁): toFun (a₀ + a₁) = toFun a₀ * toFun a₁
 
+structure MulEquiv (α β: Type*) [Mul α] [Mul β] extends α ≃ β, MulHom α β where
+structure AddEquiv (α β: Type*) [Add α] [Add β] extends α ≃ β, AddHom α β where
+structure PreLogEquiv (α β: Type*) [Mul α] [Add β] extends α ≃ β, PreLogHom α β where
+structure PreExpEquiv (α β: Type*) [Add α] [Mul β] extends α ≃ β, PreExpHom α β where
+
 infixr:80 " →*ₙ " => MulHom
 infixr:80 " →+ₙ " => AddHom
 infixr:80 " →ₘ+ₙ " => PreLogHom
 infixr:80 " →ₐ*ₙ " => PreExpHom
 
+infixr:80 " ≃*ₙ " => MulEquiv
+infixr:80 " ≃+ₙ " => AddEquiv
+infixr:80 " ≃ₘ+ₙ " => PreLogEquiv
+infixr:80 " ≃ₐ*ₙ " => PreExpEquiv
+
 section
 
 variable
-  [FunLike F α β] [Add α] [Add β] [Mul α] [Mul β]
+  [FunLike F α β] [Add α] [Add β] [Add γ] [Mul α] [Mul β] [Mul γ]
   [IsMulHom F α β] [IsAddHom F α β] [IsLogHom F α β] [IsExpHom F α β]
 
 def map_mul (f: F) (a₀ a₁: α) : f (a₀ * a₁) =f a₀ * f a₁ := IsMulHom.map_mul f a₀ a₁
@@ -91,6 +101,7 @@ def map_mul_to_add (f: F) (a₀ a₁: α) : f (a₀ * a₁) = f a₀ + f a₁ :=
 def map_add_to_mul (f: F) (a₀ a₁: α) : f (a₀ + a₁) = f a₀ * f a₁ := IsExpHom.map_add_to_mul f a₀ a₁
 
 instance (priority := 10000) : FunLike (Hom α β) α β where
+
 instance (priority := 10000) : FunLike (α →*ₙ β) α β where
 instance (priority := 10000) : FunLike (α →+ₙ β) α β where
 instance (priority := 10000) : FunLike (α →ₐ*ₙ β) α β where
@@ -101,22 +112,32 @@ instance (priority := 10000) : IsAddHom (α →+ₙ β) α β where
 instance (priority := 10000) : IsLogHom (α →ₘ+ₙ β) α β where
 instance (priority := 10000) : IsExpHom (α →ₐ*ₙ β) α β where
 
+instance (priority := 10000) : EquivLike (α ≃*ₙ β) α β where
+instance (priority := 10000) : EquivLike (α ≃+ₙ β) α β where
+instance (priority := 10000) : EquivLike (α ≃ₐ*ₙ β) α β where
+instance (priority := 10000) : EquivLike (α ≃ₘ+ₙ β) α β where
+
+instance (priority := 10000) : IsMulHom (α ≃*ₙ β) α β where
+instance (priority := 10000) : IsAddHom (α ≃+ₙ β) α β where
+instance (priority := 10000) : IsLogHom (α ≃ₘ+ₙ β) α β where
+instance (priority := 10000) : IsExpHom (α ≃ₐ*ₙ β) α β where
+
 attribute [local irreducible] AddOfMul MulOfAdd
 
-def AddOfMul.mkHomₙ : α →ₘ+ₙ AddOfMul α where
-  toFun := AddOfMul.mk
+def AddOfMul.mkHomₙ : α ≃ₘ+ₙ AddOfMul α where
+  toEquiv := AddOfMul.equiv
   map_mul_to_add _ _ := rfl
 
-def AddOfMul.getHomₙ : AddOfMul α →ₐ*ₙ α where
-  toFun := AddOfMul.get
+def AddOfMul.getHomₙ : AddOfMul α ≃ₐ*ₙ α where
+  toEquiv := AddOfMul.equiv.symm
   map_add_to_mul _ _ := rfl
 
-def MulOfAdd.mkHomₙ : α →ₐ*ₙ MulOfAdd α where
-  toFun := MulOfAdd.mk
+def MulOfAdd.mkHomₙ : α ≃ₐ*ₙ MulOfAdd α where
+  toEquiv := MulOfAdd.equiv
   map_add_to_mul _ _ := rfl
 
-def MulOfAdd.getHomₙ : MulOfAdd α →ₘ+ₙ α where
-  toFun := MulOfAdd.get
+def MulOfAdd.getHomₙ : MulOfAdd α ≃ₘ+ₙ α where
+  toEquiv := MulOfAdd.equiv.symm
   map_mul_to_add _ _ := rfl
 
 def AddOfMul.mk_get_homₙ (a: α) : getHomₙ (mkHomₙ a) = a := rfl
@@ -124,6 +145,78 @@ def MulOfAdd.mk_get_homₙ (a: α) : getHomₙ (mkHomₙ a) = a := rfl
 
 def AddOfMul.get_mk_homₙ (a: AddOfMul α) : mkHomₙ (getHomₙ a) = a := rfl
 def MulOfAdd.get_mk_homₙ (a: MulOfAdd α) : mkHomₙ (getHomₙ a) = a := rfl
+
+@[simp] def AddEquiv.apply_toEquiv (f: α ≃+ₙ β) (x: α) : f.toEquiv x = f x := rfl
+@[simp] def MulEquiv.apply_toEquiv (f: α ≃*ₙ β) (x: α) : f.toEquiv x = f x := rfl
+@[simp] def PreLogEquiv.apply_toEquiv (f: α ≃ₘ+ₙ β) (x: α) : f.toEquiv x = f x := rfl
+@[simp] def PreExpEquiv.apply_toEquiv (f: α ≃ₐ*ₙ β) (x: α) : f.toEquiv x = f x := rfl
+
+def AddEquiv.comp (f: β ≃+ₙ γ) (g: α ≃+ₙ β) : α ≃+ₙ γ where
+  toEquiv := f.toEquiv.comp g.toEquiv
+  map_add a b := by
+    dsimp
+    rw [map_add, map_add]
+def MulEquiv.comp (f: β ≃*ₙ γ) (g: α ≃*ₙ β) : α ≃*ₙ γ where
+  toEquiv := f.toEquiv.comp g.toEquiv
+  map_mul a b := by
+    dsimp
+    rw [map_mul, map_mul]
+def compPreExpLog (f: β ≃ₐ*ₙ γ) (g: α ≃ₘ+ₙ β) : α ≃*ₙ γ where
+  toEquiv := f.toEquiv.comp g.toEquiv
+  map_mul a b := by
+    dsimp
+    rw [map_mul_to_add, map_add_to_mul]
+def compPreLogExp (f: β ≃ₘ+ₙ γ) (g: α ≃ₐ*ₙ β) : α ≃+ₙ γ where
+  toEquiv := f.toEquiv.comp g.toEquiv
+  map_add a b := by
+    dsimp
+    rw [map_add_to_mul, map_mul_to_add]
+
+def AddEquiv.trans (g: α ≃+ₙ β) (f: β ≃+ₙ γ) : α ≃+ₙ γ := f.comp g
+def MulEquiv.trans (g: α ≃*ₙ β) (f: β ≃*ₙ γ) : α ≃*ₙ γ := f.comp g
+def transPreExpLog (g: α ≃ₘ+ₙ β) (f: β ≃ₐ*ₙ γ) : α ≃*ₙ γ := compPreExpLog f g
+def transPreLogExp (g: α ≃ₐ*ₙ β) (f: β ≃ₘ+ₙ γ) : α ≃+ₙ γ := compPreLogExp f g
+
+def AddEquiv.symm (f: α ≃+ₙ β) : β ≃+ₙ α where
+  toEquiv := f.toEquiv.symm
+  map_add a b := by
+    apply f.inj; dsimp
+    rw (occs := [2]) [map_add]
+    apply Eq.trans; apply Equiv.symm_coe
+    congr <;> (symm; apply Equiv.symm_coe)
+def MulEquiv.symm (f: α ≃*ₙ β) : β ≃*ₙ α where
+  toEquiv := f.toEquiv.symm
+  map_mul a b := by
+    apply f.inj; dsimp
+    rw (occs := [2]) [map_mul]
+    apply Eq.trans; apply Equiv.symm_coe
+    congr <;> (symm; apply Equiv.symm_coe)
+
+@[simp] def AddEquiv.coe_symm (f: α ≃+ₙ β) : f.symm (f x) = x := Equiv.coe_symm _ _
+@[simp] def AddEquiv.symm_coe (f: α ≃+ₙ β) : f (f.symm x) = x := Equiv.symm_coe _ _
+@[simp] def MulEquiv.coe_symm (f: α ≃*ₙ β) : f.symm (f x) = x := Equiv.coe_symm _ _
+@[simp] def MulEquiv.symm_coe (f: α ≃*ₙ β) : f (f.symm x) = x := Equiv.symm_coe _ _
+
+def AddEquiv.refl (α: Type*) [Add α] : α ≃+ₙ α where
+  toEquiv := Equiv.id _
+  map_add _ _ := rfl
+def MulEquiv.refl (α: Type*) [Mul α] : α ≃*ₙ α where
+  toEquiv := Equiv.id _
+  map_mul _ _ := rfl
+
+@[simp] def AddEquiv.apply_refl (x: α) : AddEquiv.refl _ x = x := rfl
+@[simp] def MulEquiv.apply_refl (x: α) : MulEquiv.refl _ x = x := rfl
+
+private instance : EquivOpsCheck Add (fun α β _ _ => α ≃+ₙ β) where
+  comp := AddEquiv.comp
+  trans := AddEquiv.trans
+  symm := AddEquiv.symm
+  refl := AddEquiv.refl
+private instance : EquivOpsCheck Mul (fun α β _ _ => α ≃*ₙ β) where
+  comp := MulEquiv.comp
+  trans := MulEquiv.trans
+  symm := MulEquiv.symm
+  refl := MulEquiv.refl
 
 end
 

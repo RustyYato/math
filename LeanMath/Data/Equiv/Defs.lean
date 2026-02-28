@@ -7,19 +7,52 @@ structure Equiv (α β: Sort*) where
   leftInv: Function.LeftInverse toFun invFun
   rightInv: Function.RightInverse toFun invFun
 
-infixr:20 " ≃ " => Equiv
+infixr:25 " ≃ " => Equiv
 
-namespace Equiv
+class EquivLike (F: Sort*) (α β: outParam Sort*) where
+  protected coeEquiv : F -> α ≃ β := by intro f; exact f.toEquiv
+  protected coeInj : Function.Injective coeEquiv := by
+    intro a b h
+    cases a; cases b
+    dsimp at h
+    congr
+    try
+      apply EquivLike.coeInj
+      assumption
 
-instance : FunLike (α ≃ β) α β where
+--- This is not the interface for ops, just ensures that
+--- all ops are implemented
+set_option checkBinderAnnotations false in
+class EquivOpsCheck (C: Sort u -> Sort u) (F: ∀α β (cα: C α) (cβ: C β), Sort v)
+  [∀α β [cα: C α] [cβ: C β], EquivLike (F α β cα cβ) α β]
+  where
+  protected comp {α β γ: Sort u} [cα: C α] [cβ: C β] [cγ: C γ] : F β γ cβ cγ -> F α β cα cβ -> F α γ cα cγ
+  protected trans {α β γ: Sort u} [cα: C α] [cβ: C β] [cγ: C γ] : F α β cα cβ -> F β γ cβ cγ -> F α γ cα cγ
+  protected symm {α β: Sort u} [cα: C α] [cβ: C β] : F α β cα cβ -> F β α cβ cα
+  protected refl (α: Sort u) [cα: C α] : F α α cα cα
+
+instance {F α β: Sort*} [EquivLike F α β] : FunLike F α β where
+  coeFun f := (EquivLike.coeEquiv (F := F) f).toFun
   coeInj := by
     intro a b h
+    suffices EquivLike.coeEquiv a = EquivLike.coeEquiv b by
+      exact EquivLike.coeInj this
     dsimp at h
+    revert h;
+    generalize EquivLike.coeEquiv a = a
+    generalize EquivLike.coeEquiv b = b
+    intro h
     suffices a.invFun = b.invFun by
       cases a; cases b
       congr
     ext x
     rw [←a.leftInv x, a.rightInv, h, b.rightInv]
+
+namespace Equiv
+
+instance : EquivLike (α ≃ β) α β where
+  coeEquiv := id
+  coeInj _ _ := id
 
 protected def id (α: Sort*) : α ≃ α where
   toFun := id
@@ -48,6 +81,8 @@ def comp (f: β ≃ γ) (g: α ≃ β) : α ≃ γ where
 
 abbrev trans (f: α ≃ β) (g: β ≃ γ) : α ≃ γ := g.comp f
 
+@[simp] def apply_toFun (f: α ≃ β) (x: α) : f.toFun x = f x := rfl
+
 @[simp] def apply_id (α: Sort*) (x: α) : Equiv.id α x = x := rfl
 @[simp] def apply_comp (f: β ≃ γ) (g: α ≃ β) (x: α) : (f.comp g) x = f (g x) := rfl
 @[simp] def apply_trans (f: β ≃ γ) (g: α ≃ β) (x: α) : (g.trans f) x = f (g x) := rfl
@@ -61,5 +96,13 @@ def toBij (f: α ≃ β) : α ↭ β where
   surj' := f.surj
 
 @[simp] def apply_toBij (f: α ≃ β) : f.toBij x = f x := rfl
+
+class Nop (α: Sort u) where
+instance : Nop α where
+instance : EquivOpsCheck Nop (fun α β _ _ => α ≃ β) where
+  comp := Equiv.comp
+  trans := Equiv.trans
+  symm := Equiv.symm
+  refl α := Equiv.id α
 
 end Equiv

@@ -5,7 +5,7 @@ structure Bijection (α β: Sort*) where
   protected inj': Function.Injective toFun
   protected surj': Function.Surjective toFun
 
-infixr:20 " ↭ " => Bijection
+infixr:25 " ↭ " => Bijection
 
 namespace Bijection
 

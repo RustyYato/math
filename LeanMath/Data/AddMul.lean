@@ -1,4 +1,5 @@
 import LeanMath.Tactic.TypeStar
+import LeanMath.Data.Equiv.Defs
 
 def AddOfMul (α: Type*) := α
 def MulOfAdd (α: Type*) := α
@@ -19,6 +20,30 @@ def AddOpp.mk : α -> AddOpp α := id
 def AddOpp.get : AddOpp α -> α := id
 
 attribute [local irreducible] AddOfMul MulOfAdd MulOpp AddOpp
+
+def AddOfMul.equiv : α ≃ AddOfMul α where
+  toFun := mk
+  invFun := get
+  leftInv _ := rfl
+  rightInv _ := rfl
+
+def MulOfAdd.equiv : α ≃ MulOfAdd α where
+  toFun := mk
+  invFun := get
+  leftInv _ := rfl
+  rightInv _ := rfl
+
+def MulOpp.equiv : α ≃ MulOpp α where
+  toFun := mk
+  invFun := get
+  leftInv _ := rfl
+  rightInv _ := rfl
+
+def AddOpp.equiv : α ≃ AddOpp α where
+  toFun := mk
+  invFun := get
+  leftInv _ := rfl
+  rightInv _ := rfl
 
 def AddOfMul.induction {motive: AddOfMul α -> Prop} (mk: ∀a, motive (.mk a)) (a: AddOfMul α) : motive a := mk a.get
 def MulOfAdd.induction {motive: MulOfAdd α -> Prop} (mk: ∀a, motive (.mk a)) (a: MulOfAdd α) : motive a := mk a.get
