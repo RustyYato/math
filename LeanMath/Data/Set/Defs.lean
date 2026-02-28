@@ -1,0 +1,282 @@
+import LeanMath.Tactic.TypeStar
+import LeanMath.Data.TopBot.Defs
+
+structure Set (α: Type*) where
+  ofMem :: Mem: α -> Prop
+
+class SetLike (S: Type*) (α: outParam Type*) where
+  coeSet : S -> Set α := by intro s; exact s.toSet
+  coeInj: Function.Injective coeSet := by
+    intro a b h
+    cases a; cases b
+    dsimp at h
+    congr
+    try
+      apply DFunLike.coeInj
+      assumption
+
+@[coe] def Set.coe [SetLike S α] (s: S) : Set α := SetLike.coeSet s
+def Set.coe_inj [SetLike S α] : Function.Injective (Set.coe (S := S)) := SetLike.coeInj
+
+instance : SetLike (Set α) α where
+  coeSet := id
+
+instance [SetLike S α] : CoeOut S (Set α) where
+  coe := Set.coe
+
+class SUnion (α: Type*) (β: outParam <| Type*) where
+  sUnion : α -> β
+
+class SInter (α: Type*) (β: outParam <| Type*) where
+  sInter : α -> β
+
+class SetComplement (α: Type*) where
+  scompl : α -> α
+
+class SupSet (α: Type*) where
+  sSup: Set α -> α
+
+class InfSet (α: Type*) where
+  sInf: Set α -> α
+
+export SupSet (sSup)
+export InfSet (sInf)
+
+prefix:100 "⋃ " => SUnion.sUnion
+prefix:100 "⋂ " => SInter.sInter
+postfix:max "ᶜ" => SetComplement.scompl
+
+prefix:100 "⨆ " => SupSet.sSup
+prefix:100 "⨅ " => InfSet.sInf
+
+namespace Set
+
+section Defs
+
+instance : Membership α (Set α) where
+  mem := Set.Mem
+
+instance : HasSubset (Set α) where
+  Subset a b := ∀x ∈ a, x ∈ b
+
+instance [SetLike S α] : Membership α S where
+  mem S a := a ∈ (S: Set α)
+
+instance [SetLike S α] : HasSubset S where
+  Subset a b := (a: Set α) ⊆ b
+
+@[simp] def ofMem_mem (P: α -> Prop) : ∀{x}, x ∈ ofMem P ↔ P x := by rfl
+
+def sub_def (a b: Set α) : (a ⊆ b) = ∀x ∈ a, x ∈ b := rfl
+
+@[ext] def ext (a b : Set α) : (∀x, x ∈ a ↔ x ∈ b) -> a = b := by
+  intro h;
+  cases a; cases b
+  congr; ext; apply h
+
+@[refl] def sub_refl (s: Set α) : s ⊆ s := fun _ => id
+def sub_trans {a b c: Set α} : a ⊆ b -> b ⊆ c -> a ⊆ c := fun ab bc _ h => bc _ (ab _ h)
+def sub_antisymm {a b: Set α} : a ⊆ b -> b ⊆ a -> a = b := by
+  intro ab ba
+  ext x
+  apply Iff.intro
+  apply ab
+  apply ba
+
+instance : Bot (Set α) where
+  bot := ⟨fun _ => False⟩
+instance : Top (Set α) where
+  top := ⟨fun _ => True⟩
+instance : EmptyCollection (Set α) where
+  emptyCollection := ⊥
+
+instance : Inhabited (Set α) := ⟨⊥⟩
+instance : Nonempty (Set α) := inferInstance
+
+@[simp] def not_mem_empty (a: α) : a ∉ (∅: Set α) := nofun
+@[simp] def not_mem_bot (a: α) : a ∉ (⊥: Set α) := nofun
+@[simp] def mem_top (a: α) : a ∈ (⊤: Set α) := True.intro
+
+def ext_empty (a: Set α) : (∀x: α, ¬x ∈ a) -> a = ∅ := by
+  intro h
+  ext x
+  simp [h]
+def ext_univ (a: Set α) : (∀x: α, x ∈ a) -> a = ⊤ := by
+  intro h
+  ext x
+  simp [h]
+
+instance : Singleton α (Set α) where
+  singleton a := { Mem := (· = a) }
+
+@[simp] def mem_singleton {a: α} : ∀{x}, x ∈ ({a}: Set α) ↔ x = a := Iff.rfl
+
+instance : Union (Set α) where
+  union a b := { Mem x := x ∈ a ∨ x ∈ b }
+
+@[simp] def mem_union {a b: Set α} : ∀{x}, x ∈ a ∪ b ↔ x ∈ a ∨ x ∈ b := Iff.rfl
+
+instance : Inter (Set α) where
+  inter a b := { Mem x := x ∈ a ∧ x ∈ b }
+
+@[simp] def mem_inter {a b: Set α} : ∀{x}, x ∈ a ∩ b ↔ x ∈ a ∧ x ∈ b := Iff.rfl
+
+instance : SetComplement (Set α) where
+  scompl a := { Mem := (· ∉ a) }
+
+@[simp] def mem_scompl {a: Set α} : ∀{x}, x ∈ aᶜ ↔ x ∉ a := Iff.rfl
+
+instance : SDiff (Set α) where
+  sdiff a b := a ∩ bᶜ
+
+@[simp] def mem_sdiff {a b: Set α} : ∀{x}, x ∈ a \ b ↔ x ∈ a ∧ x ∉ b := Iff.rfl
+
+instance : Insert α (Set α) where
+  insert a x := {a} ∪ x
+
+@[simp] def mem_insert {a: α} {s: Set α} : ∀{x}, x ∈ insert a s ↔ x = a ∨ x ∈ s := Iff.rfl
+
+def preimage (f: α -> β) (s: Set β) : Set α where
+  Mem x := f x ∈ s
+
+@[simp] def mem_preimage {s: Set β} {f: α -> β} : ∀{x}, x ∈ s.preimage f ↔ f x ∈ s := Iff.rfl
+
+def image (s: Set ι) (f: ι -> α) : Set α where
+  Mem a := ∃i ∈ s, a = f i
+
+@[simp] def mem_image {s: Set ι} {f: ι -> α} : ∀{x}, x ∈ s.image f ↔ ∃i ∈ s, x = f i := Iff.rfl
+
+def range (f: ι -> α) : Set α := image ⊤ f
+
+@[simp] def mem_range {f: ι -> α} : ∀{x}, x ∈ range f ↔ ∃i, x = f i := by simp [Set.range]
+
+def iSup [SupSet α] (s: ι -> α) : α := sSup (Set.range s)
+def iInf [InfSet α] (s: ι -> α) : α := sInf (Set.range s)
+
+section Syntax
+
+open Lean Meta PrettyPrinter TSyntax.Compat
+
+macro (name := big_op_iSup) "⨆ " xs:explicitBinders ", " b:term:60 : term => expandExplicitBinders ``iSup xs b
+macro (name := big_op_iInf) "⨅ " xs:explicitBinders ", " b:term:60 : term => expandExplicitBinders ``iInf xs b
+
+@[app_unexpander iSup] def unexpand_iSup : Unexpander
+  | `($(_) fun $x:ident => ⨆ $xs:binderIdent*, $b) => `(⨆ $x:ident $xs:binderIdent*, $b)
+  | `($(_) fun $x:ident => $b)                     => `(⨆ $x:ident, $b)
+  | `($(_) fun ($x:ident : $t) => $b)              => `(⨆ ($x:ident : $t), $b)
+  | _                                              => throw ()
+
+@[app_unexpander iInf] def unexpand_iInf : Unexpander
+  | `($(_) fun $x:ident => ⨅ $xs:binderIdent*, $b) => `(⨅ $x:ident $xs:binderIdent*, $b)
+  | `($(_) fun $x:ident => $b)                     => `(⨅ $x:ident, $b)
+  | `($(_) fun ($x:ident : $t) => $b)              => `(⨅ ($x:ident : $t), $b)
+  | _                                              => throw ()
+
+end Syntax
+
+instance : SUnion (Set (Set α)) (Set α) where
+  sUnion U := { Mem x := ∃s ∈ U, x ∈ s }
+
+instance : SInter (Set (Set α)) (Set α) where
+  sInter U := { Mem x := ∀s ∈ U, x ∈ s }
+
+instance : SupSet (Set α) where
+  sSup U := ⋃ U
+
+instance : InfSet (Set α) where
+  sInf U := ⋂ U
+
+@[simp] def sSup_eq_sUnion (s: Set (Set α)) : ⨆ s = ⋃ s := rfl
+@[simp] def sInf_eq_sInter (s: Set (Set α)) : ⨅ s = ⋂ s := rfl
+
+@[simp] def mem_sUnion {S: Set (Set α)} : ∀{x}, x ∈ ⋃ S ↔ ∃s ∈ S, x ∈ s := Iff.rfl
+@[simp] def mem_sInter {S: Set (Set α)} : ∀{x}, x ∈ ⋂ S ↔ ∀s ∈ S, x ∈ s := Iff.rfl
+
+def powerset (s: Set α) : Set (Set α) where
+  Mem a := ∀x, x ∈ a -> x ∈ s
+
+@[simp] def mem_powerset {s: Set α} : ∀{x}, x ∈ s.powerset ↔ x ⊆ s := Iff.rfl
+
+instance : CoeSort (Set α) (Sort _) where
+  coe s := { x // x ∈ s }
+
+def attach (s: Set α) : Set s := ⊤
+
+@[simp] def mem_attach {s: Set α} : ∀{x}, x ∈ s.attach := True.intro
+
+protected abbrev Nonempty (s: Set α) : Prop := Nonempty s
+
+@[simp] def not_nonempty {a: Set α} : ¬a.Nonempty ↔ a = ∅ := by
+  apply Iff.intro
+  intro h; ext x; simp
+  intro g; apply h; exists x
+  rintro rfl
+  intro h
+  obtain ⟨x, hx⟩ := h
+  contradiction
+
+@[simp] def ne_empty {a: Set α} : a ≠ ∅ ↔ a.Nonempty := by
+  classical
+  simp [Decidable.not_iff_not.symm]
+
+def nonempty_iff_exists {s: Set α} : s.Nonempty ↔ ∃x, x ∈ s := by
+  apply Iff.intro
+  intro ⟨x, sh⟩
+  exists x
+  intro ⟨x, sh⟩
+  exists x
+
+def exists_elem (s: Set α) [s.Nonempty] : ∃x, x ∈ s := by
+  rwa [←nonempty_iff_exists]
+
+instance (a: α) : Set.Nonempty {a} := by exists a
+
+instance : Inhabited ({a}: Set α) where
+  default := ⟨a, rfl⟩
+
+instance : Inhabited (insert a x: Set α) where
+  default := ⟨a, by simp⟩
+
+instance {a b: Set α} [h: Nonempty a] : Nonempty (a ∪ b: Set _) := by
+    obtain ⟨x, h⟩ := h
+    exact ⟨x, by simp [h]⟩
+
+instance {a b: Set α} [h: Nonempty b] : Nonempty (a ∪ b: Set _) := by
+    obtain ⟨x, h⟩ := h
+    exact ⟨x, by simp [h]⟩
+
+instance  [h : Nonempty ι] (f : ι → α) : (range f).Nonempty := by
+  obtain ⟨x⟩ := h
+  refine ⟨f x, by exists x⟩
+
+instance (s: Set α) (f: α -> β) [s.Nonempty] : (s.image f).Nonempty := by
+  have ⟨x, h⟩ := exists_elem s
+  exists f x
+  exists x
+
+def empty_not_nonempty : ¬Set.Nonempty (∅: Set α) := nofun
+
+macro_rules
+| `(tactic|contradiction) => `(tactic|exfalso; apply empty_not_nonempty; assumption)
+
+end Defs
+
+def union_comm (a b: Set α) : a ∪ b = b ∪ a := by ext; simp [Or.comm]
+def inter_comm (a b: Set α) : a ∩ b = b ∩ a := by ext; simp [And.comm]
+
+def union_assoc (a b c: Set α) : a ∪ b ∪ c = a ∪ (b ∪ c) := by ext; simp [or_assoc]
+def inter_assoc (a b c: Set α) : a ∩ b ∩ c = a ∩ (b ∩ c) := by ext; simp [and_assoc]
+
+instance : @Std.Commutative (Set α) (· ∩ ·) := ⟨inter_comm⟩
+instance : @Std.Associative (Set α) (· ∩ ·) := ⟨inter_assoc⟩
+instance : @Std.Commutative (Set α) (· ∪ ·) := ⟨union_comm⟩
+instance : @Std.Associative (Set α) (· ∪ ·) := ⟨union_assoc⟩
+
+@[simp] def preimage_id (s: Set α) : s.preimage id = s := rfl
+@[simp] def preimage_id' (s: Set α) (f: α -> α) (hf: ∀x, f x = x) : s.preimage f = s := by
+  rw [show f = id from ?_, preimage_id]
+  ext; apply hf
+@[simp] def preimage_preimage (s: Set α) (f: γ -> β) (g: β -> α) : (s.preimage g).preimage f = s.preimage (g ∘ f) := rfl
+@[simp] def scompl_scompl (s: Set α) : sᶜᶜ = s := by ext; simp
+
+end Set
