@@ -7,6 +7,15 @@ class GroupOps (α: Type*) extends MonoidOps α, Inv α, Div α where
 class AddGroupOps (α: Type*) extends AddMonoidOps α, Neg α, Sub α where
   toZSMul : SMul ℤ α := by infer_instance
 
+def defaultPowZ [Pow α ℕ] [Inv α] : Pow α ℤ where
+  pow
+  | a, .ofNat n => a ^ n
+  | a, .negSucc n => (a ^ (n + 1))⁻¹
+def defaultSMulZ [SMul ℕ α] [Neg α] : SMul ℤ α where
+  smul
+  | .ofNat n, a => n • a
+  | .negSucc n, a => -((n + 1) • a)
+
 instance (priority := 100) [GroupOps α] : One α := inferInstance
 instance (priority := 100) [GroupOps α] : Mul α := inferInstance
 instance (priority := 100) [GroupOps α] : Pow α ℕ := inferInstance

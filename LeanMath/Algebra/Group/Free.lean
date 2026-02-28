@@ -1,5 +1,6 @@
 import LeanMath.Algebra.Group.Quot
 import LeanMath.Algebra.Monoid.Free
+import LeanMath.Data.Indicator.Defs
 
 attribute [local irreducible] MulOpp
 
@@ -23,7 +24,7 @@ instance : Mul (FreeGroup α) where
 instance : Pow (FreeGroup α) ℕ where
   pow a n := { toQuot := a.toQuot ^ n }
 
-def ι (a: α) : FreeGroup α where
+private def toFreeGroup (a: α) : FreeGroup α where
   toQuot := GroupQuot.mk (Rel α) (FreeMonoid.ι (false, a))
 
 instance : IsMonoid (FreeGroup α) where
@@ -104,14 +105,14 @@ instance : IsGroup (FreeGroup α) where
       rw [map_mul, map_mul, MulOpp.mul_get, map_mul]
       rw [←mul_assoc, mul_assoc (GroupQuot.mk _ _), ihb, mul_one, iha]
 
-private def inv_ι (x: α) : (ι x)⁻¹ = ofQuot (GroupQuot.mk _ (FreeMonoid.ι (true, x))) := by
+private def inv_toFreeGroup (x: α) : (toFreeGroup x)⁻¹ = ofQuot (GroupQuot.mk _ (FreeMonoid.ι (true, x))) := by
   show MulOpp.get (MulOpp.mk _) = _
-  simp [ι]
+  simp [toFreeGroup]
 
 @[induction_eliminator]
 def induction {motive: FreeGroup α -> Prop}
   (one: motive 1)
-  (ι: ∀x, motive (ι x))
+  (ι: ∀x, motive (toFreeGroup x))
   (inv: ∀x, motive x -> motive x⁻¹)
   (mul: ∀a b, motive a -> motive b -> motive (a * b))
   (g: FreeGroup α): motive g := by
@@ -127,8 +128,8 @@ def induction {motive: FreeGroup α -> Prop}
     obtain ⟨b, x⟩ := x
     cases b
     apply ι
-    rw [←inv_ι]
-    apply inv (FreeGroup.ι x)
+    rw [←inv_toFreeGroup]
+    apply inv (toFreeGroup x)
     apply ι
 
 variable [GroupOps G] [IsGroup G]
@@ -152,28 +153,28 @@ private def preLift (f: α -> G) : FreeGroup α →* G where
   map_one := by simp [map_one]
   map_mul a b := by simp [map_mul]
 
-private def preLift_ι (f: α -> G) (x: α) : preLift f (ι x) = f x := by
-  simp [preLift, ι]
+private def preLift_toFreeGroup (f: α -> G) (x: α) : preLift f (toFreeGroup x) = f x := by
+  simp [preLift, toFreeGroup]
   show GroupQuot.lift _ _ (GroupQuot.mk _ _) = _
   simp
 
 def lift : (α -> G) ≃ (FreeGroup α →* G) where
   toFun := preLift
-  invFun f := f ∘ ι
+  invFun f := f ∘ toFreeGroup
   leftInv f := by
     simp; ext x
     induction x with
     | one => simp [map_one]
     | inv a ih => simp [map_inv, ih]
     | mul a b iha ihb => simp [map_mul, iha, ihb]
-    | ι a => simp [preLift_ι]
+    | ι a => simp [preLift_toFreeGroup]
   rightInv f := by
     ext x; simp
-    rw [preLift_ι]
+    rw [preLift_toFreeGroup]
 
-@[simp] def lift_ι (f: α -> G) (x: α) : lift f (ι x) = f x := preLift_ι f x
+@[simp] private def lift_toFreeGroup (f: α -> G) (x: α) : lift f (toFreeGroup x) = f x := preLift_toFreeGroup f x
 
-attribute [irreducible] invHom lift ι
+attribute [irreducible] invHom lift toFreeGroup
 
 instance [Subsingleton α] : IsComm (FreeGroup α) where
   mul_comm a b := by
@@ -184,7 +185,7 @@ instance [Subsingleton α] : IsComm (FreeGroup α) where
       | one => rw [mul_one, one_mul]
       | ι b => rw [Subsingleton.allEq a b]
       | inv b ih =>
-        have : IsCommAt (ι a) b := ⟨ih⟩
+        have : IsCommAt (toFreeGroup a) b := ⟨ih⟩
         rw [mul_comm]
       | mul b₀ b₁ ih₀ ih₁ => rw [←mul_assoc, ih₀, mul_assoc, ih₁, mul_assoc]
     | inv a ih =>
@@ -192,47 +193,18 @@ instance [Subsingleton α] : IsComm (FreeGroup α) where
       rw [mul_comm]
     | mul a₀ a₁ ih₀ ih₁ => rw [mul_assoc, ih₁, ←mul_assoc, ih₀, mul_assoc]
 
-def ι_inj : Function.Injective (ι (α := α)) := by
+private def toFreeGroup_inj : Function.Injective (toFreeGroup (α := α)) := by
   intro a b h
-  unfold ι at h
-  replace h := GroupQuot.exact _ (ofQuot.inj h)
-  generalize ha':FreeMonoid.ι (false, a) = a'
-  generalize hb':FreeMonoid.ι (false, b) = b'
-  rw [ha', hb'] at h
-  induction h generalizing a b with
-  | of _ _ h =>
-    cases h
-    rcases FreeMonoid.ι_eq_mul _ _ _ ha' with ⟨h, _⟩ | ⟨_, h⟩
-    have := FreeMonoid.ι_ne_one _ h
-    contradiction
-    have := FreeMonoid.ι_ne_one _ h
-    contradiction
-  | refl =>
-    rw [←hb'] at ha'
-    cases FreeMonoid.ι.inj ha'
-    rfl
-  | symm _ _ _ ih =>
-    rw [ih hb' ha']
-  | trans x y z _ _ ih₀ ih₁ =>
-    subst x
-    subst z
+  classical
+  let f := lift (G := Indicator) (fun x => if x = b then 1 else .flip)
+  have : f (toFreeGroup b) = 1 := by rw [lift_toFreeGroup, if_pos rfl]
+  have : f (toFreeGroup a) = 1 := by rw [h, this]
+  simpa [f] using this
 
-    sorry
-    -- rw [ih₀ ha', ←ih₁ _ hb']
-    -- exact a
-    -- sorry
-    -- sorry
-  | mul  _ _ _ _ _ _ ih₀ ih₁ =>
-    rcases FreeMonoid.ι_eq_mul _ _ _ ha' with ⟨rfl, ha''⟩ | ⟨ha'', rfl⟩ <;> subst ha''
-    <;> rcases FreeMonoid.ι_eq_mul _ _ _ hb' with ⟨rfl, hb''⟩ | ⟨hb'', rfl⟩ <;> subst hb''
-    -- all_goals clear ha' hb'
-    apply ih₁
-    rfl
-    rfl
-    · sorry
-    · sorry
-    apply ih₀
-    rfl
-    rfl
+def ι : α ↪ FreeGroup α where
+  toFun := toFreeGroup
+  inj := toFreeGroup_inj
+
+def lift_ι (f: α -> G) (x: α) : lift f (ι x) = f x := lift_toFreeGroup f x
 
 end FreeGroup
