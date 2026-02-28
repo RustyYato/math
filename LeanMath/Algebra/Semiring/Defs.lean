@@ -37,14 +37,14 @@ structure RingHom (α β: Type*)
 
 structure RingEquiv (α β: Type*)
   [Add α] [Add β] [Zero α] [Zero β]
-  [Mul α] [Mul β] [One α] [One β] extends α ≃ β, RingHom α β where
+  [Mul α] [Mul β] [One α] [One β] extends α ≃ β, RingHom α β, α ≃+ β, α ≃* β where
 
 infixr:80 " →+* " => RingHom
 infixr:80 " ≃+* " => RingEquiv
 
 variable
-  [Add α] [Add β] [Zero α] [Zero β]
-  [Mul α] [Mul β] [One α] [One β]
+  [Add α] [Add β] [Add γ] [Zero α] [Zero β] [Zero γ]
+  [Mul α] [Mul β] [Mul γ] [One α] [One β] [One γ]
 
 instance (priority := 10000) : FunLike (α →+* β) α β where
 instance (priority := 10000) : IsZeroHom (α →+* β) α β where
@@ -52,35 +52,39 @@ instance (priority := 10000) : IsAddHom (α →+* β) α β where
 instance (priority := 10000) : IsOneHom (α →+* β) α β where
 instance (priority := 10000) : IsMulHom (α →+* β) α β where
 
-instance (priority := 10000) : FunLike (α ≃+* β) α β where
+instance (priority := 10000) : EquivLike (α ≃+* β) α β where
 instance (priority := 10000) : IsZeroHom (α ≃+* β) α β where
 instance (priority := 10000) : IsAddHom (α ≃+* β) α β where
 instance (priority := 10000) : IsOneHom (α ≃+* β) α β where
 instance (priority := 10000) : IsMulHom (α ≃+* β) α β where
 
-def RingEquiv.symm (f: α ≃+* β) : β ≃+* α := {
-  f.toEquiv.symm with
-  map_zero := by
-    apply f.inj
-    show f.toEquiv (f.toEquiv.symm 0) = f 0
-    rw [Equiv.symm_coe, map_zero]
-  map_one := by
-    apply f.inj
-    show f.toEquiv (f.toEquiv.symm 1) = f 1
-    rw [Equiv.symm_coe, map_one]
-  map_add a b := by
-    apply f.inj
-    show f.toEquiv (f.toEquiv.symm (a + b)) = f (f.toEquiv.symm a + f.toEquiv.symm b)
-    rw [Equiv.symm_coe, map_add]
-    show _ = f.toEquiv (f.toEquiv.symm a) + f.toEquiv (f.toEquiv.symm b)
-    rw [Equiv.symm_coe, Equiv.symm_coe]
-  map_mul a b := by
-    apply f.inj
-    show f.toEquiv (f.toEquiv.symm (a * b)) = f (f.toEquiv.symm a * f.toEquiv.symm b)
-    rw [Equiv.symm_coe, map_mul]
-    show _ = f.toEquiv (f.toEquiv.symm a) * f.toEquiv (f.toEquiv.symm b)
-    rw [Equiv.symm_coe, Equiv.symm_coe]
-}
+def RingEquiv.comp (f: β ≃+* γ) (g: α ≃+* β) : α ≃+* γ where
+  toEquiv := f.toEquiv.comp g.toEquiv
+  map_zero := map_zero <| f.toZeroEquiv.comp g.toZeroEquiv
+  map_one := map_one <| f.toOneEquiv.comp g.toOneEquiv
+  map_add := map_add <| f.toAddEquiv.comp g.toAddEquiv
+  map_mul := map_mul <| f.toMulEquiv.comp g.toMulEquiv
+def RingEquiv.trans (g: α ≃+* β) (f: β ≃+* γ) : α ≃+* γ := f.comp g
+def RingEquiv.symm (f: α ≃+* β) : β ≃+* α where
+  toEquiv := f.toEquiv.symm
+  map_zero := map_zero f.toZeroEquiv.symm
+  map_one := map_one f.toOneEquiv.symm
+  map_add := map_add f.toAddEquiv.symm
+  map_mul := map_mul f.toMulEquiv.symm
+
+@[simp] def RingEquiv.apply_comp (f: β ≃+* γ) (g: α ≃+* β) : (f.comp g) x = f (g x) := rfl
+@[simp] def RingEquiv.apply_trans (g: α ≃+* β) (f: β ≃+* γ) : (g.trans f) x = f (g x) := rfl
+
+@[simp] def RingEquiv.coe_symm (f: α ≃+* β) : f.symm (f x) = x := Equiv.coe_symm _ _
+@[simp] def RingEquiv.symm_coe (f: α ≃+* β) : f (f.symm x) = x := Equiv.symm_coe _ _
+def RingEquiv.refl (α: Type*) [Zero α] [One α] [Add α] [Mul α] : α ≃+* α where
+  toEquiv := Equiv.id _
+  map_zero := rfl
+  map_one := rfl
+  map_add _ _ := rfl
+  map_mul _ _ := rfl
+
+@[simp] def RingEquiv.apply_refl (x: α) : RingEquiv.refl _ x = x := rfl
 
 end
 

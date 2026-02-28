@@ -130,23 +130,43 @@ structure LogOneHom (α β: Type*) [One α] [Zero β] extends Hom α β where
 structure ExpZeroHom (α β: Type*) [Zero α] [One β] extends Hom α β where
   protected map_zero_to_one: toFun 0 = 1
 
+structure OneEquiv (α β: Type*) [One α] [One β] extends α ≃ β, OneHom α β where
+structure ZeroEquiv (α β: Type*) [Zero α] [Zero β] extends α ≃ β, ZeroHom α β where
+structure LogOneEquiv (α β: Type*) [One α] [Zero β] extends α ≃ β, LogOneHom α β where
+structure ExpZeroEquiv (α β: Type*) [Zero α] [One β] extends α ≃ β, ExpZeroHom α β where
+
 infixr:80 " →₁ " => OneHom
 infixr:80 " →₀ " => ZeroHom
 infixr:80 " →₁₀ " => LogOneHom
 infixr:80 " →₀₁ " => ExpZeroHom
+
+infixr:80 " ≃₁ " => OneEquiv
+infixr:80 " ≃₀ " => ZeroEquiv
+infixr:80 " ≃₁₀ " => LogOneEquiv
+infixr:80 " ≃₀₁ " => ExpZeroEquiv
 
 structure GroupHom (α β: Type*) [One α] [One β] [Mul α] [Mul β] extends Hom α β, α →₁ β, α →*ₙ β where
 structure AddGroupHom (α β: Type*) [Zero α] [Zero β] [Add α] [Add β] extends Hom α β, α →₀ β, α →+ₙ β where
 structure LogHom (α β: Type*) [One α] [Zero β] [Mul α] [Add β] extends Hom α β, α →₁₀ β, α →ₘ+ₙ β where
 structure ExpHom (α β: Type*) [Zero α] [One β] [Add α] [Mul β] extends Hom α β, α →₀₁ β, α →ₐ*ₙ β where
 
+structure GroupEquiv (α β: Type*) [One α] [One β] [Mul α] [Mul β] extends α ≃ β, α ≃₁ β, α ≃*ₙ β where
+structure AddGroupEquiv (α β: Type*) [Zero α] [Zero β] [Add α] [Add β] extends α ≃ β, α ≃₀ β, α ≃+ₙ β where
+structure LogEquiv (α β: Type*) [One α] [Zero β] [Mul α] [Add β] extends α ≃ β, α ≃₁₀ β, α ≃ₘ+ₙ β where
+structure ExpEquiv (α β: Type*) [Zero α] [One β] [Add α] [Mul β] extends α ≃ β, α ≃₀₁ β, α ≃ₐ*ₙ β where
+
 infixr:80 " →* " => GroupHom
 infixr:80 " →+ " => AddGroupHom
 infixr:80 " →ₘ+ " => LogHom
 infixr:80 " →ₐ* " => ExpHom
 
+infixr:80 " ≃* " => GroupEquiv
+infixr:80 " ≃+ " => AddGroupEquiv
+infixr:80 " ≃ₘ+ " => LogEquiv
+infixr:80 " ≃ₐ* " => ExpEquiv
+
 variable
-  [FunLike F α β] [Zero α] [Zero β] [One α] [One β]
+  [FunLike F α β] [Zero α] [Zero β] [Zero γ] [One α] [One β] [One γ]
   [IsOneHom F α β] [IsZeroHom F α β] [IsLogOneHom F α β] [IsExpZeroHom F α β]
 
 def map_one (f: F) : f 1 = 1 := IsOneHom.map_one f
@@ -164,7 +184,17 @@ instance (priority := 10000) : IsZeroHom (α →₀ β) α β where
 instance (priority := 10000) : IsLogOneHom (α →₁₀ β) α β where
 instance (priority := 10000) : IsExpZeroHom (α →₀₁ β) α β where
 
-variable [Add α] [Add β] [Mul α] [Mul β]
+instance (priority := 10000) : FunLike (α ≃₁ β) α β where
+instance (priority := 10000) : FunLike (α ≃₀ β) α β where
+instance (priority := 10000) : FunLike (α ≃₀₁ β) α β where
+instance (priority := 10000) : FunLike (α ≃₁₀ β) α β where
+
+instance (priority := 10000) : IsOneHom (α ≃₁ β) α β where
+instance (priority := 10000) : IsZeroHom (α ≃₀ β) α β where
+instance (priority := 10000) : IsLogOneHom (α ≃₁₀ β) α β where
+instance (priority := 10000) : IsExpZeroHom (α ≃₀₁ β) α β where
+
+variable [Add α] [Add β] [Add γ] [Mul α] [Mul β] [Mul γ]
   [IsAddHom F α β] [IsMulHom F α β] [IsLogHom F α β] [IsExpHom F α β]
 
 instance (priority := 10000) : FunLike (α →* β) α β where
@@ -181,6 +211,21 @@ instance (priority := 10000) : IsMulHom (α →* β) α β where
 instance (priority := 10000) : IsAddHom (α →+ β) α β where
 instance (priority := 10000) : IsLogHom (α →ₘ+ β) α β where
 instance (priority := 10000) : IsExpHom (α →ₐ* β) α β where
+
+instance (priority := 10000) : EquivLike (α ≃* β) α β where
+instance (priority := 10000) : EquivLike (α ≃+ β) α β where
+instance (priority := 10000) : EquivLike (α ≃ₐ* β) α β where
+instance (priority := 10000) : EquivLike (α ≃ₘ+ β) α β where
+
+instance (priority := 10000) : IsOneHom (α ≃* β) α β where
+instance (priority := 10000) : IsZeroHom (α ≃+ β) α β where
+instance (priority := 10000) : IsLogOneHom (α ≃ₘ+ β) α β where
+instance (priority := 10000) : IsExpZeroHom (α ≃ₐ* β) α β where
+
+instance (priority := 10000) : IsMulHom (α ≃* β) α β where
+instance (priority := 10000) : IsAddHom (α ≃+ β) α β where
+instance (priority := 10000) : IsLogHom (α ≃ₘ+ β) α β where
+instance (priority := 10000) : IsExpHom (α ≃ₐ* β) α β where
 
 protected def GroupHom.id (α: Type*) [One α] [Mul α] : α →* α where
   toFun := id
@@ -230,6 +275,132 @@ def AddOfMul.mk_get_hom (a: α) : getHom (mkHom a) = a := rfl
 def AddOfMul.get_mk_hom (a: AddOfMul α) : mkHom (getHom a) = a := rfl
 def MulOfAdd.mk_get_hom (a: α) : getHom (mkHom a) = a := rfl
 def MulOfAdd.get_mk_hom (a: MulOfAdd α) : mkHom (getHom a) = a := rfl
+
+@[simp] def ZeroEquiv.apply_toEquiv (f: α ≃₀ β) (x: α) : f.toEquiv x = f x := rfl
+@[simp] def OneEquiv.apply_toEquiv (f: α ≃₁ β) (x: α) : f.toEquiv x = f x := rfl
+@[simp] def LogOneEquiv.apply_toEquiv (f: α ≃₁₀ β) (x: α) : f.toEquiv x = f x := rfl
+@[simp] def ExpZeroEquiv.apply_toEquiv (f: α ≃₀₁ β) (x: α) : f.toEquiv x = f x := rfl
+
+@[simp] def AddGroupEquiv.apply_toEquiv (f: α ≃+ β) (x: α) : f.toEquiv x = f x := rfl
+@[simp] def GroupEquiv.apply_toEquiv (f: α ≃* β) (x: α) : f.toEquiv x = f x := rfl
+@[simp] def LogEquiv.apply_toEquiv (f: α ≃ₘ+ β) (x: α) : f.toEquiv x = f x := rfl
+@[simp] def ExpEquiv.apply_toEquiv (f: α ≃ₐ* β) (x: α) : f.toEquiv x = f x := rfl
+
+def ZeroEquiv.comp (f: β ≃₀ γ) (g: α ≃₀ β) : α ≃₀ γ where
+  toEquiv := f.toEquiv.comp g.toEquiv
+  map_zero := by
+    dsimp
+    rw [map_zero, map_zero]
+def OneEquiv.comp (f: β ≃₁ γ) (g: α ≃₁ β) : α ≃₁ γ where
+  toEquiv := f.toEquiv.comp g.toEquiv
+  map_one := by
+    dsimp
+    rw [map_one, map_one]
+def compExpZeroLogOne (f: β ≃₀₁ γ) (g: α ≃₁₀ β) : α ≃₁ γ where
+  toEquiv := f.toEquiv.comp g.toEquiv
+  map_one := by
+    dsimp
+    rw [map_one_to_zero, map_zero_to_one]
+def compLogOneExpZero (f: β ≃₁₀ γ) (g: α ≃₀₁ β) : α ≃₀ γ where
+  toEquiv := f.toEquiv.comp g.toEquiv
+  map_zero := by
+    dsimp
+    rw [map_zero_to_one, map_one_to_zero]
+
+def AddGroupEquiv.comp (f: β ≃+ γ) (g: α ≃+ β) : α ≃+ γ where
+  toEquiv := f.toEquiv.comp g.toEquiv
+  map_zero := map_zero (f.toZeroEquiv.comp g.toZeroEquiv)
+  map_add := map_add (f.toAddEquiv.comp g.toAddEquiv)
+def GroupEquiv.comp (f: β ≃* γ) (g: α ≃* β) : α ≃* γ where
+  toEquiv := f.toEquiv.comp g.toEquiv
+  map_one := map_one (f.toOneEquiv.comp g.toOneEquiv)
+  map_mul := map_mul (f.toMulEquiv.comp g.toMulEquiv)
+def compExpLog (f: β ≃ₐ* γ) (g: α ≃ₘ+ β) : α ≃* γ where
+  toEquiv := f.toEquiv.comp g.toEquiv
+  map_one := map_one (compExpZeroLogOne f.toExpZeroEquiv g.toLogOneEquiv)
+  map_mul := map_mul (compPreExpLog f.toPreExpEquiv g.toPreLogEquiv)
+def compLogExp (f: β ≃ₘ+ γ) (g: α ≃ₐ* β) : α ≃+ γ where
+  toEquiv := f.toEquiv.comp g.toEquiv
+  map_zero := map_zero (compLogOneExpZero f.toLogOneEquiv g.toExpZeroEquiv)
+  map_add := map_add (compPreLogExp f.toPreLogEquiv g.toPreExpEquiv)
+
+def ZeroEquiv.apply_comp (f: β ≃₀ γ) (g: α ≃₀ β) : (comp f g) x = f (g x) := rfl
+def OneEquiv.apply_comp (f: β ≃₁ γ) (g: α ≃₁ β) : (comp f g) x = f (g x) := rfl
+def apply_compExpZeroLogOne (f: β ≃₀₁ γ) (g: α ≃₁₀ β) : (compExpZeroLogOne f g) x = f (g x) := rfl
+def apply_compLogOneExpZero (f: β ≃₁₀ γ) (g: α ≃₀₁ β) : (compLogOneExpZero f g) x = f (g x) := rfl
+
+@[simp] def AddGroupEquiv.apply_comp (f: β ≃+ γ) (g: α ≃+ β) : (comp f g) x = f (g x) := rfl
+@[simp] def GroupEquiv.apply_comp (f: β ≃* γ) (g: α ≃* β) : (comp f g) x = f (g x) := rfl
+@[simp] def apply_compExpLog (f: β ≃ₐ* γ) (g: α ≃ₘ+ β) : (compExpLog f g) x = f (g x) := rfl
+@[simp] def apply_compLogExp (f: β ≃ₘ+ γ) (g: α ≃ₐ* β) : (compLogExp f g) x = f (g x) := rfl
+
+@[simp] def ZeroEquiv.trans (g: α ≃₀ β) (f: β ≃₀ γ) : α ≃₀ γ := f.comp g
+@[simp] def OneEquiv.trans (g: α ≃₁ β) (f: β ≃₁ γ) : α ≃₁ γ := f.comp g
+@[simp] def transExpZeroLogOne (g: α ≃₁₀ β) (f: β ≃₀₁ γ) : α ≃₁ γ := compExpZeroLogOne f g
+@[simp] def transLogOneExpZero (g: α ≃₀₁ β) (f: β ≃₁₀ γ) : α ≃₀ γ := compLogOneExpZero f g
+
+def AddGroupEquiv.trans (g: α ≃+ β) (f: β ≃+ γ) : α ≃+ γ := f.comp g
+def GroupEquiv.trans (g: α ≃* β) (f: β ≃* γ) : α ≃* γ := f.comp g
+def transExpLog (g: α ≃ₘ+ β) (f: β ≃ₐ* γ) : α ≃* γ := compExpLog f g
+def transLogExp (g: α ≃ₐ* β) (f: β ≃ₘ+ γ) : α ≃+ γ := compLogExp f g
+
+@[simp] def ZeroEquiv.apply_trans (f: β ≃₀ γ) (g: α ≃₀ β) : (trans g f) x = f (g x) := rfl
+@[simp] def OneEquiv.apply_trans (f: β ≃₁ γ) (g: α ≃₁ β) : (trans g f) x = f (g x) := rfl
+@[simp] def apply_transExpZeroLogOne (f: β ≃₀₁ γ) (g: α ≃₁₀ β) : (transExpZeroLogOne g f) x = f (g x) := rfl
+@[simp] def apply_transLogOneExpZero (f: β ≃₁₀ γ) (g: α ≃₀₁ β) : (transLogOneExpZero g f) x = f (g x) := rfl
+
+@[simp] def AddGroupEquiv.apply_trans (f: β ≃+ γ) (g: α ≃+ β) : (trans g f) x = f (g x) := rfl
+@[simp] def GroupEquiv.apply_trans (f: β ≃* γ) (g: α ≃* β) : (trans g f) x = f (g x) := rfl
+@[simp] def apply_transExpLog (f: β ≃ₐ* γ) (g: α ≃ₘ+ β) : (transExpLog g f) x = f (g x) := rfl
+@[simp] def apply_transLogExp (f: β ≃ₘ+ γ) (g: α ≃ₐ* β) : (transLogExp g f) x = f (g x) := rfl
+
+def ZeroEquiv.symm (f: α ≃₀ β) : β ≃₀ α where
+  toEquiv := f.toEquiv.symm
+  map_zero := by
+    apply f.inj; dsimp
+    rw (occs := [2]) [map_zero]
+    apply Eq.trans; apply Equiv.symm_coe
+    congr <;> (symm; apply Equiv.symm_coe)
+def OneEquiv.symm (f: α ≃₁ β) : β ≃₁ α where
+  toEquiv := f.toEquiv.symm
+  map_one := by
+    apply f.inj; dsimp
+    rw (occs := [2]) [map_one]
+    apply Eq.trans; apply Equiv.symm_coe
+    congr <;> (symm; apply Equiv.symm_coe)
+
+def AddGroupEquiv.symm (f: α ≃+ β) : β ≃+ α where
+  toEquiv := f.toEquiv.symm
+  map_zero := map_zero f.toZeroEquiv.symm
+  map_add := map_add f.toAddEquiv.symm
+def GroupEquiv.symm (f: α ≃* β) : β ≃* α where
+  toEquiv := f.toEquiv.symm
+  map_one := map_one f.toOneEquiv.symm
+  map_mul := map_mul f.toMulEquiv.symm
+
+@[simp] def AddGroupEquiv.coe_symm (f: α ≃+ β) : f.symm (f x) = x := Equiv.coe_symm _ _
+@[simp] def AddGroupEquiv.symm_coe (f: α ≃+ β) : f (f.symm x) = x := Equiv.symm_coe _ _
+@[simp] def GroupEquiv.coe_symm (f: α ≃* β) : f.symm (f x) = x := Equiv.coe_symm _ _
+@[simp] def GroupEquiv.symm_coe (f: α ≃* β) : f (f.symm x) = x := Equiv.symm_coe _ _
+
+def AddGroupEquiv.refl (α: Type*) [Zero α] [Add α] : α ≃+ α where
+  toEquiv := Equiv.id _
+  map_zero := rfl
+  map_add _ _ := rfl
+def GroupEquiv.refl (α: Type*) [One α] [Mul α] : α ≃* α where
+  toEquiv := Equiv.id _
+  map_one := rfl
+  map_mul _ _ := rfl
+
+@[simp] def AddGroupEquiv.apply_refl (x: α) : AddGroupEquiv.refl _ x = x := rfl
+@[simp] def GroupEquiv.apply_refl (x: α) : GroupEquiv.refl _ x = x := rfl
+
+private class AddGroupEquiv.Ops (α: Type*) extends Add α, Zero α where
+private instance : EquivOpsCheck AddGroupEquiv.Ops (fun α β _ _ => α ≃+ β) where
+  comp := AddGroupEquiv.comp
+  trans := AddGroupEquiv.trans
+  symm := AddGroupEquiv.symm
+  refl _ := AddGroupEquiv.refl _
 
 variable [Pow α ℕ] [Pow β ℕ] [SMul ℕ α] [SMul ℕ β]
 

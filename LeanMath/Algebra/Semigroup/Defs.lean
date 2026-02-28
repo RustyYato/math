@@ -172,10 +172,20 @@ def compPreLogExp (f: β ≃ₘ+ₙ γ) (g: α ≃ₐ*ₙ β) : α ≃+ₙ γ wh
     dsimp
     rw [map_add_to_mul, map_mul_to_add]
 
+@[simp] def AddEquiv.apply_comp (f: β ≃+ₙ γ) (g: α ≃+ₙ β) : (f.comp g) x = f (g x) := rfl
+@[simp] def MulEquiv.apply_comp (f: β ≃*ₙ γ) (g: α ≃*ₙ β) : (f.comp g) x = f (g x) := rfl
+@[simp] def apply_compPreExpLog (f: β ≃ₐ*ₙ γ) (g: α ≃ₘ+ₙ β) : (compPreExpLog f g) x = f (g x) := rfl
+@[simp] def apply_compPreLogExp (f: β ≃ₘ+ₙ γ) (g: α ≃ₐ*ₙ β) : (compPreLogExp f g) x = f (g x) := rfl
+
 def AddEquiv.trans (g: α ≃+ₙ β) (f: β ≃+ₙ γ) : α ≃+ₙ γ := f.comp g
 def MulEquiv.trans (g: α ≃*ₙ β) (f: β ≃*ₙ γ) : α ≃*ₙ γ := f.comp g
 def transPreExpLog (g: α ≃ₘ+ₙ β) (f: β ≃ₐ*ₙ γ) : α ≃*ₙ γ := compPreExpLog f g
 def transPreLogExp (g: α ≃ₐ*ₙ β) (f: β ≃ₘ+ₙ γ) : α ≃+ₙ γ := compPreLogExp f g
+
+@[simp] def AddEquiv.apply_trans (g: α ≃+ₙ β) (f: β ≃+ₙ γ) : (g.trans f) x = f (g x) := rfl
+@[simp] def MulEquiv.apply_trans (g: α ≃*ₙ β) (f: β ≃*ₙ γ) : (g.trans f) x = f (g x) := rfl
+@[simp] def apply_transPreExpLog (g: α ≃ₘ+ₙ β) (f: β ≃ₐ*ₙ γ) : (transPreExpLog g f) x = f (g x) := rfl
+@[simp] def apply_transPreLogExp (g: α ≃ₐ*ₙ β) (f: β ≃ₘ+ₙ γ) : (transPreLogExp g f) x = f (g x) := rfl
 
 def AddEquiv.symm (f: α ≃+ₙ β) : β ≃+ₙ α where
   toEquiv := f.toEquiv.symm
