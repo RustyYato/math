@@ -159,6 +159,9 @@ def range (f: ι -> α) : Set α := image f ⊤
 
 @[simp] def mem_range {f: ι -> α} : ∀{x}, x ∈ range f ↔ ∃i, x = f i := by simp [Set.range]
 
+def mem_range' {f: ι -> α} : f x ∈ range f := by
+  simp; exists x
+
 def iSup [SupSet α] (s: ι -> α) : α := sSup (Set.range s)
 def iInf [InfSet α] (s: ι -> α) : α := sInf (Set.range s)
 
