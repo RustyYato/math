@@ -119,6 +119,12 @@ def inv_mul_cancel (a: α) : a⁻¹ * a = 1 := by
 def neg_add_cancel (a: α) : -a + a = 0 :=
   inv_mul_cancel (α := MulOfAdd α) _
 
+def div_self (a: α) : a / a = 1 := by
+  rw [div_eq_mul_inv, mul_inv_cancel]
+
+def sub_self (a: α) : a - a = 0 :=
+  div_self (α := MulOfAdd α) _
+
 def map_inv (f: F) (x: α) : f (x⁻¹) = (f x)⁻¹ := by
   apply eq_inv_of_mul
   rw [←map_mul, inv_mul_cancel, map_one]
@@ -301,6 +307,22 @@ section
 
 variable [GroupOps α] [IsGroup α]
 
+def of_mul_left {k a b: α} (h: k * a = k * b) : a = b := by
+  rw [←one_mul a, ←one_mul b, ←inv_mul_cancel k,
+    mul_assoc, mul_assoc, h]
+
+def of_mul_right {k a b: α} (h: a * k = b * k) : a = b := by
+  rw [←mul_one a, ←mul_one b, ←mul_inv_cancel k,
+    ←mul_assoc, ←mul_assoc, h]
+
+instance (a b: α) [IsCommAt a b] : IsCommAt a⁻¹ b where
+  mul_comm := by
+    apply of_mul_left (k := a)
+    rw [←mul_assoc, ←mul_assoc, mul_inv_cancel, one_mul,
+      mul_comm a, mul_assoc, mul_inv_cancel, mul_one]
+
+instance (a b: α) [IsCommAt a b] : IsCommAt b a⁻¹ := inferInstance
+
 def inv_mul_rev (a b: α) : (a * b)⁻¹ = b⁻¹ * a⁻¹ := by
   symm; apply eq_inv_of_mul
   rw [mul_assoc, ←mul_assoc _ a, inv_mul_cancel, one_mul, inv_mul_cancel]
@@ -309,9 +331,26 @@ def inv_inv (a: α) : a⁻¹⁻¹ = a := by
   symm; apply eq_inv_of_mul
   rw [mul_inv_cancel]
 
+def inv_div (a b: α) : (a / b)⁻¹ = b / a := by
+  rw [div_eq_mul_inv, div_eq_mul_inv, inv_mul_rev, inv_inv]
+
 def one_inv : (1: α) ⁻¹ = 1 := by
   symm; apply eq_inv_of_mul
   rw [mul_one]
+
+def mul_div_assoc (a b c: α) : (a * b) / c = a * (b / c) := by
+  rw [div_eq_mul_inv, div_eq_mul_inv, mul_assoc]
+
+def div_mul (a b c: α) : a / (b * c) = a / c / b := by
+  rw [div_eq_mul_inv, div_eq_mul_inv, div_eq_mul_inv,
+    inv_mul_rev, mul_assoc]
+
+def mul_div_comm (a b c: α) [IsCommAt b c] : a * c / b = a / b * c := by
+  rw [div_eq_mul_inv, div_eq_mul_inv,
+    mul_assoc, mul_assoc, mul_comm _ c]
+
+def div_one (a: α) : a / 1 = a := by
+  rw [div_eq_mul_inv, one_inv, mul_one]
 
 def one_zpow (z: ℤ) : (1: α) ^ z = 1 := by
   cases z
@@ -416,14 +455,40 @@ section
 
 variable [AddGroupOps α] [IsAddGroup α]
 
+def of_add_left {k a b: α} (h: k + a = k + b) : a = b :=
+  of_mul_left (α := MulOfAdd α) h
+
+def of_add_right {k a b: α} (h: a + k = b + k) : a = b :=
+  of_mul_right (α := MulOfAdd α) h
+
+instance (a b: α) [IsAddCommAt a b] : IsAddCommAt (-a) b where
+  add_comm := mul_comm (MulOfAdd.mkHomₙ a)⁻¹ (MulOfAdd.mkHomₙ b)
+
+instance (a b: α) [IsAddCommAt a b] : IsAddCommAt b (-a) := inferInstance
+
 def neg_add_rev (a b: α) : -(a + b) = -b + -a :=
   inv_mul_rev (α := MulOfAdd α) _ _
 
 def neg_neg (a: α) : - -a = a :=
   inv_inv (α := MulOfAdd α) _
 
+def neg_sub (a b: α) : -(a - b) = b - a :=
+  inv_div (α := MulOfAdd α) _ _
+
 def neg_zero : -(0: α) = 0 :=
   one_inv (α := MulOfAdd α)
+
+def add_sub_assoc (a b c: α) : (a + b) - c = a + (b - c) :=
+  mul_div_assoc (α := MulOfAdd α) _ _ _
+
+def sub_add (a b c: α) : a - (b + c) = a - c - b :=
+    div_mul (α := MulOfAdd α) _ _ _
+
+def add_sub_comm (a b c: α) [IsAddCommAt b c] : a + c - b = a - b + c :=
+  mul_div_comm (α := MulOfAdd α) (MulOfAdd.mkHomₙ a) (MulOfAdd.mkHomₙ b) (MulOfAdd.mkHomₙ c)
+
+def sub_zero (a: α) : a - 0 = a :=
+  div_one (α := MulOfAdd α) _
 
 def zsmul_zero (z: ℤ) : z • (0: α) = 0 :=
   one_zpow (α := MulOfAdd α) _

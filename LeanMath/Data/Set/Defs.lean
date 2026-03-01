@@ -74,6 +74,11 @@ def sub_def (a b: Set α) : (a ⊆ b) = ∀x ∈ a, x ∈ b := rfl
   cases a; cases b
   congr; ext; apply h
 
+def _root_.SetLike.ext [SetLike S α] (a b: S) : (∀x, x ∈ a ↔ x ∈ b) -> a = b := by
+  intro h
+  apply SetLike.coeInj
+  ext; apply h
+
 @[refl] def sub_refl (s: Set α) : s ⊆ s := fun _ => id
 def sub_trans {a b c: Set α} : a ⊆ b -> b ⊆ c -> a ⊆ c := fun ab bc _ h => bc _ (ab _ h)
 def sub_antisymm {a b: Set α} : a ⊆ b -> b ⊆ a -> a = b := by

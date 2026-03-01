@@ -29,6 +29,12 @@ def zsmul_eq_mul_intCast (n: ℤ) (a: α) : n • a = a * n := by
   | ofNat n => rw [intCast_ofNat, ofNat_zsmul, nsmul_eq_mul_natCast]
   | negSucc n => rw [intCast_negSucc, negSucc_zsmul, nsmul_eq_mul_natCast, neg_mul_right]
 
+def sub_mul (a b k: α) : (a - b) * k = a * k - b * k := by
+  rw [sub_eq_add_neg, sub_eq_add_neg, neg_mul_left, add_mul]
+
+def mul_sub (k a b: α) : k * (a - b) = k * a - k * b := by
+  rw [sub_eq_add_neg, sub_eq_add_neg, neg_mul_right, mul_add]
+
 instance (n: ℤ) (a: α) : IsCommAt (n: α) a where
   mul_comm := by rw [←zsmul_eq_intCast_mul, ←zsmul_eq_mul_intCast]
 
