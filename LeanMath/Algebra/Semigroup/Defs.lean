@@ -3,6 +3,7 @@ import LeanMath.Data.Embedding.Defs
 import LeanMath.Data.Equiv.Defs
 import LeanMath.Data.AddMul
 import LeanMath.Data.Cong.Defs
+import LeanMath.Data.Hom
 
 class IsSemigroup (α: Type*) [Mul α] : Prop where
   protected mul_assoc (a b c: α) : (a * b) * c = a * (b * c)
@@ -55,9 +56,6 @@ class IsLogHom (F α β: Type*) [FunLike F α β] [Mul α] [Add β] where
   protected map_mul_to_add (f: F) (a₀ a₁: α) : f (a₀ * a₁) = f a₀ + f a₁ := by intro f; exact f.map_mul_to_add
 class IsExpHom (F α β: Type*) [FunLike F α β] [Add α] [Mul β] where
   protected map_add_to_mul (f: F) (a₀ a₁: α) : f (a₀ + a₁) = f a₀ * f a₁  := by intro f; exact f.map_add_to_mul
-
-structure Hom (α β: Type*) where
-  toFun : α → β
 
 structure MulHom (α β: Type*) [Mul α] [Mul β] extends Hom α β where
   protected map_mul (a₀ a₁): toFun (a₀ * a₁) = toFun a₀ * toFun a₁
