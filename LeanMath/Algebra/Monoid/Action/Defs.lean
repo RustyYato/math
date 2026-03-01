@@ -23,6 +23,9 @@ instance [AddMonoidOps α] [IsAddMonoid α] [IsAddComm α] : IsDistributiveActio
 instance [AddMonoidOps α] [IsAddMonoid α] : IsLeftDistribSMul ℕ α where
   add_smul r s a := by rw [add_nsmul]
 
+instance [AddMonoidOps α] [IsAddMonoid α] : IsLawfulZeroSMul ℕ α where
+  zero_smul a := by rw [zero_nsmul]
+
 instance [AddMonoidOps α] [IsAddMonoid α] : IsScalarTower ℕ ℕ α where
   smul_assoc r s a := by
     show (r * s) • a = _

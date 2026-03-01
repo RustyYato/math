@@ -1,4 +1,4 @@
-import LeanMath.Algebra.Monoid.Action
+import LeanMath.Algebra.Monoid.Action.Defs
 import LeanMath.Algebra.Group.Defs
 
 instance [AddGroupOps α] [IsAddGroup α] : IsMonoidAction ℤ α where
@@ -10,6 +10,9 @@ instance [AddGroupOps α] [IsAddGroup α] : IsLawfulSMulZero ℤ α where
 
 instance [AddGroupOps α] [IsAddGroup α] : IsLeftDistribSMul ℤ α where
   add_smul r s a := by rw [add_zsmul]
+
+instance [AddGroupOps α] [IsAddGroup α] : IsLawfulZeroSMul ℤ α where
+  zero_smul a := by rw [zero_zsmul]
 
 instance [AddGroupOps α] [IsAddGroup α] [IsAddComm α] : IsDistributiveAction ℤ α where
   smul_add r a b := by rw [zsmul_add]

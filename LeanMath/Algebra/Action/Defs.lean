@@ -6,6 +6,9 @@ class IsLawfulOneSMul (R α: Type*) [One R] [SMul R α] where
 class IsLawfulSMulZero (R α: Type*) [Zero α] [SMul R α] where
   protected smul_zero (r: R) : r • (0: α) = 0
 
+class IsLawfulZeroSMul (R α: Type*) [Zero R] [Zero α] [SMul R α] where
+  protected zero_smul (a: α) : (0: R) • a = 0
+
 class IsLawfulMulSMul (R α: Type*) [Mul R] [SMul R α] where
   protected mul_smul (r s: R) (a: α) : (r * s) • a = r • s • a
 
@@ -28,6 +31,8 @@ def one_smul [One R] [SMul R α] [IsLawfulOneSMul R α] (a: α) : (1: R) • a =
   IsLawfulOneSMul.one_smul _
 def smul_zero [Zero α] [SMul R α] [IsLawfulSMulZero R α] (r: R) : r • (0: α) = 0 :=
   IsLawfulSMulZero.smul_zero _
+def zero_smul [Zero R] [Zero α] [SMul R α] [IsLawfulZeroSMul R α] (a: α) : (0: R) • a = 0 :=
+  IsLawfulZeroSMul.zero_smul _
 def mul_smul [Mul R] [SMul R α] [IsLawfulMulSMul R α] (r s: R) (a: α) : (r * s) • a = r • s • a :=
   IsLawfulMulSMul.mul_smul _ _ _
 def add_smul [Add R] [Add α] [SMul R α] [IsLeftDistribSMul R α] (r s: R) (a: α) : (r + s) • a = r • a + s • a :=
