@@ -45,12 +45,14 @@ section
 
 variable [Mul α] [Mul β] [One α] [One β]
 
-def MemOne.preimage [SetLike S β] [IsMemOne S β] [FunLike F α β] [IsOneHom F α β] (f: F) (U: S) : MemOne (Set.preimage f U) := by
+def MemOne.preimage [SetLike S β] [IsMemOne S β] [FunLike F α β] [IsOneHom F α β]
+  (f: F) (U: S) : MemOne (Set.preimage f U) := by
     show f 1 ∈ U
     rw [map_one]
     apply mem_one
 
-def MemOne.image [SetLike S α] [IsMemOne S α] [FunLike F α β] [IsOneHom F α β] (f: F) (U: S) : MemOne (Set.image f U) := by
+def MemOne.image [SetLike S α] [IsMemOne S α] [FunLike F α β] [IsOneHom F α β]
+  (f: F) (U: S) : MemOne (Set.image f U) := by
     show 1 ∈ _
     rw [←map_one f]
     apply Set.mem_image'
@@ -73,7 +75,8 @@ def sub_closure (U: Set α) : U ⊆ SubSemigroup.closure U := by
   apply SubSemigroup.Closure.of
   assumption
 
-def of_mem_closure [SetLike S α] [IsMemMul S α] [IsMemOne S α] (U: Set α) (s: S) : (∀{a}, a ∈ U -> a ∈ s) -> ∀{a}, a ∈ closure U -> a ∈ s := by
+def of_mem_closure [SetLike S α] [IsMemMul S α] [IsMemOne S α] (U: Set α) (s: S)
+  : (∀{a}, a ∈ U -> a ∈ s) -> ∀{a}, a ∈ closure U -> a ∈ s := by
   intro g a h
   induction h with
   | of =>
@@ -133,12 +136,14 @@ section
 
 variable [Add α] [Add β] [Zero α] [Zero β]
 
-def MemZero.preimage [SetLike S β] [IsMemZero S β] [FunLike F α β] [IsZeroHom F α β] (f: F) (U: S) : MemZero (Set.preimage f U) := by
+def MemZero.preimage [SetLike S β] [IsMemZero S β] [FunLike F α β] [IsZeroHom F α β]
+  (f: F) (U: S) : MemZero (Set.preimage f U) := by
     show f 0 ∈ U
     rw [map_zero]
     apply mem_zero
 
-def MemZero.image [SetLike S α] [IsMemZero S α] [FunLike F α β] [IsZeroHom F α β] (f: F) (U: S) : MemZero (Set.image f U) := by
+def MemZero.image [SetLike S α] [IsMemZero S α] [FunLike F α β] [IsZeroHom F α β]
+  (f: F) (U: S) : MemZero (Set.image f U) := by
     show 0 ∈ _
     rw [←map_zero f]
     apply Set.mem_image'
@@ -161,7 +166,8 @@ def sub_closure (U: Set α) : U ⊆ closure U := by
   apply Closure.of
   assumption
 
-def of_mem_closure [SetLike S α] [IsMemAdd S α] [IsMemZero S α] (U: Set α) (s: S) : (∀{a}, a ∈ U -> a ∈ s) -> ∀{a}, a ∈ closure U -> a ∈ s := by
+def of_mem_closure [SetLike S α] [IsMemAdd S α] [IsMemZero S α] (U: Set α) (s: S)
+  : (∀{a}, a ∈ U -> a ∈ s) -> ∀{a}, a ∈ closure U -> a ∈ s := by
   intro g a h
   induction h with
   | of =>

@@ -65,6 +65,19 @@ def sub_closure (U: Set α) : U ⊆ closure U := by
   apply Closure.of
   assumption
 
+def of_mem_closure [SetLike S α] [IsMemMul S α] [IsMemInv S α] [IsMemOne S α] (U: Set α) (s: S)
+  : (∀{a}, a ∈ U -> a ∈ s) -> ∀{a}, a ∈ closure U -> a ∈ s := by
+  intro g a h
+  induction h with
+  | of =>
+    apply g
+    assumption
+  | one => apply mem_one
+  | inv a ih =>
+    apply mem_inv <;> assumption
+  | mul a b iha ihb =>
+    apply mem_mul <;> assumption
+
 instance : Top (Subgroup α) where
   top := {
     toSet := ⊤
@@ -90,6 +103,14 @@ def sub_top (a: Subgroup α) : a ⊆ ⊤ := fun _ _ => True.intro
 def bot_sub [IsLawfulOneMul α] [IsLawfulOneInv α] (a: Subgroup α) : ⊥ ⊆ a := by
   rintro _ rfl
   apply mem_one a
+@[simp] def closure_bot_eq_bot [IsLawfulOneMul α] [IsLawfulOneInv α] : closure (α := α) ⊥ = ⊥ := by
+  symm; apply SetLike.ext
+  intro a
+  apply Iff.intro
+  apply bot_sub
+  intro h
+  apply of_mem_closure _ _ _ h
+  nofun
 
 end Subgroup
 
@@ -149,9 +170,21 @@ def closure (U: Set α) : AddSubgroup α where
   mem_add := Closure.add
 
 def sub_closure (U: Set α) : U ⊆ closure U := by
-  intro a ha
+  intro a
   apply Closure.of
-  assumption
+
+def of_mem_closure [SetLike S α] [IsMemAdd S α] [IsMemNeg S α] [IsMemZero S α] (U: Set α) (s: S)
+  : (∀{a}, a ∈ U -> a ∈ s) -> ∀{a}, a ∈ closure U -> a ∈ s := by
+  intro g a h
+  induction h with
+  | of =>
+    apply g
+    assumption
+  | zero => apply mem_zero
+  | neg a iha =>
+    apply mem_neg <;> assumption
+  | add a b iha ihb =>
+    apply mem_add <;> assumption
 
 instance : Top (AddSubgroup α) where
   top := {
@@ -178,6 +211,14 @@ def sub_top (a: AddSubgroup α) : a ⊆ ⊤ := fun _ _ => True.intro
 def bot_sub [IsLawfulZeroAdd α] [IsLawfulNegZero α] (a: AddSubgroup α) : ⊥ ⊆ a := by
   rintro _ rfl
   apply mem_zero a
+@[simp] def closure_bot_eq_bot [IsLawfulZeroAdd α] [IsLawfulNegZero α] : closure (α := α) ⊥ = ⊥ := by
+  symm; apply SetLike.ext
+  intro a
+  apply Iff.intro
+  apply bot_sub
+  intro h
+  apply of_mem_closure _ _ _ h
+  nofun
 
 end AddSubgroup
 

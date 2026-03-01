@@ -70,7 +70,8 @@ section
 
 variable [Mul α] [Mul β]
 
-def MemMul.preimage [SetLike S β] [IsMemMul S β] [FunLike F α β] [IsMulHom F α β] (f: F) (U: S) : MemMul (Set.preimage f U) := by
+def MemMul.preimage [SetLike S β] [IsMemMul S β] [FunLike F α β] [IsMulHom F α β]
+  (f: F) (U: S) : MemMul (Set.preimage f U) := by
     intro a b ha hb
     show f (a * b) ∈ U
     rw [map_mul]
@@ -78,7 +79,8 @@ def MemMul.preimage [SetLike S β] [IsMemMul S β] [FunLike F α β] [IsMulHom F
     assumption
     assumption
 
-def MemMul.image [SetLike S α] [IsMemMul S α] [FunLike F α β] [IsMulHom F α β] (f: F) (U: S) : MemMul (Set.image f U) := by
+def MemMul.image [SetLike S α] [IsMemMul S α] [FunLike F α β] [IsMulHom F α β]
+  (f: F) (U: S) : MemMul (Set.image f U) := by
     rintro a b ⟨a, _, rfl⟩ ⟨b, _, rfl⟩
     rw [←map_mul]
     apply Set.mem_image'
@@ -101,7 +103,8 @@ def sub_closure (U: Set α) : U ⊆ closure U := by
   apply Closure.of
   assumption
 
-def of_mem_closure [SetLike S α] [IsMemMul S α] (U: Set α) (s: S) : (∀{a}, a ∈ U -> a ∈ s) -> ∀{a}, a ∈ closure U -> a ∈ s := by
+def of_mem_closure [SetLike S α] [IsMemMul S α] (U: Set α) (s: S)
+  : (∀{a}, a ∈ U -> a ∈ s) -> ∀{a}, a ∈ closure U -> a ∈ s := by
   intro g a h
   induction h with
   | of =>
@@ -145,7 +148,8 @@ section
 
 variable [Add α] [Add β]
 
-def MemAdd.preimage [SetLike S β] [IsMemAdd S β] [FunLike F α β] [IsAddHom F α β] (f: F) (U: S) : MemAdd (Set.preimage f U) := by
+def MemAdd.preimage [SetLike S β] [IsMemAdd S β] [FunLike F α β] [IsAddHom F α β]
+  (f: F) (U: S) : MemAdd (Set.preimage f U) := by
     intro a b ha hb
     show f (a + b) ∈ U
     rw [map_add]
@@ -153,7 +157,8 @@ def MemAdd.preimage [SetLike S β] [IsMemAdd S β] [FunLike F α β] [IsAddHom F
     assumption
     assumption
 
-def MemAdd.image [SetLike S α] [IsMemAdd S α] [FunLike F α β] [IsAddHom F α β] (f: F) (U: S) : MemAdd (Set.image f U) := by
+def MemAdd.image [SetLike S α] [IsMemAdd S α] [FunLike F α β] [IsAddHom F α β]
+  (f: F) (U: S) : MemAdd (Set.image f U) := by
     rintro a b ⟨a, _, rfl⟩ ⟨b, _, rfl⟩
     rw [←map_add]
     apply Set.mem_image'
@@ -176,7 +181,8 @@ def sub_closure (U: Set α) : U ⊆ closure U := by
   apply Closure.of
   assumption
 
-def of_mem_closure [SetLike S α] [IsMemAdd S α] (U: Set α) (s: S) : (∀{a}, a ∈ U -> a ∈ s) -> ∀{a}, a ∈ closure U -> a ∈ s := by
+def of_mem_closure [SetLike S α] [IsMemAdd S α] (U: Set α) (s: S)
+  : (∀{a}, a ∈ U -> a ∈ s) -> ∀{a}, a ∈ closure U -> a ∈ s := by
   intro g a h
   induction h with
   | of =>
