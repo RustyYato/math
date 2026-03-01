@@ -1,4 +1,5 @@
 import LeanMath.TypeTheory.Defs
+import LeanMath.Logic.Relation.ChurchRosser
 
 namespace TypeTheory.Term
 
