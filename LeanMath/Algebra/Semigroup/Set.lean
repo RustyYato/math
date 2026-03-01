@@ -37,31 +37,184 @@ instance [SetLike S α] : SetLike (MulOfAdd S) (MulOfAdd α) where
     replace hx : MulOfAdd.get (MulOfAdd.mk x) ∈ _ := hx
     rwa [←Set.mem_preimage, ←h, Set.mem_preimage] at hx
 
+def MemMul [SetLike S α] [Mul α] (s: S) := ∀{a b: α}, a ∈ s -> b ∈ s -> a * b ∈ s
+def MemAdd [SetLike S α] [Add α] (s: S) := ∀{a b: α}, a ∈ s -> b ∈ s -> a + b ∈ s
+
 class IsMemMul (S α: Type*) [Mul α] [SetLike S α] where
-  protected mem_mul (s: S) {a b: α} : a ∈ s -> b ∈ s -> a * b ∈ s := by intro s; exact s.mem_mul
+  protected mem_mul (s: S) : MemMul s := by intro s; exact s.mem_mul
 
 class IsMemAdd (S α: Type*) [Add α] [SetLike S α] where
-  protected mem_add (s: S) {a b: α} : a ∈ s -> b ∈ s -> a + b ∈ s := by intro s; exact s.mem_add
+  protected mem_add (s: S) : MemAdd s := by intro s; exact s.mem_add
 
-def mem_mul [Mul α] [SetLike S α] [IsMemMul S α] (s: S) {a b: α} : a ∈ s -> b ∈ s -> a * b ∈ s :=
+def mem_mul [Mul α] [SetLike S α] [IsMemMul S α] (s: S) : MemMul s :=
   IsMemMul.mem_mul _
 
-def mem_add [Add α] [SetLike S α] [IsMemAdd S α] (s: S) {a b: α} : a ∈ s -> b ∈ s -> a + b ∈ s :=
+def mem_add [Add α] [SetLike S α] [IsMemAdd S α] (s: S) : MemAdd s :=
   IsMemAdd.mem_add _
 
 structure SubSemigroup (α: Type*) [Mul α] where
   toSet: Set α
-  protected mem_mul {a b: α} : a ∈ toSet -> b ∈ toSet -> a * b ∈ toSet
+  protected mem_mul : MemMul toSet
 
 structure AddSubSemigroup (α: Type*) [Add α] where
   toSet: Set α
-  protected mem_add {a b: α} : a ∈ toSet -> b ∈ toSet -> a + b ∈ toSet
+  protected mem_add : MemAdd toSet
 
 instance [Mul α] : SetLike (SubSemigroup α) α where
 instance [Mul α] : IsMemMul (SubSemigroup α) α where
 
 instance [Add α] : SetLike (AddSubSemigroup α) α where
 instance [Add α] : IsMemAdd (AddSubSemigroup α) α where
+
+section
+
+variable [Mul α] [Mul β]
+
+def MemMul.preimage [SetLike S β] [IsMemMul S β] [FunLike F α β] [IsMulHom F α β] (f: F) (U: S) : MemMul (Set.preimage f U) := by
+    intro a b ha hb
+    show f (a * b) ∈ U
+    rw [map_mul]
+    apply mem_mul
+    assumption
+    assumption
+
+def MemMul.image [SetLike S α] [IsMemMul S α] [FunLike F α β] [IsMulHom F α β] (f: F) (U: S) : MemMul (Set.image f U) := by
+    rintro a b ⟨a, _, rfl⟩ ⟨b, _, rfl⟩
+    rw [←map_mul]
+    apply Set.mem_image'
+    apply mem_mul U
+    assumption
+    assumption
+
+namespace SubSemigroup
+
+inductive Closure (U: Set α) : α -> Prop where
+| of (a: α) (h: a ∈ U) : Closure U a
+| mul {a b: α} : Closure U a -> Closure U b -> Closure U (a * b)
+
+def closure (U: Set α) : SubSemigroup α where
+  toSet := Set.ofMem (Closure U)
+  mem_mul := Closure.mul
+
+def sub_closure (U: Set α) : U ⊆ closure U := by
+  intro a ha
+  apply Closure.of
+  assumption
+
+def of_mem_closure [SetLike S α] [IsMemMul S α] (U: Set α) (s: S) : (∀{a}, a ∈ U -> a ∈ s) -> ∀{a}, a ∈ closure U -> a ∈ s := by
+  intro g a h
+  induction h with
+  | of =>
+    apply g
+    assumption
+  | mul a b iha ihb =>
+    apply mem_mul
+    assumption
+    assumption
+
+instance : Top (SubSemigroup α) where
+  top := {
+    toSet := ⊤
+    mem_mul _ _ := True.intro
+  }
+
+instance : Bot (SubSemigroup α) where
+  bot := {
+    toSet := ⊥
+    mem_mul := nofun
+  }
+
+def mem_top (a: α) : a ∈ (⊤: SubSemigroup α) := True.intro
+def not_mem_bot (a: α) : a ∉ (⊥: SubSemigroup α) := nofun
+def sub_top (a: SubSemigroup α) : a ⊆ ⊤ := fun _ _ => True.intro
+def bot_sub (a: SubSemigroup α) : ⊥ ⊆ a := nofun
+
+def preimage (f: α →*ₙ β) (U: SubSemigroup β) : SubSemigroup α where
+  toSet := Set.preimage f U
+  mem_mul := MemMul.preimage f _
+
+def image (f: α →*ₙ β) (U: SubSemigroup α) : SubSemigroup β where
+  toSet := Set.image f U
+  mem_mul := MemMul.image f _
+
+end SubSemigroup
+
+end
+
+section
+
+variable [Add α] [Add β]
+
+def MemAdd.preimage [SetLike S β] [IsMemAdd S β] [FunLike F α β] [IsAddHom F α β] (f: F) (U: S) : MemAdd (Set.preimage f U) := by
+    intro a b ha hb
+    show f (a + b) ∈ U
+    rw [map_add]
+    apply mem_add
+    assumption
+    assumption
+
+def MemAdd.image [SetLike S α] [IsMemAdd S α] [FunLike F α β] [IsAddHom F α β] (f: F) (U: S) : MemAdd (Set.image f U) := by
+    rintro a b ⟨a, _, rfl⟩ ⟨b, _, rfl⟩
+    rw [←map_add]
+    apply Set.mem_image'
+    apply mem_add U
+    assumption
+    assumption
+
+namespace AddSubSemigroup
+
+inductive Closure (U: Set α) : α -> Prop where
+| of (a: α) (h: a ∈ U) : Closure U a
+| add {a b: α} : Closure U a -> Closure U b -> Closure U (a + b)
+
+def closure (U: Set α) : AddSubSemigroup α where
+  toSet := Set.ofMem (Closure U)
+  mem_add := Closure.add
+
+def sub_closure (U: Set α) : U ⊆ closure U := by
+  intro a ha
+  apply Closure.of
+  assumption
+
+def of_mem_closure [SetLike S α] [IsMemAdd S α] (U: Set α) (s: S) : (∀{a}, a ∈ U -> a ∈ s) -> ∀{a}, a ∈ closure U -> a ∈ s := by
+  intro g a h
+  induction h with
+  | of =>
+    apply g
+    assumption
+  | add a b iha ihb =>
+    apply mem_add
+    assumption
+    assumption
+
+instance : Top (AddSubSemigroup α) where
+  top := {
+    toSet := ⊤
+    mem_add _ _ := True.intro
+  }
+
+instance : Bot (AddSubSemigroup α) where
+  bot := {
+    toSet := ⊥
+    mem_add := nofun
+  }
+
+def mem_top (a: α) : a ∈ (⊤: AddSubSemigroup α) := True.intro
+def not_mem_bot (a: α) : a ∉ (⊥: AddSubSemigroup α) := nofun
+def sub_top (a: AddSubSemigroup α) : a ⊆ ⊤ := fun _ _ => True.intro
+def bot_sub (a: AddSubSemigroup α) : ⊥ ⊆ a := nofun
+
+def preimage (f: α →+ₙ β) (U: AddSubSemigroup β) : AddSubSemigroup α where
+  toSet := Set.preimage f U
+  mem_add := MemAdd.preimage f _
+
+def image (f: α →+ₙ β) (U: AddSubSemigroup α) : AddSubSemigroup β where
+  toSet := Set.image f U
+  mem_add := MemAdd.image f _
+
+end AddSubSemigroup
+
+end
 
 variable (s: S)
 variable [Mul α] [SetLike S α] [IsMemMul S α]

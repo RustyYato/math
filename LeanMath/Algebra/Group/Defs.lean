@@ -44,6 +44,20 @@ class IsLawfulSub (α: Type*) [Add α] [Neg α] [Sub α] where
 def div_eq_mul_inv [Mul α] [Inv α] [Div α] [IsLawfulDiv α] (a b: α) : a / b = a * b⁻¹ := IsLawfulDiv.div_eq_mul_inv _ _
 def sub_eq_add_neg [Add α] [Neg α] [Sub α] [IsLawfulSub α] (a b: α) : a - b = a + -b := IsLawfulSub.sub_eq_add_neg _ _
 
+class IsLawfulOneInv (α: Type*) [Inv α] [One α] : Prop where
+  protected one_inv : (1: α)⁻¹ = 1
+
+class IsLawfulNegZero (α: Type*) [Neg α] [Zero α] : Prop where
+  protected neg_zero : -(0: α) = 0
+
+def one_inv [Inv α] [One α] [IsLawfulOneInv α] : (1: α)⁻¹ = 1 := IsLawfulOneInv.one_inv
+def neg_zero [Neg α] [Zero α] [IsLawfulNegZero α] : -(0: α) = 0 := IsLawfulNegZero.neg_zero
+
+instance [Inv α] [One α] [IsLawfulOneInv α] : IsLawfulNegZero (AddOfMul α) where
+  neg_zero := one_inv (α := α)
+instance [Neg α] [Zero α] [IsLawfulNegZero α] : IsLawfulOneInv (MulOfAdd α) where
+  one_inv := neg_zero (α := α)
+
 class IsLawfulPowZ (α: Type*) [GroupOps α] : Prop extends IsLawfulPowN α where
   protected zpow_ofNat (a: α) (n: ℕ) : a ^ (n: ℤ) = a ^ n
   protected zpow_negSucc (a: α) (n: ℕ) : a ^ (Int.negSucc n) = (a ^ (n + 1))⁻¹
@@ -334,9 +348,10 @@ def inv_inv (a: α) : a⁻¹⁻¹ = a := by
 def inv_div (a b: α) : (a / b)⁻¹ = b / a := by
   rw [div_eq_mul_inv, div_eq_mul_inv, inv_mul_rev, inv_inv]
 
-def one_inv : (1: α) ⁻¹ = 1 := by
-  symm; apply eq_inv_of_mul
-  rw [mul_one]
+instance : IsLawfulOneInv α where
+  one_inv := by
+    symm; apply eq_inv_of_mul
+    rw [mul_one]
 
 def mul_div_assoc (a b c: α) : (a * b) / c = a * (b / c) := by
   rw [div_eq_mul_inv, div_eq_mul_inv, mul_assoc]
@@ -475,8 +490,8 @@ def neg_neg (a: α) : - -a = a :=
 def neg_sub (a b: α) : -(a - b) = b - a :=
   inv_div (α := MulOfAdd α) _ _
 
-def neg_zero : -(0: α) = 0 :=
-  one_inv (α := MulOfAdd α)
+instance : IsLawfulNegZero α where
+  neg_zero := one_inv (α := MulOfAdd α)
 
 def add_sub_assoc (a b c: α) : (a + b) - c = a + (b - c) :=
   mul_div_assoc (α := MulOfAdd α) _ _ _

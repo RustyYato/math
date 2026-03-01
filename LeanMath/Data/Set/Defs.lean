@@ -146,12 +146,16 @@ def preimage (f: α -> β) (s: Set β) : Set α where
 
 @[simp] def mem_preimage {s: Set β} {f: α -> β} : ∀{x}, x ∈ s.preimage f ↔ f x ∈ s := Iff.rfl
 
-def image (s: Set ι) (f: ι -> α) : Set α where
+def image (f: ι -> α) (s: Set ι) : Set α where
   Mem a := ∃i ∈ s, a = f i
 
 @[simp] def mem_image {s: Set ι} {f: ι -> α} : ∀{x}, x ∈ s.image f ↔ ∃i ∈ s, x = f i := Iff.rfl
 
-def range (f: ι -> α) : Set α := image ⊤ f
+def mem_image' {s: Set ι} {f: ι -> α} : x ∈ s -> f x ∈ s.image f := by
+  intro h
+  simp; exists x
+
+def range (f: ι -> α) : Set α := image f ⊤
 
 @[simp] def mem_range {f: ι -> α} : ∀{x}, x ∈ range f ↔ ∃i, x = f i := by simp [Set.range]
 

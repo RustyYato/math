@@ -1,11 +1,14 @@
 import LeanMath.Algebra.Group.Defs
 import LeanMath.Algebra.Monoid.Set
 
+def MemInv [Inv α] [SetLike S α] (s: S) := ∀{a: α}, a ∈ s -> a⁻¹ ∈ s
+def MemNeg [Neg α] [SetLike S α] (s: S) := ∀{a: α}, a ∈ s -> -a ∈ s
+
 class IsMemInv (S α: Type*) [Inv α] [SetLike S α] where
-  protected mem_inv (s: S) {a: α}: a ∈ s -> a⁻¹ ∈ s := by intro s; exact s.mem_inv
+  protected mem_inv (s: S) : MemInv s := by intro s; exact s.mem_inv
 
 class IsMemNeg (S α: Type*) [Neg α] [SetLike S α] where
-  protected mem_neg (s: S) {a: α}: a ∈ s -> -a ∈ s := by intro s; exact s.mem_neg
+  protected mem_neg (s: S) : MemNeg s := by intro s; exact s.mem_neg
 
 def mem_inv [Inv α] [SetLike S α] [IsMemInv S α] (s: S) {a: α}: a ∈ s -> a⁻¹ ∈ s :=
   IsMemInv.mem_inv _
@@ -15,11 +18,11 @@ def mem_neg [Neg α] [SetLike S α] [IsMemNeg S α] (s: S) {a: α}: a ∈ s -> -
 
 structure SubInv (α: Type*) [Inv α] where
   toSet: Set α
-  protected mem_inv {a: α} : a ∈ toSet -> a⁻¹ ∈ toSet
+  protected mem_inv : MemInv toSet
 
 structure SubNeg (α: Type*) [Neg α] where
   toSet: Set α
-  protected mem_neg {a: α} : a ∈ toSet -> -a ∈ toSet
+  protected mem_neg : MemNeg toSet
 
 instance [Inv α] : SetLike (SubInv α) α where
 instance [Inv α] : IsMemInv (SubInv α) α where
@@ -40,6 +43,182 @@ instance [Add α] [Neg α] [Zero α] : SetLike (AddSubgroup α) α where
 instance [Add α] [Neg α] [Zero α] : IsMemAdd (AddSubgroup α) α where
 instance [Add α] [Neg α] [Zero α] : IsMemNeg (AddSubgroup α) α where
 instance [Add α] [Neg α] [Zero α] : IsMemZero (AddSubgroup α) α where
+
+namespace Subgroup
+
+variable [Mul α] [Mul β] [Inv α] [Inv β] [One α] [One β]
+
+inductive Closure (U: Set α) : α -> Prop where
+| of (a: α) (h: a ∈ U) : Closure U a
+| one : Closure U 1
+| inv {a: α} : Closure U a -> Closure U (a⁻¹)
+| mul {a b: α} : Closure U a -> Closure U b -> Closure U (a * b)
+
+def closure (U: Set α) : Subgroup α where
+  toSet := Set.ofMem (Closure U)
+  mem_one := Closure.one
+  mem_inv := Closure.inv
+  mem_mul := Closure.mul
+
+def sub_closure (U: Set α) : U ⊆ closure U := by
+  intro a ha
+  apply Closure.of
+  assumption
+
+instance : Top (Subgroup α) where
+  top := {
+    toSet := ⊤
+    mem_one := True.intro
+    mem_inv _ := True.intro
+    mem_mul _ _ := True.intro
+  }
+
+instance [IsLawfulOneMul α] [IsLawfulOneInv α] : Bot (Subgroup α) where
+  bot := {
+    toSet := {1}
+    mem_one := rfl
+    mem_inv := by
+      rintro _ rfl
+      rw [one_inv]; rfl
+    mem_mul := by
+      rintro _ _ rfl rfl
+      rw [mul_one]; rfl
+  }
+
+def mem_top (a: α) : a ∈ (⊤: Subgroup α) := True.intro
+def sub_top (a: Subgroup α) : a ⊆ ⊤ := fun _ _ => True.intro
+def bot_sub [IsLawfulOneMul α] [IsLawfulOneInv α] (a: Subgroup α) : ⊥ ⊆ a := by
+  rintro _ rfl
+  apply mem_one a
+
+end Subgroup
+
+section
+
+variable [GroupOps α] [GroupOps β] [IsGroup α] [IsGroup β]
+
+def MemInv.preimage [SetLike S β] [IsMemInv S β] [IsMemOne S β] [FunLike F α β] [IsMulHom F α β] [IsOneHom F α β] (f: F) (U: S) : MemInv (Set.preimage f U) := by
+    intro a h
+    show f _ ∈ U
+    rw [map_inv]
+    apply mem_inv U
+    assumption
+
+def MemInv.image [SetLike S α] [IsMemInv S α] [IsMemOne S α] [FunLike F α β] [IsMulHom F α β] [IsOneHom F α β] (f: F) (U: S) : MemInv (Set.image f U) := by
+    rintro _ ⟨a, _, rfl⟩
+    show (f _)⁻¹ ∈ _
+    rw [←map_inv f]
+    apply Set.mem_image'
+    apply mem_inv U
+    assumption
+
+namespace Subgroup
+
+def preimage (f: α →* β) (U: Subgroup β) : Subgroup α where
+  toSet := Set.preimage f U
+  mem_one := MemOne.preimage f _
+  mem_inv := MemInv.preimage f _
+  mem_mul := MemMul.preimage f _
+
+def image (f: α →* β) (U: Subgroup α) : Subgroup β where
+  toSet := Set.image f U
+  mem_one := MemOne.image f _
+  mem_inv := MemInv.image f _
+  mem_mul := MemMul.image f _
+
+def kernel (f: α →* β) : Subgroup α := preimage f ⊥
+
+end Subgroup
+
+end
+
+namespace AddSubgroup
+
+variable [Add α] [Add β] [Neg α] [Neg β] [Zero α] [Zero β]
+
+inductive Closure (U: Set α) : α -> Prop where
+| of (a: α) (h: a ∈ U) : Closure U a
+| zero : Closure U 0
+| neg {a: α} : Closure U a -> Closure U (-a)
+| add {a b: α} : Closure U a -> Closure U b -> Closure U (a + b)
+
+def closure (U: Set α) : AddSubgroup α where
+  toSet := Set.ofMem (Closure U)
+  mem_zero := Closure.zero
+  mem_neg := Closure.neg
+  mem_add := Closure.add
+
+def sub_closure (U: Set α) : U ⊆ closure U := by
+  intro a ha
+  apply Closure.of
+  assumption
+
+instance : Top (AddSubgroup α) where
+  top := {
+    toSet := ⊤
+    mem_zero := True.intro
+    mem_neg _ := True.intro
+    mem_add _ _ := True.intro
+  }
+
+instance [IsLawfulZeroAdd α] [IsLawfulNegZero α] : Bot (AddSubgroup α) where
+  bot := {
+    toSet := {0}
+    mem_zero := rfl
+    mem_neg := by
+      rintro _ rfl
+      rw [neg_zero]; rfl
+    mem_add := by
+      rintro _ _ rfl rfl
+      rw [add_zero]; rfl
+  }
+
+def mem_top (a: α) : a ∈ (⊤: AddSubgroup α) := True.intro
+def sub_top (a: AddSubgroup α) : a ⊆ ⊤ := fun _ _ => True.intro
+def bot_sub [IsLawfulZeroAdd α] [IsLawfulNegZero α] (a: AddSubgroup α) : ⊥ ⊆ a := by
+  rintro _ rfl
+  apply mem_zero a
+
+end AddSubgroup
+
+section
+
+variable [AddGroupOps α] [AddGroupOps β] [IsAddGroup α] [IsAddGroup β]
+
+def MemNeg.preimage [SetLike S β] [IsMemNeg S β] [IsMemZero S β] [FunLike F α β] [IsAddHom F α β] [IsZeroHom F α β] (f: F) (U: S) : MemNeg (Set.preimage f U) := by
+    intro a h
+    show f _ ∈ U
+    rw [map_neg]
+    apply mem_neg U
+    assumption
+
+def MemNeg.image [SetLike S α] [IsMemNeg S α] [IsMemZero S α] [FunLike F α β] [IsAddHom F α β] [IsZeroHom F α β] (f: F) (U: S) : MemNeg (Set.image f U) := by
+    rintro _ ⟨a, _, rfl⟩
+    show -(f _) ∈ _
+    rw [←map_neg f]
+    apply Set.mem_image'
+    apply mem_neg U
+    assumption
+
+namespace AddSubgroup
+
+def preimage (f: α →+ β) (U: AddSubgroup β) : AddSubgroup α where
+  toSet := Set.preimage f U
+  mem_zero := MemZero.preimage f _
+  mem_neg := MemNeg.preimage f _
+  mem_add := MemAdd.preimage f _
+
+def image (f: α →+ β) (U: AddSubgroup α) : AddSubgroup β where
+  toSet := Set.image f U
+  mem_zero := MemZero.image f _
+  mem_neg := MemNeg.image f _
+  mem_add := MemAdd.image f _
+
+def kernel (f: α →+ β) : AddSubgroup α := preimage f ⊥
+
+end AddSubgroup
+
+end
 
 variable (s: S) [SetLike S α]
 
