@@ -1,29 +1,51 @@
-import LeanMath.Algebra.Semiring.Set
+import LeanMath.Algebra.Semiring.Defs
+import LeanMath.Data.Set.Defs
 
-class IsMemLeftMul (S α: Type*) [SetLike S α] [SemiringOps α] [IsSemiring α] where
-  protected mem_left_mul (s: S) {a: α} (k: α) : a ∈ s -> k * a ∈ s := by intro s; exact s.mem_left_mul
+def MemLeftMul [SetLike S α] [Mul α] (s: S) := ∀{a: α} (k: α), a ∈ s -> k * a ∈ s
+def MemRightMul [SetLike S α] [Mul α] (s: S) := ∀{a: α} (k: α), a ∈ s -> a * k ∈ s
 
-class IsMemRightMul (S α: Type*) [SetLike S α] [SemiringOps α] [IsSemiring α] where
-  protected mem_right_mul (s: S) {a: α} (k: α) : a ∈ s -> a * k ∈ s := by intro s; exact s.mem_right_mul
+class IsMemLeftMul (S α: Type*) [SetLike S α] [Mul α] where
+  protected mem_left_mul (s: S) : MemLeftMul s := by intro s; exact s.mem_left_mul
 
-variable [SetLike S α] [SemiringOps α] [IsSemiring α]
+class IsMemRightMul (S α: Type*) [SetLike S α] [Mul α] where
+  protected mem_right_mul (s: S) : MemRightMul s := by intro s; exact s.mem_right_mul
 
-def mem_left_mul [IsMemLeftMul S α] (s: S) {a: α} (k: α) : a ∈ s -> k * a ∈ s :=
-  IsMemLeftMul.mem_left_mul _ _
+variable [Mul α] [Mul β]
 
-def mem_right_mul [IsMemRightMul S α] (s: S) {a: α} (k: α) : a ∈ s -> a * k ∈ s :=
-  IsMemRightMul.mem_right_mul _ _
+section
 
-structure SubLeftMul (α: Type*) [SemiringOps α] [IsSemiring α] where
+variable [SetLike S α]
+
+def mem_left_mul [IsMemLeftMul S α] (s: S) : MemLeftMul s:=
+  IsMemLeftMul.mem_left_mul _
+
+def mem_right_mul [IsMemRightMul S α] (s: S) : MemRightMul s :=
+  IsMemRightMul.mem_right_mul _
+
+end
+
+structure SubLeftMul (α: Type*) [Mul α] where
   toSet: Set α
-  protected mem_left_mul {a: α} (k: α) : a ∈ toSet -> k * a ∈ toSet
+  protected mem_left_mul : MemLeftMul toSet
 
-structure SubRightMul (α: Type*) [SemiringOps α] [IsSemiring α] where
+structure SubRightMul (α: Type*) [Mul α] where
   toSet: Set α
-  protected mem_right_mul {a: α} (k: α) : a ∈ toSet -> a * k ∈ toSet
+  protected mem_right_mul : MemRightMul toSet
 
 instance : SetLike (SubLeftMul α) α where
 instance : IsMemLeftMul (SubLeftMul α) α where
 
 instance : SetLike (SubRightMul α) α where
 instance : IsMemRightMul (SubRightMul α) α where
+
+def MemLeftMul.preimage [SetLike S β] [IsMemLeftMul S β] [FunLike F α β] [IsMulHom F α β] (f: F) (s: S) : MemLeftMul (Set.preimage f s) := by
+  intro a k ha
+  simp; rw [map_mul]
+  apply mem_left_mul s
+  assumption
+
+def MemRightMul.preimage [SetLike S β] [IsMemRightMul S β] [FunLike F α β] [IsMulHom F α β] (f: F) (s: S) : MemRightMul (Set.preimage f s) := by
+  intro a k ha
+  simp; rw [map_mul]
+  apply mem_right_mul s
+  assumption
