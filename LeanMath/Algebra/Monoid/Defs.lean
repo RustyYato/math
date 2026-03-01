@@ -130,6 +130,11 @@ structure LogOneHom (α β: Type*) [One α] [Zero β] extends Hom α β where
 structure ExpZeroHom (α β: Type*) [Zero α] [One β] extends Hom α β where
   protected map_zero_to_one: toFun 0 = 1
 
+structure OneEmbedding (α β: Type*) [One α] [One β] extends α ↪ β, OneHom α β where
+structure ZeroEmbedding (α β: Type*) [Zero α] [Zero β] extends α ↪ β, ZeroHom α β where
+structure LogOneEmbedding (α β: Type*) [One α] [Zero β] extends α ↪ β, LogOneHom α β where
+structure ExpZeroEmbedding (α β: Type*) [Zero α] [One β] extends α ↪ β, ExpZeroHom α β where
+
 structure OneEquiv (α β: Type*) [One α] [One β] extends α ≃ β, OneHom α β where
 structure ZeroEquiv (α β: Type*) [Zero α] [Zero β] extends α ≃ β, ZeroHom α β where
 structure LogOneEquiv (α β: Type*) [One α] [Zero β] extends α ≃ β, LogOneHom α β where
@@ -139,6 +144,11 @@ infixr:80 " →₁ " => OneHom
 infixr:80 " →₀ " => ZeroHom
 infixr:80 " →₁₀ " => LogOneHom
 infixr:80 " →₀₁ " => ExpZeroHom
+
+infixr:80 " ↪₁ " => OneEmbedding
+infixr:80 " ↪₀ " => ZeroEmbedding
+infixr:80 " ↪₁₀ " => LogOneEmbedding
+infixr:80 " ↪₀₁ " => ExpZeroEmbedding
 
 infixr:80 " ≃₁ " => OneEquiv
 infixr:80 " ≃₀ " => ZeroEquiv
@@ -150,6 +160,11 @@ structure AddGroupHom (α β: Type*) [Zero α] [Zero β] [Add α] [Add β] exten
 structure LogHom (α β: Type*) [One α] [Zero β] [Mul α] [Add β] extends Hom α β, α →₁₀ β, α →ₘ+ₙ β where
 structure ExpHom (α β: Type*) [Zero α] [One β] [Add α] [Mul β] extends Hom α β, α →₀₁ β, α →ₐ*ₙ β where
 
+structure GroupEmbedding (α β: Type*) [One α] [One β] [Mul α] [Mul β] extends α ↪ β, α ↪₁ β, α ↪*ₙ β where
+structure AddGroupEmbedding (α β: Type*) [Zero α] [Zero β] [Add α] [Add β] extends α ↪ β, α ↪₀ β, α ↪+ₙ β where
+structure LogEmbedding (α β: Type*) [One α] [Zero β] [Mul α] [Add β] extends α ↪ β, α ↪₁₀ β, α ↪ₘ+ₙ β where
+structure ExpEmbedding (α β: Type*) [Zero α] [One β] [Add α] [Mul β] extends α ↪ β, α ↪₀₁ β, α ↪ₐ*ₙ β where
+
 structure GroupEquiv (α β: Type*) [One α] [One β] [Mul α] [Mul β] extends α ≃ β, α ≃₁ β, α ≃*ₙ β where
 structure AddGroupEquiv (α β: Type*) [Zero α] [Zero β] [Add α] [Add β] extends α ≃ β, α ≃₀ β, α ≃+ₙ β where
 structure LogEquiv (α β: Type*) [One α] [Zero β] [Mul α] [Add β] extends α ≃ β, α ≃₁₀ β, α ≃ₘ+ₙ β where
@@ -159,6 +174,11 @@ infixr:80 " →* " => GroupHom
 infixr:80 " →+ " => AddGroupHom
 infixr:80 " →ₘ+ " => LogHom
 infixr:80 " →ₐ* " => ExpHom
+
+infixr:80 " ↪* " => GroupEmbedding
+infixr:80 " ↪+ " => AddGroupEmbedding
+infixr:80 " ↪ₘ+ " => LogEmbedding
+infixr:80 " ↪ₐ* " => ExpEmbedding
 
 infixr:80 " ≃* " => GroupEquiv
 infixr:80 " ≃+ " => AddGroupEquiv
@@ -184,10 +204,20 @@ instance (priority := 10000) : IsZeroHom (α →₀ β) α β where
 instance (priority := 10000) : IsLogOneHom (α →₁₀ β) α β where
 instance (priority := 10000) : IsExpZeroHom (α →₀₁ β) α β where
 
-instance (priority := 10000) : FunLike (α ≃₁ β) α β where
-instance (priority := 10000) : FunLike (α ≃₀ β) α β where
-instance (priority := 10000) : FunLike (α ≃₀₁ β) α β where
-instance (priority := 10000) : FunLike (α ≃₁₀ β) α β where
+instance (priority := 10000) : EmbeddingLike (α ↪₁ β) α β where
+instance (priority := 10000) : EmbeddingLike (α ↪₀ β) α β where
+instance (priority := 10000) : EmbeddingLike (α ↪₀₁ β) α β where
+instance (priority := 10000) : EmbeddingLike (α ↪₁₀ β) α β where
+
+instance (priority := 10000) : IsOneHom (α ↪₁ β) α β where
+instance (priority := 10000) : IsZeroHom (α ↪₀ β) α β where
+instance (priority := 10000) : IsLogOneHom (α ↪₁₀ β) α β where
+instance (priority := 10000) : IsExpZeroHom (α ↪₀₁ β) α β where
+
+instance (priority := 10000) : EquivLike (α ≃₁ β) α β where
+instance (priority := 10000) : EquivLike (α ≃₀ β) α β where
+instance (priority := 10000) : EquivLike (α ≃₀₁ β) α β where
+instance (priority := 10000) : EquivLike (α ≃₁₀ β) α β where
 
 instance (priority := 10000) : IsOneHom (α ≃₁ β) α β where
 instance (priority := 10000) : IsZeroHom (α ≃₀ β) α β where
@@ -211,6 +241,21 @@ instance (priority := 10000) : IsMulHom (α →* β) α β where
 instance (priority := 10000) : IsAddHom (α →+ β) α β where
 instance (priority := 10000) : IsLogHom (α →ₘ+ β) α β where
 instance (priority := 10000) : IsExpHom (α →ₐ* β) α β where
+
+instance (priority := 10000) : EmbeddingLike (α ↪* β) α β where
+instance (priority := 10000) : EmbeddingLike (α ↪+ β) α β where
+instance (priority := 10000) : EmbeddingLike (α ↪ₐ* β) α β where
+instance (priority := 10000) : EmbeddingLike (α ↪ₘ+ β) α β where
+
+instance (priority := 10000) : IsOneHom (α ↪* β) α β where
+instance (priority := 10000) : IsZeroHom (α ↪+ β) α β where
+instance (priority := 10000) : IsLogOneHom (α ↪ₘ+ β) α β where
+instance (priority := 10000) : IsExpZeroHom (α ↪ₐ* β) α β where
+
+instance (priority := 10000) : IsMulHom (α ↪* β) α β where
+instance (priority := 10000) : IsAddHom (α ↪+ β) α β where
+instance (priority := 10000) : IsLogHom (α ↪ₘ+ β) α β where
+instance (priority := 10000) : IsExpHom (α ↪ₐ* β) α β where
 
 instance (priority := 10000) : EquivLike (α ≃* β) α β where
 instance (priority := 10000) : EquivLike (α ≃+ β) α β where
@@ -276,6 +321,16 @@ def AddOfMul.get_mk_hom (a: AddOfMul α) : mkHom (getHom a) = a := rfl
 def MulOfAdd.mk_get_hom (a: α) : getHom (mkHom a) = a := rfl
 def MulOfAdd.get_mk_hom (a: MulOfAdd α) : mkHom (getHom a) = a := rfl
 
+@[simp] def ZeroEmbedding.apply_toEmbedding (f: α ↪₀ β) (x: α) : f.toEmbedding x = f x := rfl
+@[simp] def OneEmbedding.apply_toEmbedding (f: α ↪₁ β) (x: α) : f.toEmbedding x = f x := rfl
+@[simp] def LogOneEmbedding.apply_toEmbedding (f: α ↪₁₀ β) (x: α) : f.toEmbedding x = f x := rfl
+@[simp] def ExpZeroEmbedding.apply_toEmbedding (f: α ↪₀₁ β) (x: α) : f.toEmbedding x = f x := rfl
+
+@[simp] def AddGroupEmbedding.apply_toEmbedding (f: α ↪+ β) (x: α) : f.toEmbedding x = f x := rfl
+@[simp] def GroupEmbedding.apply_toEmbedding (f: α ↪* β) (x: α) : f.toEmbedding x = f x := rfl
+@[simp] def LogEmbedding.apply_toEmbedding (f: α ↪ₘ+ β) (x: α) : f.toEmbedding x = f x := rfl
+@[simp] def ExpEmbedding.apply_toEmbedding (f: α ↪ₐ* β) (x: α) : f.toEmbedding x = f x := rfl
+
 @[simp] def ZeroEquiv.apply_toEquiv (f: α ≃₀ β) (x: α) : f.toEquiv x = f x := rfl
 @[simp] def OneEquiv.apply_toEquiv (f: α ≃₁ β) (x: α) : f.toEquiv x = f x := rfl
 @[simp] def LogOneEquiv.apply_toEquiv (f: α ≃₁₀ β) (x: α) : f.toEquiv x = f x := rfl
@@ -285,6 +340,26 @@ def MulOfAdd.get_mk_hom (a: MulOfAdd α) : mkHom (getHom a) = a := rfl
 @[simp] def GroupEquiv.apply_toEquiv (f: α ≃* β) (x: α) : f.toEquiv x = f x := rfl
 @[simp] def LogEquiv.apply_toEquiv (f: α ≃ₘ+ β) (x: α) : f.toEquiv x = f x := rfl
 @[simp] def ExpEquiv.apply_toEquiv (f: α ≃ₐ* β) (x: α) : f.toEquiv x = f x := rfl
+
+def ZeroEmbedding.comp (f: β ↪₀ γ) (g: α ↪₀ β) : α ↪₀ γ where
+  toEmbedding := f.toEmbedding.comp g.toEmbedding
+  map_zero := by
+    dsimp
+    rw [map_zero, map_zero]
+def OneEmbedding.comp (f: β ↪₁ γ) (g: α ↪₁ β) : α ↪₁ γ where
+  toEmbedding := f.toEmbedding.comp g.toEmbedding
+  map_one := by
+    dsimp
+    rw [map_one, map_one]
+
+def AddGroupEmbedding.comp (f: β ↪+ γ) (g: α ↪+ β) : α ↪+ γ where
+  toEmbedding := f.toEmbedding.comp g.toEmbedding
+  map_zero := map_zero (f.toZeroEmbedding.comp g.toZeroEmbedding)
+  map_add := map_add (f.toAddEmbedding.comp g.toAddEmbedding)
+def GroupEmbedding.comp (f: β ↪* γ) (g: α ↪* β) : α ↪* γ where
+  toEmbedding := f.toEmbedding.comp g.toEmbedding
+  map_one := map_one (f.toOneEmbedding.comp g.toOneEmbedding)
+  map_mul := map_mul (f.toMulEmbedding.comp g.toMulEmbedding)
 
 def ZeroEquiv.comp (f: β ≃₀ γ) (g: α ≃₀ β) : α ≃₀ γ where
   toEquiv := f.toEquiv.comp g.toEquiv
@@ -318,31 +393,49 @@ def GroupEquiv.comp (f: β ≃* γ) (g: α ≃* β) : α ≃* γ where
 def compExpLog (f: β ≃ₐ* γ) (g: α ≃ₘ+ β) : α ≃* γ where
   toEquiv := f.toEquiv.comp g.toEquiv
   map_one := map_one (compExpZeroLogOne f.toExpZeroEquiv g.toLogOneEquiv)
-  map_mul := map_mul (compPreExpLog f.toPreExpEquiv g.toPreLogEquiv)
+  map_mul := map_mul (eqvCompPreExpLog f.toPreExpEquiv g.toPreLogEquiv)
 def compLogExp (f: β ≃ₘ+ γ) (g: α ≃ₐ* β) : α ≃+ γ where
   toEquiv := f.toEquiv.comp g.toEquiv
   map_zero := map_zero (compLogOneExpZero f.toLogOneEquiv g.toExpZeroEquiv)
-  map_add := map_add (compPreLogExp f.toPreLogEquiv g.toPreExpEquiv)
+  map_add := map_add (eqvCompPreLogExp f.toPreLogEquiv g.toPreExpEquiv)
 
-def ZeroEquiv.apply_comp (f: β ≃₀ γ) (g: α ≃₀ β) : (comp f g) x = f (g x) := rfl
-def OneEquiv.apply_comp (f: β ≃₁ γ) (g: α ≃₁ β) : (comp f g) x = f (g x) := rfl
-def apply_compExpZeroLogOne (f: β ≃₀₁ γ) (g: α ≃₁₀ β) : (compExpZeroLogOne f g) x = f (g x) := rfl
-def apply_compLogOneExpZero (f: β ≃₁₀ γ) (g: α ≃₀₁ β) : (compLogOneExpZero f g) x = f (g x) := rfl
+@[simp] def ZeroEmbedding.apply_comp (f: β ↪₀ γ) (g: α ↪₀ β) : (comp f g) x = f (g x) := rfl
+@[simp] def OneEmbedding.apply_comp (f: β ↪₁ γ) (g: α ↪₁ β) : (comp f g) x = f (g x) := rfl
+
+@[simp] def AddGroupEmbedding.apply_comp (f: β ↪+ γ) (g: α ↪+ β) : (comp f g) x = f (g x) := rfl
+@[simp] def GroupEmbedding.apply_comp (f: β ↪* γ) (g: α ↪* β) : (comp f g) x = f (g x) := rfl
+
+@[simp] def ZeroEquiv.apply_comp (f: β ≃₀ γ) (g: α ≃₀ β) : (comp f g) x = f (g x) := rfl
+@[simp] def OneEquiv.apply_comp (f: β ≃₁ γ) (g: α ≃₁ β) : (comp f g) x = f (g x) := rfl
+@[simp] def apply_compExpZeroLogOne (f: β ≃₀₁ γ) (g: α ≃₁₀ β) : (compExpZeroLogOne f g) x = f (g x) := rfl
+@[simp] def apply_compLogOneExpZero (f: β ≃₁₀ γ) (g: α ≃₀₁ β) : (compLogOneExpZero f g) x = f (g x) := rfl
 
 @[simp] def AddGroupEquiv.apply_comp (f: β ≃+ γ) (g: α ≃+ β) : (comp f g) x = f (g x) := rfl
 @[simp] def GroupEquiv.apply_comp (f: β ≃* γ) (g: α ≃* β) : (comp f g) x = f (g x) := rfl
 @[simp] def apply_compExpLog (f: β ≃ₐ* γ) (g: α ≃ₘ+ β) : (compExpLog f g) x = f (g x) := rfl
 @[simp] def apply_compLogExp (f: β ≃ₘ+ γ) (g: α ≃ₐ* β) : (compLogExp f g) x = f (g x) := rfl
 
-@[simp] def ZeroEquiv.trans (g: α ≃₀ β) (f: β ≃₀ γ) : α ≃₀ γ := f.comp g
-@[simp] def OneEquiv.trans (g: α ≃₁ β) (f: β ≃₁ γ) : α ≃₁ γ := f.comp g
-@[simp] def transExpZeroLogOne (g: α ≃₁₀ β) (f: β ≃₀₁ γ) : α ≃₁ γ := compExpZeroLogOne f g
-@[simp] def transLogOneExpZero (g: α ≃₀₁ β) (f: β ≃₁₀ γ) : α ≃₀ γ := compLogOneExpZero f g
+def ZeroEmbedding.trans (g: α ↪₀ β) (f: β ↪₀ γ) : α ↪₀ γ := f.comp g
+def OneEmbedding.trans (g: α ↪₁ β) (f: β ↪₁ γ) : α ↪₁ γ := f.comp g
+
+def AddGroupEmbedding.trans (g: α ↪+ β) (f: β ↪+ γ) : α ↪+ γ := f.comp g
+def GroupEmbedding.trans (g: α ↪* β) (f: β ↪* γ) : α ↪* γ := f.comp g
+
+def ZeroEquiv.trans (g: α ≃₀ β) (f: β ≃₀ γ) : α ≃₀ γ := f.comp g
+def OneEquiv.trans (g: α ≃₁ β) (f: β ≃₁ γ) : α ≃₁ γ := f.comp g
+def transExpZeroLogOne (g: α ≃₁₀ β) (f: β ≃₀₁ γ) : α ≃₁ γ := compExpZeroLogOne f g
+def transLogOneExpZero (g: α ≃₀₁ β) (f: β ≃₁₀ γ) : α ≃₀ γ := compLogOneExpZero f g
 
 def AddGroupEquiv.trans (g: α ≃+ β) (f: β ≃+ γ) : α ≃+ γ := f.comp g
 def GroupEquiv.trans (g: α ≃* β) (f: β ≃* γ) : α ≃* γ := f.comp g
 def transExpLog (g: α ≃ₘ+ β) (f: β ≃ₐ* γ) : α ≃* γ := compExpLog f g
 def transLogExp (g: α ≃ₐ* β) (f: β ≃ₘ+ γ) : α ≃+ γ := compLogExp f g
+
+@[simp] def ZeroEmbedding.apply_trans (f: β ↪₀ γ) (g: α ↪₀ β) : (trans g f) x = f (g x) := rfl
+@[simp] def OneEmbedding.apply_trans (f: β ↪₁ γ) (g: α ↪₁ β) : (trans g f) x = f (g x) := rfl
+
+@[simp] def AddGroupEmbedding.apply_trans (f: β ↪+ γ) (g: α ↪+ β) : (trans g f) x = f (g x) := rfl
+@[simp] def GroupEmbedding.apply_trans (f: β ↪* γ) (g: α ↪* β) : (trans g f) x = f (g x) := rfl
 
 @[simp] def ZeroEquiv.apply_trans (f: β ≃₀ γ) (g: α ≃₀ β) : (trans g f) x = f (g x) := rfl
 @[simp] def OneEquiv.apply_trans (f: β ≃₁ γ) (g: α ≃₁ β) : (trans g f) x = f (g x) := rfl
@@ -383,6 +476,15 @@ def GroupEquiv.symm (f: α ≃* β) : β ≃* α where
 @[simp] def GroupEquiv.coe_symm (f: α ≃* β) : f.symm (f x) = x := Equiv.coe_symm _ _
 @[simp] def GroupEquiv.symm_coe (f: α ≃* β) : f (f.symm x) = x := Equiv.symm_coe _ _
 
+def AddGroupEmbedding.refl (α: Type*) [Zero α] [Add α] : α ↪+ α where
+  toEmbedding := Embedding.id _
+  map_zero := rfl
+  map_add _ _ := rfl
+def GroupEmbedding.refl (α: Type*) [One α] [Mul α] : α ↪* α where
+  toEmbedding := Embedding.id _
+  map_one := rfl
+  map_mul _ _ := rfl
+
 def AddGroupEquiv.refl (α: Type*) [Zero α] [Add α] : α ≃+ α where
   toEquiv := Equiv.id _
   map_zero := rfl
@@ -391,6 +493,9 @@ def GroupEquiv.refl (α: Type*) [One α] [Mul α] : α ≃* α where
   toEquiv := Equiv.id _
   map_one := rfl
   map_mul _ _ := rfl
+
+@[simp] def AddGroupEmbedding.apply_refl (x: α) : AddGroupEmbedding.refl _ x = x := rfl
+@[simp] def GroupEmbedding.apply_refl (x: α) : GroupEmbedding.refl _ x = x := rfl
 
 @[simp] def AddGroupEquiv.apply_refl (x: α) : AddGroupEquiv.refl _ x = x := rfl
 @[simp] def GroupEquiv.apply_refl (x: α) : GroupEquiv.refl _ x = x := rfl

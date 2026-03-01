@@ -71,6 +71,11 @@ structure PreLogHom (α β: Type*) [Mul α] [Add β] extends Hom α β where
 structure PreExpHom (α β: Type*) [Add α] [Mul β] extends Hom α β where
   protected map_add_to_mul (a₀ a₁): toFun (a₀ + a₁) = toFun a₀ * toFun a₁
 
+structure MulEmbedding (α β: Type*) [Mul α] [Mul β] extends α ↪ β, MulHom α β where
+structure AddEmbedding (α β: Type*) [Add α] [Add β] extends α ↪ β, AddHom α β where
+structure PreLogEmbedding (α β: Type*) [Mul α] [Add β] extends α ↪ β, PreLogHom α β where
+structure PreExpEmbedding (α β: Type*) [Add α] [Mul β] extends α ↪ β, PreExpHom α β where
+
 structure MulEquiv (α β: Type*) [Mul α] [Mul β] extends α ≃ β, MulHom α β where
 structure AddEquiv (α β: Type*) [Add α] [Add β] extends α ≃ β, AddHom α β where
 structure PreLogEquiv (α β: Type*) [Mul α] [Add β] extends α ≃ β, PreLogHom α β where
@@ -80,6 +85,11 @@ infixr:80 " →*ₙ " => MulHom
 infixr:80 " →+ₙ " => AddHom
 infixr:80 " →ₘ+ₙ " => PreLogHom
 infixr:80 " →ₐ*ₙ " => PreExpHom
+
+infixr:80 " ↪*ₙ " => MulEmbedding
+infixr:80 " ↪+ₙ " => AddEmbedding
+infixr:80 " ↪ₘ+ₙ " => PreLogEmbedding
+infixr:80 " ↪ₐ*ₙ " => PreExpEmbedding
 
 infixr:80 " ≃*ₙ " => MulEquiv
 infixr:80 " ≃+ₙ " => AddEquiv
@@ -111,6 +121,16 @@ instance (priority := 10000) : IsMulHom (α →*ₙ β) α β where
 instance (priority := 10000) : IsAddHom (α →+ₙ β) α β where
 instance (priority := 10000) : IsLogHom (α →ₘ+ₙ β) α β where
 instance (priority := 10000) : IsExpHom (α →ₐ*ₙ β) α β where
+
+instance (priority := 10000) : EmbeddingLike (α ↪*ₙ β) α β where
+instance (priority := 10000) : EmbeddingLike (α ↪+ₙ β) α β where
+instance (priority := 10000) : EmbeddingLike (α ↪ₐ*ₙ β) α β where
+instance (priority := 10000) : EmbeddingLike (α ↪ₘ+ₙ β) α β where
+
+instance (priority := 10000) : IsMulHom (α ↪*ₙ β) α β where
+instance (priority := 10000) : IsAddHom (α ↪+ₙ β) α β where
+instance (priority := 10000) : IsLogHom (α ↪ₘ+ₙ β) α β where
+instance (priority := 10000) : IsExpHom (α ↪ₐ*ₙ β) α β where
 
 instance (priority := 10000) : EquivLike (α ≃*ₙ β) α β where
 instance (priority := 10000) : EquivLike (α ≃+ₙ β) α β where
@@ -146,10 +166,26 @@ def MulOfAdd.mk_get_homₙ (a: α) : getHomₙ (mkHomₙ a) = a := rfl
 def AddOfMul.get_mk_homₙ (a: AddOfMul α) : mkHomₙ (getHomₙ a) = a := rfl
 def MulOfAdd.get_mk_homₙ (a: MulOfAdd α) : mkHomₙ (getHomₙ a) = a := rfl
 
+@[simp] def AddEmbedding.apply_toEmbedding (f: α ↪+ₙ β) (x: α) : f.toEmbedding x = f x := rfl
+@[simp] def MulEmbedding.apply_toEmbedding (f: α ↪*ₙ β) (x: α) : f.toEmbedding x = f x := rfl
+@[simp] def PreLogEmbedding.apply_toEmbedding (f: α ↪ₘ+ₙ β) (x: α) : f.toEmbedding x = f x := rfl
+@[simp] def PreExpEmbedding.apply_toEmbedding (f: α ↪ₐ*ₙ β) (x: α) : f.toEmbedding x = f x := rfl
+
 @[simp] def AddEquiv.apply_toEquiv (f: α ≃+ₙ β) (x: α) : f.toEquiv x = f x := rfl
 @[simp] def MulEquiv.apply_toEquiv (f: α ≃*ₙ β) (x: α) : f.toEquiv x = f x := rfl
 @[simp] def PreLogEquiv.apply_toEquiv (f: α ≃ₘ+ₙ β) (x: α) : f.toEquiv x = f x := rfl
 @[simp] def PreExpEquiv.apply_toEquiv (f: α ≃ₐ*ₙ β) (x: α) : f.toEquiv x = f x := rfl
+
+def AddEmbedding.comp (f: β ↪+ₙ γ) (g: α ↪+ₙ β) : α ↪+ₙ γ where
+  toEmbedding := f.toEmbedding.comp g.toEmbedding
+  map_add a b := by
+    dsimp
+    rw [map_add, map_add]
+def MulEmbedding.comp (f: β ↪*ₙ γ) (g: α ↪*ₙ β) : α ↪*ₙ γ where
+  toEmbedding := f.toEmbedding.comp g.toEmbedding
+  map_mul a b := by
+    dsimp
+    rw [map_mul, map_mul]
 
 def AddEquiv.comp (f: β ≃+ₙ γ) (g: α ≃+ₙ β) : α ≃+ₙ γ where
   toEquiv := f.toEquiv.comp g.toEquiv
@@ -161,27 +197,34 @@ def MulEquiv.comp (f: β ≃*ₙ γ) (g: α ≃*ₙ β) : α ≃*ₙ γ where
   map_mul a b := by
     dsimp
     rw [map_mul, map_mul]
-def compPreExpLog (f: β ≃ₐ*ₙ γ) (g: α ≃ₘ+ₙ β) : α ≃*ₙ γ where
+def eqvCompPreExpLog (f: β ≃ₐ*ₙ γ) (g: α ≃ₘ+ₙ β) : α ≃*ₙ γ where
   toEquiv := f.toEquiv.comp g.toEquiv
   map_mul a b := by
     dsimp
     rw [map_mul_to_add, map_add_to_mul]
-def compPreLogExp (f: β ≃ₘ+ₙ γ) (g: α ≃ₐ*ₙ β) : α ≃+ₙ γ where
+def eqvCompPreLogExp (f: β ≃ₘ+ₙ γ) (g: α ≃ₐ*ₙ β) : α ≃+ₙ γ where
   toEquiv := f.toEquiv.comp g.toEquiv
   map_add a b := by
     dsimp
     rw [map_add_to_mul, map_mul_to_add]
 
+@[simp] def AddEmbedding.apply_comp (f: β ↪+ₙ γ) (g: α ↪+ₙ β) : (f.comp g) x = f (g x) := rfl
+@[simp] def MulEmbedding.apply_comp (f: β ↪*ₙ γ) (g: α ↪*ₙ β) : (f.comp g) x = f (g x) := rfl
+
 @[simp] def AddEquiv.apply_comp (f: β ≃+ₙ γ) (g: α ≃+ₙ β) : (f.comp g) x = f (g x) := rfl
 @[simp] def MulEquiv.apply_comp (f: β ≃*ₙ γ) (g: α ≃*ₙ β) : (f.comp g) x = f (g x) := rfl
-@[simp] def apply_compPreExpLog (f: β ≃ₐ*ₙ γ) (g: α ≃ₘ+ₙ β) : (compPreExpLog f g) x = f (g x) := rfl
-@[simp] def apply_compPreLogExp (f: β ≃ₘ+ₙ γ) (g: α ≃ₐ*ₙ β) : (compPreLogExp f g) x = f (g x) := rfl
+@[simp] def apply_compPreExpLog (f: β ≃ₐ*ₙ γ) (g: α ≃ₘ+ₙ β) : (eqvCompPreExpLog f g) x = f (g x) := rfl
+@[simp] def apply_compPreLogExp (f: β ≃ₘ+ₙ γ) (g: α ≃ₐ*ₙ β) : (eqvCompPreLogExp f g) x = f (g x) := rfl
 
+def AddEmbedding.trans (g: α ↪+ₙ β) (f: β ↪+ₙ γ) : α ↪+ₙ γ := f.comp g
+def MulEmbedding.trans (g: α ↪*ₙ β) (f: β ↪*ₙ γ) : α ↪*ₙ γ := f.comp g
 def AddEquiv.trans (g: α ≃+ₙ β) (f: β ≃+ₙ γ) : α ≃+ₙ γ := f.comp g
 def MulEquiv.trans (g: α ≃*ₙ β) (f: β ≃*ₙ γ) : α ≃*ₙ γ := f.comp g
-def transPreExpLog (g: α ≃ₘ+ₙ β) (f: β ≃ₐ*ₙ γ) : α ≃*ₙ γ := compPreExpLog f g
-def transPreLogExp (g: α ≃ₐ*ₙ β) (f: β ≃ₘ+ₙ γ) : α ≃+ₙ γ := compPreLogExp f g
+def transPreExpLog (g: α ≃ₘ+ₙ β) (f: β ≃ₐ*ₙ γ) : α ≃*ₙ γ := eqvCompPreExpLog f g
+def transPreLogExp (g: α ≃ₐ*ₙ β) (f: β ≃ₘ+ₙ γ) : α ≃+ₙ γ := eqvCompPreLogExp f g
 
+@[simp] def AddEmbedding.apply_trans (g: α ↪+ₙ β) (f: β ↪+ₙ γ) : (g.trans f) x = f (g x) := rfl
+@[simp] def MulEmbedding.apply_trans (g: α ↪*ₙ β) (f: β ↪*ₙ γ) : (g.trans f) x = f (g x) := rfl
 @[simp] def AddEquiv.apply_trans (g: α ≃+ₙ β) (f: β ≃+ₙ γ) : (g.trans f) x = f (g x) := rfl
 @[simp] def MulEquiv.apply_trans (g: α ≃*ₙ β) (f: β ≃*ₙ γ) : (g.trans f) x = f (g x) := rfl
 @[simp] def apply_transPreExpLog (g: α ≃ₘ+ₙ β) (f: β ≃ₐ*ₙ γ) : (transPreExpLog g f) x = f (g x) := rfl
@@ -207,6 +250,13 @@ def MulEquiv.symm (f: α ≃*ₙ β) : β ≃*ₙ α where
 @[simp] def MulEquiv.coe_symm (f: α ≃*ₙ β) : f.symm (f x) = x := Equiv.coe_symm _ _
 @[simp] def MulEquiv.symm_coe (f: α ≃*ₙ β) : f (f.symm x) = x := Equiv.symm_coe _ _
 
+def AddEmbedding.refl (α: Type*) [Add α] : α ↪+ₙ α where
+  toEmbedding := Embedding.id _
+  map_add _ _ := rfl
+def MulEmbedding.refl (α: Type*) [Mul α] : α ↪*ₙ α where
+  toEmbedding := Embedding.id _
+  map_mul _ _ := rfl
+
 def AddEquiv.refl (α: Type*) [Add α] : α ≃+ₙ α where
   toEquiv := Equiv.id _
   map_add _ _ := rfl
@@ -214,8 +264,21 @@ def MulEquiv.refl (α: Type*) [Mul α] : α ≃*ₙ α where
   toEquiv := Equiv.id _
   map_mul _ _ := rfl
 
+@[simp] def AddEmbedding.apply_refl (x: α) : AddEmbedding.refl _ x = x := rfl
+@[simp] def MulEmbedding.apply_refl (x: α) : MulEmbedding.refl _ x = x := rfl
+
 @[simp] def AddEquiv.apply_refl (x: α) : AddEquiv.refl _ x = x := rfl
 @[simp] def MulEquiv.apply_refl (x: α) : MulEquiv.refl _ x = x := rfl
+
+private instance : EmbeddingOpsCheck Add (fun α β _ _ => α ↪+ₙ β) where
+  comp := AddEmbedding.comp
+  trans := AddEmbedding.trans
+  refl := AddEmbedding.refl
+
+private instance : EmbeddingOpsCheck Mul (fun α β _ _ => α ↪*ₙ β) where
+  comp := MulEmbedding.comp
+  trans := MulEmbedding.trans
+  refl := MulEmbedding.refl
 
 private instance : EquivOpsCheck Add (fun α β _ _ => α ≃+ₙ β) where
   comp := AddEquiv.comp
