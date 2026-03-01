@@ -108,8 +108,6 @@ def map_mul_to_add (f: F) (a₀ a₁: α) : f (a₀ * a₁) = f a₀ + f a₁ :=
 
 def map_add_to_mul (f: F) (a₀ a₁: α) : f (a₀ + a₁) = f a₀ * f a₁ := IsExpHom.map_add_to_mul f a₀ a₁
 
-instance (priority := 10000) : FunLike (Hom α β) α β where
-
 instance (priority := 10000) : FunLike (α →*ₙ β) α β where
 instance (priority := 10000) : FunLike (α →+ₙ β) α β where
 instance (priority := 10000) : FunLike (α →ₐ*ₙ β) α β where
