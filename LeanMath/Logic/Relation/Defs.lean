@@ -95,13 +95,13 @@ class IsSymm (R: α -> α -> Prop) where
 class IsTrans (R: α -> α -> Prop) where
   protected trans {a b c: α} : R a b -> R b c -> R a c
 
-class IsAntisymm (R: α -> α -> Prop) (E: outParam (α -> α -> Prop) := (· = ·)) where
+class IsAntisymm (R: α -> α -> Prop) (E: outParam (α -> α -> Prop)) where
   protected antisymm {a b: α} : R a b -> R b a -> E a b
 
 class IsTotal (R: α -> α -> Prop) where
   protected total (a b: α) : R a b ∨ R b a
 
-class IsTrichotomous (R: α -> α -> Prop) (E: outParam (α -> α -> Prop) := (· = ·)) where
+class IsTrichotomous (R: α -> α -> Prop) (E: outParam (α -> α -> Prop)) where
   protected trichotomous (a b: α) : R a b ∨ E a b ∨ R b a
 
 class IsIrrefl (R: α -> α -> Prop) where
@@ -119,7 +119,7 @@ def trans {R: α -> α -> Prop} [IsTrans R] {a b c: α} : R a b -> R b c -> R a 
 
 def antisymm {R E: α -> α -> Prop} [IsAntisymm R E] {a b: α} : R a b -> R b a -> E a b := IsAntisymm.antisymm
 def total (R: α -> α -> Prop) [IsTotal R]  (a b: α) : R a b ∨ R b a := IsTotal.total a b
-def trichotomous (R: α -> α -> Prop) {E: α -> α -> Prop} [IsTrichotomous R E] (a b: α) : R a b ∨ E a b ∨ R b a := IsTrichotomous.trichotomous a b
+def trichotomous (R: α -> α -> Prop) {E: outParam <| α -> α -> Prop} (a b: α) [IsTrichotomous R E] : R a b ∨ E a b ∨ R b a := IsTrichotomous.trichotomous a b
 def irrefl {R: α -> α -> Prop} [IsIrrefl R] {a: α} : ¬R a a := IsIrrefl.irrefl
 def asymm {R: α -> α -> Prop} [IsAsymm R] {a b: α} : R a b -> R b a -> False := IsAsymm.asymm
 def wf (R: α -> α -> Prop) [IsWelFounded R] : WellFounded R := IsWelFounded.wf
