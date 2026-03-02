@@ -280,4 +280,30 @@ def setoid (R: α -> α -> Prop) [IsRefl R] [IsTrans R] [IsSymm R] : Setoid α w
   r := R
   iseqv := equiv R
 
+section WellFounded
+
+variable (R: α -> α -> Prop) [Relation.IsWelFounded R] {P: α -> Prop} (h: ∃a, P a)
+
+def exists_min : ∃a, P a ∧ ∀b, R b a -> ¬P b := by
+  obtain ⟨x, Pa⟩ := h
+  induction x using (wf R).induction with
+  | h a ih =>
+  by_cases g:∃x, P x ∧ R x a
+  · obtain ⟨x, Px, hx⟩ := g
+    apply ih
+    assumption
+    assumption
+  · refine ⟨a, Pa, ?_⟩
+    intro x hx px
+    apply g
+    refine ⟨_, px, hx⟩
+
+noncomputable def min : α := Classical.choose (exists_min R h)
+def min_spec : P (min R h) := (Classical.choose_spec (exists_min R h)).left
+def min_minimal : ∀a, R a (min R h) -> ¬P a := (Classical.choose_spec (exists_min R h)).right
+
+attribute [irreducible] min
+
+end WellFounded
+
 end Relation

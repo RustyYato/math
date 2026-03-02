@@ -2,6 +2,29 @@ import LeanMath.Logic.Relation.Defs
 
 open Relation
 
+infixl:68 " ⊔ " => max
+infixl:69 " ⊓ " => min
+
+def OrderOpp (α: Sort u) := α
+
+def OrderOpp.get : OrderOpp α -> α := id
+def OrderOpp.mk : α -> OrderOpp α := id
+
+postfix:max "ᵒᵖ" => OrderOpp
+
+attribute [local irreducible] OrderOpp
+
+instance [LE α] : LE αᵒᵖ where
+  le a b := b.get ≤ a.get
+
+instance [LT α] : LT αᵒᵖ where
+  lt a b := b.get < a.get
+
+instance [Max α] : Min αᵒᵖ where
+  min a b := .mk <| a.get ⊔ b.get
+instance [Min α] : Max αᵒᵖ where
+  max a b := .mk <| a.get ⊓ b.get
+
 class IsLawfulLT (α: Type) [LE α] [LT α] : Prop where
   protected lt_iff_le_and_not_ge {a b: α} : a < b ↔ a ≤ b ∧ ¬b ≤ a
 
@@ -13,6 +36,22 @@ class IsPartialOrder (α: Type) [LE α] [LT α] : Prop
 
 class IsLinearOrder (α: Type) [LE α] [LT α] : Prop
   extends IsPartialOrder α, @Relation.IsTotal α (· ≤ ·) where
+
+class IsLawfulMax (α: Type) [LE α] [Max α] : Prop where
+  protected left_le_max {a b: α} : a ≤ a ⊔ b
+  protected right_le_max {a b: α} : b ≤ a ⊔ b
+
+class IsLawfulMin (α: Type) [LE α] [Min α] : Prop where
+  protected min_le_left {a b: α} : a ⊓ b ≤ a
+  protected min_le_right {a b: α} : a ⊓ b ≤ b
+
+class IsSemiLatticeMax (α: Type) [LE α] [LT α] [Max α] : Prop extends IsPartialOrder α, IsLawfulMax α where
+  protected max_le {x a b: α} : a ≤ x -> b ≤ x -> a ⊔ b ≤ x
+
+class IsSemiLatticeMin (α: Type) [LE α] [LT α] [Min α] : Prop extends IsPartialOrder α, IsLawfulMin α where
+  protected le_min {x a b: α} : x ≤ a -> x ≤ b -> x ≤ a ⊓ b
+
+class IsLattice (α: Type) [LE α] [LT α] [Max α] [Min α] : Prop extends IsSemiLatticeMax α, IsSemiLatticeMin α where
 
 variable [LE α] [LT α]
 
@@ -61,6 +100,22 @@ instance : IsLinearOrder Int where
   trans := Int.le_trans
   antisymm := Int.le_antisymm
   total := Int.le_total
+
+instance : IsLattice Nat where
+  left_le_max := Nat.le_max_left _ _
+  right_le_max := Nat.le_max_right _ _
+  max_le h g := Nat.max_le.mpr ⟨h, g⟩
+  min_le_left := Nat.min_le_left _ _
+  min_le_right := Nat.min_le_right _ _
+  le_min h g := Nat.le_min.mpr ⟨h, g⟩
+
+instance : IsLattice Int where
+  left_le_max := Int.le_max_left _ _
+  right_le_max := Int.le_max_right _ _
+  max_le h g := Int.max_le.mpr ⟨h, g⟩
+  min_le_left := Int.min_le_left _ _
+  min_le_right := Int.min_le_right _ _
+  le_min h g := Int.le_min.mpr ⟨h, g⟩
 
 variable [DecidableRel (α := α) (· ≤ ·)]
 
