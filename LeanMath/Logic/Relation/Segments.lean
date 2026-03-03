@@ -167,3 +167,62 @@ def InitialSegment.principal_or_eqv [Relation.IsWellOrder s] (f: r ≼r s) : Non
       rfl
     map_rel := map_rel f
   }
+
+def InitialSegment.trans_princ [Relation.IsWellOrder t] (f: r ≼r s) (g: s ≺r t) : r ≺r t where
+  toRelEmbedding := f.toRelEmbedding.trans g.toRelEmbedding
+  isPrincipal := by
+    have := g.toRelEmbedding.liftWellOrder
+    have := f.toRelEmbedding.liftWellOrder
+    -- have ⟨top, htop⟩ := g.IsPrincipal
+    have h : ∃x, ∀a, t (g (f a)) x := by
+      have ⟨top, htop⟩ := g.IsPrincipal
+      exists top
+      intro a
+      apply (htop _).mpr
+      apply Set.mem_range'
+    let top := Relation.min t h
+    have htop := Relation.min_spec t h
+    have top_min := Relation.min_minimal t h
+    exists top
+    intro b
+    symm; apply Iff.intro
+    · simp; intro _ rfl
+      apply htop
+    · simp; intro hb
+      have := top_min _ hb
+      simp at this
+      let a := Relation.min r this
+      have ha := Relation.min_spec r this
+      have a_min : ∀x, r x a -> _ := Relation.min_minimal r this
+      simp at a_min
+      exists a
+      rcases Relation.trichotomous t b (g (f a)) with h | h | h
+      · have := a_min
+        obtain ⟨b, _, rfl⟩ := g.toInitialSegment.IsInitial _ _ h
+        obtain ⟨b, _, rfl⟩ := f.IsInitial _ _ (map_rel_rev g h)
+        show g _ = g (f _); congr
+        nomatch Relation.irrefl (a_min b (map_rel_rev f (map_rel_rev g h)))
+      · assumption
+      · nomatch ha h
+
+def PrincipalSegment.trans_init [Relation.IsTrans t] (f: r ≺r s) (g: s ≼r t) : r ≺r t where
+  toRelEmbedding := f.toRelEmbedding.trans g.toRelEmbedding
+  isPrincipal := by
+    have := g.toRelHom.liftTrans
+    have := f.toRelHom.liftTrans
+    have ⟨top, htop⟩ := f.IsPrincipal
+    exists g top
+    intro b
+    apply Iff.intro
+    · intro h
+      simp; show ∃i, b = g (f _)
+      obtain ⟨b, _, rfl⟩ := g.IsInitial _ _ h
+      replace h := map_rel_rev g h
+      have ⟨i, _, hi⟩ := (htop _).mp h
+      exists i
+      rw [hi]
+    · rintro ⟨a, _, rfl⟩
+      show t (g (f a)) _
+      apply map_rel_fwd
+      apply (htop _).mpr
+      apply Set.mem_range'

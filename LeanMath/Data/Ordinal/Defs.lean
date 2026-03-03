@@ -1,5 +1,5 @@
 import LeanMath.Tactic.PPWithUniv
-import LeanMath.Logic.Relation.Defs
+import LeanMath.Logic.Relation.Segments
 
 @[pp_with_univ]
 structure Ordinal.Pre.{u} where
@@ -80,6 +80,32 @@ def ind {motive: Ordinal -> Prop} (type: ∀{α} (r: α -> α -> Prop) [Relation
   induction o using Quotient.ind with | _ o =>
   apply type
 
+def sound {r: α -> α -> Prop} {s: β -> β -> Prop} [Relation.IsWellOrder r] [Relation.IsWellOrder s] : r ≃r s -> type r = type s := by
+  intro h
+  unfold type; congr 1
+  apply Quotient.sound
+  exact ⟨h⟩
+
+instance : LE Ordinal where
+  le := lift₂ (fun r s => Nonempty (r ≼r s)) <| by
+    intro α₀ β₀ α₁ β₁ r₀ r₁ s₀ s₁ _ _ _ _ h₀ h₁
+    simp
+    apply Iff.intro
+    · intro ⟨f⟩
+      exact ⟨h₀.symm.toInitialSegment.trans (f.trans h₁.toInitialSegment)⟩
+    · intro ⟨f⟩
+      exact ⟨h₀.toInitialSegment.trans (f.trans h₁.symm.toInitialSegment)⟩
+
+instance : LT Ordinal where
+  lt := lift₂ (fun r s => Nonempty (r ≺r s)) <| by
+    intro α₀ β₀ α₁ β₁ r₀ r₁ s₀ s₁ _ _ _ _ h₀ h₁
+    simp
+    apply Iff.intro
+    · intro ⟨f⟩
+      exact ⟨h₀.symm.toInitialSegment.trans_princ (f.trans_init h₁.toInitialSegment)⟩
+    · intro ⟨f⟩
+      exact ⟨h₀.toInitialSegment.trans_princ (f.trans_init h₁.symm.toInitialSegment)⟩
+
 def type_in_ty (r: α -> α -> Prop) [Relation.IsWellOrder r] (a: α) := { x: α // r x a }
 def type_in_rel (r: α -> α -> Prop) [Relation.IsWellOrder r] (a: α) (x y: type_in_ty r a) : Prop := r x.val y.val
 
@@ -91,5 +117,49 @@ def type_in_rel_to_rel (r: α -> α -> Prop) [Relation.IsWellOrder r] (a: α) : 
 instance {α: Type*} (r: α -> α -> Prop) [Relation.IsWellOrder r] (a: α) : Relation.IsWellOrder (type_in_rel r a) :=
   (type_in_rel_to_rel r a).liftWellOrder
 def type_in (r: α -> α -> Prop) [Relation.IsWellOrder r] (a: α) : Ordinal := type (type_in_rel r a)
+
+def type_in_lt_type (r: α -> α -> Prop) [Relation.IsWellOrder r] (a: α) : type_in r a < type r := by
+  refine ⟨{
+    toFun := Subtype.val
+    inj := Subtype.val_inj
+    map_rel := Iff.rfl
+    isPrincipal := by
+      exists a
+      intro b
+      apply Iff.intro
+      · intro h
+        simp; exists ⟨_, h⟩
+      · rintro ⟨a, _, rfl⟩
+        exact a.property
+  }⟩
+
+def of_lt_type {r: α -> α -> Prop} [Relation.IsWellOrder r] : ∀{o}, o < type r -> ∃a, o = type_in r a := by
+  intro o hi
+  induction o with | @type β s =>
+  have ⟨f⟩ := hi; simp at f
+  have ⟨top, htop⟩ := f.IsPrincipal
+  have (a: { a // r a top }) : ∃b, a = f b := by simpa using (htop a.val).mp a.property
+  replace this := Classical.axiomOfChoice this
+  obtain ⟨g, hg⟩ := this
+  exists top
+  apply sound
+  exact {
+    toFun b := {
+      val := f b
+      property := by
+        apply (htop _).mpr
+        apply Set.mem_range'
+    }
+    invFun := g
+    map_rel := map_rel f
+    leftInv _ := by
+      dsimp; congr; symm
+      apply hg
+    rightInv _ := by
+      symm; dsimp
+      apply f.inj
+      show f _ = f _
+      rw [←hg]
+  }
 
 end Ordinal
