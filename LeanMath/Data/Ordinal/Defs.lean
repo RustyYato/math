@@ -1,4 +1,5 @@
 import LeanMath.Tactic.PPWithUniv
+import LeanMath.Tactic.AxiomBlame
 import LeanMath.Logic.Relation.Segments
 
 @[pp_with_univ]
@@ -161,5 +162,84 @@ def of_lt_type {r: α -> α -> Prop} [Relation.IsWellOrder r] : ∀{o}, o < type
       show f _ = f _
       rw [←hg]
   }
+
+def ulift_rel (r: α -> α -> Prop) : ULift α -> ULift α -> Prop := fun a b => r a.down b.down
+
+def ulift_rel_eqv_rel (r: α -> α -> Prop) : ulift_rel r ≃r r where
+  toFun x := x.down
+  invFun x := ⟨x⟩
+  leftInv _ := rfl
+  rightInv _ := rfl
+  map_rel := Iff.rfl
+
+
+instance [Relation.IsWellOrder r] : Relation.IsWellOrder (ulift_rel r) := (ulift_rel_eqv_rel r).toRelEmbedding.liftWellOrder
+
+def ulift.{v, u} : Ordinal.{u} -> Ordinal.{max u v} :=
+  lift (fun r => type (ulift_rel r)) <| by
+    intro α β r s _ _ h
+    dsimp
+    apply sound
+    apply (ulift_rel_eqv_rel _).trans
+    apply h.trans
+    exact (ulift_rel_eqv_rel _).symm
+
+def omega': Ordinal.{0} := type (α := ℕ) (· < ·)
+def omega.{u} := ulift.{u} omega'
+
+def ofNat' (n: ℕ) := type (α := Fin n) (· < ·)
+def ofNat.{u} (n: ℕ) := ulift.{u} (ofNat' n)
+
+def lt_omega_iff : ∀{o: Ordinal.{u}}, o < omega ↔ ∃n, o = ofNat n := by
+  intro o
+  apply Iff.intro
+  · induction o with | type r =>
+    intro ⟨g⟩
+    dsimp at g
+    replace g := g.trans_init (ulift_rel_eqv_rel _).toInitialSegment
+    have ⟨n, hn⟩ := g.IsPrincipal
+    dsimp at hn
+    have  hg (x): g x < n := by
+      apply (hn _).mpr
+      apply Set.mem_range'
+    replace hn (x: Fin n) := (hn x).mp x.isLt
+    simp at hn; replace hn := Classical.axiomOfChoice hn
+    obtain ⟨f, hf⟩ := hn
+    exists n
+    apply sound
+    apply RelEquiv.trans _ (ulift_rel_eqv_rel _).symm
+    simp
+    exact {
+      toFun x := {
+          val := g x
+          isLt := hg _
+      }
+      invFun := f
+      map_rel := map_rel g
+      leftInv x := by simp; congr; symm; apply hf
+      rightInv := by
+        intro x
+        simp; apply g.inj
+        show g _ = g _
+        rw [←hf]
+    }
+  · rintro ⟨n, rfl⟩
+    refine ⟨?_⟩
+    simp
+    apply (ulift_rel_eqv_rel _).toInitialSegment.trans_princ
+    apply PrincipalSegment.trans_init _ (ulift_rel_eqv_rel _).symm.toInitialSegment
+    exact {
+      toFun := Fin.val
+      inj _ _ := Fin.val_inj.mp
+      map_rel := Iff.rfl
+      isPrincipal := by
+        exists n; intro m
+        simp
+        apply Iff.intro
+        · intro h
+          exists ⟨_, h⟩
+        · rintro ⟨_, rfl⟩
+          apply Fin.isLt
+    }
 
 end Ordinal

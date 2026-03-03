@@ -1,5 +1,6 @@
 import LeanMath.Logic.Funlike
 import LeanMath.Data.Bijection.Defs
+import LeanMath.Data.Embedding.Defs
 
 structure Equiv (α β: Sort*) where
   toFun: α -> β
@@ -96,6 +97,12 @@ def toBij (f: α ≃ β) : α ↭ β where
   surj' := f.surj
 
 @[simp] def apply_toBij (f: α ≃ β) : f.toBij x = f x := rfl
+
+def toEmbedding (f: α ≃ β) : α ↪ β where
+  toFun := f
+  inj := f.inj
+
+@[simp] def apply_toEmbedding (f: α ≃ β) : f.toEmbedding x = f x := rfl
 
 class Nop (α: Sort u) where
 instance : Nop α where

@@ -78,6 +78,10 @@ def RelEquiv.symm (f: r ≃r s) : s ≃r r where
     rw (occs := [1]) [←f.symm_coe a, ←f.symm_coe b]
     apply (map_rel f).symm
 
+def RelEquiv.toRelEmbedding (f: r ≃r s) : r ↪r s where
+  toEmbedding := f.toEmbedding
+  map_rel := map_rel f
+
 end
 
 namespace Relation
@@ -367,3 +371,15 @@ def RelEmbedding.liftTrichotomous (f: r ↪r s) [Relation.IsTrichotomous s (· =
 def RelEmbedding.liftWellOrder (f: r ↪r s) [Relation.IsWellOrder s] : Relation.IsWellOrder r := {
   f.toRelHom.liftTrans, f.toRelHom.liftWellfounded, f.liftTrichotomous with
 }
+
+instance : @Relation.IsWellOrder ℕ (· < ·) where
+  trans := Nat.lt_trans
+  trichotomous := Nat.lt_trichotomy
+  wf := Nat.lt_wfRel.wf
+
+def Fin.relEmb : (fun a b: Fin n => a < b) ↪r (fun a b: Nat => a < b) where
+  toFun := Fin.val
+  inj _ _ := Fin.val_inj.mp
+  map_rel := Iff.rfl
+
+instance : @Relation.IsWellOrder (Fin n) (· < ·) := Fin.relEmb.liftWellOrder
