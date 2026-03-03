@@ -26,11 +26,9 @@ structure RelMap {α β: Sort*} (r: α -> α -> Prop) (s: β -> β -> Prop) exte
 structure RelHom {α β: Sort*} (r: α -> α -> Prop) (s: β -> β -> Prop) extends Hom α β where
   protected map_rel : ∀{a b: α}, r a b ↔ s (toFun a) (toFun b)
 
-structure RelEmbedding {α β: Sort*} (r: α -> α -> Prop) (s: β -> β -> Prop) extends α ↪ β where
-  protected map_rel : ∀{a b: α}, r a b ↔ s (toFun a) (toFun b)
+structure RelEmbedding {α β: Sort*} (r: α -> α -> Prop) (s: β -> β -> Prop) extends α ↪ β, RelHom r s where
 
-structure RelEquiv {α β: Sort*} (r: α -> α -> Prop) (s: β -> β -> Prop) extends α ≃ β where
-  protected map_rel : ∀{a b: α}, r a b ↔ s (toFun a) (toFun b)
+structure RelEquiv {α β: Sort*} (r: α -> α -> Prop) (s: β -> β -> Prop) extends α ≃ β, RelHom r s where
 
 infixr:80 " →r₀ " => RelMap
 infixr:80 " →r " => RelHom
@@ -39,7 +37,7 @@ infixr:80 " ≃r " => RelEquiv
 
 section
 
-variable {α β: Type*} (r: α -> α -> Prop) (s: β -> β -> Prop)
+variable {α β γ: Type*} {r: α -> α -> Prop} {s: β -> β -> Prop} {t: γ -> γ -> Prop}
 
 instance : FunLike (r →r₀ s) α β where
 instance : IsRelMap (r →r₀ s) r s where
@@ -47,11 +45,38 @@ instance : IsRelMap (r →r₀ s) r s where
 instance : FunLike (r →r s) α β where
 instance : IsRelHom (r →r s) r s where
 
-instance : FunLike (r ↪r s) α β where
+instance : EmbeddingLike (r ↪r s) α β where
 instance : IsRelHom (r ↪r s) r s where
 
-instance : FunLike (r ≃r s) α β where
+instance : EquivLike (r ≃r s) α β where
 instance : IsRelHom (r ≃r s) r s where
+
+def RelEmbedding.id (r: α -> α -> Prop) : r ↪r r where
+  toEmbedding := Embedding.id _
+  map_rel := Iff.rfl
+
+def RelEmbedding.trans (f: r ↪r s) (g: s ↪r t) : r ↪r t where
+  toEmbedding := f.toEmbedding.trans g.toEmbedding
+  map_rel := Iff.trans (map_rel f) (map_rel g)
+
+@[simp] def RelEmbedding.apply_toFun (f: r ↪r s) : f.toFun x = f x := rfl
+
+def RelEquiv.id (r: α -> α -> Prop) : r ≃r r where
+  toEquiv := Equiv.id _
+  map_rel := Iff.rfl
+
+def RelEquiv.comp (f: s ≃r t) (g: r ≃r s) : r ≃r t where
+  toEquiv := f.toEquiv.comp g.toEquiv
+  map_rel := (map_rel g).trans (map_rel f)
+
+def RelEquiv.trans (f: r ≃r s) (g: s ≃r t) : r ≃r t := RelEquiv.comp g f
+
+def RelEquiv.symm (f: r ≃r s) : s ≃r r where
+  toEquiv := f.toEquiv.symm
+  map_rel := by
+    intro a b
+    rw (occs := [1]) [←f.symm_coe a, ←f.symm_coe b]
+    apply (map_rel f).symm
 
 end
 
@@ -112,6 +137,12 @@ class IsAsymm (R: α -> α -> Prop) where
 
 class IsWelFounded (R: α -> α -> Prop) where
   protected wf : WellFounded R
+
+class IsWellOrder (R: α -> α -> Prop) extends
+  Relation.IsTrans R, Relation.IsWelFounded R, Relation.IsTrichotomous R (· = ·)
+
+
+instance[Relation.IsTrans R] [Relation.IsWelFounded R] [Relation.IsTrichotomous R (· = ·)] : IsWellOrder R where
 
 @[refl] def refl {R: α -> α -> Prop} [IsRefl R] (a: α) : R a a := IsRefl.refl _
 def symm {R: α -> α -> Prop} [IsSymm R] {a b: α} : R a b -> R b a := IsSymm.symm
@@ -307,3 +338,32 @@ attribute [irreducible] min
 end WellFounded
 
 end Relation
+
+open Relation
+
+variable {α β γ: Type*} {r: α -> α -> Prop} {s: β -> β -> Prop} {t: γ -> γ -> Prop}
+
+def RelHom.liftTrans (f: r →r s) [Relation.IsTrans s] : Relation.IsTrans r where
+  trans := by
+    intro a b c h g
+    exact map_rel_rev f <| trans (map_rel_fwd f h) (map_rel_fwd f g)
+def RelHom.liftWellfounded (f: r →r s) [Relation.IsWelFounded s] : Relation.IsWelFounded r where
+  wf := by
+    apply WellFounded.intro
+    intro a
+    generalize hb:f a = b
+    induction b using (wf s).induction generalizing a with
+    | h b ih =>
+    subst b
+    apply Acc.intro
+    intro b h
+    exact ih _ (map_rel_fwd f h) _ rfl
+def RelEmbedding.liftTrichotomous (f: r ↪r s) [Relation.IsTrichotomous s (· = ·)] : Relation.IsTrichotomous r (· = ·) where
+  trichotomous a b := by
+    rcases trichotomous s (f a) (f b) with h | h | h
+    · exact .inl <| map_rel_rev f h
+    · exact .inr <| .inl <| f.inj h
+    · exact .inr <| .inr <| map_rel_rev f h
+def RelEmbedding.liftWellOrder (f: r ↪r s) [Relation.IsWellOrder s] : Relation.IsWellOrder r := {
+  f.toRelHom.liftTrans, f.toRelHom.liftWellfounded, f.liftTrichotomous with
+}

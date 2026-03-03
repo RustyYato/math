@@ -7,8 +7,8 @@ structure Embedding (α β: Sort*) where
 infixr:25 " ↪ " => Embedding
 
 class EmbeddingLike (F: Sort*) (α β: outParam Sort*) where
-  protected coeEquiv : F -> α ↪ β := by intro f; exact f.toEmbedding
-  protected coeInj : Function.Injective coeEquiv := by
+  protected coeEmbedding : F -> α ↪ β := by intro f; exact f.toEmbedding
+  protected coeInj : Function.Injective coeEmbedding := by
     intro a b h
     cases a; cases b
     dsimp at h
@@ -28,15 +28,15 @@ class EmbeddingOpsCheck (C: Sort u -> Sort u) (F: ∀α β (cα: C α) (cβ: C �
   protected refl (α: Sort u) [cα: C α] : F α α cα cα
 
 instance {F α β: Sort*} [EmbeddingLike F α β] : FunLike F α β where
-  coeFun f := (EmbeddingLike.coeEquiv (F := F) f).toFun
+  coeFun f := (EmbeddingLike.coeEmbedding (F := F) f).toFun
   coeInj := by
     intro a b h
-    suffices EmbeddingLike.coeEquiv a = EmbeddingLike.coeEquiv b by
+    suffices EmbeddingLike.coeEmbedding a = EmbeddingLike.coeEmbedding b by
       exact EmbeddingLike.coeInj this
     dsimp at h
     revert h;
-    generalize EmbeddingLike.coeEquiv a = a
-    generalize EmbeddingLike.coeEquiv b = b
+    generalize EmbeddingLike.coeEmbedding a = a
+    generalize EmbeddingLike.coeEmbedding b = b
     intro h
     cases a; cases b; congr
 
