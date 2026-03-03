@@ -226,3 +226,20 @@ def PrincipalSegment.trans_init [Relation.IsTrans t] (f: r ≺r s) (g: s ≼r t)
       apply map_rel_fwd
       apply (htop _).mpr
       apply Set.mem_range'
+
+def InitialSegment.antisymm [Relation.IsWellOrder s] (f: r ≼r s) (g: s ≼r r) : r ≃r s where
+  toFun := f
+  invFun := g
+  map_rel := map_rel f
+  leftInv := by
+    have := f.liftWellOrder
+    have alleq := Subsingleton.allEq (g.trans f) (.id _)
+    intro x
+    show (g.trans f) x = x
+    rw [alleq]; rfl
+  rightInv := by
+    have := f.liftWellOrder
+    have alleq := Subsingleton.allEq (f.trans g) (.id _)
+    intro x
+    show (f.trans g) x = x
+    rw [alleq]; rfl

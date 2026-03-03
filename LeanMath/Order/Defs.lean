@@ -25,33 +25,33 @@ instance [Max α] : Min αᵒᵖ where
 instance [Min α] : Max αᵒᵖ where
   max a b := .mk <| a.get ⊓ b.get
 
-class IsLawfulLT (α: Type) [LE α] [LT α] : Prop where
+class IsLawfulLT (α: Type*) [LE α] [LT α] : Prop where
   protected lt_iff_le_and_not_ge {a b: α} : a < b ↔ a ≤ b ∧ ¬b ≤ a
 
-class IsPreorder (α: Type) [LE α] [LT α] : Prop
+class IsPreorder (α: Type*) [LE α] [LT α] : Prop
   extends IsLawfulLT α, @Relation.IsRefl α (· ≤ ·), @Relation.IsTrans α (· ≤ ·) where
 
-class IsPartialOrder (α: Type) [LE α] [LT α] : Prop
+class IsPartialOrder (α: Type*) [LE α] [LT α] : Prop
   extends IsPreorder α, Relation.IsAntisymm (α := α) (· ≤ ·) (· = ·) where
 
-class IsLinearOrder (α: Type) [LE α] [LT α] : Prop
+class IsLinearOrder (α: Type*) [LE α] [LT α] : Prop
   extends IsPartialOrder α, @Relation.IsTotal α (· ≤ ·) where
 
-class IsLawfulMax (α: Type) [LE α] [Max α] : Prop where
+class IsLawfulMax (α: Type*) [LE α] [Max α] : Prop where
   protected left_le_max {a b: α} : a ≤ a ⊔ b
   protected right_le_max {a b: α} : b ≤ a ⊔ b
 
-class IsLawfulMin (α: Type) [LE α] [Min α] : Prop where
+class IsLawfulMin (α: Type*) [LE α] [Min α] : Prop where
   protected min_le_left {a b: α} : a ⊓ b ≤ a
   protected min_le_right {a b: α} : a ⊓ b ≤ b
 
-class IsSemiLatticeMax (α: Type) [LE α] [LT α] [Max α] : Prop extends IsPartialOrder α, IsLawfulMax α where
+class IsSemiLatticeMax (α: Type*) [LE α] [LT α] [Max α] : Prop extends IsPartialOrder α, IsLawfulMax α where
   protected max_le {x a b: α} : a ≤ x -> b ≤ x -> a ⊔ b ≤ x
 
-class IsSemiLatticeMin (α: Type) [LE α] [LT α] [Min α] : Prop extends IsPartialOrder α, IsLawfulMin α where
+class IsSemiLatticeMin (α: Type*) [LE α] [LT α] [Min α] : Prop extends IsPartialOrder α, IsLawfulMin α where
   protected le_min {x a b: α} : x ≤ a -> x ≤ b -> x ≤ a ⊓ b
 
-class IsLattice (α: Type) [LE α] [LT α] [Max α] [Min α] : Prop extends IsSemiLatticeMax α, IsSemiLatticeMin α where
+class IsLattice (α: Type*) [LE α] [LT α] [Max α] [Min α] : Prop extends IsSemiLatticeMax α, IsSemiLatticeMin α where
 
 variable [LE α] [LT α]
 

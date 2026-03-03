@@ -1,6 +1,7 @@
 import LeanMath.Tactic.PPWithUniv
 import LeanMath.Tactic.AxiomBlame
 import LeanMath.Logic.Relation.Segments
+import LeanMath.Order.Defs
 import LeanMath.Data.Equiv.Basic
 
 @[pp_with_univ]
@@ -173,7 +174,6 @@ def ulift_rel_eqv_rel (r: α -> α -> Prop) : ulift_rel r ≃r r where
   rightInv _ := rfl
   map_rel := Iff.rfl
 
-
 instance [Relation.IsWellOrder r] : Relation.IsWellOrder (ulift_rel r) := (ulift_rel_eqv_rel r).toRelEmbedding.liftWellOrder
 
 def ulift.{v, u} : Ordinal.{u} -> Ordinal.{max u v} :=
@@ -321,5 +321,40 @@ def lt_succ_self (o: Ordinal) : o < o.succ := by
         rintro ⟨_, rfl⟩
         apply succ_rel.some_lt_none
   }⟩
+
+instance : IsPartialOrder Ordinal where
+  lt_iff_le_and_not_ge := by
+    intro a b
+    induction a with | @type α r =>
+    induction b with | @type β s =>
+    apply Iff.intro
+    · intro ⟨h⟩
+      apply And.intro ⟨h.toInitialSegment⟩
+      intro ⟨g⟩
+      simp at h g
+      exact (h.trans_init g).irrefl
+    · intro ⟨⟨h⟩, g⟩
+      simp at h
+      replace h := h
+      rcases h.principal_or_eqv with ⟨⟨h⟩⟩ | ⟨⟨h⟩⟩
+      · exact ⟨h⟩
+      · nomatch g ⟨h.symm.toInitialSegment⟩
+  refl a := by
+    induction a with | type r =>
+    exact ⟨.id _⟩
+  trans {a b c} h g := by
+    induction a with | type ra =>
+    induction b with | type rb =>
+    induction c with | type rc =>
+    obtain ⟨h⟩ := h
+    obtain ⟨g⟩ := g
+    exact ⟨h.trans g⟩
+  antisymm {a b} h g := by
+    induction a with | type ra =>
+    induction b with | type rb =>
+    obtain ⟨h⟩ := h
+    obtain ⟨g⟩ := g
+    apply sound
+    exact h.antisymm g
 
 end Ordinal
