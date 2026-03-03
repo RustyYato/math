@@ -23,6 +23,29 @@ def sum_equiv_psum : α ⊕ β ≃ α ⊕' β where
   | .inl _ => rfl
   | .inr _ => rfl
 
+def optionCongr (f: α ≃ β) : Option α ≃ Option β where
+  toFun
+  | .some a => .some (f a)
+  | .none => .none
+  invFun
+  | .some a => .some (f.symm a)
+  | .none => .none
+  leftInv := by
+    intro a; cases a
+    rfl
+    show some _ = some _
+    rw [f.symm_coe]
+  rightInv := by
+    intro a; cases a
+    rfl
+    show some _ = some _
+    rw [f.coe_symm]
+
+@[simp] def apply_optionCongr_none (f: α ≃ β) : optionCongr f .none = .none := rfl
+@[simp] def symm_apply_optionCongr_none (f: α ≃ β) : (optionCongr f).symm .none = .none := rfl
+@[simp] def apply_optionCongr_some (f: α ≃ β) (a: α) : optionCongr f (.some a) = .some (f a) := rfl
+@[simp] def symm_apply_optionCongr_some (f: α ≃ β) (b: β) : (optionCongr f).symm (.some b) = .some (f.symm b) := rfl
+
 -- def psumCongr (f: α₀ ≃ α₁) (g: β₀ ≃ β₁) : α₀ ⊕' β₀ ≃ α₁ ⊕' β₁ where
 --   toFun
 --   | .inl x => .inl (f x)

@@ -1,6 +1,7 @@
 import LeanMath.Tactic.PPWithUniv
 import LeanMath.Tactic.AxiomBlame
 import LeanMath.Logic.Relation.Segments
+import LeanMath.Data.Equiv.Basic
 
 @[pp_with_univ]
 structure Ordinal.Pre.{u} where
@@ -241,5 +242,84 @@ def lt_omega_iff : ∀{o: Ordinal.{u}}, o < omega ↔ ∃n, o = ofNat n := by
         · rintro ⟨_, rfl⟩
           apply Fin.isLt
     }
+
+inductive succ_rel (r: α -> α -> Prop) : Option α -> Option α -> Prop where
+| some_lt_none : succ_rel r (.some a) .none
+| some_lt_some : r a b ->  succ_rel r (.some a) (.some b)
+
+instance [Relation.IsWellOrder r] : Relation.IsWellOrder (succ_rel r) where
+  trans {a b c} h g := by
+    cases h <;> cases g
+    apply succ_rel.some_lt_none
+    apply succ_rel.some_lt_some
+    apply Relation.trans
+    assumption
+    assumption
+  trichotomous := by
+    intro a b
+    rcases a with _ | a <;> rcases b with _ | b
+    right; left; rfl
+    right; right; apply succ_rel.some_lt_none
+    left; apply succ_rel.some_lt_none
+    rcases Relation.trichotomous r a b with h | h | h
+    left; apply succ_rel.some_lt_some; assumption
+    right; left; congr
+    right; right; apply succ_rel.some_lt_some; assumption
+  wf := by
+    suffices ih:∀a, Acc (succ_rel r) (.some a) by
+      apply WellFounded.intro
+      intro a
+      cases a
+      apply Acc.intro
+      intro y h; cases h
+      apply ih
+      apply ih
+    intro a
+    induction a using (Relation.wf r).induction with
+    | _ a ih =>
+    apply Acc.intro
+    intro _ h; cases h
+    apply ih
+    assumption
+
+def succ : Ordinal -> Ordinal :=
+  lift (fun r => type (succ_rel r)) <| by
+    intro α β r s _ _ h
+    simp; apply sound
+    exact {
+      toEquiv := Equiv.optionCongr h.toEquiv
+      map_rel := by
+        intro a b
+        cases a <;> cases b <;> simp
+        all_goals (apply Iff.intro <;> intro g)
+        any_goals contradiction
+        any_goals apply succ_rel.some_lt_none
+        all_goals apply succ_rel.some_lt_some
+        apply map_rel_fwd h
+        cases g; assumption
+        cases g
+        apply map_rel_rev h
+        assumption
+    }
+
+def lt_succ_self (o: Ordinal) : o < o.succ := by
+  induction o with | @type α r =>
+  exact ⟨{
+      toFun := .some
+      inj _ _ := Option.some.inj
+      map_rel := by
+        simp; intro a b
+        apply Iff.intro
+        apply succ_rel.some_lt_some
+        intro h; cases h; assumption
+      isPrincipal := by
+        exists .none
+        simp; intro b
+        apply Iff.intro
+        intro h; cases h
+        exact ⟨_, rfl⟩
+        rintro ⟨_, rfl⟩
+        apply succ_rel.some_lt_none
+  }⟩
 
 end Ordinal
