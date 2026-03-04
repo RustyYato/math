@@ -109,34 +109,86 @@ instance : LT Ordinal where
     · intro ⟨f⟩
       exact ⟨h₀.toInitialSegment.trans_princ (f.trans_init h₁.symm.toInitialSegment)⟩
 
-def type_in_ty (r: α -> α -> Prop) [Relation.IsWellOrder r] (a: α) := { x: α // r x a }
-def type_in_rel (r: α -> α -> Prop) [Relation.IsWellOrder r] (a: α) (x y: type_in_ty r a) : Prop := r x.val y.val
+def rank_ty (r: α -> α -> Prop) [Relation.IsWellOrder r] (a: α) := { x: α // r x a }
+def rank_rel (r: α -> α -> Prop) [Relation.IsWellOrder r] (a: α) (x y: rank_ty r a) : Prop := r x.val y.val
 
-def type_in_rel_to_rel (r: α -> α -> Prop) [Relation.IsWellOrder r] (a: α) : type_in_rel r a ↪r r where
+def rank_rel_to_rel (r: α -> α -> Prop) [Relation.IsWellOrder r] (a: α) : rank_rel r a ↪r r where
   toFun x := x.val
   inj := by intro a b h; cases a; cases b; cases h; rfl
   map_rel := Iff.rfl
 
-instance {α: Type*} (r: α -> α -> Prop) [Relation.IsWellOrder r] (a: α) : Relation.IsWellOrder (type_in_rel r a) :=
-  (type_in_rel_to_rel r a).liftWellOrder
-def type_in (r: α -> α -> Prop) [Relation.IsWellOrder r] (a: α) : Ordinal := type (type_in_rel r a)
+instance {α: Type*} (r: α -> α -> Prop) [Relation.IsWellOrder r] (a: α) : Relation.IsWellOrder (rank_rel r a) :=
+  (rank_rel_to_rel r a).liftWellOrder
+def rank (r: α -> α -> Prop) [Relation.IsWellOrder r] (a: α) : Ordinal := type (rank_rel r a)
 
-def type_in_lt_type (r: α -> α -> Prop) [Relation.IsWellOrder r] (a: α) : type_in r a < type r := by
-  refine ⟨{
-    toFun := Subtype.val
-    inj := Subtype.val_inj
-    map_rel := Iff.rfl
-    isPrincipal := by
-      exists a
-      intro b
-      apply Iff.intro
-      · intro h
-        simp; exists ⟨_, h⟩
-      · rintro ⟨a, _, rfl⟩
-        exact a.property
-  }⟩
+def rank_lt_type' (r: α -> α -> Prop) [Relation.IsWellOrder r] (a: α) : rank_rel r a ≺r r where
+  toFun := Subtype.val
+  inj := Subtype.val_inj
+  map_rel := Iff.rfl
+  isPrincipal := by
+    exists a
+    intro b
+    apply Iff.intro
+    · intro h
+      simp; exists ⟨_, h⟩
+    · rintro ⟨a, _, rfl⟩
+      exact a.property
 
-def of_lt_type {r: α -> α -> Prop} [Relation.IsWellOrder r] : ∀{o}, o < type r -> ∃a, o = type_in r a := by
+@[simp] def apply_rank_lt_type' (r: α -> α -> Prop) [Relation.IsWellOrder r] (a: α) {x} : rank_lt_type' r a x = x.val := rfl
+
+def rank_lt_type (r: α -> α -> Prop) [Relation.IsWellOrder r] (a: α) : rank r a < type r := ⟨rank_lt_type' r a⟩
+
+def rank_lt_rank_iff {r: α -> α -> Prop} [Relation.IsWellOrder r] {a b: α} : r a b ↔ rank r a < rank r b := by
+  apply Iff.intro
+  · intro h
+    refine ⟨{
+      toFun x := {
+        val := x.val
+        property := Relation.trans x.property h
+      }
+      inj := by
+        intro ⟨x, hx⟩ ⟨y, hy⟩ h
+        dsimp at h
+        cases h; rfl
+      map_rel := Iff.rfl
+      isPrincipal := by
+        exists ⟨a, h⟩
+        intro ⟨x, hx⟩
+        simp; apply Iff.intro
+        · intro hbx
+          refine ⟨⟨x, ?_⟩, ?_⟩
+          exact hbx
+          rfl
+        · rintro ⟨⟨_, _⟩, h⟩
+          cases h
+          assumption
+    }⟩
+  · intro ⟨h⟩
+    dsimp at h
+    have ⟨top, htop⟩ := h.IsPrincipal
+    suffices top.val = a by
+      rw [←this]
+      exact top.property
+    obtain ⟨top, r_top_b⟩ := top
+    dsimp
+    have htop' : Relation.IsPrincipal r (h.trans_init (rank_lt_type' r b).toInitialSegment) top := Relation.IsPrincipal.trans_init h (PrincipalSegment.toInitialSegment (rank_lt_type' r b)) htop
+    suffices ha : Relation.IsPrincipal r (h.trans_init (rank_lt_type' r b).toInitialSegment) a by
+      exact Relation.IsPrincipal.unique _ _ htop' ha
+    intro x
+    apply Iff.intro
+    · intro rxa
+      simp; show ∃i, x = (h i).val
+      have := h ⟨_, rxa⟩
+      exists ⟨x, rxa⟩
+      show rank_lt_type' r a ⟨x, rxa⟩ = (h.trans_init (rank_lt_type' r b).toInitialSegment) ⟨x, rxa⟩
+      congr
+      apply Subsingleton.allEq
+    · rintro ⟨x, _, rfl⟩
+      suffices (h.trans_init (rank_lt_type' r b).toInitialSegment) = rank_lt_type' r a by
+        rw [this]; exact x.property
+      apply Subsingleton.allEq
+
+def of_lt_type {r: α -> α -> Prop} [Relation.IsWellOrder r] : ∀{o}, o < type r -> ∃a, o = rank r a := by
   intro o hi
   induction o with | @type β s =>
   have ⟨f⟩ := hi; simp at f
@@ -199,7 +251,6 @@ def lt_omega_iff : ∀{o: Ordinal.{u}}, o < omega ↔ ∃n, o = ofNat n := by
     dsimp at g
     replace g := g.trans_init (ulift_rel_eqv_rel _).toInitialSegment
     have ⟨n, hn⟩ := g.IsPrincipal
-    dsimp at hn
     have  hg (x): g x < n := by
       apply (hn _).mpr
       apply Set.mem_range'
@@ -317,8 +368,8 @@ def lt_succ_self (o: Ordinal) : o < o.succ := by
         simp; intro b
         apply Iff.intro
         intro h; cases h
-        exact ⟨_, rfl⟩
-        rintro ⟨_, rfl⟩
+        simp; exact ⟨_, rfl⟩
+        rintro ⟨_, _, rfl⟩
         apply succ_rel.some_lt_none
   }⟩
 
@@ -356,5 +407,87 @@ instance : IsPartialOrder Ordinal where
     obtain ⟨g⟩ := g
     apply sound
     exact h.antisymm g
+
+instance [Relation.IsWellOrder r] [Relation.IsWellOrder s] : Relation.IsWellOrder (Sum.Lex r s) where
+  trans {a b c} h g := by
+    rcases h with h | h |_ <;> rcases g with g | g | _
+    · apply Sum.Lex.inl
+      apply Relation.trans
+      assumption
+      assumption
+    · apply Sum.Lex.sep
+    · apply Sum.Lex.inr
+      apply Relation.trans
+      assumption
+      assumption
+    · apply Sum.Lex.sep
+  trichotomous {a b} := by
+    rcases a with a | a <;> rcases b with b | b
+    · rcases Relation.trichotomous r a b with h | h | h
+      · left; apply Sum.Lex.inl
+        assumption
+      · right; left; congr
+      · right; right; apply Sum.Lex.inl
+        assumption
+    · left; apply Sum.Lex.sep
+    · right; right; apply Sum.Lex.sep
+    · rcases Relation.trichotomous s a b with h | h | h
+      · left; apply Sum.Lex.inr
+        assumption
+      · right; left; congr
+      · right; right; apply Sum.Lex.inr
+        assumption
+  wf := by
+    suffices iha: ∀a, Acc (Sum.Lex r s) (.inl a) by
+      apply WellFounded.intro; intro x
+      cases x with
+      | inl a => apply iha
+      | inr a =>
+        induction a using (Relation.wf s).induction with
+        | _ a ih =>
+          apply Acc.intro
+          intro _ h; cases h
+          apply ih
+          assumption
+          apply iha
+    intro a
+    induction a using (Relation.wf r).induction with
+    | _ a ih =>
+      apply Acc.intro
+      intro _ h; cases h
+      apply ih
+      assumption
+
+instance : Add Ordinal where
+  add := lift₂ (fun r s => type (Sum.Lex r s)) <| by
+    intro α₀ β₀ α₁ β₁ r₀ r₁ s₀ s₁ _ _ _ _ h₀ h₁
+    simp
+    apply sound
+    exact {
+      toEquiv := Equiv.sumCongr h₀.toEquiv h₁.toEquiv
+      map_rel {a b} := by
+        simp
+        rcases a with a | a <;> rcases b with b | b <;> simp
+        apply map_rel h₀
+        apply map_rel h₁
+    }
+
+def lt_trichotomy_of_le (o: Ordinal) : ∀{a b: Ordinal}, a ≤ o -> b ≤ o -> a < b ∨ a = b ∨ b < a := by
+  classical
+  intro a b ha hb
+  replace ha := lt_or_eq_of_le ha
+  replace hb := lt_or_eq_of_le hb
+  rcases ha with ha | rfl <;> rcases hb with hb | rfl
+  · induction o with | type r =>
+    obtain ⟨a, rfl⟩ := of_lt_type ha
+    obtain ⟨b, rfl⟩ := of_lt_type hb
+    simp [←rank_lt_rank_iff]
+    rcases Relation.trichotomous r a b with h | h | h
+    · left; assumption
+    · right; left; congr
+    · right; right; assumption
+  · left; assumption
+  · right; right; assumption
+  · right; left; rfl
 
 end Ordinal

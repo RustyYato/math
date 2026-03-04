@@ -46,80 +46,46 @@ def optionCongr (f: α ≃ β) : Option α ≃ Option β where
 @[simp] def apply_optionCongr_some (f: α ≃ β) (a: α) : optionCongr f (.some a) = .some (f a) := rfl
 @[simp] def symm_apply_optionCongr_some (f: α ≃ β) (b: β) : (optionCongr f).symm (.some b) = .some (f.symm b) := rfl
 
--- def psumCongr (f: α₀ ≃ α₁) (g: β₀ ≃ β₁) : α₀ ⊕' β₀ ≃ α₁ ⊕' β₁ where
---   toFun
---   | .inl x => .inl (f x)
---   | .inr x => .inr (g x)
---   inj' := by
---     intro x y h
---     cases x <;> cases y <;> dsimp at *
---     replace h := f.inj (PSum.inl.inj h)
---     congr; contradiction
---     contradiction
---     replace h := g.inj (PSum.inr.inj h)
---     congr
---   surj' := by
---     intro x
---     rcases x with x | x
---     · have ⟨y, h⟩ := f.surj x
---       exists .inl y
---       rw [←h]
---     · have ⟨y, h⟩ := g.surj x
---       exists .inr y
---       rw [←h]
+def psumCongr (f: α₀ ≃ α₁) (g: β₀ ≃ β₁) : α₀ ⊕' β₀ ≃ α₁ ⊕' β₁ where
+  toFun
+  | .inl x => .inl (f x)
+  | .inr x => .inr (g x)
+  invFun
+  | .inl x => .inl (f.symm x)
+  | .inr x => .inr (g.symm x)
+  leftInv x := by
+    cases x
+    show PSum.inl _ = PSum.inl _
+    rw [f.symm_coe]
+    show PSum.inr _ = PSum.inr _
+    rw [g.symm_coe]
+  rightInv x := by
+    cases x
+    show PSum.inl _ = PSum.inl _
+    rw [f.coe_symm]
+    show PSum.inr _ = PSum.inr _
+    rw [g.coe_symm]
 
--- def pprodCongr (f: α₀ ≃ α₁) (g: β₀ ≃ β₁) : α₀ ×' β₀ ≃ α₁ ×' β₁ where
---   toFun x := ⟨f x.fst, g x.snd⟩
---   inj' := by
---     intro x y h
---     replace h := PProd.mk.inj h
---     ext
---     exact f.inj h.left
---     exact g.inj h.right
---   surj' := by
---     intro ⟨a, b⟩
---     have ⟨a', ha⟩ := f.surj a
---     have ⟨b', hb⟩ := g.surj b
---     exists ⟨a', b'⟩
---     dsimp
---     rw [ha, hb]
+def liftSum : (α₀ ⊕' β₀ ≃ α₁ ⊕' β₁) ≃ (α₀ ⊕ β₀ ≃ α₁ ⊕ β₁) where
+  toFun f := sum_equiv_psum.trans <| f.trans sum_equiv_psum.symm
+  invFun f := sum_equiv_psum.symm.trans <| f.trans sum_equiv_psum
+  leftInv f := by
+    apply DFunLike.ext; intro x
+    simp
+  rightInv f := by
+    apply DFunLike.ext; intro x
+    simp
 
--- def sumCongr (f: α₀ ≃ α₁) (g: β₀ ≃ β₁) : α₀ ⊕ β₀ ≃ α₁ ⊕ β₁ where
---   toFun
---   | .inl x => .inl (f x)
---   | .inr x => .inr (g x)
---   inj' := by
---     intro x y h
---     cases x <;> cases y <;> dsimp at *
---     replace h := f.inj (Sum.inl.inj h)
---     congr; contradiction
---     contradiction
---     replace h := g.inj (Sum.inr.inj h)
---     congr
---   surj' := by
---     intro x
---     rcases x with x | x
---     · have ⟨y, h⟩ := f.surj x
---       exists .inl y
---       rw [←h]
---     · have ⟨y, h⟩ := g.surj x
---       exists .inr y
---       rw [←h]
+def sumCongr (f: α₀ ≃ α₁) (g: β₀ ≃ β₁) : α₀ ⊕ β₀ ≃ α₁ ⊕ β₁ := liftSum (psumCongr f g)
 
--- def prodCongr (f: α₀ ≃ α₁) (g: β₀ ≃ β₁) : α₀ × β₀ ≃ α₁ × β₁ where
---   toFun x := (f x.fst, g x.snd)
---   inj' := by
---     intro x y h
---     replace h := Prod.mk.inj h
---     ext
---     exact f.inj h.left
---     exact g.inj h.right
---   surj' := by
---     intro (a, b)
---     have ⟨a', ha⟩ := f.surj a
---     have ⟨b', hb⟩ := g.surj b
---     exists (a', b')
---     dsimp
---     rw [ha, hb]
+@[simp] def apply_psumCongr_inl (f: α₀ ≃ α₁) (g: β₀ ≃ β₁) : psumCongr f g (.inl x) = .inl (f x) := rfl
+@[simp] def apply_psumCongr_inr (f: α₀ ≃ α₁) (g: β₀ ≃ β₁) : psumCongr f g (.inr x) = .inr (g x) := rfl
+@[simp] def symm_apply_psumCongr_inl (f: α₀ ≃ α₁) (g: β₀ ≃ β₁) : (psumCongr f g).symm (.inl x) = .inl (f.symm x) := rfl
+@[simp] def symm_apply_psumCongr_inr (f: α₀ ≃ α₁) (g: β₀ ≃ β₁) : (psumCongr f g).symm (.inr x) = .inr (g.symm x) := rfl
+
+@[simp] def apply_sumCongr_inl (f: α₀ ≃ α₁) (g: β₀ ≃ β₁) : sumCongr f g (.inl x) = .inl (f x) := rfl
+@[simp] def apply_sumCongr_inr (f: α₀ ≃ α₁) (g: β₀ ≃ β₁) : sumCongr f g (.inr x) = .inr (g x) := rfl
+@[simp] def symm_apply_sumCongr_inl (f: α₀ ≃ α₁) (g: β₀ ≃ β₁) : (sumCongr f g).symm (.inl x) = .inl (f.symm x) := rfl
+@[simp] def symm_apply_sumCongr_inr (f: α₀ ≃ α₁) (g: β₀ ≃ β₁) : (sumCongr f g).symm (.inr x) = .inr (g.symm x) := rfl
 
 end Equiv

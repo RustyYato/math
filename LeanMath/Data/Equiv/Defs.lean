@@ -67,8 +67,8 @@ def symm (f: α ≃ β) : β ≃ α where
   leftInv := f.rightInv
   rightInv := f.leftInv
 
-def symm_coe (f: α ≃ β) (x: β) : f (f.symm x) = x := f.leftInv _
-def coe_symm (f: α ≃ β) (x: α) : f.symm (f x) = x := f.rightInv _
+@[simp] def symm_coe (f: α ≃ β) (x: β) : f (f.symm x) = x := f.leftInv _
+@[simp] def coe_symm (f: α ≃ β) (x: α) : f.symm (f x) = x := f.rightInv _
 
 def comp (f: β ≃ γ) (g: α ≃ β) : α ≃ γ where
   toFun := f ∘ g

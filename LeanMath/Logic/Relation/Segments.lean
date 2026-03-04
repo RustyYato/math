@@ -7,14 +7,14 @@ variable {α β γ: Type*} {r: α -> α -> Prop} {s: β -> β -> Prop} {t: γ ->
 def Relation.IsInitial (s: β -> β -> Prop) [FunLike F α β] (f: F) :=
   ∀a, ∀b, s b (f a) -> b ∈ Set.range f
 
-def Relation.IsPrincipal (s: β -> β -> Prop) [FunLike F α β] (f: F) :=
-  ∃top, ∀b, s b top ↔ b ∈ Set.range f
+def Relation.IsPrincipal (s: β -> β -> Prop) [FunLike F α β] (f: F) (top: β) :=
+  ∀b, s b top ↔ b ∈ Set.range f
 
 structure InitialSegment {α β: Type*} (r: α -> α -> Prop) (s: β -> β -> Prop) extends r ↪r s  where
   isInitial : Relation.IsInitial s toFun
 
 structure PrincipalSegment {α β: Type*} (r: α -> α -> Prop) (s: β -> β -> Prop) extends r ↪r s  where
-  isPrincipal : Relation.IsPrincipal s toFun
+  isPrincipal : ∃top, Relation.IsPrincipal s toFun top
 
 infixr:80 " ≼r " => InitialSegment
 infixr:80 " ≺r " => PrincipalSegment
@@ -26,7 +26,7 @@ instance : EmbeddingLike (r ≺r s) α β where
 instance : IsRelHom (r ≺r s) r s where
 
 def InitialSegment.IsInitial (f: r ≼r s) : Relation.IsInitial s f := f.isInitial
-def PrincipalSegment.IsPrincipal (f: r ≺r s) : Relation.IsPrincipal s f := f.isPrincipal
+def PrincipalSegment.IsPrincipal (f: r ≺r s) : ∃top, Relation.IsPrincipal s f top := f.isPrincipal
 
 def InitialSegment.id (r: α -> α -> Prop) : r ≼r r where
   toRelEmbedding := RelEmbedding.id _
@@ -132,7 +132,7 @@ def RelEquiv.toInitialSegment (f: r ≃r s) : r ≼r s where
 def InitialSegment.principal_or_eqv [Relation.IsWellOrder s] (f: r ≼r s) : Nonempty (r ≺r s) ∨ Nonempty (r ≃r s) := by
   apply Classical.or_iff_not_imp_left.mpr
   intro h
-  have hf : ¬Relation.IsPrincipal s f := fun hf => h ⟨{
+  have hf : ¬∃top, Relation.IsPrincipal s f top := fun hf => h ⟨{
     toRelEmbedding := f.toRelEmbedding
     isPrincipal := hf
   }⟩
@@ -243,3 +243,38 @@ def InitialSegment.antisymm [Relation.IsWellOrder s] (f: r ≼r s) (g: s ≼r r)
     intro x
     show (f.trans g) x = x
     rw [alleq]; rfl
+
+private def Relation.IsPrincipal.unique' (s: β -> β -> Prop) [Relation.IsWellOrder s] (f: r ≺r s) :
+  Relation.IsPrincipal s f a ->
+  Relation.IsPrincipal s f b ->
+  ¬s a b := by
+  intro ha hb h
+  obtain ⟨a, _, rfl⟩ := (hb a).mp h
+  obtain g := (ha (f a)).mpr Set.mem_range'
+  exact Relation.irrefl g
+
+def Relation.IsPrincipal.unique (s: β -> β -> Prop) [Relation.IsWellOrder s] (f: r ≺r s) :
+  Relation.IsPrincipal s f a ->
+  Relation.IsPrincipal s f b ->
+  a = b := by
+  intro ha hb
+  rcases Relation.trichotomous s a b with h | h | h
+  · nomatch unique' s f ha hb h
+  · assumption
+  · nomatch unique' s f hb ha h
+
+def Relation.IsPrincipal.trans_init [Relation.IsWellOrder t] (f: r ≺r s) (g: s ≼r t) :
+  Relation.IsPrincipal s f a ->
+  Relation.IsPrincipal t (f.trans_init g) (g a) := by
+  intro ha i
+  apply Iff.intro
+  · intro h
+    obtain ⟨i, _, rfl⟩ := g.IsInitial _ _ h
+    replace h := map_rel_rev g h
+    obtain ⟨i, _, rfl⟩ := (ha i).mp h
+    apply Set.mem_range'
+  · rintro ⟨i, _, rfl⟩
+    apply map_rel_fwd g
+    show s (f i) a
+    apply (ha _).mpr
+    apply Set.mem_range'
