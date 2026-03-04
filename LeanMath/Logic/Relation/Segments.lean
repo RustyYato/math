@@ -1,5 +1,4 @@
-import LeanMath.Logic.Relation.Defs
-import LeanMath.Data.Set.Defs
+import LeanMath.Data.Set.Relation
 
 variable {α β γ: Type*} {r: α -> α -> Prop} {s: β -> β -> Prop} {t: γ -> γ -> Prop}
   -- [Relation.IsWellOrder r] [Relation.IsWellOrder s] [Relation.IsWellOrder t]
@@ -278,3 +277,87 @@ def Relation.IsPrincipal.trans_init [Relation.IsWellOrder t] (f: r ≺r s) (g: s
     show s (f i) a
     apply (ha _).mpr
     apply Set.mem_range'
+
+namespace PrincipalSegment
+
+variable [Relation.IsWellOrder r] [Relation.IsWellOrder s]
+
+private noncomputable def collapse_helper [Relation.IsWellOrder r] (f: r ↪r s) (a: α) : { b: β // ¬ s (f a) b } :=
+  let U: Set β := Set.ofMem fun b => ∀x (h: r x a), s (collapse_helper f x) b
+  have : U.Nonempty := by
+    exists f a
+    · intro x hx'
+      rcases Relation.trichotomous s (collapse_helper f x).val (f x) with hx | hx | hx
+      · apply Relation.trans hx (map_rel_fwd f hx')
+      · rw [hx]; exact map_rel_fwd f hx'
+      · have := (collapse_helper f x).property
+        contradiction
+  ⟨Set.min s this, by
+    apply Set.min_minimal
+    intro x rxa
+    rcases Relation.trichotomous s (collapse_helper f x).val (f x) with hx | hx | hx
+    · apply Relation.trans hx
+      apply map_rel_fwd
+      assumption
+    · rw [hx]
+      apply map_rel_fwd
+      assumption
+    · have:= (collapse_helper f x).property
+      contradiction⟩
+termination_by WellFounded.wrap r a
+
+private def collapse_helper_lt (f: r ↪r s) : ∀b a, r a b -> s (collapse_helper f a) (collapse_helper f b) := by
+  intro b
+  show (collapse_helper f b).1 ∈ Set.ofMem fun a => ∀x (_ : r x b), s (collapse_helper f x).1 a
+  conv => { rhs; unfold collapse_helper }
+  dsimp; apply Set.min_mem
+
+private def collapse_helper_not_lt [Relation.IsWellOrder s] (f : r ↪r s) (a : α) {b}
+  (h : ∀x (_: r x a), s (collapse_helper f x).1 b) : ¬s b (collapse_helper f a).1 := by
+  let U := Set.ofMem fun b => ∀x (_ : r x a), s (collapse_helper f x).1 b
+  unfold collapse_helper
+  dsimp; apply Set.min_minimal s
+  apply h
+
+noncomputable def collapse (f: r ↪r s) : r ≼r s where
+  toFun a := (collapse_helper f a).val
+  inj := by
+    intro a b h
+    dsimp at h
+    rcases Relation.trichotomous r a b with g | g | g
+    · have := collapse_helper_lt f _ _ g
+      rw [h] at this
+      nomatch Relation.irrefl this
+    · assumption
+    · have := collapse_helper_lt f _ _ g
+      rw [h] at this
+      nomatch Relation.irrefl this
+  map_rel := by
+    intro a b
+    apply Iff.intro
+    apply collapse_helper_lt
+    intro h
+    rcases Relation.trichotomous r a b with g | rfl | g
+    assumption
+    nomatch Relation.irrefl h
+    nomatch Relation.asymm (collapse_helper_lt f _ _ g) h
+  isInitial := by
+    intro a b h
+    replace h : s b (collapse_helper f a).val := h
+    simp
+    show ∃i, b = (collapse_helper f i).val
+    let S := Set.ofMem fun a => ¬s (collapse_helper f a).val b
+    have : S.Nonempty := ⟨_, Relation.asymm h⟩
+    exists S.min r this
+    rcases Relation.trichotomous s b (collapse_helper f (Set.min r this)).val with g | g | g
+    · exfalso
+      refine collapse_helper_not_lt f _ ?_ g
+      intro x hx
+      apply Classical.byContradiction
+      apply (Set.min_minimal r this x · hx)
+    · assumption
+    · exfalso
+      have := Set.min_mem r this
+      contradiction
+
+end PrincipalSegment

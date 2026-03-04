@@ -458,7 +458,7 @@ instance [Relation.IsWellOrder r] [Relation.IsWellOrder s] : Relation.IsWellOrde
       apply ih
       assumption
 
-instance : Add Ordinal where
+instance : Add Ordinal.{u} where
   add := lift₂ (fun r s => type (Sum.Lex r s)) <| by
     intro α₀ β₀ α₁ β₁ r₀ r₁ s₀ s₁ _ _ _ _ h₀ h₁
     simp
@@ -472,7 +472,7 @@ instance : Add Ordinal where
         apply map_rel h₁
     }
 
-def lt_trichotomy_of_le (o: Ordinal) : ∀{a b: Ordinal}, a ≤ o -> b ≤ o -> a < b ∨ a = b ∨ b < a := by
+private def lt_trichotomy_of_le (o: Ordinal) : ∀{a b: Ordinal}, a ≤ o -> b ≤ o -> a < b ∨ a = b ∨ b < a := by
   classical
   intro a b ha hb
   replace ha := lt_or_eq_of_le ha
@@ -489,5 +489,40 @@ def lt_trichotomy_of_le (o: Ordinal) : ∀{a b: Ordinal}, a ≤ o -> b ≤ o -> 
   · left; assumption
   · right; right; assumption
   · right; left; rfl
+
+def le_add_left (a b: Ordinal.{u}) : a ≤ a + b := by
+  induction a with | @type α r =>
+  induction b with | @type β s =>
+  refine ⟨{
+    toFun := .inl
+    inj _ _ := Sum.inl.inj
+    map_rel := by simp
+    isInitial := by
+      simp
+      intro a b h
+      cases h
+      apply Set.mem_range'
+  }⟩
+
+def le_add_right (a b: Ordinal.{u}) : b ≤ a + b := by
+  induction a with | @type α r =>
+  induction b with | @type β s =>
+  refine ⟨?_⟩
+  apply PrincipalSegment.collapse
+  dsimp
+  exact {
+    toFun := .inr
+    inj _ _ := Sum.inr.inj
+    map_rel := by simp
+  }
+
+instance : @Relation.IsTrichotomous Ordinal (· < ·) (· = ·) where
+  trichotomous := by
+    intro a b
+    apply lt_trichotomy_of_le (a + b)
+    apply le_add_left
+    apply le_add_right
+
+instance : IsLinearOrder Ordinal where
 
 end Ordinal

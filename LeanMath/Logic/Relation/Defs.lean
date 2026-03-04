@@ -383,3 +383,21 @@ def Fin.relEmb : (fun a b: Fin n => a < b) ↪r (fun a b: Nat => a < b) where
   map_rel := Iff.rfl
 
 instance : @Relation.IsWellOrder (Fin n) (· < ·) := Fin.relEmb.liftWellOrder
+
+def WellFounded.wrap (r: α -> α -> Prop) [Relation.IsWelFounded r] (a: α) : { x: α // Acc r x } := ⟨a, (Relation.wf r).apply _⟩
+
+def Subtype.rel {P: α -> Prop} (r: α -> α -> Prop) : Subtype P -> Subtype P -> Prop := fun a b => r a b
+
+def Subtype.relEmb (r: α -> α -> Prop) : rel (P := P) r ↪r r where
+  toFun x := x.val
+  inj := by
+    intro ⟨a, _⟩ ⟨a, _⟩ h
+    cases h
+    rfl
+  map_rel := Iff.rfl
+
+instance [Relation.IsWelFounded r] : Relation.IsWelFounded (Subtype.rel (P := P) r) := (Subtype.relEmb r).liftWellfounded
+
+instance [Relation.IsWelFounded r] : WellFoundedRelation { x: α // Acc r x } where
+  rel := Subtype.rel r
+  wf := Relation.wf (Subtype.rel (P := Acc r) r)
