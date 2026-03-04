@@ -77,7 +77,7 @@ def lift₂ (f: ∀{α: Type u}{β: Type v} (r: α -> α -> Prop) (s: β -> β -
 @[simp] def lift_type (r: α -> α -> Prop) [Relation.IsWellOrder r] : lift f h (type r) = f r := rfl
 @[simp] def lift₂_type (r: α -> α -> Prop) (s: β -> β -> Prop) [Relation.IsWellOrder r] [Relation.IsWellOrder s] : lift₂ f h (type r) (type s) = f r s := rfl
 
-@[local induction_eliminator]
+@[cases_eliminator]
 def ind {motive: Ordinal -> Prop} (type: ∀{α} (r: α -> α -> Prop) [Relation.IsWellOrder r], motive (type r)) : ∀o, motive o := by
   intro ⟨o⟩
   induction o using Quotient.ind with | _ o =>
@@ -190,7 +190,7 @@ def rank_lt_rank_iff {r: α -> α -> Prop} [Relation.IsWellOrder r] {a b: α} : 
 
 def of_lt_type {r: α -> α -> Prop} [Relation.IsWellOrder r] : ∀{o}, o < type r -> ∃a, o = rank r a := by
   intro o hi
-  induction o with | @type β s =>
+  cases o with | @type β s =>
   have ⟨f⟩ := hi; simp at f
   have ⟨top, htop⟩ := f.IsPrincipal
   have (a: { a // r a top }) : ∃b, a = f b := by simpa using (htop a.val).mp a.property
@@ -246,7 +246,7 @@ def ofNat.{u} (n: ℕ) := ulift.{u} (ofNat' n)
 def lt_omega_iff : ∀{o: Ordinal.{u}}, o < omega ↔ ∃n, o = ofNat n := by
   intro o
   apply Iff.intro
-  · induction o with | type r =>
+  · cases o with | type r =>
     intro ⟨g⟩
     dsimp at g
     replace g := g.trans_init (ulift_rel_eqv_rel _).toInitialSegment
@@ -354,7 +354,7 @@ def succ : Ordinal -> Ordinal :=
     }
 
 def lt_succ_self (o: Ordinal) : o < o.succ := by
-  induction o with | @type α r =>
+  cases o with | @type α r =>
   exact ⟨{
       toFun := .some
       inj _ _ := Option.some.inj
@@ -376,8 +376,8 @@ def lt_succ_self (o: Ordinal) : o < o.succ := by
 instance : IsPartialOrder Ordinal where
   lt_iff_le_and_not_ge := by
     intro a b
-    induction a with | @type α r =>
-    induction b with | @type β s =>
+    cases a with | @type α r =>
+    cases b with | @type β s =>
     apply Iff.intro
     · intro ⟨h⟩
       apply And.intro ⟨h.toInitialSegment⟩
@@ -391,18 +391,18 @@ instance : IsPartialOrder Ordinal where
       · exact ⟨h⟩
       · nomatch g ⟨h.symm.toInitialSegment⟩
   refl a := by
-    induction a with | type r =>
+    cases a with | type r =>
     exact ⟨.id _⟩
   trans {a b c} h g := by
-    induction a with | type ra =>
-    induction b with | type rb =>
-    induction c with | type rc =>
+    cases a with | type ra =>
+    cases b with | type rb =>
+    cases c with | type rc =>
     obtain ⟨h⟩ := h
     obtain ⟨g⟩ := g
     exact ⟨h.trans g⟩
   antisymm {a b} h g := by
-    induction a with | type ra =>
-    induction b with | type rb =>
+    cases a with | type ra =>
+    cases b with | type rb =>
     obtain ⟨h⟩ := h
     obtain ⟨g⟩ := g
     apply sound
@@ -478,7 +478,7 @@ private def lt_trichotomy_of_le (o: Ordinal) : ∀{a b: Ordinal}, a ≤ o -> b �
   replace ha := lt_or_eq_of_le ha
   replace hb := lt_or_eq_of_le hb
   rcases ha with ha | rfl <;> rcases hb with hb | rfl
-  · induction o with | type r =>
+  · cases o with | type r =>
     obtain ⟨a, rfl⟩ := of_lt_type ha
     obtain ⟨b, rfl⟩ := of_lt_type hb
     simp [←rank_lt_rank_iff]
@@ -491,8 +491,8 @@ private def lt_trichotomy_of_le (o: Ordinal) : ∀{a b: Ordinal}, a ≤ o -> b �
   · right; left; rfl
 
 def le_add_left (a b: Ordinal.{u}) : a ≤ a + b := by
-  induction a with | @type α r =>
-  induction b with | @type β s =>
+  cases a with | @type α r =>
+  cases b with | @type β s =>
   refine ⟨{
     toFun := .inl
     inj _ _ := Sum.inl.inj
@@ -505,8 +505,8 @@ def le_add_left (a b: Ordinal.{u}) : a ≤ a + b := by
   }⟩
 
 def le_add_right (a b: Ordinal.{u}) : b ≤ a + b := by
-  induction a with | @type α r =>
-  induction b with | @type β s =>
+  cases a with | @type α r =>
+  cases b with | @type β s =>
   refine ⟨?_⟩
   apply PrincipalSegment.collapse
   dsimp
@@ -524,5 +524,22 @@ instance : @Relation.IsTrichotomous Ordinal (· < ·) (· = ·) where
     apply le_add_right
 
 instance : IsLinearOrder Ordinal where
+
+instance : @Relation.IsWelFounded Ordinal (· < ·) where
+  wf := by
+    apply WellFounded.intro
+    intro o
+    cases o with | @type α r =>
+    apply Acc.intro
+    intro x hx
+    obtain ⟨a, rfl⟩ := of_lt_type hx
+    clear hx
+    induction a using (Relation.wf r).induction with
+    | h a ih =>
+    apply Acc.intro
+    intro b h
+    obtain ⟨b, rfl⟩ := of_lt_type <| Relation.trans h (rank_lt_type r _)
+    apply ih
+    rwa [←rank_lt_rank_iff] at h
 
 end Ordinal
