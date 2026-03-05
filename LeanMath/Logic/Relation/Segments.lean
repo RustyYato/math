@@ -293,7 +293,7 @@ def Relation.IsPrincipal.trans_init [Relation.IsWellOrder t] (f: r ≺r s) (g: s
     apply (ha _).mpr
     apply Set.mem_range'
 
-namespace PrincipalSegment
+namespace InitialSegment
 
 variable [Relation.IsWellOrder r] [Relation.IsWellOrder s]
 
@@ -375,4 +375,4 @@ noncomputable def collapse (f: r ↪r s) : r ≼r s where
       have := Set.min_mem r this
       contradiction
 
-end PrincipalSegment
+end InitialSegment

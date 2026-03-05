@@ -517,7 +517,7 @@ def le_add_right (a b: Ordinal.{u}) : b ≤ a + b := by
   cases a with | @type α r =>
   cases b with | @type β s =>
   refine ⟨?_⟩
-  apply PrincipalSegment.collapse
+  apply InitialSegment.collapse
   dsimp
   exact {
     toFun := .inr
