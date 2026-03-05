@@ -169,6 +169,12 @@ def IsTrichotomous.ofTotal [IsTotal R] : IsTrichotomous R E where
     match total R a b with
     | .inl x => .inl x
     | .inr x => .inr (.inr x)
+instance [IsTrichotomous R (· = ·)] [IsRefl R] : IsTotal R where
+  total a b := by
+    rcases trichotomous R a b with h | rfl | h
+    · left; assumption
+    · left; rfl
+    · right; assumption
 
 instance [IsTrans R] [IsIrrefl R] : IsAsymm R where
   asymm a b := irrefl (trans a b)

@@ -59,6 +59,9 @@ instance : Membership α (Set α) where
 instance : HasSubset (Set α) where
   Subset a b := ∀x ∈ a, x ∈ b
 
+instance : HasSSubset (Set α) where
+  SSubset a b := a ⊆ b ∧ ∃x ∈ b, ¬x ∈ a
+
 instance [SetLike S α] : Membership α S where
   mem S a := a ∈ (S: Set α)
 
@@ -290,6 +293,50 @@ instance : @Std.Associative (Set α) (· ∪ ·) := ⟨union_assoc⟩
   ext; apply hf
 @[simp] def preimage_preimage (s: Set α) (f: γ -> β) (g: β -> α) : (s.preimage g).preimage f = s.preimage (g ∘ f) := rfl
 @[simp] def scompl_scompl (s: Set α) : sᶜᶜ = s := by ext; simp
+
+@[simp] def sInter_empty : ⋂ (⊥: Set (Set _)) = (⊤: Set α) := by ext; simp
+@[simp] def sUnion_empty : ⋃ (⊥: Set (Set _)) = (⊥: Set α) := by ext; simp
+
+@[simp] def sInter_univ : ⋂ (⊤: Set (Set _)) = (⊥: Set α) := by
+  ext; simp
+  exists ∅
+  simp
+
+@[simp] def sUnion_univ : ⋃ (⊤: Set (Set _)) = (⊤: Set α) := by
+  ext; simp
+  exists ⊤
+
+@[simp] def sInter_insert (a: Set α) (as: Set (Set α)) : ⋂ (insert a as) = a ∩ ⋂as := by
+  ext; simp
+@[simp] def sUnion_insert (a: Set α) (as: Set (Set α)) : ⋃ (insert a as) = a ∪ ⋃as := by
+  ext; simp
+
+@[simp] def inter_top (a: Set α) : a ∩ ⊤ = a := by ext; simp
+@[simp] def inter_bot (a: Set α) : a ∩ ⊥ = ⊥ := by ext; simp
+@[simp] def top_inter (a: Set α) : ⊤ ∩ a = a := by ext; simp
+@[simp] def bot_inter (a: Set α) : ⊥ ∩ a = ⊥ := by ext; simp
+
+@[simp] def union_top (a: Set α) : a ∪ ⊤ = ⊤ := by ext; simp
+@[simp] def union_bot (a: Set α) : a ∪ ⊥ = a := by ext; simp
+@[simp] def top_union (a: Set α) : ⊤ ∪ a = ⊤ := by ext; simp
+@[simp] def bot_union (a: Set α) : ⊥ ∪ a = a := by ext; simp
+
+def singleton_eq_insert (a: α) : ({a}: Set α) = insert a ⊥ := by ext; simp
+
+@[simp] def sInter_singleton (a: Set α) : ⋂ ({a}: Set (Set _)) = a := by
+  simp [singleton_eq_insert]
+@[simp] def sUnion_singleton (a: Set α) : ⋃ ({a}: Set (Set _)) = a := by
+  simp [singleton_eq_insert]
+
+@[simp] def sInter_pair_eq_inter (a b: Set α) : ⋂ ({a, b}: Set _) = a ∩ b := by
+  simp
+
+@[simp] def sUnion_pair_eq_union (a b: Set α) : ⋃ ({a, b}: Set _) = a ∪ b := by
+  simp
+
+def sub_sUnion (U: Set (Set α)) (a: Set α) : a ∈ U -> a ⊆ ⋃ U := by
+  intro ha x hx
+  exists a
 
 end Set
 

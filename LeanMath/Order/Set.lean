@@ -19,4 +19,7 @@ def isMin (s: Set α) (x: α) : Prop := ∀a ∈ s, x ≤ a
 def IsGLB (s: Set α) (x: α) := s.lowerBounds.isMax x
 def IsLUB (s: Set α) (x: α) := s.upperBounds.isMin x
 
+def BoundedAbove (s: Set α) := s.upperBounds.Nonempty
+def BoundedBelow (s: Set α) := s.lowerBounds.Nonempty
+
 end Set
