@@ -109,15 +109,15 @@ instance : LT Ordinal where
     · intro ⟨f⟩
       exact ⟨h₀.toInitialSegment.trans_princ (f.trans_init h₁.symm.toInitialSegment)⟩
 
-def rank_ty (r: α -> α -> Prop) [Relation.IsWellOrder r] (a: α) := { x: α // r x a }
-def rank_rel (r: α -> α -> Prop) [Relation.IsWellOrder r] (a: α) (x y: rank_ty r a) : Prop := r x.val y.val
+private def rank_ty (r: α -> α -> Prop) [Relation.IsWellOrder r] (a: α) := { x: α // r x a }
+private def rank_rel (r: α -> α -> Prop) [Relation.IsWellOrder r] (a: α) (x y: rank_ty r a) : Prop := r x.val y.val
 
-def rank_rel_to_rel (r: α -> α -> Prop) [Relation.IsWellOrder r] (a: α) : rank_rel r a ↪r r where
+private def rank_rel_to_rel (r: α -> α -> Prop) [Relation.IsWellOrder r] (a: α) : rank_rel r a ↪r r where
   toFun x := x.val
   inj := by intro a b h; cases a; cases b; cases h; rfl
   map_rel := Iff.rfl
 
-instance {α: Type*} (r: α -> α -> Prop) [Relation.IsWellOrder r] (a: α) : Relation.IsWellOrder (rank_rel r a) :=
+private instance {α: Type*} (r: α -> α -> Prop) [Relation.IsWellOrder r] (a: α) : Relation.IsWellOrder (rank_rel r a) :=
   (rank_rel_to_rel r a).liftWellOrder
 def rank (r: α -> α -> Prop) [Relation.IsWellOrder r] (a: α) : Ordinal := type (rank_rel r a)
 
@@ -226,16 +226,16 @@ def of_lt_type {r: α -> α -> Prop} [Relation.IsWellOrder r] : ∀{o}, o < type
       rw [←hg]
   }
 
-def ulift_rel (r: α -> α -> Prop) : ULift α -> ULift α -> Prop := fun a b => r a.down b.down
+private def ulift_rel (r: α -> α -> Prop) : ULift α -> ULift α -> Prop := fun a b => r a.down b.down
 
-def ulift_rel_eqv_rel (r: α -> α -> Prop) : ulift_rel r ≃r r where
+private def ulift_rel_eqv_rel (r: α -> α -> Prop) : ulift_rel r ≃r r where
   toFun x := x.down
   invFun x := ⟨x⟩
   leftInv _ := rfl
   rightInv _ := rfl
   map_rel := Iff.rfl
 
-instance [Relation.IsWellOrder r] : Relation.IsWellOrder (ulift_rel r) := (ulift_rel_eqv_rel r).toRelEmbedding.liftWellOrder
+private instance [Relation.IsWellOrder r] : Relation.IsWellOrder (ulift_rel r) := (ulift_rel_eqv_rel r).toRelEmbedding.liftWellOrder
 
 def ulift.{v, u} : Ordinal.{u} -> Ordinal.{max u v} :=
   lift (fun r => type (ulift_rel r)) <| by
@@ -303,11 +303,11 @@ def lt_omega_iff : ∀{o: Ordinal.{u}}, o < omega ↔ ∃n, o = ofNat n := by
           apply Fin.isLt
     }
 
-inductive succ_rel (r: α -> α -> Prop) : Option α -> Option α -> Prop where
+private inductive succ_rel (r: α -> α -> Prop) : Option α -> Option α -> Prop where
 | some_lt_none : succ_rel r (.some a) .none
 | some_lt_some : r a b ->  succ_rel r (.some a) (.some b)
 
-instance [Relation.IsWellOrder r] : Relation.IsWellOrder (succ_rel r) where
+private instance [Relation.IsWellOrder r] : Relation.IsWellOrder (succ_rel r) where
   trans {a b c} h g := by
     cases h <;> cases g
     apply succ_rel.some_lt_none
@@ -551,12 +551,12 @@ instance : @Relation.IsWelFounded Ordinal (· < ·) where
     apply ih
     rwa [←rank_lt_rank_iff] at h
 
-structure min_rel_ty {α β: Type u} (r: α -> α -> Prop) (s: β -> β -> Prop) [Relation.IsWellOrder r] [Relation.IsWellOrder s] where
+private structure min_rel_ty {α β: Type u} (r: α -> α -> Prop) (s: β -> β -> Prop) [Relation.IsWellOrder r] [Relation.IsWellOrder s] where
   left: α
   right: β
   rank_eq: rank r left = rank s right
 
-def min_rel {α β: Type u} (r: α -> α -> Prop) (s: β -> β -> Prop) [Relation.IsWellOrder r] [Relation.IsWellOrder s] (x y: min_rel_ty r s) : Prop := r x.left y.left
+private def min_rel {α β: Type u} (r: α -> α -> Prop) (s: β -> β -> Prop) [Relation.IsWellOrder r] [Relation.IsWellOrder s] (x y: min_rel_ty r s) : Prop := r x.left y.left
 
 variable {r: α -> α -> Prop} {s: β -> β -> Prop} {t: γ -> γ -> Prop}
    {r₀: α₀ -> α₀ -> Prop} {r₁: α₁ -> α₁ -> Prop}
@@ -565,7 +565,7 @@ variable {r: α -> α -> Prop} {s: β -> β -> Prop} {t: γ -> γ -> Prop}
    [Relation.IsWellOrder r₀] [Relation.IsWellOrder r₁]
    [Relation.IsWellOrder s₀] [Relation.IsWellOrder s₁]
 
-def min_rel_emb_left : min_rel r s ≼r r where
+private def min_rel_emb_left : min_rel r s ≼r r where
   toFun := min_rel_ty.left
   inj := by
     intro ⟨a, b₀, h₀⟩ ⟨a₁, b₀, h₁⟩ h
@@ -581,7 +581,7 @@ def min_rel_emb_left : min_rel r s ≼r r where
     have ⟨b, rank_eq⟩ := of_lt_type (lt_trans this (rank_lt_type _ _))
     exists ⟨a, b, rank_eq⟩
 
-def min_rel_emb_right : min_rel r s ≼r s where
+private def min_rel_emb_right : min_rel r s ≼r s where
   toFun := min_rel_ty.right
   inj := by
     intro ⟨a, b₀, h₀⟩ ⟨a₁, b₀, h₁⟩ h
@@ -601,7 +601,7 @@ def min_rel_emb_right : min_rel r s ≼r s where
     have ⟨a, rank_eq⟩ := of_lt_type (lt_trans this (rank_lt_type _ _))
     exists ⟨a, b, rank_eq.symm⟩
 
-instance : Relation.IsWellOrder (min_rel r s) := min_rel_emb_left.liftWellOrder
+private instance : Relation.IsWellOrder (min_rel r s) := min_rel_emb_left.liftWellOrder
 
 def rank_eq_of_init {F: Type*} [EmbeddingLike F α β] [IsInitialSegment F r s] (f: F)
   : rank r a = rank s (f a) := by
