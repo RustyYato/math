@@ -352,7 +352,7 @@ def succ : Ordinal -> Ordinal :=
     intro α β r s _ _ h
     simp; apply sound
     exact {
-      toEquiv := Equiv.optionCongr h.toEquiv
+      toEquiv := Equiv.option_congr h.toEquiv
       map_rel := by
         intro a b
         cases a <;> cases b <;> simp
@@ -478,7 +478,7 @@ instance : Add Ordinal.{u} where
     simp
     apply sound
     exact {
-      toEquiv := Equiv.sumCongr h₀.toEquiv h₁.toEquiv
+      toEquiv := Equiv.sum_congr h₀.toEquiv h₁.toEquiv
       map_rel {a b} := by
         simp
         rcases a with a | a <;> rcases b with b | b <;> simp

@@ -8,7 +8,7 @@ structure Equiv (α β: Sort*) where
   leftInv: Function.LeftInverse toFun invFun
   rightInv: Function.RightInverse toFun invFun
 
-infixr:25 " ≃ " => Equiv
+infixr:50 " ≃ " => Equiv
 
 class EquivLike (F: Sort*) (α β: outParam Sort*) where
   protected coeEquiv : F -> α ≃ β := by intro f; exact f.toEquiv

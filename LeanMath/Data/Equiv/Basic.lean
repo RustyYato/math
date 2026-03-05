@@ -3,13 +3,23 @@ import LeanMath.Data.Bijection.Basic
 
 namespace Equiv
 
-def prod_equiv_pprod : α × β ≃ α ×' β where
+def equiv_congr (h: α₀ ≃ α₁) (g: β₀ ≃ β₁) : (α₀ ≃ β₀) ≃ (α₁ ≃ β₁) where
+  toFun f := h.symm.trans (f.trans g)
+  invFun f := h.trans (f.trans g.symm)
+  leftInv f := by
+    simp; rw [←Equiv.trans_assoc]
+    simp
+  rightInv f := by
+    simp; rw [←Equiv.trans_assoc]
+    simp
+
+def prod_equiv_pprod : (α × β) ≃ (α ×' β) where
   toFun x := ⟨x.1, x.2⟩
   invFun x := ⟨x.1, x.2⟩
   leftInv _ := rfl
   rightInv _ := rfl
 
-def sum_equiv_psum : α ⊕ β ≃ α ⊕' β where
+def sum_equiv_psum : (α ⊕ β) ≃ (α ⊕' β) where
   toFun
   | .inl x => .inl x
   | .inr x => .inr x
@@ -23,7 +33,7 @@ def sum_equiv_psum : α ⊕ β ≃ α ⊕' β where
   | .inl _ => rfl
   | .inr _ => rfl
 
-def optionCongr (f: α ≃ β) : Option α ≃ Option β where
+def option_congr (f: α ≃ β) : Option α ≃ Option β where
   toFun
   | .some a => .some (f a)
   | .none => .none
@@ -41,12 +51,12 @@ def optionCongr (f: α ≃ β) : Option α ≃ Option β where
     show some _ = some _
     rw [f.coe_symm]
 
-@[simp] def apply_optionCongr_none (f: α ≃ β) : optionCongr f .none = .none := rfl
-@[simp] def symm_apply_optionCongr_none (f: α ≃ β) : (optionCongr f).symm .none = .none := rfl
-@[simp] def apply_optionCongr_some (f: α ≃ β) (a: α) : optionCongr f (.some a) = .some (f a) := rfl
-@[simp] def symm_apply_optionCongr_some (f: α ≃ β) (b: β) : (optionCongr f).symm (.some b) = .some (f.symm b) := rfl
+@[simp] def apply_option_congr_none (f: α ≃ β) : option_congr f .none = .none := rfl
+@[simp] def symm_apply_option_congr_none (f: α ≃ β) : (option_congr f).symm .none = .none := rfl
+@[simp] def apply_option_congr_some (f: α ≃ β) (a: α) : option_congr f (.some a) = .some (f a) := rfl
+@[simp] def symm_apply_option_congr_some (f: α ≃ β) (b: β) : (option_congr f).symm (.some b) = .some (f.symm b) := rfl
 
-def psumCongr (f: α₀ ≃ α₁) (g: β₀ ≃ β₁) : α₀ ⊕' β₀ ≃ α₁ ⊕' β₁ where
+def psum_congr (f: α₀ ≃ α₁) (g: β₀ ≃ β₁) : (α₀ ⊕' β₀) ≃ (α₁ ⊕' β₁) where
   toFun
   | .inl x => .inl (f x)
   | .inr x => .inr (g x)
@@ -66,27 +76,35 @@ def psumCongr (f: α₀ ≃ α₁) (g: β₀ ≃ β₁) : α₀ ⊕' β₀ ≃ �
     show PSum.inr _ = PSum.inr _
     rw [g.coe_symm]
 
-def liftSum : (α₀ ⊕' β₀ ≃ α₁ ⊕' β₁) ≃ (α₀ ⊕ β₀ ≃ α₁ ⊕ β₁) where
-  toFun f := sum_equiv_psum.trans <| f.trans sum_equiv_psum.symm
-  invFun f := sum_equiv_psum.symm.trans <| f.trans sum_equiv_psum
-  leftInv f := by
-    apply DFunLike.ext; intro x
-    simp
-  rightInv f := by
-    apply DFunLike.ext; intro x
-    simp
+def pprod_congr (f: α₀ ≃ α₁) (g: β₀ ≃ β₁) : (α₀ ×' β₀) ≃ (α₁ ×' β₁) where
+  toFun x := ⟨f x.1, g x.2⟩
+  invFun x := ⟨f.symm x.1, g.symm x.2⟩
+  leftInv x := by simp
+  rightInv x := by simp
 
-def sumCongr (f: α₀ ≃ α₁) (g: β₀ ≃ β₁) : α₀ ⊕ β₀ ≃ α₁ ⊕ β₁ := liftSum (psumCongr f g)
+def liftSum : ((α₀ ⊕' β₀) ≃ (α₁ ⊕' β₁)) ≃ ((α₀ ⊕ β₀) ≃ (α₁ ⊕ β₁)) :=
+  (equiv_congr sum_equiv_psum sum_equiv_psum).symm
 
-@[simp] def apply_psumCongr_inl (f: α₀ ≃ α₁) (g: β₀ ≃ β₁) : psumCongr f g (.inl x) = .inl (f x) := rfl
-@[simp] def apply_psumCongr_inr (f: α₀ ≃ α₁) (g: β₀ ≃ β₁) : psumCongr f g (.inr x) = .inr (g x) := rfl
-@[simp] def symm_apply_psumCongr_inl (f: α₀ ≃ α₁) (g: β₀ ≃ β₁) : (psumCongr f g).symm (.inl x) = .inl (f.symm x) := rfl
-@[simp] def symm_apply_psumCongr_inr (f: α₀ ≃ α₁) (g: β₀ ≃ β₁) : (psumCongr f g).symm (.inr x) = .inr (g.symm x) := rfl
+def liftProd : ((α₀ ×' β₀) ≃ (α₁ ×' β₁)) ≃ ((α₀ × β₀) ≃ (α₁ × β₁)) :=
+  (equiv_congr prod_equiv_pprod prod_equiv_pprod).symm
 
-@[simp] def apply_sumCongr_inl (f: α₀ ≃ α₁) (g: β₀ ≃ β₁) : sumCongr f g (.inl x) = .inl (f x) := rfl
-@[simp] def apply_sumCongr_inr (f: α₀ ≃ α₁) (g: β₀ ≃ β₁) : sumCongr f g (.inr x) = .inr (g x) := rfl
-@[simp] def symm_apply_sumCongr_inl (f: α₀ ≃ α₁) (g: β₀ ≃ β₁) : (sumCongr f g).symm (.inl x) = .inl (f.symm x) := rfl
-@[simp] def symm_apply_sumCongr_inr (f: α₀ ≃ α₁) (g: β₀ ≃ β₁) : (sumCongr f g).symm (.inr x) = .inr (g.symm x) := rfl
+def sum_congr (f: α₀ ≃ α₁) (g: β₀ ≃ β₁) : (α₀ ⊕ β₀) ≃ (α₁ ⊕ β₁) := liftSum (psum_congr f g)
+
+def prod_congr (f: α₀ ≃ α₁) (g: β₀ ≃ β₁) : (α₀ ×  β₀) ≃ (α₁ × β₁) := liftProd (pprod_congr f g)
+
+@[simp] def apply_psum_congr_inl (f: α₀ ≃ α₁) (g: β₀ ≃ β₁) : psum_congr f g (.inl x) = .inl (f x) := rfl
+@[simp] def apply_psum_congr_inr (f: α₀ ≃ α₁) (g: β₀ ≃ β₁) : psum_congr f g (.inr x) = .inr (g x) := rfl
+@[simp] def symm_psum_congr_inl (f: α₀ ≃ α₁) (g: β₀ ≃ β₁) : (psum_congr f g).symm = psum_congr f.symm g.symm := rfl
+
+@[simp] def apply_sum_congr_inl (f: α₀ ≃ α₁) (g: β₀ ≃ β₁) : sum_congr f g (.inl x) = .inl (f x) := rfl
+@[simp] def apply_sum_congr_inr (f: α₀ ≃ α₁) (g: β₀ ≃ β₁) : sum_congr f g (.inr x) = .inr (g x) := rfl
+@[simp] def symm_sum_congr_inl (f: α₀ ≃ α₁) (g: β₀ ≃ β₁) : (sum_congr f g).symm = sum_congr f.symm g.symm := rfl
+
+@[simp] def apply_pprod_congr_inl (f: α₀ ≃ α₁) (g: β₀ ≃ β₁) : pprod_congr f g x = ⟨f x.1, g x.2⟩ := rfl
+@[simp] def symm_pprod_congr (f: α₀ ≃ α₁) (g: β₀ ≃ β₁) : (pprod_congr f g).symm = pprod_congr f.symm g.symm := rfl
+
+@[simp] def apply_prod_congr_inl (f: α₀ ≃ α₁) (g: β₀ ≃ β₁) : prod_congr f g x = ⟨f x.1, g x.2⟩ := rfl
+@[simp] def symm_prod_congr (f: α₀ ≃ α₁) (g: β₀ ≃ β₁) : (prod_congr f g).symm = prod_congr f.symm g.symm := rfl
 
 def subtype_congr {P: α -> Prop} {Q: β -> Prop} (f: α ≃ β) (h: ∀x, P x ↔ Q (f x)) : Subtype P ≃ Subtype Q where
   toFun x := {
@@ -107,16 +125,6 @@ def emb_eq_subtype : (α ↪ β) ≃ { f: α -> β // Function.Injective f } whe
   invFun f := ⟨f.1, f.2⟩
   leftInv _ := rfl
   rightInv _ := rfl
-
-def equiv_congr (h: α₀ ≃ α₁) (g: β₀ ≃ β₁) : (α₀ ≃ β₀) ≃ (α₁ ≃ β₁) where
-  toFun f := h.symm.trans (f.trans g)
-  invFun f := h.trans (f.trans g.symm)
-  leftInv f := by
-    simp; rw [←Equiv.trans_assoc]
-    simp
-  rightInv f := by
-    simp; rw [←Equiv.trans_assoc]
-    simp
 
 def fun_congr (h: α₀ ≃ α₁) (g: β₀ ≃ β₁) : (α₀ -> β₀) ≃ (α₁ -> β₁) where
   toFun f := g ∘ f ∘ h.symm

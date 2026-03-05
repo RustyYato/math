@@ -4,7 +4,7 @@ structure Embedding (α β: Sort*) where
   toFun: α -> β
   inj: Function.Injective toFun
 
-infixr:25 " ↪ " => Embedding
+infixr:50 " ↪ " => Embedding
 
 class EmbeddingLike (F: Sort*) (α β: outParam Sort*) where
   protected coeEmbedding : F -> α ↪ β := by intro f; exact f.toEmbedding

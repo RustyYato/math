@@ -29,8 +29,8 @@ def ind {motive: Cardinal -> Prop} (type: ∀α, motive (type α)) (c: Cardinal)
 
 def lift (f: Type u -> A) (h: ∀α β: Type u, α ≈ β -> f α = f β) : Cardinal -> A
 | .ofQuot c => c.lift f h
-def lift₂ (f: Type u -> Type v -> A) (h: ∀α₀ β₀ α₁ β₁, α₀ ≈ α₁ -> β₀ ≈ β₁ -> f α₀ β₀ = f α₁ β₁) : Cardinal -> Cardinal -> A
-| .ofQuot a, .ofQuot b => a.lift₂ f h b
+def lift₂ (f: Type u -> Type v -> A) (h: ∀α₀ β₀ α₁ β₁, (α₀ ≃ α₁) -> (β₀ ≃ β₁) -> f α₀ β₀ = f α₁ β₁) : Cardinal -> Cardinal -> A
+| .ofQuot a, .ofQuot b => a.liftOn₂ b f (fun a b c d ⟨h₀⟩ ⟨h₁⟩ => h a b c d h₀ h₁)
 
 @[simp] def lift_type (f: Type u -> A) (h: ∀α β: Type u, α ≈ β -> f α = f β) (α: Type u) : lift f h (type α) = f α := rfl
 @[simp] def lift₂_type (f: Type u -> Type v -> A) (h) (α: Type u) (β: Type v) : lift₂ f h (type α) (type β) = f α β := rfl
@@ -46,7 +46,7 @@ noncomputable def exact' (h: type α = type β) : α ≃ β := Classical.choice 
 
 instance : LE Cardinal where
   le := lift₂ (fun α β => Nonempty (α ↪ β)) <| by
-    intro α₀ β₀ α₁ β₁ ⟨f⟩ ⟨g⟩
+    intro α₀ β₀ α₁ β₁ f g
     dsimp
     simp; apply Iff.intro
     intro ⟨h⟩
@@ -77,6 +77,22 @@ instance : IsPartialOrder Cardinal where
     intro ⟨f⟩ ⟨g⟩
     apply sound
     apply Equiv.antisymm
+    assumption
+    assumption
+
+instance : Add Cardinal where
+  add := lift₂ (type <|· ⊕ ·) <| by
+    intro _ _ _ _ h g
+    apply sound
+    apply Equiv.sum_congr
+    assumption
+    assumption
+
+instance : Mul Cardinal where
+  mul := lift₂ (type <|· × ·) <| by
+    intro _ _ _ _ h g
+    apply sound
+    apply Equiv.prod_congr
     assumption
     assumption
 

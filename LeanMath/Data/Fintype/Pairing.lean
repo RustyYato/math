@@ -12,7 +12,7 @@ instance [fa: Fintype α] [fb: Fintype β] : Fintype (α ⊕' β) where
     fb.repr.map fun fb => {
       bij := (Fin.sum (card α) (card β)).toBij.trans
         <| Equiv.sum_equiv_psum.toBij.trans
-        <| (Bijection.psumCongr fa.bij fb.bij)
+        <| (Bijection.psum_congr fa.bij fb.bij)
       try_decode :=
         match fa.try_decode with
         | .none => .none
