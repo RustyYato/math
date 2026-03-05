@@ -1,4 +1,5 @@
 import LeanMath.Algebra.Semiring.Defs
+import LeanMath.Algebra.Module.Defs
 
 class AlgebraMap (R α: Type*) [SemiringOps R] [SemiringOps α] where
   protected toAlgebraMap : R →+* α
@@ -144,3 +145,12 @@ instance : EquivOpsCheck (AlgebraEquiv.Ops R) (fun α β _ _ => α ≃ₐ[R] β)
   trans := .trans
   symm := .symm
   refl _ := .refl R _
+
+-- every algebra is also a module
+instance [IsAlgebra R α] : IsModule R α where
+  one_smul a := by rw [smul_def, map_one, one_mul]
+  mul_smul r s a := by rw [smul_def, smul_def, smul_def, map_mul, mul_assoc]
+  smul_zero r := by rw [smul_def, mul_zero]
+  smul_add r a b := by rw [smul_def, smul_def, smul_def, mul_add]
+  zero_smul a := by rw [smul_def, map_zero, zero_mul]
+  add_smul r s a := by rw [smul_def, smul_def, smul_def, map_add, add_mul]
