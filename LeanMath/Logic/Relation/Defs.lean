@@ -417,3 +417,26 @@ instance [Relation.IsWelFounded r] : Relation.IsWelFounded (Subtype.rel (P := P)
 instance [Relation.IsWelFounded r] : WellFoundedRelation { x: α // Acc r x } where
   rel := Subtype.rel r
   wf := Relation.wf (Subtype.rel (P := Acc r) r)
+
+instance [Subsingleton α] [Relation.IsIrrefl r] : Relation.IsWellOrder r where
+  trans := by
+    intro a b c
+    cases Subsingleton.allEq a b
+    intro h
+    nomatch Relation.irrefl h
+  trichotomous _ _ := by
+    right; left
+    apply Subsingleton.allEq
+  wf := by
+    apply WellFounded.intro
+    intro a
+    apply Acc.intro
+    intro b h
+    rw [Subsingleton.allEq a b] at h
+    nomatch Relation.irrefl h
+
+instance : Relation.IsWelFounded (fun a b: α => False) where
+  wf := by
+    apply WellFounded.intro
+    intro a; apply Acc.intro
+    nofun
