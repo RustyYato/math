@@ -34,3 +34,13 @@ protected def ext (f g : F) (h : ∀ x : α, f x = g x) : f = g := DFunLike.coeI
 protected theorem congrFun {f g : F} (h₁ : f = g) (x : α) : f x = g x := congrFun (congrArg _ h₁) x
 
 end DFunLike
+
+def Function.hfunext {α α' : Sort u} {β : α → Sort v} {β' : α' → Sort v} {f : ∀a, β a} {f' : ∀a, β' a}
+    (hα : α = α') (h : ∀a a', HEq a a' → HEq (f a) (f' a')) : HEq f f' := by
+  subst hα
+  have : ∀a, HEq (f a) (f' a) := fun a ↦ h a a (HEq.refl a)
+  have : β = β' := by funext a; exact type_eq_of_heq (this a)
+  subst this
+  apply heq_of_eq
+  funext a
+  exact eq_of_heq (this a)

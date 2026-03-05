@@ -96,4 +96,23 @@ instance : Mul Cardinal where
     assumption
     assumption
 
+instance : Pow Cardinal Cardinal where
+  pow := lift₂ (fun α β => type <| α -> β) <| by
+    intro _ _ _ _ h g
+    apply sound
+    apply Equiv.fun_congr
+    assumption
+    assumption
+
+def ofNat (n: ℕ) : Cardinal := type (Fin n)
+
+def exists_eq_type (c: Cardinal.{u}) : ∃α: Type u, type α = c := by
+  cases c
+  exact ⟨_, rfl⟩
+def out (c: Cardinal.{u}) : Type u := Classical.choose c.exists_eq_type
+def out_spec (c: Cardinal.{u}) : type c.out = c := Classical.choose_spec c.exists_eq_type
+
+def sum {ι: Type v} (f: ι -> Cardinal.{u}) : Cardinal.{max v u} := type (Σi, (f i).out)
+def prod {ι: Type v} (f: ι -> Cardinal.{u}) : Cardinal.{max v u} := type (∀i, (f i).out)
+
 end Cardinal
