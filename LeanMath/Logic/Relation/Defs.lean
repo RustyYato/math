@@ -232,6 +232,13 @@ instance [s: Setoid α] : @IsSymm α (· ≈ ·) where
 instance [s: Setoid α] : @IsTrans α (· ≈ ·) where
   trans := s.iseqv.trans
 
+instance {s: β -> β -> Prop} [Relation.IsRefl s] (f: α -> β) : @IsRefl α (fun a b => s (f a) (f b)) where
+  refl _ := Relation.refl _
+instance {s: β -> β -> Prop} [Relation.IsSymm s] (f: α -> β) : @IsSymm α (fun a b => s (f a) (f b)) where
+  symm := Relation.symm
+instance {s: β -> β -> Prop} [Relation.IsTrans s] (f: α -> β) : @IsTrans α (fun a b => s (f a) (f b)) where
+  trans := Relation.trans
+
 def ofTransGen {R: α -> α -> Prop} {S: β -> β -> Prop} [IsTrans S] (f: R →r S) : TransGen R →r S where
   toFun := f
   map_rel := by

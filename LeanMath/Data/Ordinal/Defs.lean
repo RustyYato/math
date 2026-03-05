@@ -559,7 +559,11 @@ structure min_rel_ty {α β: Type u} (r: α -> α -> Prop) (s: β -> β -> Prop)
 def min_rel {α β: Type u} (r: α -> α -> Prop) (s: β -> β -> Prop) [Relation.IsWellOrder r] [Relation.IsWellOrder s] (x y: min_rel_ty r s) : Prop := r x.left y.left
 
 variable {r: α -> α -> Prop} {s: β -> β -> Prop} {t: γ -> γ -> Prop}
+   {r₀: α₀ -> α₀ -> Prop} {r₁: α₁ -> α₁ -> Prop}
+   {s₀: β₀ -> β₀ -> Prop} {s₁: β₁ -> β₁ -> Prop}
    [Relation.IsWellOrder r] [Relation.IsWellOrder s] [Relation.IsWellOrder t]
+   [Relation.IsWellOrder r₀] [Relation.IsWellOrder r₁]
+   [Relation.IsWellOrder s₀] [Relation.IsWellOrder s₁]
 
 def min_rel_emb_left : min_rel r s ≼r r where
   toFun := min_rel_ty.left
@@ -694,6 +698,209 @@ instance : IsSemiLatticeMin Ordinal where
         rw [←hb, ←rank_eq_of_init, rank_eq_of_init f]
         dsimp
         rw [hy]
+    }
+
+section
+
+variable  (r: α -> α -> Prop) (s: β -> β -> Prop) [Relation.IsWellOrder r] [Relation.IsWellOrder s]
+
+private def sum_rank : α ⊕ β -> Ordinal
+| .inl a => rank r a
+| .inr b => rank s b
+
+private def max_rel_setoid : Setoid (α ⊕ β) where
+  r a b := sum_rank r s a = sum_rank r s b
+  iseqv := Relation.equiv _
+
+private def max_rel_ty := Quotient (max_rel_setoid r s)
+
+private def max_rel_ty.rank : max_rel_ty r s -> Ordinal :=
+  Quotient.lift (fun
+    | .inl x => Ordinal.rank r x
+    | .inr x => Ordinal.rank s x) fun _ _ => id
+
+private def max_rel (a b: max_rel_ty r s) := a.rank < b.rank
+
+private def max_rel_init_ord : max_rel r s ↪r ((· < ·): Ordinal -> Ordinal -> Prop) where
+  toFun a := a.rank
+  inj := by
+    intro a b h
+    dsimp at h
+    induction a using Quotient.ind with | _ a =>
+    induction b using Quotient.ind with | _ b =>
+    apply Quotient.sound
+    assumption
+  map_rel := Iff.rfl
+
+instance : Relation.IsWellOrder (max_rel r s) := (max_rel_init_ord r s).liftWellOrder
+
+end
+
+@[simp]
+private def quot_lift_mk {s: Setoid α} {x: α} {f: α -> β} {h} :
+  Quotient.lift f h (Quotient.mk s x) = f x := rfl
+
+private def max_rel_congr_init (f: r₀ ≼r r₁) (g: s₀ ≼r s₁) : max_rel r₀ s₀ ≼r max_rel r₁ s₁ where
+  toFun := Quotient.lift (fun x => Quotient.mk _ (x.map f g)) <| by
+    intro a b h
+    dsimp
+    apply Quotient.sound
+    cases a <;> cases b <;> (dsimp; show Ordinal.rank _ _ = Ordinal.rank _ _)
+    all_goals
+      iterate 2 rw [←rank_eq_of_init]
+      assumption
+  inj := by
+    intro a b h
+    induction a using Quotient.ind with | _ a =>
+    induction b using Quotient.ind with | _ b =>
+    replace h := Quotient.exact h
+    apply Quotient.sound
+    show sum_rank _ _ _ = sum_rank _ _ _
+    cases a <;> cases b <;> (dsimp [sum_rank]; dsimp at h)
+    all_goals
+      replace h : Ordinal.rank _ _ = Ordinal.rank _ _ := h
+      rwa [←rank_eq_of_init, ←rank_eq_of_init] at h
+  map_rel := by
+    intro a b
+    induction a using Quotient.ind with | _ a =>
+    induction b using Quotient.ind with | _ b =>
+    cases a <;> cases b
+    all_goals simp [max_rel, max_rel_ty.rank, ←rank_eq_of_init f, ←rank_eq_of_init g]
+  isInitial := by
+    intro a b
+    induction a using Quotient.ind with | _ a =>
+    induction b using Quotient.ind with | _ b =>
+    cases a <;> cases b
+    all_goals
+      simp [max_rel, max_rel_ty.rank]
+      intro h
+      replace h : _ < Ordinal.rank _ _ := h
+      rename_i x₀ x₁
+    any_goals rw [←rank_lt_rank_iff] at h
+    · obtain ⟨x₁, rfl⟩ := Set.mem_range.mp <| f.IsInitial x₀ x₁ h
+      exists Quotient.mk _ (Sum.inl x₁)
+    · rw [←rank_eq_of_init] at h
+      obtain ⟨x₁, g⟩ := of_lt_type (lt_trans h (rank_lt_type _ _))
+      exists Quotient.mk _ (Sum.inl x₁)
+      apply Quotient.sound
+      simp; show Ordinal.rank _ _ = Ordinal.rank _ _
+      rwa [←rank_eq_of_init]
+    · rw [←rank_eq_of_init] at h
+      obtain ⟨x₁, g⟩ := of_lt_type (lt_trans h (rank_lt_type _ _))
+      exists Quotient.mk _ (Sum.inr x₁)
+      apply Quotient.sound
+      simp; show Ordinal.rank _ _ = Ordinal.rank _ _
+      rwa [←rank_eq_of_init]
+    · obtain ⟨x₁, rfl⟩ := Set.mem_range.mp <| g.IsInitial x₀ x₁ h
+      exists Quotient.mk _ (Sum.inr x₁)
+
+private def emb_max_rel_left : r ≼r max_rel r s where
+  toFun x := Quotient.mk _ (.inl x)
+  inj _ _ h := rank_inj (Quotient.exact h)
+  map_rel := rank_lt_rank_iff
+  isInitial := by
+    intro a b h
+    replace h : max_rel r s b (Quotient.mk _ (.inl a)) := h
+    induction b using Quotient.ind with | _ b =>
+    rcases b with b | b <;> replace h : Ordinal.rank _ b < Ordinal.rank _ a := h
+    exists b
+    have ⟨b', h⟩ := of_lt_type (lt_trans h (rank_lt_type _ _))
+    simp; exists b'
+    apply Quotient.sound
+    assumption
+
+private def emb_max_rel_right : s ≼r max_rel r s where
+  toFun x := Quotient.mk _ (.inr x)
+  inj _ _ h := rank_inj (Quotient.exact h)
+  map_rel := rank_lt_rank_iff
+  isInitial := by
+    intro a b h
+    replace h : max_rel r s b (Quotient.mk _ (.inr a)) := h
+    induction b using Quotient.ind with | _ b =>
+    rcases b with b | b <;> replace h : Ordinal.rank _ b < Ordinal.rank _ a := h
+    have ⟨b', h⟩ := of_lt_type (lt_trans h (rank_lt_type _ _))
+    simp; exists b'
+    apply Quotient.sound
+    assumption
+    exists b
+
+instance : Max Ordinal where
+  max := lift₂ (fun r s => type (max_rel r s)) <| by
+    intro α₀ β₀ α₁ β₁ r₀ r₁ s₀ s₁ _ _ _ _ f g
+    apply sound
+    apply InitialSegment.antisymm
+    apply max_rel_congr_init
+    exact f.toInitialSegment
+    exact g.toInitialSegment
+    apply max_rel_congr_init
+    exact f.symm.toInitialSegment
+    exact g.symm.toInitialSegment
+
+instance : IsLattice Ordinal where
+  left_le_max {a b} := by
+    cases a with | type r =>
+    cases b with | type s =>
+    exact ⟨emb_max_rel_left⟩
+  right_le_max {a b} := by
+    cases a with | type r =>
+    cases b with | type s =>
+    exact ⟨emb_max_rel_right⟩
+  max_le := by
+    intro x a b f g
+    cases x with | @type γ t =>
+    cases a with | @type α r =>
+    cases b with | @type β s =>
+    obtain ⟨f⟩ := f
+    obtain ⟨g⟩ := g
+    dsimp at f g
+    refine ⟨?_⟩
+    dsimp
+    exact {
+      toFun := Quotient.lift (fun x => x.elim f g) <| by
+        intro a b h
+        dsimp
+        cases a <;> cases b
+        all_goals
+          rename_i a b
+          replace h : Ordinal.rank _ _ = Ordinal.rank _ _ := h
+          simp
+        congr; exact rank_inj h
+        apply rank_inj (r := t)
+        rwa [←rank_eq_of_init, ←rank_eq_of_init]
+        apply rank_inj (r := t)
+        rwa [←rank_eq_of_init, ←rank_eq_of_init]
+        congr; exact rank_inj h
+      inj := by
+        intro a b h
+        induction a using Quotient.ind with | _ a =>
+        induction b using Quotient.ind with | _ b =>
+        cases a <;> cases b
+        all_goals simp at h
+        congr; exact inj f h
+        apply Quotient.sound
+        show Ordinal.rank _ _ = Ordinal.rank _ _
+        rw [rank_eq_of_init f, rank_eq_of_init g, h]
+        apply Quotient.sound
+        show Ordinal.rank _ _ = Ordinal.rank _ _
+        rw [rank_eq_of_init f, rank_eq_of_init g, h]
+        congr; exact inj g h
+      map_rel := by
+        intro a b
+        induction a using Quotient.ind with | _ a =>
+        induction b using Quotient.ind with | _ b =>
+        cases a <;> cases b
+        all_goals simp [max_rel, max_rel_ty.rank]
+        all_goals repeat rw [rank_eq_of_init f]
+        all_goals repeat rw [rank_eq_of_init g]
+        all_goals apply rank_lt_rank_iff.symm
+      isInitial := by
+        intro a b h
+        induction a using Quotient.ind with | _ a =>
+        rcases a with a | a
+        obtain ⟨b, rfl⟩ := Set.mem_range.mp <| f.isInitial a b h
+        simp; exists Quotient.mk _ (.inl b)
+        obtain ⟨b, rfl⟩ := Set.mem_range.mp <| g.isInitial a b h
+        simp; exists Quotient.mk _ (.inr b)
     }
 
 end Ordinal
