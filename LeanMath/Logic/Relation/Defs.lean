@@ -387,6 +387,11 @@ def RelEmbedding.liftTrichotomous (f: r ↪r s) [Relation.IsTrichotomous s (· =
 def RelEmbedding.liftWellOrder (f: r ↪r s) [Relation.IsWellOrder s] : Relation.IsWellOrder r := {
   f.toRelHom.liftTrans, f.toRelHom.liftWellfounded, f.liftTrichotomous with
 }
+def RelEmbedding.liftTotal (f: r ↪r s) [Relation.IsTotal s] : Relation.IsTotal r where
+  total a b := by
+    rcases total s (f a) (f b) with h | h
+    · exact .inl <| map_rel_rev f h
+    · exact .inr <| map_rel_rev f h
 
 instance : @Relation.IsWellOrder ℕ (· < ·) where
   trans := Nat.lt_trans

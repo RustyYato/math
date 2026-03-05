@@ -88,4 +88,66 @@ def sumCongr (f: α₀ ≃ α₁) (g: β₀ ≃ β₁) : α₀ ⊕ β₀ ≃ α�
 @[simp] def symm_apply_sumCongr_inl (f: α₀ ≃ α₁) (g: β₀ ≃ β₁) : (sumCongr f g).symm (.inl x) = .inl (f.symm x) := rfl
 @[simp] def symm_apply_sumCongr_inr (f: α₀ ≃ α₁) (g: β₀ ≃ β₁) : (sumCongr f g).symm (.inr x) = .inr (g.symm x) := rfl
 
+def subtype_congr {P: α -> Prop} {Q: β -> Prop} (f: α ≃ β) (h: ∀x, P x ↔ Q (f x)) : Subtype P ≃ Subtype Q where
+  toFun x := {
+    val := f x.val
+    property := (h x.val).mp x.property
+  }
+  invFun x := {
+    val := f.symm x.val
+    property := by
+      apply (h _).mpr
+      simp; exact x.property
+  }
+  leftInv x := by simp
+  rightInv x := by simp
+
+def emb_eq_subtype : (α ↪ β) ≃ { f: α -> β // Function.Injective f } where
+  toFun f := ⟨f.1, f.2⟩
+  invFun f := ⟨f.1, f.2⟩
+  leftInv _ := rfl
+  rightInv _ := rfl
+
+def equiv_congr (h: α₀ ≃ α₁) (g: β₀ ≃ β₁) : (α₀ ≃ β₀) ≃ (α₁ ≃ β₁) where
+  toFun f := h.symm.trans (f.trans g)
+  invFun f := h.trans (f.trans g.symm)
+  leftInv f := by
+    simp; rw [←Equiv.trans_assoc]
+    simp
+  rightInv f := by
+    simp; rw [←Equiv.trans_assoc]
+    simp
+
+def fun_congr (h: α₀ ≃ α₁) (g: β₀ ≃ β₁) : (α₀ -> β₀) ≃ (α₁ -> β₁) where
+  toFun f := g ∘ f ∘ h.symm
+  invFun f := g.symm ∘ f ∘ h
+  leftInv f := by
+    show (g.symm.trans g) ∘ f ∘ (h.symm.trans h) = _
+    simp; rfl
+  rightInv f := by
+    show (g.trans g.symm) ∘ f ∘ (h.trans h.symm) = _
+    simp; rfl
+
+@[simp] def symm_fun_congr (h: α₀ ≃ α₁) (g: β₀ ≃ β₁) : (fun_congr h g).symm = fun_congr h.symm g.symm := rfl
+@[simp] def apply_fun_congr (h: α₀ ≃ α₁) (g: β₀ ≃ β₁) (f: α₀ -> β₀) : fun_congr h g f = g ∘ f ∘ h.symm := rfl
+
+def embed_congr (h: α₀ ≃ α₁) (g: β₀ ≃ β₁) : (α₀ ↪ β₀) ≃ (α₁ ↪ β₁) :=
+  equiv_congr emb_eq_subtype.symm emb_eq_subtype.symm <|
+  subtype_congr (fun_congr h g) <| by
+  intro f
+  apply Iff.intro
+  · intro hf x y
+    simp
+    intro eq
+    apply h.symm.inj
+    exact hf (inj g eq)
+  · intro hf x y eq
+    have := @hf (h x) (h y)
+    simp at this
+    rw [eq] at this
+    exact inj h (this rfl)
+
+@[simp] def symm_embed_congr (h: α₀ ≃ α₁) (g: β₀ ≃ β₁) : (embed_congr h g).symm = embed_congr h.symm g.symm := rfl
+@[simp] def apply_embed_congr (h: α₀ ≃ α₁) (g: β₀ ≃ β₁) (f: α₀ ↪ β₀) : embed_congr h g f = (g.toEmbedding.comp f).comp h.symm.toEmbedding := rfl
+
 end Equiv

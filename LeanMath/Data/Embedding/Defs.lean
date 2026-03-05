@@ -42,7 +42,8 @@ instance {F α β: Sort*} [EmbeddingLike F α β] : FunLike F α β where
 
 namespace Embedding
 
-instance : FunLike (α ↪ β) α β where
+instance : EmbeddingLike (α ↪ β) α β where
+  coeEmbedding := id
 
 protected def id (α: Sort*) : α ↪ α where
   toFun := id

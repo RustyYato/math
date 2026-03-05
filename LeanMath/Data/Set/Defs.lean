@@ -207,6 +207,19 @@ instance : InfSet (Set α) where
 @[simp] def mem_sUnion {S: Set (Set α)} : ∀{x}, x ∈ ⋃ S ↔ ∃s ∈ S, x ∈ s := Iff.rfl
 @[simp] def mem_sInter {S: Set (Set α)} : ∀{x}, x ∈ ⋂ S ↔ ∀s ∈ S, x ∈ s := Iff.rfl
 
+@[simp] def mem_iSup (f: ι -> Set α) : x ∈ ⨆i, f i ↔ ∃i, x ∈ f i := by
+  simp [iSup]
+  apply Iff.intro
+  intro ⟨_, ⟨i, rfl⟩, _⟩
+  exists i
+  intro ⟨i, hi⟩
+  exists f i
+  apply And.intro _ hi
+  exists i
+
+@[simp] def mem_iInf (f: ι -> Set α) : x ∈ ⨅i, f i ↔ ∀i, x ∈ f i := by
+  simp [iInf]
+
 def powerset (s: Set α) : Set (Set α) where
   Mem a := ∀x, x ∈ a -> x ∈ s
 

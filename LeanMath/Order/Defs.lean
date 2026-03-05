@@ -198,4 +198,12 @@ def max_comm [IsSemiLatticeMax α] {a b: α} : a ⊔ b = b ⊔ a := by
     apply right_le_max
     apply left_le_max
 
+def le_of_not_lt [IsLinearOrder α] {a b: α} : ¬b < a -> a ≤ b := by
+  intro h
+  rcases Relation.trichotomous (α := α) (· < ·) a b with _ | rfl | _
+  apply le_of_lt
+  assumption
+  rfl
+  contradiction
+
 end

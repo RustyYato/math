@@ -83,6 +83,11 @@ def ind {motive: Ordinal -> Prop} (type: ∀{α} (r: α -> α -> Prop) [Relation
   induction o using Quotient.ind with | _ o =>
   apply type
 
+def exists_eq_type: ∀o: Ordinal, ∃(α: _) (r: α -> α -> Prop) (_: Relation.IsWellOrder r), o = type r  := by
+  intro o
+  cases o with | _ =>
+  refine ⟨_, _, _, rfl⟩
+
 def sound {r: α -> α -> Prop} {s: β -> β -> Prop} [Relation.IsWellOrder r] [Relation.IsWellOrder s] : r ≃r s -> type r = type s := by
   intro h
   unfold type; congr 1
