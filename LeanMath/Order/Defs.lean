@@ -51,9 +51,28 @@ class IsSemiLatticeMax (α: Type*) [LE α] [LT α] [Max α] : Prop extends IsPar
 class IsSemiLatticeMin (α: Type*) [LE α] [LT α] [Min α] : Prop extends IsPartialOrder α, IsLawfulMin α where
   protected le_min {x a b: α} : x ≤ a -> x ≤ b -> x ≤ a ⊓ b
 
+
 class IsLattice (α: Type*) [LE α] [LT α] [Max α] [Min α] : Prop extends IsSemiLatticeMax α, IsSemiLatticeMin α where
 
-variable [LE α] [LT α]
+variable [LE α] [LT α] [Min α] [Max α]
+
+
+
+def max_le [IsSemiLatticeMax α] {x a b: α} : a ≤ x -> b ≤ x -> a ⊔ b ≤ x :=
+  IsSemiLatticeMax.max_le
+
+def left_le_max [IsLawfulMax α] {a b: α} : a ≤ a ⊔ b :=
+  IsLawfulMax.left_le_max
+def right_le_max [IsLawfulMax α] {a b: α} : b ≤ a ⊔ b :=
+  IsLawfulMax.right_le_max
+
+def le_min [IsSemiLatticeMin α] {x a b: α} : x ≤ a -> x ≤ b -> x ≤ a ⊓ b :=
+  IsSemiLatticeMin.le_min
+
+def min_le_left [IsLawfulMin α] {a b: α} : a ⊓ b ≤ a :=
+  IsLawfulMin.min_le_left
+def min_le_right [IsLawfulMin α] {a b: α} : a ⊓ b ≤ b :=
+  IsLawfulMin.min_le_right
 
 section
 
@@ -157,5 +176,26 @@ instance [IsPreorder α] : @Relation.IsTrans α (· < ·) where
 
 def le_total [IsLinearOrder α] (a b: α) : a ≤ b ∨ b ≤ a := total (· ≤ ·) a b
 def lt_trichotomy [IsLinearOrder α] (a b: α) : a < b ∨ a = b ∨ b < a := trichotomous (· < ·) a b
+
+def lt_trans [IsPreorder α] {a b c: α} : a < b -> b < c -> a < c := Relation.trans
+def le_antisymm [IsPartialOrder α] {a b: α} : a ≤ b -> b ≤ a -> a = b := Relation.antisymm
+
+def min_comm [IsSemiLatticeMin α] {a b: α} : a ⊓ b = b ⊓ a := by
+  apply le_antisymm
+  · apply le_min
+    apply min_le_right
+    apply min_le_left
+  · apply le_min
+    apply min_le_right
+    apply min_le_left
+
+def max_comm [IsSemiLatticeMax α] {a b: α} : a ⊔ b = b ⊔ a := by
+  apply le_antisymm
+  · apply max_le
+    apply right_le_max
+    apply left_le_max
+  · apply max_le
+    apply right_le_max
+    apply left_le_max
 
 end

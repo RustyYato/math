@@ -82,6 +82,9 @@ def RelEquiv.toRelEmbedding (f: r ≃r s) : r ↪r s where
   toEmbedding := f.toEmbedding
   map_rel := map_rel f
 
+@[simp] def RelEquiv.symm_coe (f: r ≃r s) (x: β) : f (f.symm x) = x := f.leftInv _
+@[simp] def RelEquiv.coe_symm (f: r ≃r s) (x: α) : f.symm (f x) = x := f.rightInv _
+
 end
 
 namespace Relation

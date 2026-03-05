@@ -18,6 +18,12 @@ structure PrincipalSegment {α β: Type*} (r: α -> α -> Prop) (s: β -> β -> 
 infixr:80 " ≼r " => InitialSegment
 infixr:80 " ≺r " => PrincipalSegment
 
+class IsInitialSegment (F: Type*) {α β: Type*} [EmbeddingLike F α β] (r: outParam <| α -> α -> Prop) (s: outParam <| β -> β -> Prop) extends IsRelHom F r s where
+  isInitial (f: F) : Relation.IsInitial s f
+
+def isInitial {F: Type*} {α β: Type*} [EmbeddingLike F α β] {r: α -> α -> Prop} {s: β -> β -> Prop} [IsInitialSegment F r s]
+  (f: F) : Relation.IsInitial s f:= IsInitialSegment.isInitial f
+
 instance : EmbeddingLike (r ≼r s) α β where
 instance : IsRelHom (r ≼r s) r s where
 
@@ -26,6 +32,9 @@ instance : IsRelHom (r ≺r s) r s where
 
 def InitialSegment.IsInitial (f: r ≼r s) : Relation.IsInitial s f := f.isInitial
 def PrincipalSegment.IsPrincipal (f: r ≺r s) : ∃top, Relation.IsPrincipal s f top := f.isPrincipal
+
+instance : IsInitialSegment (r ≼r s) r s where
+  isInitial := InitialSegment.isInitial
 
 def InitialSegment.id (r: α -> α -> Prop) : r ≼r r where
   toRelEmbedding := RelEmbedding.id _
@@ -41,6 +50,9 @@ def PrincipalSegment.toInitialSegment [Relation.IsTrans s] (f: r ≺r s) : r ≼
     have ⟨top, hf⟩ := f.IsPrincipal
     have sa := (hf (f a)).mpr Set.mem_range'
     exact (hf b).mp (Relation.trans h sa)
+
+instance [Relation.IsTrans s] : IsInitialSegment (r ≺r s) r s where
+  isInitial f := f.toInitialSegment.isInitial
 
 @[simp] def InitialSegment.apply_toRelEmbedding (f: r ≼r s) (x: α) : f.toRelEmbedding x = f x := rfl
 
@@ -127,6 +139,9 @@ def RelEquiv.toInitialSegment (f: r ≃r s) : r ≼r s where
     intro a b h
     rw [←f.symm_coe b]
     apply Set.mem_range'
+
+instance [Relation.IsTrans s] : IsInitialSegment (r ≃r s) r s where
+  isInitial f := f.toInitialSegment.isInitial
 
 def InitialSegment.principal_or_eqv [Relation.IsWellOrder s] (f: r ≼r s) : Nonempty (r ≺r s) ∨ Nonempty (r ≃r s) := by
   apply Classical.or_iff_not_imp_left.mpr

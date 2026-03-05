@@ -188,6 +188,15 @@ def rank_lt_rank_iff {r: α -> α -> Prop} [Relation.IsWellOrder r] {a b: α} : 
         rw [this]; exact x.property
       apply Subsingleton.allEq
 
+def rank_inj {r: α -> α -> Prop} [Relation.IsWellOrder r] {a b: α} : rank r a = rank r b -> a = b := by
+  intro eq
+  rcases Relation.trichotomous r a b with h | h | h
+  · rw [rank_lt_rank_iff (r := r), eq, ←rank_lt_rank_iff] at h
+    nomatch Relation.irrefl h
+  · assumption
+  · rw [rank_lt_rank_iff (r := r), eq, ←rank_lt_rank_iff] at h
+    nomatch Relation.irrefl h
+
 def of_lt_type {r: α -> α -> Prop} [Relation.IsWellOrder r] : ∀{o}, o < type r -> ∃a, o = rank r a := by
   intro o hi
   cases o with | @type β s =>
@@ -541,5 +550,150 @@ instance : @Relation.IsWelFounded Ordinal (· < ·) where
     obtain ⟨b, rfl⟩ := of_lt_type <| Relation.trans h (rank_lt_type r _)
     apply ih
     rwa [←rank_lt_rank_iff] at h
+
+structure min_rel_ty {α β: Type u} (r: α -> α -> Prop) (s: β -> β -> Prop) [Relation.IsWellOrder r] [Relation.IsWellOrder s] where
+  left: α
+  right: β
+  rank_eq: rank r left = rank s right
+
+def min_rel {α β: Type u} (r: α -> α -> Prop) (s: β -> β -> Prop) [Relation.IsWellOrder r] [Relation.IsWellOrder s] (x y: min_rel_ty r s) : Prop := r x.left y.left
+
+variable {r: α -> α -> Prop} {s: β -> β -> Prop} {t: γ -> γ -> Prop}
+   [Relation.IsWellOrder r] [Relation.IsWellOrder s] [Relation.IsWellOrder t]
+
+def min_rel_emb_left : min_rel r s ≼r r where
+  toFun := min_rel_ty.left
+  inj := by
+    intro ⟨a, b₀, h₀⟩ ⟨a₁, b₀, h₁⟩ h
+    dsimp at h; subst a₁
+    congr
+    rw [h₀] at h₁
+    exact rank_inj h₁
+  map_rel := Iff.rfl
+  isInitial := by
+    intro x a h
+    have this : rank r a < rank r x.left := by rwa [←rank_lt_rank_iff]
+    rw [x.rank_eq] at this
+    have ⟨b, rank_eq⟩ := of_lt_type (lt_trans this (rank_lt_type _ _))
+    exists ⟨a, b, rank_eq⟩
+
+def min_rel_emb_right : min_rel r s ≼r s where
+  toFun := min_rel_ty.right
+  inj := by
+    intro ⟨a, b₀, h₀⟩ ⟨a₁, b₀, h₁⟩ h
+    dsimp at h; subst b₀
+    congr
+    rw [←h₀] at h₁
+    exact rank_inj h₁.symm
+  map_rel := by
+    intro x y
+    rw [rank_lt_rank_iff (r := s), ←x.rank_eq, ←y.rank_eq]
+    rw [←rank_lt_rank_iff]
+    apply map_rel min_rel_emb_left
+  isInitial := by
+    intro x b h
+    have this : rank s b < rank s x.right := by rwa [←rank_lt_rank_iff]
+    rw [←x.rank_eq] at this
+    have ⟨a, rank_eq⟩ := of_lt_type (lt_trans this (rank_lt_type _ _))
+    exists ⟨a, b, rank_eq.symm⟩
+
+instance : Relation.IsWellOrder (min_rel r s) := min_rel_emb_left.liftWellOrder
+
+def rank_eq_of_init {F: Type*} [EmbeddingLike F α β] [IsInitialSegment F r s] (f: F)
+  : rank r a = rank s (f a) := by
+  have ⟨g, hg⟩ := Classical.axiomOfChoice fun x: { b // s b (f a) } => Set.mem_range.mp (isInitial f a x.val x.property)
+  apply sound
+  exact {
+    toFun x := {
+      val := f x.val
+      property := by
+        apply map_rel_fwd
+        exact x.property
+    }
+    invFun x := {
+      val := g x
+      property := by
+        apply map_rel_rev f
+        rw [←hg]
+        exact x.property
+    }
+    map_rel := map_rel f
+    leftInv := by intro ⟨x, hx⟩; dsimp; congr; rw [←hg]
+    rightInv := by
+      intro ⟨x, hx⟩
+      dsimp
+      congr; apply inj f
+      rw [←hg]
+  }
+
+instance : Min Ordinal.{u} where
+  min := lift₂ (fun r s => type (min_rel r s)) <| by
+    intro α₀ β₀ α₁ β₁ r₀ r₁ s₀ s₁ _ _ _ _ h g
+    dsimp; apply sound
+    exact {
+      toFun x := {
+        left := h x.left
+        right := g x.right
+        rank_eq := by
+          rw [←rank_eq_of_init, ←rank_eq_of_init]
+          exact x.rank_eq
+      }
+      invFun x := {
+        left := h.symm x.left
+        right := g.symm x.right
+        rank_eq := by
+          rw [←rank_eq_of_init, ←rank_eq_of_init]
+          exact x.rank_eq
+      }
+      rightInv  := by intro ⟨x, y, h⟩; simp
+      leftInv := by intro ⟨x, y, h⟩; simp
+      map_rel := by
+        intro x y
+        apply map_rel h
+    }
+
+instance : IsSemiLatticeMin Ordinal where
+  min_le_left {a b} := by
+    cases a with | _ r =>
+    cases b with | _ s =>
+    exact ⟨min_rel_emb_left⟩
+  min_le_right {a b} := by
+    cases a with | _ r =>
+    cases b with | _ s =>
+    exact ⟨min_rel_emb_right⟩
+  le_min x {a b} f g := by
+    cases x with | @type γ t =>
+    cases a with | @type α r =>
+    cases b with | @type β s =>
+    obtain ⟨f⟩ := f
+    obtain ⟨g⟩ := g
+    refine ⟨?_⟩
+    dsimp
+    exact {
+      toFun x := {
+        left := f x
+        right := g x
+        rank_eq := by rw [←rank_eq_of_init, ←rank_eq_of_init]
+      }
+      inj := by
+        intro x y h
+        dsimp at h
+        exact inj f (min_rel_ty.mk.inj h).left
+      map_rel := map_rel f
+      isInitial := by
+        intro x b h
+        simp
+        replace h : r b.left (f x) := h
+        have ⟨y, hy⟩ := Set.mem_range.mp (isInitial f _ _ h)
+        dsimp at y
+        exists y
+        obtain ⟨b₀, b₁, hb⟩ := b
+        dsimp at h hy
+        congr
+        apply rank_inj (r := s)
+        rw [←hb, ←rank_eq_of_init, rank_eq_of_init f]
+        dsimp
+        rw [hy]
+    }
 
 end Ordinal

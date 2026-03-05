@@ -113,3 +113,17 @@ instance : EquivOpsCheck Nop (fun α β _ _ => α ≃ β) where
   refl α := Equiv.id α
 
 end Equiv
+
+instance [EquivLike F α β] : EmbeddingLike F α β where
+  coeEmbedding := Equiv.toEmbedding ∘ EquivLike.coeEquiv
+  coeInj := by
+    apply Function.Injective.comp
+    · intro f g h
+      suffices f.toFun = g.toFun by
+        apply DFunLike.coeInj
+        assumption
+      obtain ⟨f, _, _, _⟩ := f
+      obtain ⟨g, _, _, _⟩ := g
+      cases h
+      rfl
+    · apply EquivLike.coeInj

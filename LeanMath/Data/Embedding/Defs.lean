@@ -61,3 +61,8 @@ abbrev trans (f: α ↪ β) (g: β ↪ γ) : α ↪ γ := g.comp f
 @[simp] def apply_trans (f: β ↪ γ) (g: α ↪ β) (x: α) : (g.trans f) x = f (g x) := rfl
 
 end Embedding
+
+def inj [EmbeddingLike F α β] (f: F) : Function.Injective f := by
+  intro a b h
+  have : EmbeddingLike.coeEmbedding f a = EmbeddingLike.coeEmbedding f b := h
+  exact Embedding.inj _ this
