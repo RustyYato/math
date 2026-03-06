@@ -23,21 +23,6 @@ class IsLawfulDiv? (α: Type*) [Zero α] [Mul α] [CheckedInv? α] [CheckedDiv? 
 def div?_eq_mul_inv? [Zero α] [Mul α] [CheckedInv? α] [CheckedDiv? α] [IsLawfulDiv? α] (a b: α) (h: b ≠ 0) : a /? b = a * b⁻¹? :=
   IsLawfulDiv?.div?_eq_mul_inv? _ _ _
 
-class IsZeroNeOne (α: Type*) [Zero α] [One α] : Prop where
-  protected zero_ne_one : (0: α) ≠ (1: α)
-
-def zero_ne_one (α: Type*) [Zero α] [One α] [IsZeroNeOne α] : (0: α) ≠ (1: α) := IsZeroNeOne.zero_ne_one
-
-instance [Nontrivial α] [DecidableEq α] [Zero α] [One α] [Mul α]
-  [IsLawfulOneMul α] [IsLawfulZeroMul α] : IsZeroNeOne α where
-  zero_ne_one := by
-    intro h
-    have ⟨b, g⟩ := Nontrivial.exists_ne (1: α)
-    rw [←mul_one b, ←h, mul_zero] at g
-    contradiction
-
-instance [Zero α] [One α] [IsZeroNeOne α] : Nontrivial α := .intro 0 1 (zero_ne_one α)
-
 macro_rules
 | `(tactic|invert_tactic_trivial) => `(tactic|apply zero_ne_one)
 macro_rules
@@ -85,11 +70,6 @@ def of_mul_ne_zero {a b: α} (h: a * b ≠ 0) : a ≠ 0 ∧ b ≠ 0 := by
 
 macro_rules
 | `(tactic|invert_tactic_trivial_low_priority) => `(tactic|first|apply (of_mul_ne_zero (by assumption)).left|apply (of_mul_ne_zero (by assumption)).right)
-
-macro_rules
-| `(tactic|contradiction) => `(tactic|nomatch zero_ne_one _ (by assumption))
-macro_rules
-| `(tactic|contradiction) => `(tactic|nomatch zero_ne_one _ (Eq.symm (by assumption)))
 
 instance : NoZeroDivisors α where
   of_mul_eq_zero {a b} h := by

@@ -1,5 +1,6 @@
 import LeanMath.Data.LinearCombo.Defs
 import LeanMath.Algebra.Module.Defs
+import LeanMath.Logic.Nontrivial
 
 namespace LinearCombo
 
@@ -85,9 +86,25 @@ def lift : (α -> M) ≃ (LinearCombo R α →ₗ[R] M) where
     show preLift f (ι a 1) = f a
     rw [preLift_ι, one_smul]
 
-@[simp]
 def lift_ι (f: α -> M) (a: α) (r: R) : lift f (ι a r) = r • f a := preLift_ι _ _ _
 
+@[simp]
+def lift_ι₁ (f: α -> M) (a: α) : lift f (ι a (1: R)) = f a := by rw [lift_ι, one_smul]
+
 attribute [irreducible] lift
+
+-- for any non-trivial ground semiring, the ι function is injective
+def ι_inj [Nontrivial R] : Function.Injective (ι · (1: R) (α := α)) := by
+  intro a b h
+  simp at h
+  classical
+  let f := lift (M := R) (R := R) (α := α) (fun x => if x = b then 0 else 1)
+  replace h₀ : f (ι b 1) = 0 := by simp [f]
+  replace h₀ : f (ι a 1) = 0 := by rw [h, h₀]
+  simp [f] at h₀
+  apply Classical.byContradiction
+  intro g
+  have := h₀ g
+  contradiction
 
 end LinearCombo

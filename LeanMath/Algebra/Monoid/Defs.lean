@@ -78,6 +78,26 @@ class NoZeroDivisors (α: Type*) [Mul α] [Zero α] where
 def of_mul_eq_zero [Mul α] [Zero α] [NoZeroDivisors α] {a b: α} (h: a * b = 0) : a = 0 ∨ b = 0 :=
   NoZeroDivisors.of_mul_eq_zero h
 
+class IsZeroNeOne (α: Type*) [Zero α] [One α] : Prop where
+  protected zero_ne_one : (0: α) ≠ (1: α)
+
+def zero_ne_one (α: Type*) [Zero α] [One α] [IsZeroNeOne α] : (0: α) ≠ (1: α) := IsZeroNeOne.zero_ne_one
+
+instance [Nontrivial α] [DecidableEq α] [Zero α] [One α] [Mul α]
+  [IsLawfulOneMul α] [IsLawfulZeroMul α] : IsZeroNeOne α where
+  zero_ne_one := by
+    intro h
+    have ⟨b, g⟩ := Nontrivial.exists_ne (1: α)
+    rw [←mul_one b, ←h, mul_zero] at g
+    contradiction
+
+instance [Zero α] [One α] [IsZeroNeOne α] : Nontrivial α := .intro 0 1 (zero_ne_one α)
+
+macro_rules
+| `(tactic|contradiction) => `(tactic|nomatch zero_ne_one _ (by assumption))
+macro_rules
+| `(tactic|contradiction) => `(tactic|nomatch zero_ne_one _ (Eq.symm (by assumption)))
+
 instance : IsMonoid ℕ where
   one_mul _ := by rw [Nat.one_mul]
   mul_one _ := by rw [Nat.mul_one]

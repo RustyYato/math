@@ -228,4 +228,16 @@ instance : IsDistributiveAction S (LinearCombo R α) where
 
 attribute [irreducible] ι
 
+instance [Subsingleton R] : Subsingleton (LinearCombo R α) where
+  allEq := by
+    suffices ∀a: LinearCombo R α, a = 0 by
+      intro a b
+      rw [this a, this b]
+    intro a
+    induction a with
+    | zero => rfl
+    | ι a r => rw [Subsingleton.allEq r 0, map_zero]
+    | add a b iha ihb =>
+      rw [iha, ihb, add_zero]
+
 end LinearCombo
