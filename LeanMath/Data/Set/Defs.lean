@@ -351,6 +351,9 @@ def sub_sUnion (U: Set (Set α)) (a: Set α) : a ∈ U -> a ⊆ ⋃ U := by
   intro ha x hx
   exists a
 
+class inductive IsFinite (U: Set α) where
+| intro (canon: List α)
+
 end Set
 
 def Subtype.val_inj {P: α -> Prop} : Function.Injective (Subtype.val (p := P)) := by

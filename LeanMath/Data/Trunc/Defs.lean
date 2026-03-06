@@ -36,4 +36,14 @@ def bind (f: α -> Trunc β) : Trunc α -> Trunc β :=
 def map (f: α -> β) : Trunc α -> Trunc β :=
   bind (mk ∘ f)
 
+@[simp] def map_mk (f: α -> β) (a: α) : (Trunc.mk a).map f = (Trunc.mk (f a)) := rfl
+@[simp] def bind_mk (f: α -> Trunc β) (a: α) : (Trunc.mk a).bind f = (f a) := rfl
+@[simp] def lift_mk (f: α -> β) {h} (a: α) : (Trunc.mk a).lift f h = f a := rfl
+
+@[simp]
+def bind_map (f: α -> Trunc β) (g: β -> γ) (x: Trunc α) :
+  ((x.bind f).map g) = x.bind (Trunc.map g ∘ f) := by
+  induction x
+  rfl
+
 end Trunc
