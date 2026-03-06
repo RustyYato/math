@@ -30,3 +30,93 @@ instance [AddMonoidOps α] [IsAddMonoid α] : IsScalarTower ℕ ℕ α where
   smul_assoc r s a := by
     show (r * s) • a = _
     rw [mul_comm, mul_nsmul]
+
+instance [SMul R α] [AddMonoidOps α] [IsAddMonoid α] [IsRightDistribSMul R α] [IsLawfulSMulZero R α] : IsSMulComm ℕ R α where
+  smul_comm r s a := by
+    induction r with
+    | zero => rw [zero_smul, zero_smul, smul_zero]
+    | succ n ih => rw [succ_nsmul, succ_nsmul, smul_add, ih]
+
+section
+
+variable
+  [Zero α] [Zero β] [Zero γ]
+  [Add α] [Add β] [Add γ]
+  [SMul R α] [SMul R β] [SMul R γ]
+
+instance [Zero R] [IsLawfulZeroSMul R α] [IsLawfulZeroSMul R β] : IsZeroHom (α →ₗ[R] β) α β where
+  map_zero := by
+    intro f
+    rw [←zero_smul (R := R) (0: α), map_smul, zero_smul]
+
+instance [Zero R] [IsLawfulZeroSMul R α] [IsLawfulZeroSMul R β] : IsZeroHom (α ≃ₗ[R] β) α β where
+  map_zero := by
+    intro f
+    rw [←zero_smul (R := R) (0: α), map_smul, zero_smul]
+
+instance [IsLawfulSMulZero R β] [IsLawfulZeroAdd β] : Zero (α →ₗ[R] β) where
+  zero := {
+    toFun _ := 0
+    map_smul := by
+      intro r' a
+      rw [smul_zero]
+    map_add a b := by rw [add_zero]
+  }
+
+instance [SMul S β] [IsSMulComm S R β] [IsRightDistribSMul S β] : SMul S (α →ₗ[R] β) where
+  smul s f := {
+    toFun x := s • f x
+    map_smul := by
+      intro r a
+      rw [map_smul, smul_comm]
+    map_add a b := by
+      rw [map_add, smul_add]
+  }
+
+instance [IsRightDistribSMul R β] [IsAddComm β] [IsAddSemigroup β] : Add (α →ₗ[R] β) where
+  add f g := {
+    toFun x := f x + g x
+    map_smul := by
+      intro r' a
+      rw [map_smul, map_smul, smul_add]
+    map_add a b := by
+      rw [map_add, map_add]
+      ac_rfl
+  }
+
+end
+
+instance [SMul R α] [Add α] [SMul R β] [IsSMulComm R R β] [Add β] [IsRightDistribSMul R β] [MonoidOps R] [IsMonoid R] [IsMonoidAction R β]: IsMonoidAction R (α →ₗ[R] β) where
+  one_smul f := by
+    apply DFunLike.ext; intro x
+    apply one_smul
+  mul_smul _ _ _ := by
+    apply DFunLike.ext; intro x
+    apply mul_smul
+
+variable [SMul R α] [Add α] [SMul R β] [AddMonoidOps β] [IsAddComm β] [IsAddMonoid β] [IsLawfulSMulZero R β] [IsSMulComm R R β] [IsRightDistribSMul R β]
+
+instance : IsAddMonoid (α →ₗ[R] β) where
+  add_assoc _ _ _ := by
+    apply DFunLike.ext; intro x
+    apply add_assoc
+  zero_add _ := by
+    apply DFunLike.ext; intro x
+    apply zero_add
+  add_zero _ := by
+    apply DFunLike.ext; intro x
+    apply add_zero
+  zero_nsmul _ := by
+    apply DFunLike.ext; intro x
+    apply zero_nsmul
+  succ_nsmul _ _ := by
+    apply DFunLike.ext; intro x
+    apply succ_nsmul
+
+instance [MonoidOps R] [IsMonoid R] [IsDistributiveAction R β] : IsDistributiveAction R (α →ₗ[R] β) where
+  smul_zero _ := by
+    apply DFunLike.ext; intro x
+    apply smul_zero
+  smul_add _ _ _ := by
+    apply DFunLike.ext; intro x
+    apply smul_add

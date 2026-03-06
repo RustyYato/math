@@ -51,16 +51,6 @@ instance [SemiringOps R] [IsSemiring R] : IsAlgebra Nat R where
     rw [←nsmul_eq_natCast_mul, ←nsmul_eq_mul_natCast]
   smul_def a b := by rw [nsmul_eq_natCast_mul]; rfl
 
-class IsSMulHom (F R α β: Type*) [FunLike F α β] [SMul R α] [SMul R β] : Prop where
-  protected map_smul (f: F) (r: R) (a: α) : f (r • a) = r • f a := by intro f; exact f.map_smul
-
-def map_smul [FunLike F α β] [SMul R α] [SMul R β] [IsSMulHom F R α β] (f: F) (r: R) (a: α) : f (r • a) = r • f a := IsSMulHom.map_smul _ _ _
-
-structure SMulHom (R α β: Type*) [SMul R α] [SMul R β] extends Hom α β where
-  protected map_smul (r: R) (a: α) : toFun (r • a) = r • toFun a
-
-structure SMulEquiv (R α β: Type*) [SMul R α] [SMul R β] extends α ≃ β, SMulHom R α β where
-
 structure AlgebraHom (R α β: Type*) [SMul R α] [SMul R β]
   [Zero α] [One α] [Add α] [Mul α]
   [Zero β] [One β] [Add β] [Mul β]
@@ -73,12 +63,6 @@ structure AlgebraEquiv (R α β: Type*) [SMul R α] [SMul R β]
 
 notation:25 A " →ₐ[" R "] " B => AlgebraHom R A B
 notation:25 A " ≃ₐ[" R "] " B => AlgebraEquiv R A B
-
-instance : FunLike (SMulHom R α β) α β where
-instance : IsSMulHom (SMulHom R α β) R α β where
-
-instance : FunLike (SMulEquiv R α β) α β where
-instance : IsSMulHom (SMulEquiv R α β) R α β where
 
 instance : FunLike (α →ₐ[R] β) α β where
 instance : IsZeroHom (α →ₐ[R] β) α β where
