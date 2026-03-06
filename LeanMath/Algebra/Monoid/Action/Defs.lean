@@ -96,6 +96,11 @@ instance [SMul R α] [Add α] [SMul R β] [IsSMulComm R R β] [Add β] [IsRightD
 
 variable [SMul R α] [Add α] [SMul R β] [AddMonoidOps β] [IsAddComm β] [IsAddMonoid β] [IsLawfulSMulZero R β] [IsSMulComm R R β] [IsRightDistribSMul R β]
 
+instance : IsAddComm (α →ₗ[R] β) where
+  add_comm _ _ := by
+    apply DFunLike.ext; intro x
+    apply add_comm
+
 instance : IsAddMonoid (α →ₗ[R] β) where
   add_assoc _ _ _ := by
     apply DFunLike.ext; intro x
