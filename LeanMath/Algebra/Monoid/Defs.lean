@@ -72,6 +72,12 @@ def succ_nsmul [AddMonoidOps α] [IsLawfulNSMul α] (n: ℕ) (a: α) : (n + 1) �
 class IsMonoid (α: Type*) [MonoidOps α] : Prop extends IsSemigroup α, IsLawfulOneMul α, IsLawfulPowN α where
 class IsAddMonoid (α: Type*) [AddMonoidOps α] : Prop extends IsAddSemigroup α, IsLawfulZeroAdd α, IsLawfulNSMul α where
 
+class NoZeroDivisors (α: Type*) [Mul α] [Zero α] where
+  of_mul_eq_zero {a b: α} (h: a * b = 0) : a = 0 ∨ b = 0
+
+def of_mul_eq_zero [Mul α] [Zero α] [NoZeroDivisors α] {a b: α} (h: a * b = 0) : a = 0 ∨ b = 0 :=
+  NoZeroDivisors.of_mul_eq_zero h
+
 instance : IsMonoid ℕ where
   one_mul _ := by rw [Nat.one_mul]
   mul_one _ := by rw [Nat.mul_one]
