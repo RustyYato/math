@@ -134,6 +134,8 @@ variable [IsLawfulZeroAdd β] [IsLawfulSMulZero R β]
 
 def kernel (f: α →ₗ[R] β) : Submodule R α := preimage f ⊥
 
+def IsSpanningSet (R: Type*) [SMul R α] (U: Set α) : Prop := ∀x, x ∈ span R U
+
 end Submodule
 
 instance : SMul R s where
