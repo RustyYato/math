@@ -5,6 +5,10 @@ import LeanMath.Logic.Nontrivial
 class GroupWithZeroOps (α: Type*) extends
   MonoidOps α, Zero α, CheckedInv? α, CheckedDiv? α, CheckedZPow? α where
 
+instance (priority := 1100)
+  [MonoidOps α] [Zero α] [CheckedInv? α] [CheckedDiv? α] [CheckedZPow? α]
+  : GroupWithZeroOps α where
+
 def defaultPowZ? [Zero α] [Pow α ℕ] [CheckedInv? α] : CheckedZPow? α where
   checked_pow
   | a, .ofNat n, _ => a ^ n
