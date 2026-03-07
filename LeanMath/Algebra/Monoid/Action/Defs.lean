@@ -96,6 +96,13 @@ instance [Zero R] [IsLawfulZeroSMul R α] [IsLawfulZeroSMul R β] : IsZeroHom (�
     intro f
     rw [←zero_smul (R := R) (0: α), map_smul, zero_smul]
 
+def LinearHom.toAddGroupHom
+   [Zero R] [IsLawfulZeroSMul R α] [IsLawfulZeroSMul R β]
+   (f: α →ₗ[R] β) : α →+ β where
+   toFun := f
+   map_zero := map_zero f
+   map_add := map_add f
+
 instance [IsLawfulSMulZero R β] [IsLawfulZeroAdd β] : Zero (α →ₗ[R] β) where
   zero := {
     toFun _ := 0
