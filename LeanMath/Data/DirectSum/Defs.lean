@@ -273,6 +273,16 @@ def lift : (∀a, R a →+ M) ≃ (⊕a, R a) →+ M where
 
 attribute [irreducible] lift ι
 
+def get [DecidableEq α] (a: α) : (⊕a, R a) →+ R a :=
+  lift (fun b => if h:a = b then cast (h ▸ rfl) (AddGroupHom.id (R b)) else 0)
+
+def get_ι_eq [DecidableEq α] (a: α) (r: R a) : get a (ι a r) = r := by
+  unfold get; rw [lift_ι, dif_pos rfl]
+  dsimp; rfl
+
+def get_ι_ne [DecidableEq α] (a b: α) (h: a ≠ b) (r: R b) : get a (ι b r) = 0 := by
+  unfold get; rw [lift_ι, dif_neg h]; rfl
+
 end
 
 end DirectSum

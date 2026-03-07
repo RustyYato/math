@@ -148,4 +148,11 @@ instance [Subsingleton R] : Subsingleton (LinearCombo R α) where
     | add a b iha ihb =>
       rw [iha, ihb, add_zero]
 
+def get [DecidableEq α] (a: α) : (LinearCombo R α) →+ R :=
+  lift (fun b => if a = b then AddGroupHom.id _ else 0)
+
+def get_ι [DecidableEq α] (a b: α) (r: R) : get a (ι b r) = if a = b then r else 0 := by
+  unfold get; rw [lift_ι]
+  split <;> rfl
+
 end LinearCombo
