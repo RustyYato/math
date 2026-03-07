@@ -192,7 +192,7 @@ structure LogEmbedding (α β: Type*) [One α] [Zero β] [Mul α] [Add β] exten
 structure ExpEmbedding (α β: Type*) [Zero α] [One β] [Add α] [Mul β] extends α ↪ β, α ↪₀₁ β, α ↪ₐ*ₙ β where
 
 structure GroupEquiv (α β: Type*) [One α] [One β] [Mul α] [Mul β] extends α ≃ β, α ≃₁ β, α ≃*ₙ β where
-structure AddGroupEquiv (α β: Type*) [Zero α] [Zero β] [Add α] [Add β] extends α ≃ β, α ≃₀ β, α ≃+ₙ β where
+structure AddGroupEquiv (α β: Type*) [Zero α] [Zero β] [Add α] [Add β] extends α ≃ β, α ≃₀ β, α ≃+ₙ β, AddGroupHom α β where
 structure LogEquiv (α β: Type*) [One α] [Zero β] [Mul α] [Add β] extends α ≃ β, α ≃₁₀ β, α ≃ₘ+ₙ β where
 structure ExpEquiv (α β: Type*) [Zero α] [One β] [Add α] [Mul β] extends α ≃ β, α ≃₀₁ β, α ≃ₐ*ₙ β where
 
@@ -325,6 +325,8 @@ protected def AddGroupHom.comp [Add γ] [Zero γ] (f: β →+ γ) (g: α →+ β
   map_add _ _ := by dsimp; rw [map_add g, map_add]
 
 @[simp] def AddGroupHom.apply_comp [Add γ] [Zero γ] (f: β →+ γ) (g: α →+ β) (x: α) : f.comp g x = f (g x) := rfl
+
+@[simp] def AddGroupEquiv.apply_toAddGroupHom [Add γ] [Zero γ] (f: α ≃+ β) (x: α) : f.toAddGroupHom x = f x := rfl
 
 @[ext] def GroupHom.ext (f g: α →* β) (h: ∀x, f x = g x) : f = g := DFunLike.ext f g h
 @[ext] def AddGroupHom.ext (f g: α →+ β) (h: ∀x, f x = g x) : f = g := DFunLike.ext f g h
