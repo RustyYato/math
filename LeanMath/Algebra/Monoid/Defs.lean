@@ -312,6 +312,20 @@ protected def GroupHom.comp [Mul γ] [One γ] (f: β →* γ) (g: α →* β) : 
 
 @[simp] def GroupHom.apply_comp [Mul γ] [One γ] (f: β →* γ) (g: α →* β) (x: α) : f.comp g x = f (g x) := rfl
 
+protected def AddGroupHom.id (α: Type*) [Zero α] [Add α] : α →+ α where
+  toFun := id
+  map_zero := rfl
+  map_add _ _ := rfl
+
+@[simp] def AddGroupHom.apply_id (x: α) : GroupHom.id α x = x := rfl
+
+protected def AddGroupHom.comp [Add γ] [Zero γ] (f: β →+ γ) (g: α →+ β) : α →+ γ where
+  toFun := f ∘ g
+  map_zero := by dsimp; rw [map_zero, map_zero]
+  map_add _ _ := by dsimp; rw [map_add g, map_add]
+
+@[simp] def AddGroupHom.apply_comp [Add γ] [Zero γ] (f: β →+ γ) (g: α →+ β) (x: α) : f.comp g x = f (g x) := rfl
+
 @[ext] def GroupHom.ext (f g: α →* β) (h: ∀x, f x = g x) : f = g := DFunLike.ext f g h
 @[ext] def AddGroupHom.ext (f g: α →+ β) (h: ∀x, f x = g x) : f = g := DFunLike.ext f g h
 @[ext] def LogHom.ext (f g: α →ₘ+ β) (h: ∀x, f x = g x) : f = g := DFunLike.ext f g h
@@ -749,6 +763,49 @@ end
 
 section
 
+instance [Zero α] [Add α] [Zero β] [Add β] [IsLawfulZeroAdd β] : Zero (α →+ β) where
+  zero := {
+    toFun x := 0
+    map_zero := rfl
+    map_add a b := by rw [add_zero]
+  }
+
+instance [Zero α] [Add α] [Zero β] [Add β] [IsAddSemigroup β] [IsAddComm β] [IsLawfulZeroAdd β]
+  : Add (α →+ β) where
+  add f g := {
+    toFun x := f x + g x
+    map_zero := by rw [map_zero, map_zero, add_zero]
+    map_add a b := by
+      rw [map_add, map_add]
+      ac_rfl
+  }
+
+
+variable
+   [Zero α] [Add α] [Zero β] [Add β] [IsAddSemigroup β] [IsAddComm β] [IsLawfulZeroAdd β]
+
+instance : IsAddSemigroup (α →+ β) where
+  add_assoc _ _ _ := by
+    apply DFunLike.ext; intro
+    apply add_assoc
+
+instance : IsAddComm (α →+ β) where
+  add_comm _ _ := by
+    apply DFunLike.ext; intro
+    apply add_comm
+
+instance : IsLawfulZeroAdd (α →+ β) where
+  add_zero _ := by
+    apply DFunLike.ext; intro
+    apply add_zero
+  zero_add _ := by
+    apply DFunLike.ext; intro
+    apply zero_add
+
+end
+
+section
+
 variable [RelLike R α] [One α] [Mul α] [IsMulCon R] (r: R)
 
 instance : IsOneHom (AlgQuot.MkHom r) α (AlgQuot r) where
@@ -798,7 +855,6 @@ def resp_npow [IsLawfulPowN α] (r: R) (n: ℕ) (a b: α) : r a b -> r (a ^ n) (
   induction n with
   | zero =>
     rw [npow_zero, npow_zero]
-    apply (IsCon.eqv r).refl
   | succ n ih =>
     rw [npow_succ, npow_succ]
     apply resp_mul
@@ -834,7 +890,6 @@ def resp_nsmul [IsLawfulNSMul α] (r: R) (n: ℕ) (a b: α) : r a b -> r (n • 
   induction n with
   | zero =>
     rw [zero_nsmul, zero_nsmul]
-    apply (IsCon.eqv r).refl
   | succ n ih =>
     rw [succ_nsmul, succ_nsmul]
     apply resp_add
@@ -859,3 +914,63 @@ instance [IsLawfulNSMul α] : IsLawfulNSMul (AlgQuot r) where
 instance [IsAddMonoid α] : IsAddMonoid (AlgQuot r) where
 
 end
+
+namespace AlgQuot
+
+variable
+  [RelLike R α] [MonoidOps α] [IsMonoid α] [IsMulCon R]
+  [RelLike S β] [MonoidOps β] [IsMonoid β] [IsMulCon S]
+  {r: R} {s: S}
+
+def MkHom.toGroupHom (_: MkHom r) : α →* AlgQuot r where
+  toFun := AlgQuot.mk r
+  map_one := rfl
+  map_mul _ _ := rfl
+
+@[simp] def apply_mkHom_toGroupHom : MkHom.toGroupHom f x = AlgQuot.mk r x := rfl
+
+def liftGroupHom (f: α →* β) (h: ∀x y, r x y -> f x = f y) : AlgQuot r →* β where
+  toFun := Quotient.lift f (by
+    intro a b ab
+    apply h
+    assumption)
+  map_one := by
+    show f 1 = 1
+    rw [map_one]
+  map_mul a b := by
+    induction a with | mk a =>
+    induction b with | mk b =>
+    show f (a * b) = _
+    apply map_mul
+
+def mapGroupHom (f: α →* β) (h: ∀x y, r x y -> s (f x) (f y)) : AlgQuot r →* AlgQuot s :=
+  liftGroupHom (r := r) (β := AlgQuot s) ((AlgQuot.mk s).toGroupHom.comp f) <| by
+    intro x y rxy
+    simp
+    apply sound
+    apply h
+    assumption
+
+@[simp] def liftGroupHom_mk (f: α →* β) {h} : liftGroupHom f h (mk r x) = f x := rfl
+@[simp] def mapGroupHom_mk (f: α →* β) {h} : mapGroupHom f h (mk r x) = mk s (f x) := rfl
+
+end AlgQuot
+
+def MulCon.map
+  [Mul α] [Mul β] [RelLike S β] [IsMulCon S]
+  [FunLike F α β] [IsMulHom F α β]
+  {r: α -> α -> Prop} {s: S}
+  (f: F) (h: ∀a b, r a b -> s (f a) (f b)) (rab: MulCon.generate r a b) : s (f a) (f b) := by
+  induction rab with
+  | of => apply h; assumption
+  | mul =>
+    rw [map_mul, map_mul]
+    apply resp_mul
+    assumption
+    assumption
+  | refl => rfl
+  | symm =>
+    apply Relation.symm
+    assumption
+  | trans =>
+    apply Relation.trans <;> assumption

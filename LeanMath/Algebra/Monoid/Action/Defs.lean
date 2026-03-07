@@ -37,6 +37,33 @@ instance [SMul R α] [AddMonoidOps α] [IsAddMonoid α] [IsRightDistribSMul R α
     | zero => rw [zero_smul, zero_smul, smul_zero]
     | succ n ih => rw [succ_nsmul, succ_nsmul, smul_add, ih]
 
+
+section
+
+instance
+  [Zero α] [Add α]
+  [SMul R β] [MonoidOps R] [IsMonoid R]
+  [AddMonoidOps β] [IsAddMonoid β]
+  [IsLawfulSMulZero R β]
+  [IsRightDistribSMul R β] : SMul R (α →+ β) where
+  smul r f := {
+    toFun a := r • f a
+    map_zero := by rw [map_zero, smul_zero]
+    map_add a b := by rw [map_add, smul_add]
+  }
+
+instance
+  [Zero α] [Add α]
+  [AddMonoidOps β] [IsAddMonoid β] [IsAddComm β] : IsAddMonoid (α →+ β) where
+  zero_nsmul _ := by
+    apply DFunLike.ext; intro
+    apply zero_nsmul
+  succ_nsmul _ _ := by
+    apply DFunLike.ext; intro
+    apply succ_nsmul
+
+end
+
 section
 
 variable
