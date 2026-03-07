@@ -345,6 +345,13 @@ def inv_inv (a: α) : a⁻¹⁻¹ = a := by
   symm; apply eq_inv_of_mul
   rw [mul_inv_cancel]
 
+def inv_inj {a b: α} : a⁻¹ = b⁻¹ ↔ a = b := by
+  apply Iff.intro
+  · intro h
+    rw [←inv_inv a, ←inv_inv b, h]
+  · intro h
+    congr
+
 def inv_div (a b: α) : (a / b)⁻¹ = b / a := by
   rw [div_eq_mul_inv, div_eq_mul_inv, inv_mul_rev, inv_inv]
 
@@ -486,6 +493,9 @@ def neg_add_rev (a b: α) : -(a + b) = -b + -a :=
 
 def neg_neg (a: α) : - -a = a :=
   inv_inv (α := MulOfAdd α) _
+
+def neg_inj {a b: α} : -a = -b ↔ a = b :=
+  inv_inj (α := MulOfAdd α)
 
 def neg_sub (a b: α) : -(a - b) = b - a :=
   inv_div (α := MulOfAdd α) _ _

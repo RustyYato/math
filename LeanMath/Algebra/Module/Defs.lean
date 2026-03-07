@@ -27,3 +27,9 @@ instance : IsModule R R where
   smul_add := mul_add
   add_smul := add_mul
   zero_smul := zero_mul
+
+instance : IsScalarTower ℕ R β where
+  smul_assoc n r a := by
+    induction n with
+    | zero => simp [zero_smul]
+    | succ n ih => rw [succ_nsmul, succ_nsmul, add_smul, ih]
