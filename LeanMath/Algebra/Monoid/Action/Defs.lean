@@ -37,6 +37,21 @@ instance [SMul R α] [AddMonoidOps α] [IsAddMonoid α] [IsRightDistribSMul R α
     | zero => rw [zero_smul, zero_smul, smul_zero]
     | succ n ih => rw [succ_nsmul, succ_nsmul, smul_add, ih]
 
+def smulHom (R: Type*) {α: Type*}
+  [Add α] [Zero α] [SMul R α]
+  [IsLawfulSMulZero R α]
+  [IsRightDistribSMul R α] (r: R) : α →+ α where
+  toFun a := r • a
+  map_zero := smul_zero _
+  map_add := smul_add _
+
+def smulHom' (R: Type*)
+  [Zero R] [Add R] [Zero α] [Add α] [SMul R α]
+  [IsLawfulZeroSMul R α]
+  [IsLeftDistribSMul R α] (a: α) : R →+ α where
+  toFun r := r • a
+  map_zero := zero_smul _
+  map_add _ _ := add_smul _ _ _
 
 section
 
