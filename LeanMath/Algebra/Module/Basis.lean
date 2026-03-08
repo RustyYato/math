@@ -1,20 +1,26 @@
 import LeanMath.Algebra.Monoid.Action.Set
+import LeanMath.Algebra.Ring.Module.Defs
 import LeanMath.Data.LinearCombo.Module
+import LeanMath.Data.LinearCombo.AddGroup
+
+namespace Submodule
 
 variable (R: Type*) [SMul R α]
   [SemiringOps R] [IsSemiring R]
   [AddMonoidOps α] [IsAddMonoid α] [IsAddComm α]
   [IsModule R α]
 
-namespace Submodule
-
 def eval {U: Set α} : LinearCombo R U →ₗ[R] α := LinearCombo.liftLin Subtype.val
 
 @[simp] def eval_ι {U: Set α} (a: U) (r: R) : eval R (LinearCombo.ι a r) = r • a.val := LinearCombo.liftLin_ι _ _ _
 
--- linear independence means that the only linear combination
--- that evaluates to 0, is the 0 linear combination
-def IsLinindep (U: Set α) := ∀lc: LinearCombo R U, eval R lc = 0 -> lc = 0
+-- linear independence means that the evaluation
+-- function from formal linear combinations to the
+-- ground set of vectors is injective.
+-- If the vectors form a group (instead of just a monoid)
+-- this is equivalent to saying that eval a = 0 -> a = 0
+def IsLinindep (U: Set α) :=
+  Function.Injective (eval R (U := U))
 
 -- a basis is is a linearly independent spanning set
 structure IsBasis (U: Set α) : Prop where
@@ -34,6 +40,11 @@ def lincombo_mem_span_of_subset {U: Set α} (lc: LinearCombo R U) (s: Submodule 
 end Submodule
 
 namespace LinearCombo
+
+variable (R: Type*) [SMul R α]
+  [SemiringOps R] [IsSemiring R]
+  [AddMonoidOps α] [IsAddMonoid α] [IsAddComm α]
+  [IsModule R α]
 
 def upcast (U V: Set α) (h: U ⊆ V) : LinearCombo R U →ₗ[R] LinearCombo R V :=
   liftLin fun x => LinearCombo.ι ⟨x.val, h _ x.property⟩ 1
@@ -97,5 +108,49 @@ def filter_singleton {U: Set α} [DecidableEq α] (a: α) (ha: a ∈ U) (lc: Lin
     rw [if_neg, map_zero]
     rintro rfl
     contradiction
+
+def filter_upcast_filter
+  (U V₀ V₁: Set α)
+  [∀x, Decidable (x ∈ V₀)]
+  [∀x, Decidable (x ∈ V₁)]
+  (hsub₀: V₀ ⊆ V₁)
+  (hsub₁: V₁ ⊆ U)
+  (lc: LinearCombo R U) :
+  upcast R V₁ U hsub₁ (filter R U V₁ (upcast R V₀ U (Set.sub_trans hsub₀ hsub₁) (filter R U V₀ lc)))
+  = upcast R V₀ U (Set.sub_trans hsub₀ hsub₁) (filter R U V₀ lc) := by
+  induction lc with
+  | zero => simp [map_zero]
+  | add a b iha ihb => simp [map_add, iha, ihb]
+  | ι a r =>
+    rw [filter_ι]
+    split <;> rename_i h
+    simp [upcast_ι, filter_ι, dif_pos (hsub₀ _ h)]
+    simp [map_zero]
+
+def filter_eval_from_basis_mem
+  (U V: Set α)
+  [∀x, Decidable (x ∈ V)]
+  (basis: List (U × R))
+  (hbasis: ∀x ∈ basis, x.fst.val ∈ V)
+  : Submodule.eval R (from_elements basis) =
+  Submodule.eval R (filter R U V (from_elements basis)) := by
+  induction basis with
+  | nil => simp [map_zero]
+  | cons v vs ih =>
+    simp [map_add, filter_ι]; rw [dif_pos, Submodule.eval_ι]; congr 1
+    apply ih
+    intro x hx; apply hbasis
+    simp [hx]
+    apply hbasis
+    simp
+
+end LinearCombo
+
+namespace LinearCombo
+
+variable (R: Type*) [SMul R α]
+  [RingOps R] [IsRing R]
+  [AddGroupOps α] [IsAddGroup α] [IsAddComm α]
+  [IsModule R α]
 
 end LinearCombo

@@ -351,8 +351,10 @@ def sub_sUnion (U: Set (Set α)) (a: Set α) : a ∈ U -> a ⊆ ⋃ U := by
   intro ha x hx
   exists a
 
-class inductive IsFinite (U: Set α) where
-| intro (canon: List α)
+def ofList (list: List α) : Set α where
+  Mem := (· ∈ list)
+
+@[simp] def mem_ofList {list: List α} : ∀{x}, x ∈ ofList list ↔ x ∈ list := Iff.rfl
 
 end Set
 

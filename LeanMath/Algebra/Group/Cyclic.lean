@@ -74,7 +74,4 @@ def generated_by_ι' [NeZero n] (x: CyclicGroup n) : ∃k < n, x = ι ^ k := by
   apply Int.emod_nonneg
   apply NeZero.ne
 
--- @[cases_eliminator]
--- def cases { motive: CyclicGroup n -> Prop } := sorry
-
 end CyclicGroup

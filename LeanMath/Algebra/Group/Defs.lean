@@ -471,6 +471,16 @@ def zpow_neg (a: α) (n: ℤ) : a ^ (-n) = (a ^ n)⁻¹ := by
   apply eq_inv_of_mul
   rw [←zpow_add, neg_add_cancel, zpow_zero]
 
+def div_eq_one_of_eq (a b: α) : a = b -> a / b = 1 := by
+  intro rfl; rw [div_self]
+
+def div_eq_one (a b: α) : a = b ↔ a / b = 1:= by
+  apply Iff.intro
+  apply div_eq_one_of_eq
+  intro h
+  rw [←one_mul b, ←h, div_eq_mul_inv a b,
+    mul_assoc, inv_mul_cancel, mul_one]
+
 end
 
 section
@@ -567,5 +577,11 @@ def mul_zsmul (a: α) (n m: ℤ) : (n * m) • a = m • n • a :=
 
 def neg_zsmul (a: α) (n: ℤ) : (-n) • a = -(n • a) :=
   zpow_neg (α := MulOfAdd α) _ _
+
+def sub_eq_zero_of_eq (a b: α) : a = b -> a - b = 0 := by
+  intro rfl; rw [sub_self]
+
+def sub_eq_zero (a b: α) : a = b ↔ a - b = 0 :=
+  div_eq_one (α := MulOfAdd α) _ _
 
 end

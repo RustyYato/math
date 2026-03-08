@@ -1,4 +1,4 @@
-import LeanMath.Algebra.Monoid.Free
+  import LeanMath.Algebra.Monoid.Free
 import LeanMath.Algebra.Monoid.Action.Defs
 
 section
@@ -282,6 +282,80 @@ def get_ι_eq [DecidableEq α] (a: α) (r: R a) : get a (ι a r) = r := by
 
 def get_ι_ne [DecidableEq α] (a b: α) (h: a ≠ b) (r: R b) : get a (ι b r) = 0 := by
   unfold get; rw [lift_ι, dif_neg h]; rfl
+
+def from_elements : List (Σa, R a) -> ⊕a, R a :=
+  List.foldr (fun x acc => ι x.1 x.2 + acc) 0
+
+@[simp] def from_elements_nil : from_elements (α := α) (R := R) [] = 0 := rfl
+@[simp] def from_elements_cons (a: (Σa, R a)) (as: List ((Σa, R a))) : from_elements (a::as) = ι a.1 a.2 + from_elements as := rfl
+
+def from_elements_set_sum
+  (elements: List (Σa, R a))
+  (index: Nat) (hindex: index < elements.length)
+  (a: α) (r₀ r₁: R a) :
+  from_elements (elements.set index ⟨a, r₀ + r₁⟩) =
+  from_elements (⟨a, r₀⟩::elements.set index ⟨a, r₁⟩) := by
+  induction elements generalizing index with
+  | nil => contradiction
+  | cons x xs ih =>
+    cases index with
+    | zero => simp; rw [map_add, add_assoc]
+    | succ index =>
+      simp
+      rw [ih]
+      simp; ac_rfl
+      apply Nat.lt_of_succ_lt_succ
+      assumption
+
+def from_elements_set_nodup
+  (elements: List (Σa, R a))
+  (index: Nat) (hindex: index < elements.length)
+  (r: R elements[index].fst) :
+  elements.Pairwise (fun x y => x.1 ≠ y.1) ->
+  (elements.set index ⟨_, r⟩).Pairwise (fun x y => x.1 ≠ y.1) := by
+  intro h
+  rw [List.pairwise_iff_getElem] at h
+  rw [List.pairwise_iff_getElem]
+  intro i j hi hj i_lt_j
+  simp [List.getElem_set]
+  split; subst index
+  rw [if_neg (Nat.ne_of_lt i_lt_j)]
+  apply h; assumption
+  split; subst index
+  apply h; assumption
+  apply h; assumption
+
+def exists_nodup_elements (lc: ⊕a, R a) : ∃elements: List (Σa, R a), elements.Pairwise (fun x y => x.1 ≠ y.1) ∧ lc = from_elements elements := by
+  classical
+  induction lc using list_induction with
+  | zero => exact ⟨[], List.Pairwise.nil, rfl⟩
+  | ι_add a r as ih =>
+    obtain ⟨elements, nodup, eq⟩ := ih
+    by_cases ha:∃index: Fin elements.length, elements[index].1 = a
+    · simp at ha
+      obtain ⟨index, _⟩ := ha
+      subst a
+      refine ⟨elements.set index ⟨_, r + elements[index].snd⟩, ?_, ?_⟩
+      · apply from_elements_set_nodup
+        assumption
+      · rw [from_elements_set_sum]
+        simp; congr
+        show as = from_elements (elements.set index elements[index.val])
+        rw [List.set_getElem_self]
+        assumption
+        exact index.isLt
+    · simp at ha
+      refine ⟨⟨a, r⟩::elements, ?_, ?_⟩
+      · apply List.Pairwise.cons
+        intro x hx
+        intro rfl
+        rw [List.mem_iff_getElem] at hx
+        obtain ⟨i, hi, h⟩ := hx
+        have := ha ⟨i, hi⟩
+        rw [←h] at this
+        contradiction
+        assumption
+      · simp; congr
 
 end
 
