@@ -9,7 +9,7 @@ namespace BasisExists
 
 section
 
-variable (F V: Type*) [FieldOps F] [IsField F]
+variable (F V: Type*) [FieldOps F] [IsDivisionRing F]
   [AddGroupOps V] [IsAddGroup V] [IsAddComm V]
   [SMul F V] [IsModule F V]
 
@@ -38,7 +38,7 @@ end
 
 section
 
-variable {F V: Type*} [FieldOps F] [IsField F]
+variable {F V: Type*} [FieldOps F] [IsDivisionRing F]
   [AddGroupOps V] [IsAddGroup V] [IsAddComm V]
   [SMul F V] [IsModule F V]
 
@@ -180,7 +180,7 @@ protected def Subset.sSup (U: Set (Subset F V))
 end
 
 variable
-  (F V: Type*) [FieldOps F] [IsField F]
+  (F V: Type*) [FieldOps F] [IsDivisionRing F]
   [AddGroupOps V] [IsAddGroup V] [IsAddComm V]
   [SMul F V] [IsModule F V]
 
@@ -209,7 +209,7 @@ def exists_basis : ∃U: Set V, Submodule.IsBasis F U := by
 end BasisExists
 
 variable
-  (F V: Type*) [FieldOps F] [IsField F]
+  (F V: Type*) [FieldOps F] [IsDivisionRing F]
   [AddGroupOps V] [IsAddGroup V] [IsAddComm V]
   [SMul F V] [IsModule F V]
 
