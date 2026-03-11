@@ -24,7 +24,7 @@ def psum_congr (f: α₀ ↭ α₁) (g: β₀ ↭ β₁) : α₀ ⊕' β₀ ↭ 
       exists .inr y
       rw [←h]
 
-def pprodCongr (f: α₀ ↭ α₁) (g: β₀ ↭ β₁) : α₀ ×' β₀ ↭ α₁ ×' β₁ where
+def pprod_congr (f: α₀ ↭ α₁) (g: β₀ ↭ β₁) : α₀ ×' β₀ ↭ α₁ ×' β₁ where
   toFun x := ⟨f x.fst, g x.snd⟩
   inj' := by
     intro x y h
@@ -62,7 +62,7 @@ def sum_congr (f: α₀ ↭ α₁) (g: β₀ ↭ β₁) : α₀ ⊕ β₀ ↭ α
       exists .inr y
       rw [←h]
 
-def prodCongr (f: α₀ ↭ α₁) (g: β₀ ↭ β₁) : α₀ × β₀ ↭ α₁ × β₁ where
+def prod_congr (f: α₀ ↭ α₁) (g: β₀ ↭ β₁) : α₀ × β₀ ↭ α₁ × β₁ where
   toFun x := (f x.fst, g x.snd)
   inj' := by
     intro x y h

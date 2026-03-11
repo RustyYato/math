@@ -46,7 +46,7 @@ instance [fa: Fintype α] [fb: Fintype β] : Fintype (α ×' β) where
     fb.repr.map fun fb => {
       bij := (Fin.prod (card α) (card β)).toBij.trans
         <| Equiv.prod_equiv_pprod.toBij.trans
-        <| (Bijection.pprodCongr fa.bij fb.bij)
+        <| (Bijection.pprod_congr fa.bij fb.bij)
       try_decode :=
         match fa.try_decode with
         | .none => .none

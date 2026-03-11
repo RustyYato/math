@@ -5,8 +5,29 @@ import LeanMath.Tactic.AxiomBlame
 import LeanMath.Logic.IsEmpty
 
 inductive POption (α: Sort u) where
-| some (a: α)
 | none
+| some (a: α)
+
+def Bijection.finsucc_poption (f: Fin n ↭ α) : Fin (n + 1) ↭ POption α where
+  toFun
+  | ⟨0, _⟩ => .none
+  | ⟨n + 1, h⟩ => .some (f ⟨n, Nat.lt_of_succ_lt_succ h⟩)
+  inj' := by
+    intro i j h
+    simp at h
+    cases i using Fin.cases <;> cases j using Fin.cases
+    · rfl
+    · nomatch h
+    · nomatch h
+    · rw [Fin.val_inj.mp <| Fin.mk.inj <| f.inj (POption.some.inj h)]
+  surj' := by
+    intro x; cases x
+    exists 0
+    rename_i x
+    have ⟨i, hi⟩ := f.surj x
+    exists i.succ
+    show POption.some _ = .some _
+    congr
 
 structure Fintype.Repr (α: Sort u) (n: Nat) where
   bij: Fin n ↭ α
@@ -280,6 +301,14 @@ instance : Fintype Prop :=
       simpa
   }
 
+instance [ft: Fintype ι] : Fintype (POption ι) where
+  card := card ι + 1
+  repr := ft.repr.map fun rι => {
+    bij := Bijection.finsucc_poption rι.bij
+    try_decode := .none -- FIXME
+  }
+
+
 def fin_foldr_eq_list_foldr
   {ι α: Type*}
   (f: ι -> α -> α)
@@ -419,5 +448,31 @@ def fold {ι α: Sort*} [ft: Fintype ι] (f: ι -> α -> α) (fcomm: ∀i j a, f
     show Fin.foldr _ (fun i => f (a i)) = Fin.foldr _ (fun i => f (b i))
     apply fin_foldr_eq f a b
     assumption
+
+def fold_bij {ι ι' α: Sort*} [ft: Fintype ι] {ft': Fintype ι'}
+  (bij: ι ↭ ι') (f: ι' -> α -> α)
+  (fcomm: ∀i j a, f i (f j a) = f j (f i a)) {acc} :
+  fold f fcomm acc = fold (fun i => f (bij i)) (by
+    intro i j a
+    dsimp; rw [fcomm]) acc := by
+    rw [show ft' = ofBij bij from Subsingleton.allEq _ _]
+    clear ft'
+    obtain ⟨card, ft⟩ := ft
+    induction ft with | mk ft =>
+    rfl
+
+def finBij (ι: Sort*) [Fintype ι] : Trunc (Fin (card ι) ↭ ι) :=
+  Fintype.repr.map fun x => x.bij
+
+@[simp] def fold_zero (f: Fin 0 -> α -> α) : fold f nofun = id := rfl
+
+@[simp] def fold_succ (f: Fin (n + 1) -> α -> α) (fcomm) :
+  fold f fcomm acc = f 0 (fold (fun i: Fin n => f i.succ) (by
+    intro i j a; dsimp; rw [fcomm]) acc) := by
+  unfold fold
+  simp [repr]
+  show Fin.foldr (n + 1) _ _ = _
+  rw [Fin.foldr_succ]
+  rfl
 
 end Fintype

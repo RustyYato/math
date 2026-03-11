@@ -130,7 +130,7 @@ private theorem nat_add_mul_div_right (x y : Nat) {z : Nat} (H : 0 < z) : (x + y
 
 namespace Fin
 
-def sum (n m: Nat) : Fin (n + m) ≃ Fin n ⊕ Fin m where
+def sum (n m: Nat) : Fin (n + m) ≃ (Fin n ⊕ Fin m) where
   toFun x :=
     if h:x.val < n then
       .inl ⟨_, h⟩
@@ -163,7 +163,7 @@ def sum (n m: Nat) : Fin (n + m) ≃ Fin n ⊕ Fin m where
     obtain ⟨i, h⟩ := nat_exists_eq_add_of_le (Nat.le_of_not_lt h)
     rw [h, Nat.add_comm n, nat_add_sub_cancel]
 
-def prod (n m: Nat) : Fin (n * m) ≃ Fin n × Fin m where
+def prod (n m: Nat) : Fin (n * m) ≃ (Fin n × Fin m) where
   toFun x := {
     fst := {
       val := x % n
