@@ -3,6 +3,7 @@ import LeanMath.Data.Equiv.Defs
 import LeanMath.Data.Trunc.Defs
 import LeanMath.Tactic.AxiomBlame
 import LeanMath.Logic.IsEmpty
+import LeanMath.Data.Nat.Find
 
 inductive POption (α: Sort u) where
 | none
@@ -463,6 +464,42 @@ def fold_bij {ι ι' α: Sort*} [ft: Fintype ι] {ft': Fintype ι'}
 
 def finBij (ι: Sort*) [Fintype ι] : Trunc (Fin (card ι) ↭ ι) :=
   Fintype.repr.map fun x => x.bij
+
+def finEquiv (ι: Sort*) [Fintype ι] [DecidableEq ι] : Trunc (Fin (card ι) ≃ ι) :=
+  Fintype.repr.map fun repr =>
+  match repr.try_decode with
+  | .some ⟨invFun, invFun_spec⟩ =>
+    {
+      toFun := repr.bij
+      invFun := invFun
+      rightInv := invFun_spec
+      leftInv := by
+        intro x
+        obtain ⟨i, rfl⟩ := repr.bij.surj x
+        rw [invFun_spec i]
+    }
+  | .none =>
+    let card :=  Fintype.card ι
+    have spec (x: ι) : ∃(n: ℕ) (hn: n < card), x = repr.bij ⟨n, hn⟩ := by
+      have ⟨i, hi⟩ := repr.bij.surj x
+      refine ⟨_, i.isLt, hi.symm⟩
+    {
+      toFun := repr.bij
+      invFun x := {
+        val := Nat.find (spec x)
+        isLt := (Nat.find_spec (spec x)).1
+      }
+      leftInv := by
+        intro x
+        obtain ⟨hn, h⟩ := Nat.find_spec (spec x)
+        exact h.symm
+      rightInv := by
+        intro i
+        apply repr.bij.inj
+        dsimp
+        have ⟨_, h⟩ := Nat.find_spec (spec (repr.bij i))
+        exact h.symm
+    }
 
 @[simp] def fold_zero (f: Fin 0 -> α -> α) : fold f nofun = id := rfl
 
