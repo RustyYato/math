@@ -45,27 +45,27 @@ variable
   [IsZeroHom F α β] [IsAddHom F α β]
   [IsOneHom F α β] [IsMulHom F α β]
 
-@[simp] def fin_sum_zero (f: Fin 0 -> α) : sum f = 0 := rfl
-@[simp] def fin_sum_succ (f: Fin (n + 1) -> α) : sum f = f 0 + sum (f ∘ Fin.succ) := by
+@[simp] def fin_sum_zero (f: Fin 0 -> α) : ∑i, f i = 0 := rfl
+@[simp] def fin_sum_succ (f: Fin (n + 1) -> α) : ∑i, f i = f 0 + ∑i: Fin n, f i.succ := by
   rw [sum, Fintype.fold_succ]
   rfl
 
-@[simp] def fin_prod_zero (f: Fin 0 -> α) : prod f = 1 := rfl
-@[simp] def fin_prod_succ (f: Fin (n + 1) -> α) : prod f = f 0 * prod (f ∘ Fin.succ) :=
+@[simp] def fin_prod_zero (f: Fin 0 -> α) : ∏i, f i = 1 := rfl
+@[simp] def fin_prod_succ (f: Fin (n + 1) -> α) : ∏i, f i = f 0 * ∏i: Fin n, f i.succ :=
   fin_sum_succ (α := AddOfMul α) _
 
-def sum_reindex (bij: ι ↭ ι') (f: ι' -> α) : sum f = sum (f ∘ bij) := by
+def sum_reindex (bij: ι ↭ ι') (f: ι' -> α) : ∑i, f i = ∑i, f (bij i) := by
   apply Fintype.fold_bij
 
-def prod_reindex (bij: ι ↭ ι') (f: ι' -> α) : prod f = prod (f ∘ bij) :=
+def prod_reindex (bij: ι ↭ ι') (f: ι' -> α) : ∏i, f i = ∏i, f (bij i) :=
   sum_reindex (α := AddOfMul α) _ _
 
-@[simp] def sum_empty [IsEmpty ι] (f: ι -> α) : sum f = 0 := by
+@[simp] def sum_empty [IsEmpty ι] (f: ι -> α) : ∑i, f i = 0 := by
   rename Fintype ι => ft
   rw [show ft = Fintype.instOfIsEmpty from Subsingleton.allEq _ _]
   rfl
 
-@[simp] def prod_empty [IsEmpty ι] (f: ι -> α) : prod f = 1 :=
+@[simp] def prod_empty [IsEmpty ι] (f: ι -> α) : ∏i, f i = 1 :=
   sum_empty (α := AddOfMul α) _
 
 @[simp] def sum_poption (f: POption ι -> α) : (∑i, f i) = f .none + ∑i, f (.some i) := by
@@ -80,8 +80,7 @@ private def map_sum' (f: Fin n -> α) (g: F) : sum (g ∘ f) = g (sum f) := by
   induction n with
   | zero => simp [map_zero]
   | succ n ih =>
-    simp [map_add]
-    rw [←ih (f ∘ Fin.succ)]
+    simp [map_add, ←ih]
     rfl
 
 def map_sum (f: ι -> α) (g: F) : (∑i, g (f i)) = g (∑i, f i) := by
@@ -210,3 +209,17 @@ def sum_zero : ∑_: ι, (0: α) = 0 := by
 
 def prod_one : ∏_: ι, (1: α) = 1 :=
   sum_zero (α := AddOfMul α)
+
+private def sum_pairwise' (f g: Fin n -> α) : (∑i, f i + g i) = (∑i, f i) + (∑i, g i) := by
+  induction n with
+  | zero => simp [add_zero]
+  | succ n ih =>
+    simp [ih]
+    ac_rfl
+def sum_pairwise (f g: ι -> α) : (∑i, f i + g i) = (∑i, f i) + (∑i, g i) := by
+  induction Fintype.finBij ι with | mk f =>
+  rw [sum_reindex f, sum_reindex f, sum_reindex f]
+  apply sum_pairwise'
+
+def prod_pairwise (f g: ι -> α) : (∏i, f i * g i) = (∏i, f i) * (∏i, g i) :=
+  sum_pairwise (α := AddOfMul α) _ _
