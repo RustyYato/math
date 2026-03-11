@@ -221,7 +221,7 @@ instance : InfSet (Set α) where
   simp [iInf]
 
 def powerset (s: Set α) : Set (Set α) where
-  Mem a := ∀x, x ∈ a -> x ∈ s
+  Mem a := a ⊆ s
 
 @[simp] def mem_powerset {s: Set α} : ∀{x}, x ∈ s.powerset ↔ x ⊆ s := Iff.rfl
 
@@ -307,6 +307,11 @@ instance : @Std.Associative (Set α) (· ∪ ·) := ⟨union_assoc⟩
 @[simp] def preimage_preimage (s: Set α) (f: γ -> β) (g: β -> α) : (s.preimage g).preimage f = s.preimage (g ∘ f) := rfl
 @[simp] def scompl_scompl (s: Set α) : sᶜᶜ = s := by ext; simp
 
+def scompl_inj {a b: Set α} : aᶜ = bᶜ ↔ a = b := by
+  apply Iff.intro
+  intro h; rw [←scompl_scompl a, ←scompl_scompl b, h]
+  intro h; rw [h]
+
 @[simp] def sInter_empty : ⋂ (⊥: Set (Set _)) = (⊤: Set α) := by ext; simp
 @[simp] def sUnion_empty : ⋃ (⊥: Set (Set _)) = (⊥: Set α) := by ext; simp
 
@@ -355,6 +360,47 @@ def ofList (list: List α) : Set α where
   Mem := (· ∈ list)
 
 @[simp] def mem_ofList {list: List α} : ∀{x}, x ∈ ofList list ↔ x ∈ list := Iff.rfl
+
+@[simp] def compl_top : ⊤ᶜ = (⊥: Set α) := by ext; simp
+@[simp] def compl_bot : ⊥ᶜ = (⊤: Set α) := by ext; simp
+
+@[simp] def compl_sUnion (U: Set (Set α)) : (⋃ U)ᶜ = ⋂ (U.preimage (·ᶜ)) := by
+  ext a; simp
+  apply Iff.intro
+  intro h x hx
+  simpa using h xᶜ hx
+  intro h x hx
+  rw [←scompl_scompl x] at hx
+  simpa using h _ hx
+
+@[simp] def compl_sInter (U: Set (Set α)) : (⋂ U)ᶜ = ⋃ (U.preimage (·ᶜ)) := by
+  apply scompl_inj.mp
+  rw [compl_sUnion]
+  simp
+
+def preimage_compl_eq_image_compl (U: Set (Set α)) : U.preimage (·ᶜ) = U.image (·ᶜ) := by
+  ext u; simp
+  apply Iff.intro
+  intro h; refine ⟨_, h, ?_⟩; simp
+  rintro ⟨_, _, rfl⟩; simpa
+
+@[simp] def image_insert (a: α) (U: Set α) (f: α -> β) : (insert a U).image f = insert (f a) (U.image f) := by
+  ext; simp
+
+@[simp] def image_empty (f: α -> β) : Set.image f ⊥ = ⊥ := by
+  ext; simp
+
+@[simp] def image_singleton (a: α) (f: α -> β) : Set.image f {a} = {f a} := by
+  rw [singleton_eq_insert, singleton_eq_insert]
+  simp
+
+@[simp] def compl_union (a b: Set α) : (a ∪ b)ᶜ = aᶜ ∩ bᶜ := by
+  rw [←sUnion_pair_eq_union, compl_sUnion, preimage_compl_eq_image_compl]
+  simp
+
+@[simp] def compl_inter (a b: Set α) : (a ∩ b)ᶜ = aᶜ ∪ bᶜ := by
+  rw [←sInter_pair_eq_inter, compl_sInter, preimage_compl_eq_image_compl]
+  simp
 
 end Set
 
