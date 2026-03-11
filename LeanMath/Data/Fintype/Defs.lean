@@ -280,4 +280,144 @@ instance : Fintype Prop :=
       simpa
   }
 
+def fin_foldr_eq_list_foldr
+  {ι α: Type*}
+  (f: ι -> α -> α)
+  (map: Fin n -> ι)
+  (acc: α): Fin.foldr n (fun i => f (map i)) acc = (List.ofFn map).foldr f acc := by
+  induction n with
+  | zero => rfl
+  | succ n ih => rw [Fin.foldr_succ, List.ofFn_succ, List.foldr_cons, ih]
+
+private def fin_foldr_map_eqv
+  {ι α β: Sort*}
+  (f: ι -> α -> α)
+  (eqv: β ≃ α)
+  (map: Fin n -> ι)
+  (acc: α):
+  Fin.foldr n (fun i a => f (map i) a) acc =
+  eqv (Fin.foldr n (fun i b => eqv.symm <| f (map i) (eqv b)) (eqv.symm acc)) := by
+  induction n with
+  | zero => simp
+  | succ n ih => simp [Fin.foldr_succ, ih]
+
+private def list_perm_of_nodup
+  {ι: Type*}
+  (as bs: List ι)
+  (has: as.Nodup)
+  (hbs: bs.Nodup)
+  (eqv: ∀i, i ∈ as ↔ i ∈ bs) :
+  as ≈ bs := by
+  induction has generalizing bs with
+  | nil =>
+    cases bs with
+    | nil => apply List.Perm.refl
+    | cons b bs => nomatch (eqv b).mpr (by simp)
+  | @cons a as head tail ih =>
+    obtain ⟨bs₀, bs₁, rfl⟩ := List.mem_iff_append.mp ((eqv a).mp (by simp))
+    apply flip List.Perm.trans
+    apply List.perm_append_comm
+    apply List.Perm.cons
+    rw [List.nodup_append, List.nodup_cons] at hbs
+    obtain ⟨hbs₀, ⟨hbs₁, hbs₂⟩, hbs₃⟩ := hbs
+    apply ih
+    show (bs₁ ++ bs₀).Nodup
+    rw [List.nodup_append]
+    refine ⟨?_, ?_, ?_⟩
+    assumption
+    assumption
+    intro i hi j hj rfl
+    have := hbs₃ i hj i (by simp [hi])
+    contradiction
+    simp
+    intro i
+    apply Iff.intro
+    intro hi
+    have := (eqv i).mp (.tail _ hi)
+    simp at this
+    rcases this with _ | rfl | _
+    right; assumption
+    nomatch head i hi
+    left; assumption
+    intro h
+    rcases h with h | h
+    all_goals
+      have g := (eqv i).mpr (by simp [h])
+      simp at g
+      rcases g with rfl | g
+    contradiction
+    assumption
+    nomatch hbs₃ i h i (by simp)
+    assumption
+
+private def list_foldr_eq
+  {ι α: Type*}
+  (f: ι -> α -> α)
+  (as bs: List ι)
+  (has: as.Nodup)
+  (hbs: bs.Nodup)
+  (eqv: ∀i, i ∈ as ↔ i ∈ bs)
+  (fcomm: ∀i j a, f i (f j a) = f j (f i a))
+  (acc: α):
+  as.foldr f acc = bs.foldr f acc := by
+  have := list_perm_of_nodup as bs has hbs eqv
+  clear eqv has hbs
+  induction this with
+  | nil => rfl
+  | trans _ _ iha ihb  => rw [iha, ihb]
+  | cons => simp; congr
+  | swap => simp; apply fcomm
+
+private def fin_foldr_eq
+  {ι α: Sort*}
+  (f: ι -> α -> α)
+  (map₀ map₁: Fin n ↭ ι)
+  (fcomm: ∀i j a, f i (f j a) = f j (f i a)) :
+  Fin.foldr n (fun i => f (map₀ i)) = Fin.foldr n (fun i => f (map₁ i)) := by
+  ext acc
+  show Fin.foldr _ (fun i a => f ((Equiv.plift _).symm <| (Equiv.plift _ ∘ map₀) i) a) _ =
+     Fin.foldr _ (fun i a => f ((Equiv.plift _).symm <| (Equiv.plift _ ∘ map₁) i) a) _
+  rw [fin_foldr_map_eqv (eqv := (Equiv.plift _).symm),
+    fin_foldr_map_eqv (eqv := (Equiv.plift α).symm)]
+  congr 1; simp
+  apply Eq.trans _ (fin_foldr_eq_list_foldr
+      (ι := PLift ι)
+      (α := PLift α)
+      (f := fun i a => (Equiv.plift _) <| f ((Equiv.plift _).symm i) ((Equiv.plift _).symm a))
+      (map := Equiv.plift _ ∘ map₁)
+      (acc := Equiv.plift _ acc)).symm
+  apply Eq.trans (fin_foldr_eq_list_foldr
+      (ι := PLift ι)
+      (α := PLift α)
+      (f := fun i a => (Equiv.plift _) <| f ((Equiv.plift _).symm i) ((Equiv.plift _).symm a))
+      (map := Equiv.plift _ ∘ map₀)
+      (acc := Equiv.plift _ acc))
+  apply list_foldr_eq
+  · apply List.pairwise_iff_getElem.mpr
+    intro i j hi hj h
+    simp
+    intro g
+    cases Fin.mk.inj (map₀.inj (Equiv.inj _ g))
+    exact Nat.lt_irrefl _ h
+  · apply List.pairwise_iff_getElem.mpr
+    intro i j hi hj h
+    simp
+    intro g
+    cases Fin.mk.inj (map₁.inj (Equiv.inj _ g))
+    exact Nat.lt_irrefl _ h
+  · intro i; apply Iff.intro <;> intro
+    simp; apply ((Equiv.toBij (Equiv.plift _)).comp map₁).surj
+    simp; apply ((Equiv.toBij (Equiv.plift _)).comp map₀).surj
+  · intro i j acc
+    simp; rw [fcomm]
+
+def fold {ι α: Sort*} [ft: Fintype ι] (f: ι -> α -> α) (fcomm: ∀i j a, f i (f j a) = f j (f i a)) : α -> α :=
+  ft.repr.lift (fun repr => Fin.foldr ft.card (fun i => f (repr.bij i))) <| by
+    intro a b
+    obtain ⟨a, ha⟩ := a
+    obtain ⟨b, hb⟩ := b
+    show Fin.foldr _ (fun i => f (a i)) = Fin.foldr _ (fun i => f (b i))
+    apply fin_foldr_eq f a b
+    assumption
+
 end Fintype

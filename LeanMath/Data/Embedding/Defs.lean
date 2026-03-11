@@ -61,6 +61,33 @@ abbrev trans (f: α ↪ β) (g: β ↪ γ) : α ↪ γ := g.comp f
 @[simp] def apply_comp (f: β ↪ γ) (g: α ↪ β) (x: α) : (f.comp g) x = f (g x) := rfl
 @[simp] def apply_trans (f: β ↪ γ) (g: α ↪ β) (x: α) : (g.trans f) x = f (g x) := rfl
 
+def swap [DecidableEq α] (i j: α) (f: α ↪ β) : α ↪ β where
+  toFun a := if a = i then f j else if a = j then f i else f a
+  inj := by
+    intro a b h
+    dsimp at h; split at h; subst a; split at h
+    subst i; rfl
+    split at h; subst b
+    exact f.inj h.symm
+    cases f.inj h
+    contradiction
+    split at h; subst a; split at h
+    cases f.inj h
+    contradiction
+    split at h
+    symm; assumption
+    cases f.inj h
+    contradiction
+    split at h
+    cases f.inj h
+    contradiction
+    split at h
+    cases f.inj h
+    contradiction
+    exact f.inj h
+
+def apply_swap [DecidableEq α] (i j a: α) (f: α ↪ β) : f.swap i j a = if a = i then f j else if a = j then f i else f a := rfl
+
 end Embedding
 
 def inj [EmbeddingLike F α β] (f: F) : Function.Injective f := by

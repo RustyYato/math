@@ -70,6 +70,8 @@ def symm (f: α ≃ β) : β ≃ α where
 @[simp] def symm_coe (f: α ≃ β) (x: β) : f (f.symm x) = x := f.leftInv _
 @[simp] def coe_symm (f: α ≃ β) (x: α) : f.symm (f x) = x := f.rightInv _
 
+@[simp] def symm_symm (f: α ≃ β) : f.symm.symm = f := rfl
+
 def comp (f: β ≃ γ) (g: α ≃ β) : α ≃ γ where
   toFun := f ∘ g
   invFun := g.symm ∘ f.symm
@@ -124,6 +126,12 @@ instance : EquivOpsCheck Nop (fun α β _ _ => α ≃ β) where
   trans := Equiv.trans
   symm := Equiv.symm
   refl α := Equiv.id α
+
+def plift (α: Sort u) : α ≃ PLift α where
+  toFun := PLift.up
+  invFun := PLift.down
+  leftInv _ := rfl
+  rightInv _ := rfl
 
 end Equiv
 
