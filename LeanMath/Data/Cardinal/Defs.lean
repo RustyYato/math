@@ -284,4 +284,12 @@ def lt_omega_iff_natCast : ∀{x}, x < ω ↔ ∃n: ℕ, x = n := by
     apply Equiv.embed_congr (Equiv.ulift _) (Equiv.ulift _) _
     exact Embedding.fin_val
 
+def fintype_card (α: Type*) [Fintype α] : type α = Fintype.card α := by
+  classical
+  induction Fintype.finEquiv α with | _ =>
+  apply sound
+  apply Equiv.trans _ (Equiv.ulift _)
+  apply Equiv.symm
+  assumption
+
 end Cardinal
