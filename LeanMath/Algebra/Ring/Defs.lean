@@ -51,6 +51,15 @@ def intCastHom : ℤ →+* α := {
 
 @[simp] def apply_intCastHom (n: ℤ) : intCastHom n = (n: α) := rfl
 
+instance : Subsingleton (ℤ →+* α) where
+  allEq := by
+    suffices ∀f: ℤ →+* α, f = intCastHom by
+      intro a b; rw [this a, this b]
+    intro f; apply DFunLike.ext; intro z
+    show f (Int.cast z) = _
+    rw [map_intCast]
+    rfl
+
 def intCast_npow (n: ℤ) (m: ℕ) : (n ^ m: ℤ) = (n: α) ^ m :=
   map_npow (f := intCastHom) _ _
 

@@ -150,6 +150,15 @@ def natCastHom : ℕ →+* α := {
 
 @[simp] def apply_natCastHom (n: ℕ) : natCastHom n = (n: α) := rfl
 
+instance : Subsingleton (ℕ →+* α) where
+  allEq := by
+    suffices ∀f: ℕ →+* α, f = natCastHom by
+      intro a b; rw [this a, this b]
+    intro f; apply DFunLike.ext; intro z
+    show f (Nat.cast z) = _
+    rw [map_natCast]
+    rfl
+
 def natCast_npow (n m: ℕ) : (n ^ m: ℕ) = (n: α) ^ m :=
   map_npow (f := natCastHom) _ _
 
