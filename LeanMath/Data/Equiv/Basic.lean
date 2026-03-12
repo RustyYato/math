@@ -1,6 +1,7 @@
 import LeanMath.Data.Equiv.Defs
 import LeanMath.Data.Bijection.Basic
 import LeanMath.Tactic.AxiomBlame
+import LeanMath.Logic.IsEmpty
 
 namespace Equiv
 
@@ -322,6 +323,104 @@ def of_fin_eqv (h: Fin n ≃ Fin m) : n = m := by
     cases m with
     | zero => exact (h 0).elim0
     | succ m => rw [ih (of_fin_succ h)]
+
+def ulift (α: Type*) : α ≃ ULift α where
+  toFun := ULift.up
+  invFun := ULift.down
+  leftInv _ := rfl
+  rightInv _ := rfl
+
+def ulift_congr : (α ≃ β) ≃ (ULift α ≃ ULift β) :=
+  equiv_congr (ulift _) (ulift _)
+
+def psum_comm : (α ⊕' β) ≃ (β ⊕' α) where
+  toFun
+  | .inl x => .inr x
+  | .inr x => .inl x
+  invFun
+  | .inl x => .inr x
+  | .inr x => .inl x
+  leftInv x := by cases x <;> rfl
+  rightInv x := by cases x <;> rfl
+def sum_comm : (α ⊕ β) ≃ (β ⊕ α) := liftSum psum_comm
+
+def pprod_comm : (α ×' β) ≃ (β ×' α) where
+  toFun x := ⟨x.2, x.1⟩
+  invFun x := ⟨x.2, x.1⟩
+  leftInv _ := rfl
+  rightInv _ := rfl
+def prod_comm : (α × β) ≃ (β × α) := liftProd pprod_comm
+
+def sum_assoc : ((α ⊕ β) ⊕ γ) ≃ (α ⊕ (β ⊕ γ)) where
+  toFun
+  | .inl (.inl x) => .inl x
+  | .inl (.inr x) => .inr (.inl x)
+  | .inr x => .inr (.inr x)
+  invFun
+  | .inl x => .inl (.inl x)
+  | .inr (.inl x) => .inl (.inr x)
+  | .inr (.inr x) => .inr x
+  leftInv x := by rcases x with x | (x | x) <;> rfl
+  rightInv x := by rcases x with (x | x) | x <;> rfl
+
+def prod_assoc : ((α × β) × γ) ≃ (α × (β × γ)) where
+  toFun x := ⟨x.1.1, x.1.2, x.2⟩
+  invFun x := ⟨⟨x.1, x.2.1⟩, x.2.2⟩
+  leftInv _ := rfl
+  rightInv _ := rfl
+
+def sum_prod : ((α ⊕ β) × γ) ≃ ((α × γ) ⊕ (β × γ)) where
+  toFun
+  | ⟨.inl x, y⟩ => .inl ⟨x, y⟩
+  | ⟨.inr x, y⟩ => .inr ⟨x, y⟩
+  invFun
+  | .inl ⟨x, y⟩ => ⟨.inl x, y⟩
+  | .inr ⟨x, y⟩ => ⟨.inr x, y⟩
+  leftInv
+  | .inl _ => rfl
+  | .inr _ => rfl
+  rightInv
+  | ⟨.inl _, _⟩ => rfl
+  | ⟨.inr _, _⟩ => rfl
+
+def empty [IsEmpty α] [IsEmpty β] : α ≃ β where
+  toFun := elim_empty
+  invFun := elim_empty
+  leftInv := rec_elim_empty
+  rightInv := rec_elim_empty
+
+def empty_sum [IsEmpty α] : (α ⊕ β) ≃ β where
+  toFun
+  | .inl x => elim_empty x
+  | .inr x => x
+  invFun := .inr
+  leftInv _ := rfl
+  rightInv
+  | .inl x => elim_empty x
+  | .inr _ => rfl
+
+def unique [Inhabited α] [Inhabited β] [Subsingleton α] [Subsingleton β] : α ≃ β where
+  toFun _ := default
+  invFun _ := default
+  leftInv _ := Subsingleton.allEq _ _
+  rightInv _ := Subsingleton.allEq _ _
+
+def unique_prod [Inhabited α] [Subsingleton α] : (α × β) ≃ β where
+  toFun x := x.2
+  invFun x := ⟨default, x⟩
+  leftInv _ := rfl
+  rightInv x := by
+    dsimp; congr; apply Subsingleton.allEq
+
+def fin_succ_func : (Fin (n + 1) -> α) ≃ ((Fin n -> α) × α) where
+  toFun f := ⟨fun i => f i.succ, f 0⟩
+  invFun x := fun
+     | ⟨0, _⟩ => x.2
+     | ⟨i + 1, hi⟩ => x.1 ⟨_, Nat.lt_of_succ_lt_succ hi⟩
+  leftInv f := rfl
+  rightInv := by
+    intro f
+    ext x; cases x using Fin.cases <;> rfl
 
 end
 

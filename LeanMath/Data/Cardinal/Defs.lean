@@ -44,7 +44,7 @@ def sound (h: α ≃ β) : type α = type β := by
 def exact (h: type α = type β) : α ≈ β := Quotient.exact (Cardinal.ofQuot.inj h)
 noncomputable def exact' (h: type α = type β) : α ≃ β := Classical.choice (Quotient.exact (Cardinal.ofQuot.inj h))
 
-instance : LE Cardinal where
+instance : LE Cardinal.{u} where
   le := lift₂ (fun α β => Nonempty (α ↪ β)) <| by
     intro α₀ β₀ α₁ β₁ f g
     dsimp
@@ -54,10 +54,10 @@ instance : LE Cardinal where
     intro ⟨h⟩
     exact ⟨(Equiv.embed_congr f g).symm h⟩
 
-instance : LT Cardinal where
+instance : LT Cardinal.{u} where
   lt a b := a ≤ b ∧ ¬b ≤ a
 
-instance : IsPartialOrder Cardinal where
+instance : IsPartialOrder Cardinal.{u} where
   lt_iff_le_and_not_ge := Iff.rfl
   refl x := by
     cases x
@@ -80,7 +80,7 @@ instance : IsPartialOrder Cardinal where
     assumption
     assumption
 
-instance : Add Cardinal where
+instance : Add Cardinal.{u} where
   add := lift₂ (type <|· ⊕ ·) <| by
     intro _ _ _ _ h g
     apply sound
@@ -88,7 +88,7 @@ instance : Add Cardinal where
     assumption
     assumption
 
-instance : Mul Cardinal where
+instance : Mul Cardinal.{u} where
   mul := lift₂ (type <|· × ·) <| by
     intro _ _ _ _ h g
     apply sound
@@ -96,8 +96,8 @@ instance : Mul Cardinal where
     assumption
     assumption
 
-instance : Pow Cardinal Cardinal where
-  pow := lift₂ (fun α β => type <| α -> β) <| by
+instance : Pow Cardinal.{u} Cardinal.{u} where
+  pow := lift₂ (fun α β => type <| β -> α) <| by
     intro _ _ _ _ h g
     apply sound
     apply Equiv.fun_congr
@@ -105,6 +105,23 @@ instance : Pow Cardinal Cardinal where
     assumption
 
 def ofNat (n: ℕ) : Cardinal := type (Fin n)
+
+def ulift.{v, u} : Cardinal.{u} -> Cardinal.{max u v} :=
+  lift (fun x => type (ULift x)) <| by
+    intro α β ⟨h⟩
+    apply sound
+    exact Equiv.ulift_congr h
+
+instance : NatCast Cardinal.{u} where
+  natCast n := ulift (ofNat n)
+
+instance : Pow Cardinal ℕ where
+  pow a n := a ^ (n: Cardinal)
+
+instance : SMul ℕ Cardinal.{u} where
+  smul n a := n * a
+
+instance : OfNat Cardinal n := ⟨n⟩
 
 def exists_eq_type (c: Cardinal.{u}) : ∃α: Type u, type α = c := by
   cases c

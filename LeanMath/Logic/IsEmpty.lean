@@ -36,3 +36,11 @@ instance [IsEmpty α] : Subsingleton α where
   allEq := rec_elim_empty
 instance : IsEmpty (Fin 0) where
   elim := Fin.elim0
+instance [IsEmpty α] : IsEmpty (ULift α) where
+  elim x := elim_empty x.down
+
+instance [IsEmpty ι] {α: ι -> Sort u} : Subsingleton (∀i, α i) where
+  allEq f g := by ext i; exact elim_empty i
+
+instance [IsEmpty ι] {α: ι -> Sort u} : Inhabited (∀i, α i) where
+  default := rec_elim_empty
