@@ -81,12 +81,4 @@ def cantor_bernstein_schröder : Nonempty (α ↭ β) := by
       apply inj g
       rw [←Classical.choose_spec (mem_range_g _ _ h)]
 
-noncomputable def Equiv.antisymm : α ≃ β := Classical.choice <| by
-  have ⟨f⟩ := cantor_bernstein_schröder f g
-  have ⟨g, hg⟩ := Classical.axiomOfChoice f.surj
-  refine ⟨{
-    toFun := f
-    invFun := g
-    leftInv := hg
-    rightInv b := by apply f.inj; rw [hg]
-  }⟩
+noncomputable def Equiv.antisymm : α ≃ β := Equiv.ofBij (Classical.choice (cantor_bernstein_schröder f g))

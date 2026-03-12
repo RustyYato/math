@@ -88,6 +88,10 @@ def swap [DecidableEq α] (i j: α) (f: α ↪ β) : α ↪ β where
 
 def apply_swap [DecidableEq α] (i j a: α) (f: α ↪ β) : f.swap i j a = if a = i then f j else if a = j then f i else f a := rfl
 
+def fin_val : Fin n ↪ ℕ where
+  toFun := Fin.val
+  inj _ _ := Fin.val_inj.mp
+
 end Embedding
 
 def inj [EmbeddingLike F α β] (f: F) : Function.Injective f := by

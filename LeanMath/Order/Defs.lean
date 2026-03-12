@@ -1,4 +1,5 @@
 import LeanMath.Logic.Relation.Defs
+import LeanMath.Data.TopBot.Defs
 
 open Relation
 
@@ -7,12 +8,10 @@ infixl:69 " ⊓ " => min
 
 def OrderOpp (α: Sort u) := α
 
-def OrderOpp.get : OrderOpp α -> α := id
-def OrderOpp.mk : α -> OrderOpp α := id
+def OrderOpp.get : OrderOpp α ↪ α := Embedding.id _
+def OrderOpp.mk : α ↪ OrderOpp α := Embedding.id _
 
 postfix:max "ᵒᵖ" => OrderOpp
-
-attribute [local irreducible] OrderOpp
 
 instance [LE α] : LE αᵒᵖ where
   le a b := b.get ≤ a.get
@@ -24,6 +23,11 @@ instance [Max α] : Min αᵒᵖ where
   min a b := .mk <| a.get ⊔ b.get
 instance [Min α] : Max αᵒᵖ where
   max a b := .mk <| a.get ⊓ b.get
+
+instance [Top α] : Bot αᵒᵖ where
+  bot := .mk ⊤
+instance [Bot α] : Top αᵒᵖ where
+  top := .mk ⊥
 
 class IsLawfulLT (α: Type*) [LE α] [LT α] : Prop where
   protected lt_iff_le_and_not_ge {a b: α} : a < b ↔ a ≤ b ∧ ¬b ≤ a
@@ -54,9 +58,7 @@ class IsSemiLatticeMin (α: Type*) [LE α] [LT α] [Min α] : Prop extends IsPar
 
 class IsLattice (α: Type*) [LE α] [LT α] [Max α] [Min α] : Prop extends IsSemiLatticeMax α, IsSemiLatticeMin α where
 
-variable [LE α] [LT α] [Min α] [Max α]
-
-
+variable [LE α] [LT α] [Min α] [Max α] [Top α] [Bot α]
 
 def max_le [IsSemiLatticeMax α] {x a b: α} : a ≤ x -> b ≤ x -> a ⊔ b ≤ x :=
   IsSemiLatticeMax.max_le
@@ -79,6 +81,36 @@ section
 variable [IsLawfulLT α] {a b c: α}
 
 def lt_iff_le_and_not_ge : a < b ↔ a ≤ b ∧ ¬b ≤ a := IsLawfulLT.lt_iff_le_and_not_ge
+
+instance : IsLawfulLT (αᵒᵖ) where
+  lt_iff_le_and_not_ge := lt_iff_le_and_not_ge (α := α)
+
+instance [IsPreorder α] : IsPreorder (αᵒᵖ) where
+  refl _ := Relation.refl (α := α) (R := (· ≤ ·)) _
+  trans := flip <| Relation.trans (α := α) (R := (· ≤ ·))
+
+instance [IsPartialOrder α] : IsPartialOrder (αᵒᵖ) where
+  antisymm h g := OrderOpp.get.inj <| Relation.antisymm (α := α) (R := (· ≤ ·)) g h
+
+instance [IsSemiLatticeMax α] : IsSemiLatticeMin (αᵒᵖ) where
+  min_le_left := left_le_max (α := α)
+  min_le_right := right_le_max (α := α)
+  le_min := max_le (α := α)
+instance [IsSemiLatticeMin α] : IsSemiLatticeMax (αᵒᵖ) where
+  left_le_max := min_le_left (α := α)
+  right_le_max := min_le_right (α := α)
+  max_le := le_min (α := α)
+
+instance [IsSemiLatticeMin α] : IsSemiLatticeMax (αᵒᵖ) where
+  left_le_max := min_le_left (α := α)
+  right_le_max := min_le_right (α := α)
+  max_le := le_min (α := α)
+
+instance [IsLawfulTop α] : IsLawfulBot αᵒᵖ where
+  bot_le := le_top (α := α)
+
+instance [IsLawfulBot α] : IsLawfulTop αᵒᵖ where
+  le_top := bot_le (α := α)
 
 def le_of_lt (h: a < b) : a ≤ b := (lt_iff_le_and_not_ge.mp h).left
 def not_le_of_lt (h: a < b) : ¬b ≤ a := (lt_iff_le_and_not_ge.mp h).right
@@ -138,6 +170,8 @@ instance : IsLattice Int where
 
 variable [DecidableRel (α := α) (· ≤ ·)]
 
+def le_trans [IsPreorder α] {a b c: α} : a ≤ b -> b ≤ c -> a ≤ c := Relation.trans
+
 def lt_of_lt_of_le [IsPreorder α] {a b c: α} (h: a < b) (g: b ≤ c) : a < c := by
   apply lt_iff_le_and_not_ge.mpr
   apply And.intro
@@ -180,7 +214,7 @@ def lt_trichotomy [IsLinearOrder α] (a b: α) : a < b ∨ a = b ∨ b < a := tr
 def lt_trans [IsPreorder α] {a b c: α} : a < b -> b < c -> a < c := Relation.trans
 def le_antisymm [IsPartialOrder α] {a b: α} : a ≤ b -> b ≤ a -> a = b := Relation.antisymm
 
-def min_comm [IsSemiLatticeMin α] {a b: α} : a ⊓ b = b ⊓ a := by
+def min_comm [IsSemiLatticeMin α] (a b: α) : a ⊓ b = b ⊓ a := by
   apply le_antisymm
   · apply le_min
     apply min_le_right
@@ -189,14 +223,28 @@ def min_comm [IsSemiLatticeMin α] {a b: α} : a ⊓ b = b ⊓ a := by
     apply min_le_right
     apply min_le_left
 
-def max_comm [IsSemiLatticeMax α] {a b: α} : a ⊔ b = b ⊔ a := by
+def max_comm [IsSemiLatticeMax α] (a b: α) : a ⊔ b = b ⊔ a :=
+  min_comm (α := αᵒᵖ) _ _
+
+def max_assoc [IsSemiLatticeMax α] (a b c: α) : a ⊔ b ⊔ c = a ⊔ (b ⊔ c) := by
   apply le_antisymm
-  · apply max_le
-    apply right_le_max
-    apply left_le_max
-  · apply max_le
-    apply right_le_max
-    apply left_le_max
+  apply max_le
+  apply max_le
+  apply left_le_max
+  apply le_trans left_le_max
+  apply right_le_max
+  apply le_trans right_le_max
+  apply right_le_max
+  apply max_le
+  apply le_trans left_le_max
+  apply left_le_max
+  apply max_le
+  apply le_trans right_le_max
+  apply left_le_max
+  apply right_le_max
+
+def min_assoc [IsSemiLatticeMin α] (a b c: α) : a ⊓ b ⊓ c = a ⊓ (b ⊓ c) :=
+  max_assoc (α := αᵒᵖ) _ _ _
 
 def le_of_not_lt [IsLinearOrder α] {a b: α} : ¬b < a -> a ≤ b := by
   intro h

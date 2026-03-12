@@ -133,6 +133,17 @@ def plift (α: Sort u) : α ≃ PLift α where
   leftInv _ := rfl
   rightInv _ := rfl
 
+noncomputable def ofBij (f: α ↭ β) : α ≃ β :=
+  Classical.choice <|
+  have ⟨g, hg⟩ := Classical.axiomOfChoice f.surj
+  ⟨{
+    toFun := f
+    invFun := g
+    leftInv := hg
+    rightInv b := by apply f.inj; rw [hg]
+  }⟩
+
+
 end Equiv
 
 instance [EquivLike F α β] : EmbeddingLike F α β where
