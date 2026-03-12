@@ -97,3 +97,13 @@ def Encodable.ofEquiv (f: α ≃ β) : Encodable β where
   spec b := by simp [Encodable.spec]
 
 instance : Encodable (Fin n) := .ofEquiv (Equiv.fin_eqv_suptype n).symm
+
+instance : Encodable Bool where
+  decode
+  | 0 => .some false
+  | 1 => .some true
+  | _ => .none
+  encode
+  | false => 0
+  | true => 1
+  spec x := by cases x <;> rfl
