@@ -1,5 +1,6 @@
 import LeanMath.Data.Equiv.Defs
 import LeanMath.Data.Bijection.Basic
+import LeanMath.Tactic.AxiomBlame
 
 namespace Equiv
 
@@ -224,6 +225,103 @@ def fin_eqv_suptype (n: ℕ) : Fin n ≃ { x // x < n } where
   invFun x := ⟨x.1, x.2⟩
   leftInv _ := rfl
   rightInv _ := rfl
+
+def swap [DecidableEq α] (a b: α) (f: α ≃ β) : α ≃ β where
+  toFun x := if x = a then f b else if x = b then f a else f x
+  invFun x := if f.symm x = a then b else if f.symm x = b then a else f.symm x
+  leftInv := by
+    intro b'
+    simp
+    split <;> rename_i h₀; subst a
+    simp; intro g; subst g; simp
+    split; rw [if_pos rfl]
+    subst b; simp
+    rw [if_neg]; simp
+    rename_i h₁
+    intro g
+    have := g h₀
+    contradiction
+  rightInv := by
+    intro a'
+    simp
+    split <;> rename_i h₀; subst a; simp
+    split; subst a'; simp
+    simp [if_neg h₀]; intro; contradiction
+
+def apply_swap [DecidableEq α] (a b x: α) (f: α ≃ β) :
+  f.swap a b x = if x = a then f b else if x = b then f a else f x := rfl
+
+def symm_swap [DecidableEq α] [DecidableEq β] (a b: α) (f: α ≃ β) :
+  (f.swap a b).symm = f.symm.swap (f a) (f b) := by
+  apply DFunLike.ext; intro x
+  show (if f.symm x = a then b else if f.symm x = b then a else f.symm x) = _
+  rw [apply_swap]
+  simp
+  split; subst a
+  simp
+  split; subst b; simp
+  intro h; rw [h]; simp
+  rw [if_neg, if_neg]
+  rintro rfl; simp at *
+  rintro rfl; simp at *
+
+def set [DecidableEq α] (a: α) (b: β) (f: α ≃ β) : α ≃ β :=
+  f.swap a (f.symm b)
+
+def symm_set [DecidableEq α] [DecidableEq β]
+  (a: α) (b: β) (f: α ≃ β) : (f.set a b).symm = f.symm.set b a := by
+  simp [set]
+  apply DFunLike.ext; intro x
+  rw [symm_swap, apply_swap, apply_swap]
+  simp
+  split; subst x
+  simp; intro h; rw [←h]; simp
+  split; rfl
+  rfl
+
+def of_fin_succ (f: Fin (n + 1) ≃ Fin (m + 1)) : Fin n ≃ Fin m :=
+  let f := f.set (Fin.last _) (Fin.last _)
+  {
+    toFun x := ⟨f x.castSucc, by
+      have := (f x.castSucc).isLt; rw [Nat.lt_succ_iff] at this
+      rcases Nat.lt_or_eq_of_le this with h | h
+      assumption
+      replace h : _ = (Fin.last _).val := h
+      have : f.symm (Fin.last _) = x.val := by
+        rw [←Fin.val_inj.mp h]
+        simp
+      simp [f, symm_set] at this
+      simp [set, apply_swap] at this
+      have : x.val < x.val := this ▸ x.isLt
+      have := Nat.lt_irrefl _ this
+      contradiction⟩
+    invFun x := ⟨f.symm x.castSucc, by
+      have := (f.symm x.castSucc).isLt; rw [Nat.lt_succ_iff] at this
+      rcases Nat.lt_or_eq_of_le this with h | h
+      assumption
+      replace h : _ = (Fin.last _).val := h
+      have : f (Fin.last _) = x.val := by
+        rw [←Fin.val_inj.mp h]
+        simp
+      simp [f] at this
+      simp [set, apply_swap] at this
+      have : x.val < x.val := this ▸ x.isLt
+      have := Nat.lt_irrefl _ this
+      contradiction⟩
+    leftInv := by intro x; simp
+    rightInv := by intro x; simp
+  }
+
+def of_fin_eqv (h: Fin n ≃ Fin m) : n = m := by
+  induction n generalizing m with
+  | zero =>
+    cases m with
+    | zero => rfl
+    | succ m => exact (h.symm 0).elim0
+  | succ n ih =>
+    cases m with
+    | zero => exact (h 0).elim0
+    | succ m => rw [ih (of_fin_succ h)]
 
 end
 

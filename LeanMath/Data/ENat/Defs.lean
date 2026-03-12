@@ -1,4 +1,5 @@
 import LeanMath.Algebra.Semiring.Defs
+import LeanMath.Data.Equiv.Basic
 import LeanMath.Order.Defs
 
 inductive ENat where
@@ -155,5 +156,18 @@ instance : IsSemiring ℕ∞ where
   natCast_zero := rfl
   natCast_one := rfl
   natCast_succ _ := rfl
+
+noncomputable def card (α: Sort*) : ℕ∞ :=
+  open Classical in
+  if h:∃n, Nonempty (Fin n ≃ α) then (Classical.choose h: ℕ) else ∞
+
+def card_spec (h: Fin n ≃ α) : ENat.card α = n := by
+  have spec : ∃n, Nonempty (Fin n ≃ α) := ⟨n, ⟨h⟩⟩
+  have ⟨spec⟩  := Classical.choose_spec spec
+  unfold card; rw [dif_pos ⟨_, ⟨h⟩⟩]
+  congr;
+  apply Equiv.of_fin_eqv
+  apply Equiv.trans spec
+  exact h.symm
 
 end ENat
