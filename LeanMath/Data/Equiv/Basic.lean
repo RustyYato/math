@@ -219,6 +219,12 @@ def lift_sigma : ((Σ'a, β₀ a) ≃ (Σ'a, β₁ a)) ≃ ((Σa, β₀ a) ≃ (
 
 def sigma_congr : (Σa, β₀ a) ≃ (Σa, β₁ a) := lift_sigma (psigma_congr f g)
 
+def fin_eqv_suptype (n: ℕ) : Fin n ≃ { x // x < n } where
+  toFun x := ⟨x.1, x.2⟩
+  invFun x := ⟨x.1, x.2⟩
+  leftInv _ := rfl
+  rightInv _ := rfl
+
 end
 
 end Equiv

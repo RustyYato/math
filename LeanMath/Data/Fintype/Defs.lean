@@ -4,10 +4,7 @@ import LeanMath.Data.Trunc.Defs
 import LeanMath.Tactic.AxiomBlame
 import LeanMath.Logic.IsEmpty
 import LeanMath.Data.Nat.Find
-
-inductive POption (α: Sort u) where
-| none
-| some (a: α)
+import LeanMath.Data.POption.Defs
 
 def Bijection.finsucc_poption (f: Fin n ↭ α) : Fin (n + 1) ↭ POption α where
   toFun
