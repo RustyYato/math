@@ -78,6 +78,32 @@ class NoZeroDivisors (α: Type*) [Mul α] [Zero α] where
 def of_mul_eq_zero [Mul α] [Zero α] [NoZeroDivisors α] {a b: α} (h: a * b = 0) : a = 0 ∨ b = 0 :=
   NoZeroDivisors.of_mul_eq_zero h
 
+instance : NoZeroDivisors ℕ where
+  of_mul_eq_zero := by
+    intro a b h; cases a; left; rfl
+    cases b; right; rfl
+    rw [Nat.succ_mul, Nat.mul_succ] at h
+    nomatch h
+
+instance : NoZeroDivisors ℤ where
+  of_mul_eq_zero {a b} := by
+    intro h
+    apply Decidable.or_iff_not_imp_left.mpr
+    intro ha
+    match b with
+    | 0 => rfl
+    | .ofNat (b + 1) =>
+      match a with
+      | .ofNat (a + 1) =>
+        cases of_mul_eq_zero (Int.ofNat.inj h) <;> contradiction
+      | .negSucc a => contradiction
+    | .negSucc b =>
+      match a with
+      | .ofNat (a + 1) => contradiction
+      | .negSucc a =>
+        rw [Int.negSucc_mul_negSucc] at h
+        cases of_mul_eq_zero (Int.ofNat.inj h) <;> contradiction
+
 class IsZeroNeOne (α: Type*) [Zero α] [One α] : Prop where
   protected zero_ne_one : (0: α) ≠ (1: α)
 
