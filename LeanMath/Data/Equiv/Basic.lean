@@ -422,6 +422,21 @@ def fin_succ_func : (Fin (n + 1) -> α) ≃ ((Fin n -> α) × α) where
     intro f
     ext x; cases x using Fin.cases <;> rfl
 
+def bool_eqv_fin2 : Bool ≃ Fin 2 where
+  toFun
+  | false => ⟨0, by decide⟩
+  | true => ⟨1, by decide⟩
+  invFun
+  | ⟨0, _⟩ => false
+  | ⟨1, _⟩ => true
+  | ⟨n + 2, h⟩ => nomatch Nat.not_le_of_lt h (Nat.le_add_left _ _)
+  leftInv x := by
+    match x with
+    | ⟨0, _⟩ => rfl
+    | ⟨1, _⟩ => rfl
+    | ⟨n + 2, h⟩ => nomatch Nat.not_le_of_lt h (Nat.le_add_left _ _)
+  rightInv x := by cases x <;> rfl
+
 end
 
 end Equiv

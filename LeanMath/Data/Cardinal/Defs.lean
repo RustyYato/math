@@ -292,4 +292,24 @@ def fintype_card (α: Type*) [Fintype α] : type α = Fintype.card α := by
   apply Equiv.symm
   assumption
 
+def lt_two_pow (a: Cardinal) : a < 2 ^ a := by
+  cases a with | _ α =>
+  apply And.intro
+  refine ⟨?_⟩
+  apply Equiv.embed_congr (Equiv.id _) (
+    Equiv.fun_congr (Equiv.id _) (Equiv.bool_eqv_fin2.trans (Equiv.ulift _))
+  ) _
+  classical
+  refine {
+    toFun a b := a = b
+    inj := ?_
+  }
+  intro a b h
+  simpa using congrFun h b
+  intro ⟨f⟩
+  replace f := Equiv.embed_congr (
+    Equiv.fun_congr (Equiv.id _) (Equiv.bool_eqv_fin2.trans (Equiv.ulift _)).symm
+  ) (Equiv.id _) f
+  exact Embedding.cantor f
+
 end Cardinal

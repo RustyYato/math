@@ -1,4 +1,5 @@
 import LeanMath.Logic.Funlike
+import LeanMath.Logic.Nontrivial
 
 structure Embedding (α β: Sort*) where
   toFun: α -> β
@@ -91,6 +92,30 @@ def apply_swap [DecidableEq α] (i j a: α) (f: α ↪ β) : f.swap i j a = if a
 def fin_val : Fin n ↪ ℕ where
   toFun := Fin.val
   inj _ _ := Fin.val_inj.mp
+
+def cantor [h: Nontrivial β] (f: (α -> β) ↪ α) : False := by
+  classical
+  have ⟨default, _, _⟩ := h
+  let f' (a: α) : β :=
+    if hg:∃g, f g = a then
+      Classical.choose (Nontrivial.exists_ne (Classical.choose hg a))
+    else
+      default
+  have : f' (f f') ≠ f' (f f') := by
+    conv => { lhs; arg 0; simp [f'] }
+    have spec : ∃g, f g = f f' := ⟨_, rfl⟩
+    rw [dif_pos spec]
+    let f₀ := Classical.choose spec
+    let spec': ∃ b, f₀ (f f') ≠ b := Nontrivial.exists_ne (f₀ (f f'))
+    show Classical.choose spec' ≠ f' (f f')
+    have := Classical.choose_spec spec'
+    suffices h₀:f₀ = f' by
+      rw [show f' (f f') = f₀ (f f') by rw [←h₀]]
+      exact this.symm
+    apply inj f
+    show f f₀ = f f'
+    apply Classical.choose_spec spec
+  contradiction
 
 end Embedding
 

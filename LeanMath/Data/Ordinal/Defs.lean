@@ -556,6 +556,10 @@ instance : @Relation.IsWelFounded Ordinal (· < ·) where
     apply ih
     rwa [←rank_lt_rank_iff] at h
 
+instance : WellFoundedRelation Ordinal where
+  rel a b := a < b
+  wf := Relation.wf _
+
 private structure min_rel_ty {α β: Type u} (r: α -> α -> Prop) (s: β -> β -> Prop) [Relation.IsWellOrder r] [Relation.IsWellOrder s] where
   left: α
   right: β

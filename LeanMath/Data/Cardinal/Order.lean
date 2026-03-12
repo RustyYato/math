@@ -103,4 +103,14 @@ instance : @Relation.IsTotal Cardinal (· ≤ ·) := to_initial_ord.liftTotal
 instance : @Relation.IsWelFounded Cardinal (· < ·) := to_initial_ord_lt.liftWellfounded
 instance : IsLinearOrder Cardinal where
 
+instance : @Relation.IsWellOrder Cardinal (· < ·) where
+  trichotomous := by
+    intro a b; classical
+    rcases Relation.total (α := Cardinal) (· ≤ ·) a b with h | h
+    all_goals rcases lt_or_eq_of_le h with h | rfl
+    left; assumption
+    right; left; rfl
+    right; right; assumption
+    right; left; rfl
+
 end Cardinal

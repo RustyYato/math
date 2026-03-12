@@ -115,6 +115,9 @@ instance [IsLawfulBot α] : IsLawfulTop αᵒᵖ where
 def le_of_lt (h: a < b) : a ≤ b := (lt_iff_le_and_not_ge.mp h).left
 def not_le_of_lt (h: a < b) : ¬b ≤ a := (lt_iff_le_and_not_ge.mp h).right
 
+instance [@Relation.IsRefl α (· ≤ ·)] : @Relation.IsIrrefl α (· < ·) where
+  irrefl h := (not_le_of_lt h) (Relation.refl _)
+
 instance (priority := 900) [@Relation.IsRefl α (· ≤ ·)] [Relation.IsTrichotomous (α := α) (· < ·) (· = ·)] : @Relation.IsTotal α (· ≤ ·) where
   total a b := by
     rcases trichotomous (· < ·) a b with h | rfl | h
@@ -253,5 +256,21 @@ def le_of_not_lt [IsLinearOrder α] {a b: α} : ¬b < a -> a ≤ b := by
   assumption
   rfl
   contradiction
+
+def not_lt [IsLinearOrder α] {a b: α} : ¬a < b ↔ b ≤ a := by
+  apply Iff.intro
+  apply le_of_not_lt
+  intro h g
+  exact Relation.irrefl (lt_of_le_of_lt h g)
+
+def not_le [IsLinearOrder α] {a b: α} : ¬a ≤ b ↔ b < a := by
+  apply Iff.intro
+  · intro h
+    cases Relation.total (α := α) (· ≤ ·) b a
+    apply lt_iff_le_and_not_ge.mpr
+    apply And.intro <;> assumption
+    contradiction
+  intro h g
+  exact Relation.irrefl (lt_of_le_of_lt g h)
 
 end
