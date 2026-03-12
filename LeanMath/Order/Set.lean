@@ -22,4 +22,9 @@ def IsLUB (s: Set α) (x: α) := s.upperBounds.isMin x
 def BoundedAbove (s: Set α) := s.upperBounds.Nonempty
 def BoundedBelow (s: Set α) := s.lowerBounds.Nonempty
 
+def Iio (a: α) : Set α where
+  Mem x := x < a
+def Ioi (a: α) : Set α where
+  Mem x := a < x
+
 end Set

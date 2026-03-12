@@ -402,6 +402,9 @@ def preimage_compl_eq_image_compl (U: Set (Set α)) : U.preimage (·ᶜ) = U.ima
   rw [←sInter_pair_eq_inter, compl_sInter, preimage_compl_eq_image_compl]
   simp
 
+def nonempty_iff (a: Set α) : a.Nonempty ↔ ¬∀x, x ∉ a := by
+  simp; apply Iff.intro <;> (intro ⟨x, hx⟩; exists x)
+
 end Set
 
 def Subtype.val_inj {P: α -> Prop} : Function.Injective (Subtype.val (p := P)) := by

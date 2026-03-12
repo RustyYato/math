@@ -257,7 +257,13 @@ def omega.{u} := ulift.{u} omega'
 def ofNat' (n: ℕ) := type (α := Fin n) (· < ·)
 def ofNat.{u} (n: ℕ) := ulift.{u} (ofNat' n)
 
-def lt_omega_iff : ∀{o: Ordinal.{u}}, o < omega ↔ ∃n, o = ofNat n := by
+instance : NatCast Ordinal where
+  natCast := ofNat
+
+instance : OfNat Ordinal n where
+  ofNat := n
+
+def lt_omega_iff : ∀{o: Ordinal.{u}}, o < omega ↔ ∃n: ℕ, o = n := by
   intro o
   apply Iff.intro
   · cases o with | type r =>
@@ -911,5 +917,37 @@ instance : IsLattice Ordinal where
         obtain ⟨b, rfl⟩ := Set.mem_range.mp <| g.isInitial a b h
         simp; exists Quotient.mk _ (.inr b)
     }
+
+noncomputable instance : InfSet Ordinal where
+  sInf S :=
+    open Classical in
+    if h:S.Nonempty then
+      Set.min (· < ·) h
+    else
+      0
+
+def sInf_mem (U: Set Ordinal) (hU: U.Nonempty) : sInf U ∈ U := by
+  simp [sInf]
+  rw [dif_pos hU]
+  apply Set.min_mem
+
+def sInf_le (U: Set Ordinal) : ∀u ∈ U, sInf U ≤ u := by
+  classical
+  intro u hu
+  simp [sInf]
+  rw [dif_pos ⟨_, hu⟩]
+  apply le_of_not_lt
+  intro h
+  exact Set.min_minimal (· < ·) (U := U) ⟨_, hu⟩ u hu h
+
+def le_sInf (U: Set Ordinal) (hU: U.Nonempty) (x: Ordinal) (h: ∀u ∈ U, x ≤ u) : x ≤ sInf U := by
+  classical
+  apply le_of_not_lt
+  intro g
+  have (u: Ordinal) (hu: u ∈ U) : sInf U < u := by
+    apply lt_of_lt_of_le g
+    apply h
+    assumption
+  exact Relation.irrefl (this _ (sInf_mem  U hU))
 
 end Ordinal
