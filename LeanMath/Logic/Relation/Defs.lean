@@ -440,7 +440,7 @@ instance [Subsingleton α] [Relation.IsIrrefl r] : Relation.IsWellOrder r where
     rw [Subsingleton.allEq a b] at h
     nomatch Relation.irrefl h
 
-instance : Relation.IsWelFounded (fun a b: α => False) where
+instance : Relation.IsWelFounded (fun _ _: α => False) where
   wf := by
     apply WellFounded.intro
     intro a; apply Acc.intro
