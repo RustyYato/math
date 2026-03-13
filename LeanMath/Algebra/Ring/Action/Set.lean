@@ -3,7 +3,7 @@ import LeanMath.Algebra.Ring.Action.Defs
 import LeanMath.Algebra.Group.Set
 
 variable (s: S) [SetLike S α] [SMul R α] [IsMemSMul S R α]
-  [RingOps R] [IsRing R] [AddGroupOps α] [IsAddGroup α] [IsModule R α]
+  [RingOps R] [IsRing R] [AddGroupOps α] [IsAddGroup α] [IsAddComm α] [IsModule R α]
 
 def IsMemNeg.ofIsMemSMul : IsMemNeg S α where
   mem_neg s a h := by

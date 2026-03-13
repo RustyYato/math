@@ -55,6 +55,8 @@ private inductive Rel {R α: Type*} [SemiringOps R] : Pre R α -> Pre R α -> Pr
 | mul_zero (a: Pre R α) : Rel (a * 0) 0
 | zero_mul (a: Pre R α) : Rel (0 * a) 0
 
+| add_comm (a b: Pre R α) : Rel (a + b) (b + a)
+
 | add_assoc (a b c: Pre R α) : Rel ((a + b) + c) (a + (b + c))
 | mul_assoc (a b c: Pre R α) : Rel ((a * b) * c) (a * (b * c))
 
@@ -197,6 +199,10 @@ instance : SMul R (FreeAlgebra R α) where
   smul r a := algebraMap R r * a
 
 instance : IsSemiring (FreeAlgebra R α) where
+  add_comm a b:= by
+    induction a, b using ind₂ with | _ =>
+    apply sound
+    apply Rel.add_comm
   add_assoc a b c := by
     induction a, b, c using ind₃ with | _ =>
     apply sound
@@ -366,6 +372,7 @@ private def preLift (f: α -> A) : FreeAlgebra R α →ₐ[R] A where
     | zero_mul =>
       show algebraMap R 0 * Pre.lift _ _ = algebraMap R 0
       rw [map_zero, zero_mul]
+    | add_comm => apply add_comm
     | add_assoc => apply add_assoc
     | mul_assoc => apply mul_assoc
     | mul_add => apply mul_add
