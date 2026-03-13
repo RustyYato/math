@@ -167,4 +167,25 @@ def omega_ne_succ : ∀{c: Cardinal}, c.succ ≠ ω := by
   rw [h] at this
   exact Relation.irrefl this
 
+def succ_lt_succ {a b: Cardinal} : a.succ < b.succ ↔ a < b := by
+  classical
+  apply Iff.intro
+  · intro h
+    apply lt_of_lt_of_le _ (of_lt_succ _ h)
+    apply lt_succ
+  · intro h
+    have := succ_le _ h
+    apply lt_of_le_of_lt
+    exact succ_le _ h
+    apply lt_succ
+
+def succ_inj : Function.Injective succ := by
+  intro a b eq
+  rcases Relation.trichotomous (· < ·) a b with h | h | h
+  rw [←succ_lt_succ, eq] at h
+  nomatch Relation.irrefl h
+  assumption
+  rw [←succ_lt_succ, eq] at h
+  nomatch Relation.irrefl h
+
 end Cardinal
