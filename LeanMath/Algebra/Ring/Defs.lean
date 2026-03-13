@@ -74,3 +74,16 @@ section
 instance : IsRing ℤ where
 
 end
+
+instance [RingOps R] [IsRing R] : Neg (Units R) where
+  neg a := {
+    val := -a.val
+    inv := -a.inv
+    val_mul_inv := by rw [←neg_mul_left, ←neg_mul_right, neg_neg, a.val_mul_inv]
+    inv_mul_val := by rw [←neg_mul_left, ←neg_mul_right, neg_neg, a.inv_mul_val]
+  }
+
+instance [RingOps R] [IsRing R] (r: R) [IsUnit r] : IsUnit (-r) where
+  exists_eq_unit :=
+    have ⟨u, h⟩ := IsUnit.exists_eq_unit (a := r)
+    ⟨-u, by rw [h]; rfl⟩
