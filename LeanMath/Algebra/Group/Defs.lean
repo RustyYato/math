@@ -585,3 +585,63 @@ def sub_eq_zero (a b: α) : a = b ↔ a - b = 0 :=
   div_eq_one (α := MulOfAdd α) _ _
 
 end
+
+def IsGroup.lift
+  [GroupOps α] [IsLawfulPowN α] [IsLawfulPowZ α] [IsLawfulDiv α]
+  [GroupOps β] [IsGroup β]
+  [EmbeddingLike F α β] [IsMulHom F α β] [IsOneHom F α β]
+  (f: F) (hinv: ∀a, f (a⁻¹) = (f a)⁻¹) : IsGroup α := {
+    IsMonoid.lift f, inferInstanceAs (IsLawfulPowZ α) with
+    mul_inv_cancel a := by
+      apply inj f
+      rw [map_mul, hinv, mul_inv_cancel, map_one]
+  }
+
+def IsAddGroup.lift
+  [AddGroupOps α] [IsLawfulNSMul α] [IsLawfulZSMul α] [IsLawfulSub α]
+  [AddGroupOps β] [IsAddGroup β]
+  [EmbeddingLike F α β] [IsZeroHom F α β] [IsAddHom F α β]
+  (f: F) (hneg: ∀a, f (-a) = -f a) : IsAddGroup α := {
+    IsAddMonoid.lift f, inferInstanceAs (IsLawfulZSMul α) with
+    add_neg_cancel a := by
+      apply inj f
+      rw [map_add, hneg, add_neg_cancel, map_zero]
+  }
+
+namespace Units
+
+instance [MonoidOps α] [IsMonoid α] : Pow (Units α) ℤ := defaultPowZ
+instance [MonoidOps α] [IsMonoid α] : Div (Units α) where
+  div a b := a * b⁻¹
+
+instance [MonoidOps α] [IsMonoid α] : IsLawfulPowZ (Units α) where
+  zpow_ofNat _ _ := rfl
+  zpow_negSucc _ _ := rfl
+instance [MonoidOps α] [IsMonoid α] : IsLawfulDiv (Units α) where
+  div_eq_mul_inv _ _ := rfl
+
+instance [MonoidOps α] [IsMonoid α] : IsGroup (Units α) where
+  mul_inv_cancel a := by
+    apply inj Units.get
+    apply a.val_mul_inv
+
+end Units
+
+namespace AddUnits
+
+instance [AddMonoidOps α] [IsAddMonoid α] : SMul ℤ (AddUnits α) := defaultSMulZ
+instance [AddMonoidOps α] [IsAddMonoid α] : Sub (AddUnits α) where
+  sub a b := a + -b
+
+instance [AddMonoidOps α] [IsAddMonoid α] : IsLawfulZSMul (AddUnits α) where
+  ofNat_zsmul _ _ := rfl
+  negSucc_zsmul _ _ := rfl
+instance [AddMonoidOps α] [IsAddMonoid α] : IsLawfulSub (AddUnits α) where
+  sub_eq_add_neg _ _ := rfl
+
+instance [AddMonoidOps α] [IsAddMonoid α] : IsAddGroup (AddUnits α) where
+  add_neg_cancel a := by
+    apply inj AddUnits.get
+    apply a.val_add_neg
+
+end AddUnits

@@ -1002,3 +1002,209 @@ def MulCon.map
     assumption
   | trans =>
     apply Relation.trans <;> assumption
+
+def IsLawfulOneMul.lift [Mul α] [Mul β] [One α] [One β] [IsLawfulOneMul β] [EmbeddingLike F α β] [IsOneHom F α β] [IsMulHom F α β] (f: F) : IsLawfulOneMul α where
+  mul_one a := by
+    apply inj f
+    simp [map_mul, map_one, mul_one]
+  one_mul a := by
+    apply inj f
+    simp [map_mul, map_one, one_mul]
+
+def IsMonoid.lift [MonoidOps α] [MonoidOps β]
+  [IsLawfulPowN α] [IsMonoid β] [EmbeddingLike F α β] [IsOneHom F α β] [IsMulHom F α β] (f: F) : IsMonoid α := {
+    IsSemigroup.lift f, IsLawfulOneMul.lift f with
+  }
+
+def IsLawfulPowN.lift
+  [One α] [Mul α] [Pow α ℕ]
+  [One β] [Mul β] [Pow β ℕ] [IsLawfulPowN β]
+  [EmbeddingLike F α β] [IsOneHom F α β] [IsMulHom F α β] (f: F)
+    (hnpow: ∀(a: α) (n: ℕ), f (a ^ n) = (f a) ^ n) : IsLawfulPowN α where
+    npow_zero := by
+      intro a
+      apply inj f
+      rw [hnpow, npow_zero, map_one]
+    npow_succ _ _ := by
+      apply inj f
+      rw [map_mul, hnpow, hnpow, npow_succ]
+
+def IsLawfulZeroAdd.lift [Add α] [Add β] [Zero α] [Zero β] [IsLawfulZeroAdd β] [EmbeddingLike F α β] [IsZeroHom F α β] [IsAddHom F α β] (f: F) : IsLawfulZeroAdd α where
+  add_zero a := by
+    apply inj f
+    simp [map_add, map_zero, add_zero]
+  zero_add a := by
+    apply inj f
+    simp [map_add, map_zero, zero_add]
+
+def IsAddMonoid.lift [AddMonoidOps α] [AddMonoidOps β]
+  [IsLawfulNSMul α] [IsAddMonoid β] [EmbeddingLike F α β] [IsZeroHom F α β] [IsAddHom F α β] (f: F) : IsAddMonoid α := {
+    IsAddSemigroup.lift f, IsLawfulZeroAdd.lift f with
+  }
+
+def IsLawfulNSMul.lift
+  [Zero α] [Add α] [SMul ℕ α]
+  [Zero β] [Add β] [SMul ℕ β] [IsLawfulNSMul β]
+  [EmbeddingLike F α β] [IsZeroHom F α β] [IsAddHom F α β] (f: F)
+    (hnsmul: ∀(a: α) (n: ℕ), f (n • a) = n • (f a)) : IsLawfulNSMul α where
+    zero_nsmul := by
+      intro a
+      apply inj f
+      rw [hnsmul, zero_nsmul, map_zero]
+    succ_nsmul _ _ := by
+      apply inj f
+      rw [map_add, hnsmul, hnsmul, succ_nsmul]
+
+structure Units (α: Type*) [Mul α] [One α] where
+  val: α
+  inv: α
+  val_mul_inv: val * inv =  1
+  inv_mul_val: inv * val =  1
+
+structure AddUnits (α: Type*) [Add α] [Zero α] where
+  val: α
+  neg: α
+  val_add_neg: val + neg =  0
+  neg_add_val: neg + val =  0
+
+namespace Units
+
+instance [Mul α] [One α] (u: Units α) : IsCommAt u.val u.inv where
+  mul_comm := by rw [u.val_mul_inv, u.inv_mul_val]
+instance [Mul α] [One α] (u: Units α) : IsCommAt u.inv u.val where
+  mul_comm := by rw [u.val_mul_inv, u.inv_mul_val]
+
+instance [Mul α] [One α] [IsLawfulOneMul α] : One (Units α) where
+  one := {
+    val := 1
+    inv := 1
+    val_mul_inv := one_mul _
+    inv_mul_val := one_mul _
+  }
+
+instance [MonoidOps α] [IsMonoid α] : Mul (Units α) where
+  mul a b := {
+    val := a.val * b.val
+    inv := b.inv * a.inv
+    val_mul_inv := by rw [←mul_assoc, mul_assoc a.val, b.val_mul_inv, mul_one, a.val_mul_inv]
+    inv_mul_val := by rw [←mul_assoc, mul_assoc b.inv, a.inv_mul_val, mul_one, b.inv_mul_val]
+  }
+
+instance [Mul α] [One α] : Inv (Units α) where
+  inv a := {
+    val := a.inv
+    inv := a.val
+    val_mul_inv := a.inv_mul_val
+    inv_mul_val := a.val_mul_inv
+  }
+
+instance [MonoidOps α] [IsMonoid α] : Pow (Units α) ℕ where
+  pow a n :=
+  {
+    val := a.val ^ n
+    inv := a.inv ^ n
+    val_mul_inv := by rw [←mul_npow, a.val_mul_inv, one_npow]
+    inv_mul_val := by rw [←mul_npow, a.inv_mul_val, one_npow]
+  }
+
+def get [MonoidOps α] [IsMonoid α] : Units α ↪* α where
+  toFun x := x.val
+  inj := by
+    intro a b h
+    suffices a.inv = b.inv by
+      obtain ⟨ ⟩ := a
+      obtain ⟨ ⟩ := b
+      congr
+    dsimp at h
+    have := a.val_mul_inv
+    rw [h] at this
+    rw [←mul_one b.inv, ←this,
+      ←mul_assoc, b.inv_mul_val, one_mul]
+  map_one := rfl
+  map_mul _ _ := rfl
+
+instance [MonoidOps α] [IsMonoid α] : IsLawfulPowN (Units α) :=
+  IsLawfulPowN.lift Units.get (fun _ _ => rfl)
+instance [MonoidOps α] [IsMonoid α] : IsMonoid (Units α) :=
+  IsMonoid.lift Units.get
+instance [MonoidOps α] [IsMonoid α] [IsComm α] : IsComm (Units α) :=
+  IsComm.lift Units.get
+
+end Units
+
+namespace AddUnits
+
+instance [Add α] [Zero α] (u: AddUnits α) : IsAddCommAt u.val u.neg where
+  add_comm := by rw [u.val_add_neg, u.neg_add_val]
+instance [Add α] [Zero α] (u: AddUnits α) : IsAddCommAt u.neg u.val where
+  add_comm := by rw [u.val_add_neg, u.neg_add_val]
+
+instance [Add α] [Zero α] [IsLawfulZeroAdd α] : Zero (AddUnits α) where
+  zero := {
+    val := 0
+    neg := 0
+    val_add_neg := zero_add _
+    neg_add_val := zero_add _
+  }
+
+instance [AddMonoidOps α] [IsAddMonoid α] : Add (AddUnits α) where
+  add a b := {
+    val := a.val + b.val
+    neg := b.neg + a.neg
+    val_add_neg := by rw [←add_assoc, add_assoc a.val, b.val_add_neg, add_zero, a.val_add_neg]
+    neg_add_val := by rw [←add_assoc, add_assoc b.neg, a.neg_add_val, add_zero, b.neg_add_val]
+  }
+
+instance [Add α] [Zero α] : Neg (AddUnits α) where
+  neg a := {
+    val := a.neg
+    neg := a.val
+    val_add_neg := a.neg_add_val
+    neg_add_val := a.val_add_neg
+  }
+
+instance [AddMonoidOps α] [IsAddMonoid α] : SMul ℕ (AddUnits α) where
+  smul n a :=
+  {
+    val := n • a.val
+    neg := n • a.neg
+    val_add_neg := by rw [←nsmul_add, a.val_add_neg, nsmul_zero]
+    neg_add_val := by rw [←nsmul_add, a.neg_add_val, nsmul_zero]
+  }
+
+def get [AddMonoidOps α] [IsAddMonoid α] : AddUnits α ↪+ α where
+  toFun x := x.val
+  inj := by
+    intro a b h
+    suffices a.neg = b.neg by
+      obtain ⟨ ⟩ := a
+      obtain ⟨ ⟩ := b
+      congr
+    dsimp at h
+    have := a.val_add_neg
+    rw [h] at this
+    rw [←add_zero b.neg, ←this,
+      ←add_assoc, b.neg_add_val, zero_add]
+  map_zero := rfl
+  map_add _ _ := rfl
+
+instance [AddMonoidOps α] [IsAddMonoid α] : IsLawfulNSMul (AddUnits α) :=
+  IsLawfulNSMul.lift AddUnits.get (fun _ _ => rfl)
+instance [AddMonoidOps α] [IsAddMonoid α] : IsAddMonoid (AddUnits α) :=
+  IsAddMonoid.lift AddUnits.get
+instance [AddMonoidOps α] [IsAddMonoid α] [IsAddComm α] : IsAddComm (AddUnits α) :=
+  IsAddComm.lift AddUnits.get
+
+end AddUnits
+
+class IsUnit (a: α) [Mul α] [One α] where
+  exists_eq_unit: ∃u: Units α, a = u.val
+
+class IsAddUnit (a: α) [Add α] [Zero α] where
+  exists_eq_add_unit: ∃u: AddUnits α, a = u.val
+
+instance [Mul α] [One α] [IsLawfulOneMul α] : IsUnit (1: α) where
+  exists_eq_unit := ⟨1, rfl⟩
+
+instance [Add α] [Zero α] [IsLawfulZeroAdd α] : IsAddUnit (0: α) where
+  exists_eq_add_unit := ⟨0, rfl⟩
