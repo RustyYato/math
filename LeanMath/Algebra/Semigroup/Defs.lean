@@ -49,6 +49,36 @@ instance (priority := 10) [Add α] (a b: α) [IsAddCommAt a b] : IsAddCommAt b a
   add_comm := by
     rw [add_comm a]
 
+class IsLeftCancel (α: Type*) [Mul α] where
+  protected of_mul_left {k a b: α} : k * a = k * b -> a = b
+class IsRightCancel (α: Type*) [Mul α] where
+  protected of_mul_right {k a b: α} : a * k = b * k -> a = b
+
+def of_mul_left [Mul α] [IsLeftCancel α] {k a b: α} : k * a = k * b -> a = b :=
+  IsLeftCancel.of_mul_left
+def of_mul_right [Mul α] [IsRightCancel α] {k a b: α} : a * k = b * k -> a = b :=
+  IsRightCancel.of_mul_right
+
+class IsLeftAddCancel (α: Type*) [Add α] where
+  protected of_add_left {k a b: α} : k + a = k + b -> a = b
+class IsRightAddCancel (α: Type*) [Add α] where
+  protected of_add_right {k a b: α} : a + k = b + k -> a = b
+
+def of_add_left [Add α] [IsLeftAddCancel α] {k a b: α} : k + a = k + b -> a = b :=
+  IsLeftAddCancel.of_add_left
+def of_add_right [Add α] [IsRightAddCancel α] {k a b: α} : a + k = b + k -> a = b :=
+  IsRightAddCancel.of_add_right
+
+class IsLeftCancel₀ (α: Type*) [Mul α] [Zero α] where
+  protected of_mul_left₀ {k a b: α} : k ≠ 0 -> k * a = k * b -> a = b
+class IsRightCancel₀ (α: Type*) [Mul α] [Zero α] where
+  protected of_mul_right₀ {k a b: α} : k ≠ 0 -> a * k = b * k -> a = b
+
+def of_mul_left₀ [Mul α] [Zero α] [IsLeftCancel₀ α] {k a b: α} : k ≠ 0 -> k * a = k * b -> a = b :=
+  IsLeftCancel₀.of_mul_left₀
+def of_mul_right₀ [Mul α] [Zero α] [IsRightCancel₀ α] {k a b: α} : k ≠ 0 -> a * k = b * k -> a = b :=
+  IsRightCancel₀.of_mul_right₀
+
 class IsMulHom (F α β: Type*) [FunLike F α β] [Mul α] [Mul β] where
   protected map_mul (f: F) (a₀ a₁: α) : f (a₀ * a₁) = f a₀ * f a₁ := by intro f; exact f.map_mul
 class IsAddHom (F α β: Type*) [FunLike F α β] [Add α] [Add β] where
@@ -409,3 +439,44 @@ def IsAddComm.lift [Add α] [Add β] [IsAddComm β] [EmbeddingLike F α β] [IsA
   add_comm a b := by
     apply inj f
     simp [map_add, add_comm]
+
+instance (priority := 100) [Mul α] [Zero α] [IsComm α] [IsLeftCancel₀ α] : IsRightCancel₀ α where
+  of_mul_right₀ := by intro k _ _ hk h; rw [mul_comm _ k, mul_comm _ k] at h; exact of_mul_left₀ hk h
+instance (priority := 100) [Mul α] [Zero α] [IsComm α] [IsRightCancel₀ α] : IsLeftCancel₀ α where
+  of_mul_left₀ := by intro k _ _ hk h; rw [mul_comm k, mul_comm k] at h; exact of_mul_right₀ hk h
+
+instance (priority := 100) [Mul α] [IsComm α] [IsLeftCancel α] : IsRightCancel α where
+  of_mul_right := by intro k _ _ h; rw [mul_comm _ k, mul_comm _ k] at h; exact of_mul_left h
+instance (priority := 100) [Mul α] [IsComm α] [IsRightCancel α] : IsLeftCancel α where
+  of_mul_left := by intro k _ _ h; rw [mul_comm k, mul_comm k] at h; exact of_mul_right h
+
+instance [Mul α] [IsLeftCancel α] : IsLeftAddCancel (AddOfMul α) where
+  of_add_left := of_mul_left (α := α)
+instance [Mul α] [IsRightCancel α] : IsRightAddCancel (AddOfMul α) where
+  of_add_right := of_mul_right (α := α)
+
+instance [Add α] [IsLeftAddCancel α] : IsLeftCancel (MulOfAdd α) where
+  of_mul_left := of_add_left (α := α)
+instance [Add α] [IsRightAddCancel α] : IsRightCancel (MulOfAdd α) where
+  of_mul_right := of_add_right (α := α)
+
+instance (priority := 100) [Add α] [IsAddComm α] [IsLeftAddCancel α] : IsRightAddCancel α where
+  of_add_right := of_mul_right (α := MulOfAdd α)
+instance (priority := 100) [Add α] [IsAddComm α] [IsRightAddCancel α] : IsLeftAddCancel α where
+  of_add_left := of_mul_left (α := MulOfAdd α)
+
+instance : IsLeftCancel₀ ℕ where
+  of_mul_left₀ := by
+    intro k a b hk h
+    apply Nat.eq_of_mul_eq_mul_left _ h
+    apply Nat.pos_of_ne_zero
+    assumption
+
+instance : IsLeftCancel₀ ℤ where
+  of_mul_left₀ := by
+    intro k a b hk h
+    apply Int.eq_of_mul_eq_mul_left _ h
+    assumption
+
+instance : IsRightCancel₀ ℕ := inferInstance
+instance : IsRightCancel₀ ℤ := inferInstance

@@ -75,34 +75,21 @@ class IsAddMonoid (α: Type*) [AddMonoidOps α] : Prop extends IsAddSemigroup α
 class NoZeroDivisors (α: Type*) [Mul α] [Zero α] where
   of_mul_eq_zero {a b: α} (h: a * b = 0) : a = 0 ∨ b = 0
 
-def of_mul_eq_zero [Mul α] [Zero α] [NoZeroDivisors α] {a b: α} (h: a * b = 0) : a = 0 ∨ b = 0 :=
-  NoZeroDivisors.of_mul_eq_zero h
-
-instance : NoZeroDivisors ℕ where
-  of_mul_eq_zero := by
-    intro a b h; cases a; left; rfl
-    cases b; right; rfl
-    rw [Nat.succ_mul, Nat.mul_succ] at h
-    nomatch h
-
-instance : NoZeroDivisors ℤ where
-  of_mul_eq_zero {a b} := by
-    intro h
+instance (priority := 100) NoZeroDivisors.ofLeftCancel₀ [Mul α] [Zero α] [IsLawfulZeroMul α] [IsLeftCancel₀ α] [DecidableEq α] : NoZeroDivisors α where
+  of_mul_eq_zero {a b} h := by
     apply Decidable.or_iff_not_imp_left.mpr
     intro ha
-    match b with
-    | 0 => rfl
-    | .ofNat (b + 1) =>
-      match a with
-      | .ofNat (a + 1) =>
-        cases of_mul_eq_zero (Int.ofNat.inj h) <;> contradiction
-      | .negSucc a => contradiction
-    | .negSucc b =>
-      match a with
-      | .ofNat (a + 1) => contradiction
-      | .negSucc a =>
-        rw [Int.negSucc_mul_negSucc] at h
-        cases of_mul_eq_zero (Int.ofNat.inj h) <;> contradiction
+    rw [←mul_zero a] at h
+    exact of_mul_left₀ ha h
+instance (priority := 100) [Mul α] [Zero α] [IsLawfulZeroMul α] [IsRightCancel₀ α] [DecidableEq α] : NoZeroDivisors α where
+  of_mul_eq_zero {a b} h := by
+    apply Decidable.or_iff_not_imp_right.mpr
+    intro hb
+    rw [←zero_mul b] at h
+    exact of_mul_right₀ hb h
+
+def of_mul_eq_zero [Mul α] [Zero α] [NoZeroDivisors α] {a b: α} (h: a * b = 0) : a = 0 ∨ b = 0 :=
+  NoZeroDivisors.of_mul_eq_zero h
 
 class IsZeroNeOne (α: Type*) [Zero α] [One α] : Prop where
   protected zero_ne_one : (0: α) ≠ (1: α)
@@ -157,6 +144,9 @@ instance : IsLawfulZeroMul ℕ where
 instance : IsLawfulZeroMul ℤ where
   mul_zero := Int.mul_zero
   zero_mul := Int.zero_mul
+
+instance : NoZeroDivisors ℕ := inferInstance
+instance : NoZeroDivisors ℤ := inferInstance
 
 section
 
@@ -1067,6 +1057,22 @@ structure AddUnits (α: Type*) [Add α] [Zero α] where
   val_add_neg: val + neg =  0
   neg_add_val: neg + val =  0
 
+instance [Mul α] [One α] : Coe (Units α) α where
+  coe := Units.val
+instance [Add α] [Zero α] : Coe (AddUnits α) α where
+  coe := AddUnits.val
+
+class IsUnitsCentral (α: Type*) [Mul α] [One α] where
+  unit_mul_comm (a: Units α) (b: α) : a * b = b * a
+
+class IsAddUnitsCentral (α: Type*) [Add α] [Zero α] where
+  unit_add_comm (a: AddUnits α) (b: α) : a + b = b + a
+
+instance [Mul α] [One α] [IsComm α] : IsUnitsCentral α where
+  unit_mul_comm _ _ := mul_comm _ _
+instance [Add α] [Zero α] [IsAddComm α] : IsAddUnitsCentral α where
+  unit_add_comm _ _ := add_comm _ _
+
 namespace Units
 
 instance [Mul α] [One α] (u: Units α) : IsCommAt u.val u.inv where
@@ -1107,6 +1113,11 @@ instance [MonoidOps α] [IsMonoid α] : Pow (Units α) ℕ where
     inv_mul_val := by rw [←mul_npow, a.inv_mul_val, one_npow]
   }
 
+instance [Mul α] [One α] [IsUnitsCentral α] (a: Units α) (b: α) : IsCommAt a.val b where
+  mul_comm := IsUnitsCentral.unit_mul_comm _ _
+instance [Mul α] [One α] [IsUnitsCentral α] (a: Units α) (b: α) : IsCommAt a.inv b where
+  mul_comm := IsUnitsCentral.unit_mul_comm a⁻¹ _
+
 def get [MonoidOps α] [IsMonoid α] : Units α ↪* α where
   toFun x := x.val
   inj := by
@@ -1129,6 +1140,22 @@ instance [MonoidOps α] [IsMonoid α] : IsMonoid (Units α) :=
   IsMonoid.lift Units.get
 instance [MonoidOps α] [IsMonoid α] [IsComm α] : IsComm (Units α) :=
   IsComm.lift Units.get
+
+def Associates [MonoidOps α] [IsMonoid α] [IsUnitsCentral α] : MulCon α where
+  toFun a b := ∃u: Units α, a * u = b
+  eqv := {
+    refl _ := ⟨1, mul_one _⟩
+    symm | ⟨u, h⟩ => ⟨u⁻¹, by rw [←h, mul_assoc, show (u.val * u⁻¹.val = 1) from u.val_mul_inv, mul_one]⟩
+    trans | ⟨u, hu⟩, ⟨v, hv⟩ => ⟨u * v, by
+      show _ * (_ * _) = _
+      rw [←mul_assoc, hu, hv]⟩
+  }
+  resp_mul := by
+    intro a b c d ⟨u, hu⟩ ⟨v, hv⟩
+    exists v * u
+    show a * b * (v.val * u.val) = _
+    rw [←mul_assoc, mul_assoc a, hv, mul_assoc,
+      mul_comm _ u.val, ←mul_assoc, hu]
 
 end Units
 
@@ -1172,6 +1199,11 @@ instance [AddMonoidOps α] [IsAddMonoid α] : SMul ℕ (AddUnits α) where
     neg_add_val := by rw [←nsmul_add, a.neg_add_val, nsmul_zero]
   }
 
+instance [Add α] [Zero α] [IsAddUnitsCentral α] (a: AddUnits α) (b: α) : IsAddCommAt a.val b where
+  add_comm := IsAddUnitsCentral.unit_add_comm _ _
+instance [Add α] [Zero α] [IsAddUnitsCentral α] (a: AddUnits α) (b: α) : IsAddCommAt a.neg b where
+  add_comm := IsAddUnitsCentral.unit_add_comm (-a) _
+
 def get [AddMonoidOps α] [IsAddMonoid α] : AddUnits α ↪+ α where
   toFun x := x.val
   inj := by
@@ -1194,6 +1226,22 @@ instance [AddMonoidOps α] [IsAddMonoid α] : IsAddMonoid (AddUnits α) :=
   IsAddMonoid.lift AddUnits.get
 instance [AddMonoidOps α] [IsAddMonoid α] [IsAddComm α] : IsAddComm (AddUnits α) :=
   IsAddComm.lift AddUnits.get
+
+def Associates [AddMonoidOps α] [IsAddMonoid α] [IsAddUnitsCentral α] : AddCon α where
+  toFun a b := ∃u: AddUnits α, a + u = b
+  eqv := {
+    refl _ := ⟨0, add_zero _⟩
+    symm | ⟨u, h⟩ => ⟨-u, by rw [←h, add_assoc, show (u.val + (-u).val = 0) from u.val_add_neg, add_zero]⟩
+    trans | ⟨u, hu⟩, ⟨v, hv⟩ => ⟨u + v, by
+      show _ + (_ + _) = _
+      rw [←add_assoc, hu, hv]⟩
+  }
+  resp_add := by
+    intro a b c d ⟨u, hu⟩ ⟨v, hv⟩
+    exists v + u
+    show a + b + (v.val + u.val) = _
+    rw [←add_assoc, add_assoc a, hv, add_assoc,
+      add_comm _ u.val, ←add_assoc, hu]
 
 end AddUnits
 

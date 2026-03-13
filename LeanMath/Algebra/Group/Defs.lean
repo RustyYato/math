@@ -321,13 +321,15 @@ section
 
 variable [GroupOps α] [IsGroup α]
 
-def of_mul_left {k a b: α} (h: k * a = k * b) : a = b := by
-  rw [←one_mul a, ←one_mul b, ←inv_mul_cancel k,
-    mul_assoc, mul_assoc, h]
+instance : IsLeftCancel α where
+  of_mul_left {k a b} h := by
+    rw [←one_mul a, ←one_mul b, ←inv_mul_cancel k,
+      mul_assoc, mul_assoc, h]
 
-def of_mul_right {k a b: α} (h: a * k = b * k) : a = b := by
-  rw [←mul_one a, ←mul_one b, ←mul_inv_cancel k,
-    ←mul_assoc, ←mul_assoc, h]
+instance : IsRightCancel α where
+  of_mul_right {k a b} h := by
+    rw [←mul_one a, ←mul_one b, ←mul_inv_cancel k,
+      ←mul_assoc, ←mul_assoc, h]
 
 instance (a b: α) [IsCommAt a b] : IsCommAt a⁻¹ b where
   mul_comm := by
@@ -487,11 +489,11 @@ section
 
 variable [AddGroupOps α] [IsAddGroup α]
 
-def of_add_left {k a b: α} (h: k + a = k + b) : a = b :=
-  of_mul_left (α := MulOfAdd α) h
+instance : IsLeftAddCancel α where
+  of_add_left := of_mul_left (α := MulOfAdd α)
 
-def of_add_right {k a b: α} (h: a + k = b + k) : a = b :=
-  of_mul_right (α := MulOfAdd α) h
+instance : IsRightAddCancel α where
+  of_add_right := of_mul_right (α := MulOfAdd α)
 
 instance (a b: α) [IsAddCommAt a b] : IsAddCommAt (-a) b where
   add_comm := mul_comm (MulOfAdd.mkHomₙ a)⁻¹ (MulOfAdd.mkHomₙ b)
