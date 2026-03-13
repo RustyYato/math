@@ -1,7 +1,8 @@
 import LeanMath.Tactic.PPWithUniv
 import LeanMath.Tactic.AxiomBlame
 import LeanMath.Logic.Relation.Segments
-import LeanMath.Order.Defs
+import LeanMath.Order.Set
+import LeanMath.Logic.Small.Defs
 import LeanMath.Data.Equiv.Basic
 
 @[pp_with_univ]
@@ -949,5 +950,43 @@ def le_sInf (U: Set Ordinal) (hU: U.Nonempty) (x: Ordinal) (h: ∀u ∈ U, x ≤
     apply h
     assumption
   exact Relation.irrefl (this _ (sInf_mem  U hU))
+
+def ulift_le_ulift {a b: Ordinal.{u}} : ulift.{v} a ≤ ulift b ↔ a ≤ b := by
+  cases a with | @type α r =>
+  cases b with | @type β s =>
+  apply Iff.intro
+  · intro h
+    obtain ⟨h⟩ := h; refine ⟨?_⟩
+    dsimp; dsimp at h
+    apply InitialSegment.trans
+    apply RelEquiv.toInitialSegment
+    apply RelEquiv.symm
+    apply ulift_rel_eqv_rel
+    apply flip InitialSegment.trans
+    apply RelEquiv.toInitialSegment
+    apply ulift_rel_eqv_rel
+    assumption
+  · intro h
+    obtain ⟨h⟩ := h; refine ⟨?_⟩
+    dsimp; dsimp at h
+    apply InitialSegment.trans
+    apply RelEquiv.toInitialSegment
+    apply ulift_rel_eqv_rel
+    apply flip InitialSegment.trans
+    apply RelEquiv.toInitialSegment
+    apply RelEquiv.symm
+    apply ulift_rel_eqv_rel
+    assumption
+
+-- def boundedAbove_range {ι: Type u} (f: ι -> Ordinal.{max u v}) : Set.BoundedAbove (Set.range f) := by
+--   sorry
+
+-- def boundedAbove_of_small (U: Set Ordinal.{u}) [Small.{u} U] : U.BoundedAbove := by
+--   have eqv := Equiv.shrink (α := U)
+--   have ⟨bound, hbound⟩ := boundedAbove_range fun x => (eqv.symm x).val
+--   exists bound; intro u hu
+--   apply hbound
+--   simp; exists eqv ⟨u, hu⟩
+--   simp
 
 end Ordinal

@@ -93,6 +93,13 @@ def fin_val : Fin n ↪ ℕ where
   toFun := Fin.val
   inj _ _ := Fin.val_inj.mp
 
+def subtype_val {P: α -> Prop} : { x // P x } ↪ α where
+  toFun := Subtype.val
+  inj a b h := by
+    obtain ⟨a, h⟩ := a
+    obtain ⟨b, h⟩ := b
+    congr
+
 def cantor [h: Nontrivial β] (f: (α -> β) ↪ α) : False := by
   classical
   have ⟨default, _, _⟩ := h

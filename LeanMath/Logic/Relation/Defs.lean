@@ -445,3 +445,27 @@ instance : Relation.IsWelFounded (fun a b: α => False) where
     apply WellFounded.intro
     intro a; apply Acc.intro
     nofun
+
+instance (r: β -> β -> Prop) [Relation.IsWelFounded r] (f: α -> β) : Relation.IsWelFounded (fun a b => r (f a) (f b)) where
+    wf := by
+      apply WellFounded.intro
+      intro a
+      induction h:f a using (Relation.wf r).induction generalizing a with
+      | _ x ih =>
+      subst x
+      apply Acc.intro
+      intro b hb
+      exact ih _ hb _ rfl
+
+
+def Embedding.pullback_rel (r: β -> β -> Prop) (h: α ↪ β) (a b: α) : Prop := r (h a) (h b)
+instance (r: β -> β -> Prop) [Relation.IsTrans r] (h: α ↪ β) : Relation.IsTrans (h.pullback_rel r) :=
+  inferInstanceAs (Relation.IsTrans (fun a b => r (h a) (h b)))
+instance (r: β -> β -> Prop) [Relation.IsWelFounded r] (f: α ↪ β) : Relation.IsWelFounded (f.pullback_rel r) :=
+  inferInstanceAs (Relation.IsWelFounded (fun a b => r (f a) (f b)))
+instance (r: β -> β -> Prop) [Relation.IsTrichotomous r (· = ·)] (f: α ↪ β) : Relation.IsTrichotomous (f.pullback_rel r) (· = ·) where
+  trichotomous a b := by
+    rcases Relation.trichotomous r (f a) (f b) with h | h | h
+    · left; assumption
+    · right; left; exact f.inj h
+    · right; right; assumption
