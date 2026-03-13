@@ -155,4 +155,16 @@ def succ_finite (n: ℕ) : succ n = (n + 1: ℕ) := by
       apply le_of_lt
       apply lt_succ
 
+def omega_ne_succ : ∀{c: Cardinal}, c.succ ≠ ω := by
+  intro c
+  intro h
+  have := lt_succ c
+  rw [h] at this
+  rw [lt_omega_iff_natCast] at this
+  obtain ⟨n, rfl⟩ := this
+  rw [succ_finite] at h
+  have := natCast_lt_omega (n + 1)
+  rw [h] at this
+  exact Relation.irrefl this
+
 end Cardinal
