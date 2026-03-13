@@ -1256,3 +1256,29 @@ instance [Mul α] [One α] [IsLawfulOneMul α] : IsUnit (1: α) where
 
 instance [Add α] [Zero α] [IsLawfulZeroAdd α] : IsAddUnit (0: α) where
   exists_eq_add_unit := ⟨0, rfl⟩
+
+instance : Subsingleton (Units ℕ) where
+  allEq := by
+    suffices ∀a: Units ℕ, a = 1 by intro a b; rw [this a, this b]
+    intro ⟨a, b, ha, hb⟩
+    apply inj Units.get
+    show a = 1
+    match a with
+    | 1 => rfl
+    | 0 => rw [mul_zero] at hb; contradiction
+    | n + 2 =>
+      match b with
+      | 0 => rw [mul_zero] at ha; contradiction
+
+def Int.ofUnit (u: Units ℤ) : u.val = 1 ∨ u.val = -1 := by
+  obtain ⟨u, v, h, g⟩ := u; dsimp
+  match u with
+  | 1 => left; rfl
+  | .negSucc 0 => right; rfl
+  | 0 => rw [mul_zero] at g; contradiction
+  | ofNat (u + 2) =>
+    match v with
+    | 0 => rw [mul_zero] at h; contradiction
+  | .negSucc (u + 1) =>
+    match v with
+    | 0 => rw [mul_zero] at h; contradiction
