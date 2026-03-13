@@ -625,6 +625,24 @@ instance [MonoidOps α] [IsMonoid α] : IsGroup (Units α) where
     apply inj Units.get
     apply a.val_mul_inv
 
+def Units.equiv {α: Type*} [GroupOps α] [IsGroup α] : α ≃* Units α :=
+  GroupEquiv.symm {
+    toFun := Units.get
+    invFun a := {
+      val := a
+      inv := a⁻¹
+      val_mul_inv := mul_inv_cancel _
+      inv_mul_val := inv_mul_cancel _
+    }
+    leftInv _ := rfl
+    rightInv _ := inj get rfl
+    map_one := rfl
+    map_mul _ _ := rfl
+  }
+
+instance [GroupOps α] [IsGroup α] (a: α) : IsUnit a where
+  exists_eq_unit := ⟨Units.equiv a, rfl⟩
+
 end Units
 
 namespace AddUnits
@@ -643,5 +661,23 @@ instance [AddMonoidOps α] [IsAddMonoid α] : IsAddGroup (AddUnits α) where
   add_neg_cancel a := by
     apply inj AddUnits.get
     apply a.val_add_neg
+
+def AddUnits.equiv {α: Type*} [AddGroupOps α] [IsAddGroup α] : α ≃+ AddUnits α :=
+  AddGroupEquiv.symm {
+    toFun := AddUnits.get
+    invFun a := {
+      val := a
+      neg := -a
+      val_add_neg := add_neg_cancel _
+      neg_add_val := neg_add_cancel _
+    }
+    leftInv _ := rfl
+    rightInv _ := inj get rfl
+    map_zero := rfl
+    map_add _ _ := rfl
+  }
+
+instance [AddGroupOps α] [IsAddGroup α] (a: α) : IsAddUnit a where
+  exists_eq_add_unit := ⟨AddUnits.equiv a, rfl⟩
 
 end AddUnits

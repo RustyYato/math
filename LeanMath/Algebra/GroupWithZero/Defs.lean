@@ -95,6 +95,29 @@ macro_rules
 macro_rules
 | `(tactic|invert_tactic_trivial) => `(tactic|first|apply inv_ne_zero <;> invert_tactic)
 
+def inv?_mul_cancel (a: α) (h: a ≠ 0) : a⁻¹? * a = 1 := by
+  rw (occs := [2]) [←mul_one a]
+  rw (occs := [1]) [←mul_inv?_cancel (a⁻¹?)]
+  rw [←mul_assoc a, mul_inv?_cancel, one_mul, mul_inv?_cancel]
+  apply inv_ne_zero
+
+def Units.of_nonzero [GroupWithZeroOps α] [IsGroupWithZero α] : { a: α // a ≠ 0 } ↪ Units α where
+  toFun | ⟨a, ha⟩ => {
+    val := a
+    inv := a⁻¹?
+    val_mul_inv := mul_inv?_cancel _ _
+    inv_mul_val := inv?_mul_cancel _ _
+  }
+  inj := by
+    intro a b h
+    dsimp at h
+    have := (Units.mk.inj h).left
+    apply Embedding.subtype_val.inj
+    assumption
+
+instance [GroupWithZeroOps α] [IsGroupWithZero α] (a: α) [NeZero a] : IsUnit a where
+  exists_eq_unit := ⟨Units.of_nonzero ⟨a, NeZero.ne _⟩, rfl⟩
+
 def div?_ne_zero {a b: α} (ha: a ≠ 0) (hb: b ≠ 0) : a /? b ≠ 0 := by
   rw [div?_eq_mul_inv?]
   invert_tactic
@@ -143,12 +166,6 @@ instance : IsLawfulOneInv? α where
   one_inv? := by
     symm; apply eq_inv?_of_mul
     rw [mul_one]
-
-def inv?_mul_cancel (a: α) (h: a ≠ 0) : a⁻¹? * a = 1 := by
-  rw (occs := [2]) [←mul_one a]
-  rw (occs := [1]) [←mul_inv?_cancel (a⁻¹?)]
-  rw [←mul_assoc a, mul_inv?_cancel, one_mul, mul_inv?_cancel]
-  apply inv_ne_zero
 
 def div?_self (a: α) (h: a ≠ 0) : a /? a = 1 := by
   rw [div?_eq_mul_inv?, mul_inv?_cancel]
