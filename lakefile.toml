@@ -1,10 +1,23 @@
 name = "LeanMath"
 version = "0.1.0"
-defaultTargets = ["leanmath"]
+defaultTargets = ["LeanMath"]
 
 [[lean_lib]]
 name = "LeanMath"
-
-[[lean_exe]]
-name = "leanmath"
-root = "Main"
+globs = [
+    "LeanMath.Algebra.+",
+    "LeanMath.Data.+",
+    "LeanMath.Logic.+",
+    "LeanMath.Order.+",
+    "LeanMath.Tactic.+",
+    "LeanMath.Topology.+",
+    "LeanMath.TypeTheory.+",
+    # "Math.CategoryTheory.+",
+    # "Math.Function.+",
+    # "Math.Ops.+",
+    # "Math.Relation.+",
+    # "Math.Type.+",
+    # "Math.Language.+",
+    # "Math.Game.+",
+    # "Math.AxiomBlame",
+]

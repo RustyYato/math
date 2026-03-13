@@ -21,7 +21,7 @@ class EmbeddingLike (F: Sort*) (α β: outParam Sort*) where
 --- This is not the interface for ops, just ensures that
 --- all ops are implemented
 set_option checkBinderAnnotations false in
-class EmbeddingOpsCheck (C: Sort u -> Sort u) (F: ∀α β (cα: C α) (cβ: C β), Sort v)
+class EmbeddingOpsCheck (C: Sort u -> Sort u) (F: ∀α β, C α -> C β -> Sort v)
   [∀α β [cα: C α] [cβ: C β], EmbeddingLike (F α β cα cβ) α β]
   where
   protected comp {α β γ: Sort u} [cα: C α] [cβ: C β] [cγ: C γ] : F β γ cβ cγ -> F α β cα cβ -> F α γ cα cγ
