@@ -113,4 +113,46 @@ instance : @Relation.IsWellOrder Cardinal (· < ·) where
     right; right; assumption
     right; left; rfl
 
+noncomputable def succ (c: Cardinal.{u}) : Cardinal.{u} :=
+  Set.min (· < ·) (U := Set.Ioi c) <| by
+    exists 2 ^ c
+    apply Cardinal.lt_two_pow
+
+def lt_succ (c: Cardinal) : c < c.succ := by
+  show c.succ ∈ Set.Ioi c
+  apply Set.min_mem
+
+def of_lt_succ (c: Cardinal) : ∀{x}, x < c.succ -> x ≤ c := by
+  classical
+  intro x hx; apply le_of_not_lt
+  intro h
+  exact Set.min_minimal (· < ·) (U := Set.Ioi c) ⟨_, h⟩ x h hx
+
+def succ_le (c: Cardinal) : ∀{x}, c < x -> c.succ ≤ x := by
+  classical
+  intro x cx; apply le_of_not_lt
+  intro h
+  have := not_lt.mpr (of_lt_succ _ h)
+  contradiction
+
+def succ_finite (n: ℕ) : succ n = (n + 1: ℕ) := by
+  apply le_antisymm
+  · apply succ_le
+    rw [natCast_lt_natCast]
+    apply Nat.lt_succ_self
+  · classical
+    apply le_of_not_lt
+    intro h
+    have ⟨m, hm⟩ := lt_omega_iff_natCast.mp (lt_trans h (natCast_lt_omega (n + 1)))
+    rw [hm, natCast_lt_natCast, Nat.lt_succ_iff] at h
+    rcases Or.symm (Nat.lt_or_eq_of_le h) with h | h
+    subst m
+    · have := lt_succ n
+      rw [hm] at this
+      exact Relation.irrefl this
+    · rw [←natCast_lt_natCast, ←hm] at h
+      apply not_le_of_lt h
+      apply le_of_lt
+      apply lt_succ
+
 end Cardinal

@@ -1,9 +1,10 @@
 import LeanMath.Logic.Funlike
 import LeanMath.Logic.Nontrivial
+import LeanMath.Logic.IsEmpty
 
 structure Embedding (α β: Sort*) where
   toFun: α -> β
-  inj: Function.Injective toFun
+  protected inj: Function.Injective toFun
 
 infixr:50 " ↪ " => Embedding
 
@@ -41,10 +42,15 @@ instance {F α β: Sort*} [EmbeddingLike F α β] : FunLike F α β where
     intro h
     cases a; cases b; congr
 
-namespace Embedding
-
 instance : EmbeddingLike (α ↪ β) α β where
   coeEmbedding := id
+
+def inj [EmbeddingLike F α β] (f: F) : Function.Injective f := by
+  intro a b h
+  have : EmbeddingLike.coeEmbedding f a = EmbeddingLike.coeEmbedding f b := h
+  exact Embedding.inj _ this
+
+namespace Embedding
 
 protected def id (α: Sort*) : α ↪ α where
   toFun := id
@@ -93,6 +99,84 @@ def fin_val : Fin n ↪ ℕ where
   toFun := Fin.val
   inj _ _ := Fin.val_inj.mp
 
+def fin_of_le (h: n ≤ m) : Fin n ↪ Fin m where
+  toFun := Fin.castLE h
+  inj := by
+    intro a b h
+    simp [←Fin.val_inj] at h
+    simpa [Fin.val_inj] using h
+
+def le_of_fin (f: Fin n ↪ Fin m) : n ≤ m := by
+  induction n generalizing m with
+  | zero => apply Nat.zero_le
+  | succ n ih =>
+    cases m with
+    | zero => exact (f 0).elim0
+    | succ m =>
+    apply Nat.succ_le_succ
+    apply ih
+    have lt_of_ne (i: Fin (n + 1)) (hi: f i ≠ Fin.last _) : f i < m := by
+      rcases Nat.lt_or_eq_of_le (Nat.lt_succ_iff.mp (f i).isLt) with h | h
+      assumption; simp at hi
+      rw [←Fin.val_inj, h] at hi
+      contradiction
+    have castSucc_ne_last (i: Fin n) : i.castSucc ≠ Fin.last _ := by
+      intro hi
+      have : i.castSucc < n := by simp
+      rw [hi] at this
+      exact Nat.lt_irrefl _ this
+    by_cases hf:f (Fin.last _) = Fin.last _
+    refine {
+      toFun i :=  {
+        val := f i.castSucc
+        isLt := ?_
+      }
+      inj := ?_
+    }
+    · rcases Nat.lt_or_eq_of_le (f i.castSucc).isLt with h | h
+      apply Nat.lt_of_succ_lt_succ
+      assumption
+      simp [←Fin.val_inj, ←Nat.succ.inj h] at hf
+      have := castSucc_ne_last _ (f.inj (Fin.val_inj.mp hf)).symm
+      contradiction
+    · intro a b h; dsimp at h
+      simp [Fin.val_inj] at h
+      simpa [Fin.castSucc_inj] using f.inj h
+    refine {
+      toFun i := {
+        val :=
+          let v := f i.castSucc
+          if v = Fin.last _ then
+            f (Fin.last _)
+          else
+            v
+        isLt := ?_
+      }
+      inj := ?_
+    }
+    · dsimp
+      split
+      apply lt_of_ne
+      assumption
+      apply lt_of_ne
+      assumption
+    · intro a b h
+      simp at h
+      split at h <;> split at h
+      rename_i h₀ h₁; rw [←h₁] at h₀
+      simpa [Fin.castSucc_inj] using f.inj h₀
+      replace h := f.inj (Fin.val_inj.mp h)
+      have := castSucc_ne_last _ h.symm
+      contradiction
+      replace h := f.inj (Fin.val_inj.mp h)
+      have := castSucc_ne_last _ h
+      contradiction
+      simpa [Fin.val_inj, (inj f).eq_iff, Fin.castSucc_inj] using h
+
+def empty [IsEmpty α] : α ↪ β where
+  toFun := elim_empty
+  inj := rec_elim_empty
+
 def subtype_val {P: α -> Prop} : { x // P x } ↪ α where
   toFun := Subtype.val
   inj a b h := by
@@ -125,8 +209,3 @@ def cantor [h: Nontrivial β] (f: (α -> β) ↪ α) : False := by
   contradiction
 
 end Embedding
-
-def inj [EmbeddingLike F α β] (f: F) : Function.Injective f := by
-  intro a b h
-  have : EmbeddingLike.coeEmbedding f a = EmbeddingLike.coeEmbedding f b := h
-  exact Embedding.inj _ this

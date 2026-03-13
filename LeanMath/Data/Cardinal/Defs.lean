@@ -284,6 +284,9 @@ def lt_omega_iff_natCast : ∀{x}, x < ω ↔ ∃n: ℕ, x = n := by
     apply Equiv.embed_congr (Equiv.ulift _) (Equiv.ulift _) _
     exact Embedding.fin_val
 
+def natCast_lt_omega (n: ℕ) : n < ω :=
+  lt_omega_iff_natCast.mpr ⟨_, rfl⟩
+
 def fintype_card (α: Type*) [Fintype α] : type α = Fintype.card α := by
   classical
   induction Fintype.finEquiv α with | _ =>
@@ -311,5 +314,30 @@ def lt_two_pow (a: Cardinal) : a < 2 ^ a := by
     Equiv.fun_congr (Equiv.id _) (Equiv.bool_eqv_fin2.trans (Equiv.ulift _)).symm
   ) (Equiv.id _) f
   exact Embedding.cantor f
+
+instance : Bot Cardinal where
+  bot := 0
+
+instance : IsLawfulBot Cardinal where
+  bot_le a := by
+    cases a with | _ α =>
+    refine ⟨?_⟩
+    apply Embedding.empty
+
+def natCast_le_natCast {n m: ℕ} : (n: Cardinal) ≤ m ↔ n ≤ m := by
+  apply Iff.intro
+  · intro ⟨f⟩
+    apply Embedding.le_of_fin
+    apply Equiv.embed_congr _ _ f
+    iterate 2 exact Equiv.symm (Equiv.ulift _)
+  · intro h
+    refine ⟨?_⟩
+    apply Equiv.embed_congr (Equiv.ulift _) (Equiv.ulift _) _
+    apply Embedding.fin_of_le
+    assumption
+
+def natCast_lt_natCast {n m: ℕ} : (n: Cardinal) < m ↔ n < m := by
+  rw [lt_iff_le_and_not_ge, lt_iff_le_and_not_ge,
+    natCast_le_natCast, natCast_le_natCast]
 
 end Cardinal
