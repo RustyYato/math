@@ -3,6 +3,16 @@ import LeanMath.Data.TopBot.Defs
 
 open Relation
 
+abbrev OrderHom (α β: Type*) [LE α] [LE β] := (· ≤ ·: α -> α -> Prop) →r (· ≤ ·: β -> β -> Prop)
+abbrev OrderEmbedding (α β: Type*) [LE α] [LE β] := (· ≤ ·: α -> α -> Prop) ↪r (· ≤ ·: β -> β -> Prop)
+abbrev OrderEquiv (α β: Type*) [LE α] [LE β] := (· ≤ ·: α -> α -> Prop) ≃r (· ≤ ·: β -> β -> Prop)
+
+abbrev IsOrderHom (F α β: Type*) [FunLike F α β] [LE α] [LE β] :=  IsRelHom F (α := α) (β := β) (· ≤ ·) (· ≤ ·)
+
+infixr:50 " →o " => OrderHom
+infixr:50 " ↪o " => OrderEmbedding
+infixr:50 " ≃o " => OrderEquiv
+
 infixl:68 " ⊔ " => max
 infixl:69 " ⊓ " => min
 
@@ -55,10 +65,10 @@ class IsSemiLatticeMax (α: Type*) [LE α] [LT α] [Max α] : Prop extends IsPar
 class IsSemiLatticeMin (α: Type*) [LE α] [LT α] [Min α] : Prop extends IsPartialOrder α, IsLawfulMin α where
   protected le_min {x a b: α} : x ≤ a -> x ≤ b -> x ≤ a ⊓ b
 
-
 class IsLattice (α: Type*) [LE α] [LT α] [Max α] [Min α] : Prop extends IsSemiLatticeMax α, IsSemiLatticeMin α where
 
 variable [LE α] [LT α] [Min α] [Max α] [Top α] [Bot α]
+  [LE β] [LT β]
 
 def max_le [IsSemiLatticeMax α] {x a b: α} : a ≤ x -> b ≤ x -> a ⊔ b ≤ x :=
   IsSemiLatticeMax.max_le
@@ -81,6 +91,12 @@ section
 variable [IsLawfulLT α] {a b c: α}
 
 def lt_iff_le_and_not_ge : a < b ↔ a ≤ b ∧ ¬b ≤ a := IsLawfulLT.lt_iff_le_and_not_ge
+
+def map_le [FunLike F α β] [IsOrderHom F α β] (f: F) (a b: α) : a ≤ b ↔ f a ≤ f b := by
+  apply map_rel
+
+def map_lt [FunLike F α β] [IsOrderHom F α β] [IsLawfulLT α] [IsLawfulLT β] (f: F) (a b: α) : a < b ↔ f a < f b := by
+  rw [lt_iff_le_and_not_ge, lt_iff_le_and_not_ge, map_le f, map_le f]
 
 instance : IsLawfulLT (αᵒᵖ) where
   lt_iff_le_and_not_ge := lt_iff_le_and_not_ge (α := α)
@@ -274,3 +290,17 @@ def not_le [IsLinearOrder α] {a b: α} : ¬a ≤ b ↔ b < a := by
   exact Relation.irrefl (lt_of_le_of_lt g h)
 
 end
+
+instance [DecidableRel (· ≤ ·: α -> α -> Prop)] [FunLike F α β] [IsOrderHom F α β] [IsPartialOrder α] [IsPreorder β] : EmbeddingLike F α β where
+  coeEmbedding f := {
+    toFun := f
+    inj := by
+      intro a b g
+      have : a ≤ b := by rw [map_le f, g]
+      have : b ≤ a := by rw [map_le f, g]
+      apply le_antisymm <;> assumption
+  }
+  coeInj := by
+    intro a b h
+    dsimp at h
+    exact DFunLike.coeInj (Embedding.mk.inj h)

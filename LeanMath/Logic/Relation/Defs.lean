@@ -253,13 +253,11 @@ def ofTransGen {R: α -> α -> Prop} {S: β -> β -> Prop} [IsTrans S] (f: R →
     · intro h
       induction h with
       | single =>
-        apply map_rel_fwd
-        assumption
+        apply map_rel_fwd _ (by assumption)
       | tail =>
         apply trans
         assumption
-        apply map_rel_fwd f
-        assumption
+        apply map_rel_fwd f (by assumption)
     · intro h
       apply TransGen.single
       apply map_rel_rev f
@@ -275,8 +273,7 @@ def ofReflTransGen {R: α -> α -> Prop} {S: β -> β -> Prop} [IsRefl S] [IsTra
       | refl => rfl
       | cons _ _ _ h =>
         apply trans
-        apply map_rel_fwd f
-        assumption
+        apply map_rel_fwd f (by assumption)
         assumption
     · intro h
       apply ReflTransGen.of
@@ -292,8 +289,7 @@ def ofReflGen {R: α -> α -> Prop} {S: β -> β -> Prop} [IsRefl S] (f: R →r 
       cases h with
       | refl => rfl
       | of _ h =>
-        apply map_rel_fwd f
-        assumption
+        apply map_rel_fwd f (by assumption)
     · intro h
       apply ReflGen.of
       apply map_rel_rev f
@@ -315,8 +311,7 @@ def ofEquivGen {R: α -> α -> Prop} {S: β -> β -> Prop} [IsRefl S] [IsTrans S
         apply symm
         assumption
       | of h =>
-        apply map_rel_fwd f
-        assumption
+        apply map_rel_fwd f (by assumption)
     · intro h
       apply EquivGen.of
       apply map_rel_rev f
