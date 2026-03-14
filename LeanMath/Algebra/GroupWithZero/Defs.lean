@@ -228,15 +228,17 @@ def resp_zpow? (r: R) (z: ℤ) (a b: α) (ha: 0 ≤ z ∨ a ≠ 0) (hb: 0 ≤ z 
   invert_tactic
   invert_tactic
 
-def of_mul_left₀ {k a b: α} (hk: k ≠ 0) (h: k * a = k * b) : a = b := by
-  rw [←one_mul a, ←one_mul b, ←inv?_mul_cancel k,
-    mul_assoc, mul_assoc, h]
-  assumption
+instance : IsLeftCancel₀ α where
+  of_mul_left₀ {k a b: α} hk h := by
+    rw [←one_mul a, ←one_mul b, ←inv?_mul_cancel k,
+      mul_assoc, mul_assoc, h]
+    assumption
 
-def of_mul_right₀ {k a b: α} (hk: k ≠ 0) (h: a * k = b * k) : a = b := by
-  rw [←mul_one a, ←mul_one b, ←mul_inv?_cancel k,
-    ←mul_assoc, ←mul_assoc, h]
-  assumption
+instance : IsRightCancel₀ α where
+  of_mul_right₀ {k a b: α} hk h := by
+    rw [←mul_one a, ←mul_one b, ←mul_inv?_cancel k,
+      ←mul_assoc, ←mul_assoc, h]
+    assumption
 
 instance (a b: α) (h: a ≠ 0) [IsCommAt a b] : IsCommAt a⁻¹? b where
   mul_comm := by

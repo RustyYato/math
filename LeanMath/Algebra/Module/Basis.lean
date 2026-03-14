@@ -50,7 +50,7 @@ def upcast (U V: Set α) (h: U ⊆ V) : LinearCombo R U →ₗ[R] LinearCombo R 
   liftLin fun x => LinearCombo.ι ⟨x.val, h _ x.property⟩ 1
 
 @[simp]
-def upcast_ι (U V: Set α) (h: U ⊆ V) (a: U) (r: R) : upcast R U V h (ι a r) = ι ⟨a, h _ a.property⟩ r := by
+def upcast_ι (U V: Set α) (h: U ⊆ V) (a: U) (r: R) : upcast R U V h (ι a r) = ι ⟨a.val, h _ a.property⟩ r := by
   rw [upcast, LinearCombo.liftLin_ι, smul_ι]
   congr; apply mul_one
 
