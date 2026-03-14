@@ -465,8 +465,6 @@ private def closure_eq (s: S) : s = LatticeBuilder.closure s := by
   · apply (LatticeBuilder.gc _ _).mp
     apply Set.sub_refl
 
-class CompleteLattice (α: Type*) extends LE α, LT α, Max α, Min α, Top α, Bot α, SupSet α, InfSet α, IsCompleteLattice α where
-
 def giGenerate : @GaloisInsertion (Set α) S _ _ LatticeBuilder.closure (fun x => x) where
   gc _ _ := (LatticeBuilder.gc _ _).symm
   le_l_u _ := closure_ge _
@@ -479,11 +477,11 @@ def giGenerate : @GaloisInsertion (Set α) S _ _ LatticeBuilder.closure (fun x =
     apply SetLike.coeInj; simp
     rwa [LatticeBuilder.create_spec s ⟨_, this⟩]
 
-protected class LatticeBuilder.CompleteLattice (α: Type*) extends
+protected class CompleteLattice (α: Type*) extends
   LE α, LT α, IsPartialOrder α,
   GaloisConnection.CompleteLattice α where
 
-def toCompleteLattice : LatticeBuilder.CompleteLattice S where
+scoped instance toCompleteLattice : LatticeBuilder.CompleteLattice S where
   toCompleteLattice := {
     giGenerate.liftCompleteLattice with
     bot := LatticeBuilder.bot.val
