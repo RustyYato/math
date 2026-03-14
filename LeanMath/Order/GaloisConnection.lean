@@ -280,6 +280,56 @@ abbrev GaloisCoinsertion.dual (gi: GaloisCoinsertion l u) : GaloisInsertion
   choice := gi.choice
   choice_eq := gi.choice_eq
 
-namespace GaloisInsertion
+class LatticeBuilder (S: Type*) {α: outParam <| Type*} [SetLike S α] where
+  protected closure: Set α -> S
+  protected create: ∀u: Set α, (∃s: S, u = s) -> S
+  protected create_spec: ∀(u: Set α) (h), create u h = u := by intros; rfl
+  protected gc: ∀(s: Set α) (t: S), s ⊆ t ↔ closure s ⊆ t
+  protected bot : { bot: S // ∀s, bot ⊆ closure s } := ⟨closure ⊥, by
+    intro s
+    apply (gc _ _).mp
+    apply Set.empty_sub⟩
 
-end GaloisInsertion
+namespace LatticeBuilder
+
+variable [SetLike S α] [LatticeBuilder S]
+
+local instance instLE : LE S where
+  le a b := a ⊆ b
+local instance instLT : LT S where
+  lt a b := a ≤ b ∧ ¬b ≤ a
+
+local instance : IsPartialOrder S where
+  lt_iff_le_and_not_ge := Iff.rfl
+  refl _ := Set.sub_refl _
+  trans := Set.sub_trans
+  antisymm ha hb := SetLike.coeInj (Set.sub_antisymm ha hb)
+
+private def closure_ge: ∀s: Set α, s ≤ LatticeBuilder.closure (S := S) s := by
+  intro s
+  apply (LatticeBuilder.gc s _).mpr
+  apply Set.sub_refl
+
+private def closure_eq (s: S) : s = LatticeBuilder.closure s := by
+  apply SetLike.coeInj
+  apply Set.sub_antisymm
+  · apply (LatticeBuilder.gc _ _).mpr
+    apply Set.sub_refl
+  · apply (LatticeBuilder.gc _ _).mp
+    apply Set.sub_refl
+
+class CompleteLattice (α: Type*) extends LE α, LT α, Max α, Min α, Top α, Bot α, SupSet α, InfSet α, IsCompleteLattice α where
+
+def giGenerate : @GaloisInsertion (Set α) S _ _ LatticeBuilder.closure (fun x => x) where
+  gc _ _ := (LatticeBuilder.gc _ _).symm
+  le_l_u _ := closure_ge _
+  choice s hs := LatticeBuilder.create s <| by
+    exists LatticeBuilder.closure s
+    exact le_antisymm (closure_ge s) hs
+  choice_eq := by
+    intro s hs
+    have := le_antisymm (closure_ge s) hs
+    apply SetLike.coeInj; simp
+    rwa [LatticeBuilder.create_spec s ⟨_, this⟩]
+
+end LatticeBuilder
