@@ -6,7 +6,7 @@ class HasChar (α: Type*) [AddMonoidOps α] [IsAddMonoid α] (c: outParam ℕ) w
 
 namespace HasChar
 
-variable [AddMonoidOps α] [IsAddMonoid α]
+variable [AddMonoidOps α] [IsAddMonoid α] [AddMonoidOps β] [IsAddMonoid β]
 
 def char_dvd [HasChar α c] (n: ℕ) : (∀a: α, n • a = 0) -> c ∣ n :=
   (HasChar.dvd_iff_nsmul_eq_zero n).mpr
@@ -65,6 +65,32 @@ def char_exists (α: Type*) [AddMonoidOps α] [IsAddMonoid α] : ∃n, HasChar �
 
 noncomputable def char (α: Type*) [AddMonoidOps α] [IsAddMonoid α]: ℕ := Classical.choose (char_exists α)
 def char_spec (α: Type*) [AddMonoidOps α] [IsAddMonoid α]: HasChar α (char α) := Classical.choose_spec (char_exists α)
+
+def of_eqv [HasChar α n] (eqv: α ≃+ β) : HasChar β n where
+  dvd_iff_nsmul_eq_zero x := by
+    apply Iff.intro
+    intro h a
+    apply inj eqv.symm
+    rw [map_nsmul, nsmul_eq_zero, map_zero]
+    assumption
+    intro h
+    apply char_dvd (α := α)
+    intro a
+    apply inj eqv
+    rw [map_nsmul, map_zero]
+    apply h
+
+def char_one_iff_subsingleton : HasChar α 1 ↔ Subsingleton α where
+  mp h := by
+    suffices ∀x: α, x = 0 by
+      apply Subsingleton.intro
+      intro a b; rw [this a, this b]
+    intro a
+    rw [←one_nsmul a, spec]
+  mpr _ := {
+    dvd_iff_nsmul_eq_zero n := by
+      simp; intro; apply Subsingleton.allEq
+  }
 
 end HasChar
 
