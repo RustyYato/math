@@ -13,7 +13,7 @@ class IsCompleteSemilatticeSup (α: Type*) [LE α] [LT α] [Max α] [SupSet α] 
 class IsCompleteSemilatticeInf (α: Type*) [LE α] [LT α] [Min α] [InfSet α] [Top α] [Bot α] : Prop extends IsSemiLatticeMin α, IsLawfulInf α, IsLawfulTop α, IsLawfulBot α where
   protected le_sInf (U: Set α) (x: α) : (∀u ∈ U, x ≤ u) -> x ≤ ⨅ U
 
-class IsCompleteLattice (α: Type*) [LE α] [LT α] [Max α] [Min α] [SupSet α] [InfSet α] [Top α] [Bot α] : Prop extends IsCompleteSemilatticeInf α, IsCompleteSemilatticeSup α, IsLawfulTop α, IsLawfulBot α where
+class IsCompleteLattice (α: Type*) [LE α] [LT α] [Max α] [Min α] [SupSet α] [InfSet α] [Top α] [Bot α] : Prop extends IsCompleteSemilatticeInf α, IsCompleteSemilatticeSup α, IsLattice α, IsLawfulTop α, IsLawfulBot α where
 
 section
 

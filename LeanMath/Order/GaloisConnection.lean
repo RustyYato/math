@@ -1,6 +1,7 @@
 import LeanMath.Order.CompleteLattice
 import LeanMath.Order.Monotone
 import LeanMath.Order.Set
+import LeanMath.Data.Set.Order
 
 variable {α β : Type*} [LT α] [LE α] [LT β] [LE β]
 
@@ -175,15 +176,15 @@ end IsLawfulTop
 
 section IsLawfulTop
 
-variable [IsPartialOrder α] [IsPreorder β] [Top β] [IsLawfulTop β]
+-- variable [IsPartialOrder α] [IsPreorder β] [Top β] [IsLawfulTop β]
 
-class LawfulTop (gc: GaloisConnection l u) extends Top α, IsLawfulTop α where
+-- class LawfulTop (gc: GaloisConnection l u) extends Top α, IsLawfulTop α where
 
-scoped instance (priority := 1) instLawfulTop : LawfulTop gc where
-  top := u ⊤
-  le_top _ := by
-    apply gc.le_u
-    apply le_top
+-- scoped instance (priority := 1) instLawfulTop : LawfulTop gc where
+--   top := u ⊤
+--   le_top _ := by
+--     apply gc.le_u
+--     apply le_top
 
 end IsLawfulTop
 
@@ -208,15 +209,15 @@ end IsLawfulBot
 
 section IsLawfulBot
 
-variable [IsPreorder α] [IsPartialOrder β] [Bot α] [IsLawfulBot α]
+-- variable [IsPreorder α] [IsPartialOrder β] [Bot α] [IsLawfulBot α]
 
-class LawfulBot (gc: GaloisConnection l u) extends Bot β, IsLawfulBot β where
+-- class LawfulBot (gc: GaloisConnection l u) extends Bot β, IsLawfulBot β where
 
-scoped instance (priority := 1) instLawfllBot : LawfulBot gc where
-  bot := l ⊥
-  bot_le _ := by
-    apply gc.l_le
-    apply bot_le
+-- scoped instance (priority := 1) instLawfulBot : LawfulBot gc where
+--   bot := l ⊥
+--   bot_le _ := by
+--     apply gc.l_le
+--     apply bot_le
 
 end IsLawfulBot
 
@@ -243,6 +244,40 @@ variable [Min α] [Min β] [IsSemiLatticeMin α] [IsSemiLatticeMin β]
 def u_min : u (a₁ ⊓ a₂) = u a₁ ⊓ u a₂ := gc.dual.l_max
 
 end SemilatticeMin
+
+section Structures
+
+-- all of these classes should not be used directly as bounds
+
+variable (α: Type*) [LE α] [LT α] [IsPartialOrder α]
+
+protected class LawfulTop extends Top α, IsLawfulTop α where
+protected class LawfulBot extends Bot α, IsLawfulBot α where
+
+protected class SemilatticeMax extends
+  Max α, IsSemiLatticeMax α where
+protected class SemilatticeMin extends
+  Min α, IsSemiLatticeMin α where
+protected class Lattice extends
+  GaloisConnection.SemilatticeMax α, GaloisConnection.SemilatticeMin α where
+
+protected class CompleteSemilatticeSup extends
+  GaloisConnection.SemilatticeMax α,
+  GaloisConnection.LawfulTop α,
+  GaloisConnection.LawfulBot α,
+  SupSet α, IsCompleteSemilatticeSup α where
+protected class CompleteSemilatticeInf extends
+  GaloisConnection.SemilatticeMin α,
+  GaloisConnection.LawfulTop α,
+  GaloisConnection.LawfulBot α,
+  InfSet α, IsCompleteSemilatticeInf α  where
+
+protected class CompleteLattice extends
+  GaloisConnection.CompleteSemilatticeSup α,
+  GaloisConnection.CompleteSemilatticeInf α,
+  IsCompleteLattice α where
+
+end Structures
 
 end GaloisConnection
 
@@ -279,6 +314,118 @@ abbrev GaloisCoinsertion.dual (gi: GaloisCoinsertion l u) : GaloisInsertion
   le_l_u := gi.u_l_le
   choice := gi.choice
   choice_eq := gi.choice_eq
+
+abbrev GaloisInsertion.instSemilatticeMax [Max α] [IsPartialOrder β] [IsSemiLatticeMax α] (gi: GaloisInsertion l u) : GaloisConnection.SemilatticeMax β where
+  max a b := l (u a ⊔ u b)
+  left_le_max {a b} := by
+    apply le_trans
+    apply gi.le_l_u
+    apply gi.gc.monotone_l
+    apply left_le_max
+  right_le_max {a b} := by
+    apply le_trans
+    apply gi.le_l_u
+    apply gi.gc.monotone_l
+    apply right_le_max
+  max_le {x a b} ha hb := by
+    apply gi.gc.l_le
+    apply max_le <;> (apply gi.gc.monotone_u; assumption)
+abbrev GaloisInsertion.instSemilatticeMin [Min α] [IsPartialOrder β] [IsSemiLatticeMin α] (gi: GaloisInsertion l u) : GaloisConnection.SemilatticeMin β where
+  min a b := gi.choice (u a ⊓ u b) <| by
+    apply le_min <;> (apply gi.gc.monotone_u; apply gi.gc.l_le)
+    apply min_le_left
+    apply min_le_right
+  min_le_left {a b}:= by
+    rw [gi.choice_eq]
+    apply gi.gc.l_le
+    apply min_le_left
+  min_le_right {a b}:= by
+    rw [gi.choice_eq]
+    apply gi.gc.l_le
+    apply min_le_right
+  le_min {x a b} ha hb := by
+    rw [gi.choice_eq]
+    apply le_trans
+    apply gi.le_l_u
+    apply gi.gc.monotone_l
+    apply le_min <;> (apply gi.gc.monotone_u; assumption)
+
+abbrev GaloisInsertion.liftLattice [Min α] [Max α] [IsPartialOrder β] [IsLattice α] (gi: GaloisInsertion l u) : GaloisConnection.Lattice β :=
+  { gi.instSemilatticeMax, gi.instSemilatticeMin with }
+
+
+abbrev GaloisInsertion.instLawfulTop [Top α] [IsLawfulTop α] [IsPreorder α] [IsPreorder β] (gi : GaloisInsertion l u) : GaloisConnection.LawfulTop β where
+  top := gi.choice ⊤ (le_top _)
+  le_top x := by
+    show _ ≤ gi.choice ⊤ (le_top _)
+    rw [gi.choice_eq]
+    apply le_trans
+    apply gi.le_l_u
+    apply gi.gc.monotone_l
+    apply le_top
+
+abbrev GaloisInsertion.instLawfulBot [Bot α] [IsLawfulBot α] [IsPreorder α] [IsPreorder β] (gi : GaloisInsertion l u) : GaloisConnection.LawfulBot β where
+  bot := l ⊥
+  bot_le x := by
+    apply gi.gc.l_le
+    apply bot_le
+
+abbrev GaloisInsertion.liftCompleteSemilatticeSup
+  [Max α] [Min α] [SupSet α] [InfSet α] [Top α] [Bot α] [IsCompleteLattice α]
+  [IsPartialOrder β] (gi : GaloisInsertion l u) : GaloisConnection.CompleteSemilatticeSup β := {
+    gi.liftLattice, gi.instLawfulTop, gi.instLawfulBot with
+    sSup S := l <| ⨆ (S.image u)
+    sSup_le S b h := by
+      apply gi.gc.l_le
+      apply sSup_le
+      rintro _ ⟨a, _, rfl⟩
+      apply gi.gc.monotone_u
+      apply h
+      assumption
+    le_sSup S b hb := by
+      apply le_trans
+      apply gi.le_l_u
+      apply gi.gc.monotone_l
+      apply le_sSup
+      apply Set.mem_image'
+      assumption
+  }
+
+abbrev GaloisInsertion.liftCompleteSemilatticeInf
+  [Max α] [Min α] [SupSet α] [InfSet α] [Top α] [Bot α] [IsCompleteLattice α]
+  [IsPartialOrder β] (gi : GaloisInsertion l u) : GaloisConnection.CompleteSemilatticeInf β := {
+    gi.liftLattice, gi.instLawfulTop, gi.instLawfulBot with
+    sInf S := gi.choice (⨅ (S.image u)) <| by
+      apply le_sInf
+      rintro _ ⟨b, hb, rfl⟩
+      apply gi.gc.monotone_u
+      apply gi.gc.l_le
+      apply sInf_le
+      apply Set.mem_image'
+      assumption
+    le_sInf S b h := by
+      rw [gi.choice_eq]
+      apply le_trans
+      apply gi.le_l_u
+      apply gi.gc.monotone_l
+      apply le_sInf
+      rintro _ ⟨a, _, rfl⟩
+      apply gi.gc.monotone_u
+      apply h
+      assumption
+    sInf_le S b hb := by
+      rw [gi.choice_eq]
+      apply gi.gc.l_le
+      apply sInf_le
+      apply Set.mem_image'
+      assumption
+  }
+
+abbrev GaloisInsertion.liftCompleteLattice
+  [Max α] [Min α] [SupSet α] [InfSet α] [Top α] [Bot α] [IsCompleteLattice α]
+  [IsPartialOrder β] (gi : GaloisInsertion l u) : GaloisConnection.CompleteLattice β := {
+    gi.liftCompleteSemilatticeSup, gi.liftCompleteSemilatticeInf with
+  }
 
 class LatticeBuilder (S: Type*) {α: outParam <| Type*} [SetLike S α] where
   protected closure: Set α -> S
@@ -331,5 +478,18 @@ def giGenerate : @GaloisInsertion (Set α) S _ _ LatticeBuilder.closure (fun x =
     have := le_antisymm (closure_ge s) hs
     apply SetLike.coeInj; simp
     rwa [LatticeBuilder.create_spec s ⟨_, this⟩]
+
+protected class LatticeBuilder.CompleteLattice (α: Type*) extends
+  LE α, LT α, IsPartialOrder α,
+  GaloisConnection.CompleteLattice α where
+
+def toCompleteLattice : LatticeBuilder.CompleteLattice S where
+  toCompleteLattice := {
+    giGenerate.liftCompleteLattice with
+    bot := LatticeBuilder.bot.val
+    bot_le s := by
+      rw [LatticeBuilder.closure_eq s]
+      apply LatticeBuilder.bot.property
+  }
 
 end LatticeBuilder
