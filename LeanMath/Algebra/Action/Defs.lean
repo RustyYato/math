@@ -53,16 +53,6 @@ instance [Mul R] [IsComm R] [SMul R α]
 instance [Mul R] [SMul R α] [IsLawfulMulSMul R α] : IsScalarTower R R α where
   smul_assoc r s a := by rw [←mul_smul]; rfl
 
-class IsSMulHom (F R α β: Type*) [FunLike F α β] [SMul R α] [SMul R β] : Prop where
-  protected map_smul (f: F) (r: R) (a: α) : f (r • a) = r • f a := by intro f; exact f.map_smul
-
-def map_smul [FunLike F α β] [SMul R α] [SMul R β] [IsSMulHom F R α β] (f: F) (r: R) (a: α) : f (r • a) = r • f a := IsSMulHom.map_smul _ _ _
-
-structure SMulHom (R α β: Type*) [SMul R α] [SMul R β] extends Hom α β where
-  protected map_smul (r: R) (a: α) : toFun (r • a) = r • toFun a
-
-structure SMulEquiv (R α β: Type*) [SMul R α] [SMul R β] extends α ≃ β, SMulHom R α β where
-
 structure LinearHom (R α β: Type*) [SMul R α] [SMul R β] [Add α] [Add β] extends SMulHom R α β, AddHom α β where
 
 structure LinearEquiv (R α β: Type*) [SMul R α] [SMul R β] [Add α] [Add β] extends α ≃ β, LinearHom R α β where
@@ -73,12 +63,6 @@ notation:25 A " ≃ₗ[" R "] " B => LinearEquiv R A B
 variable
   [Add α] [Add β] [Add γ]
   [SMul R α] [SMul R β] [SMul R γ]
-
-instance : FunLike (SMulHom R α β) α β where
-instance : IsSMulHom (SMulHom R α β) R α β where
-
-instance : FunLike (SMulEquiv R α β) α β where
-instance : IsSMulHom (SMulEquiv R α β) R α β where
 
 instance : FunLike (α →ₗ[R] β) α β where
 instance : IsSMulHom (α →ₗ[R] β) R α β where

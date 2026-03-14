@@ -94,6 +94,14 @@ structure MulHom (α β: Type*) [Mul α] [Mul β] extends Hom α β where
 structure AddHom (α β: Type*) [Add α] [Add β] extends Hom α β where
   protected map_add (a₀ a₁): toFun (a₀ + a₁) = toFun a₀ + toFun a₁
 
+class IsSMulHom (F R α β: Type*) [FunLike F α β] [SMul R α] [SMul R β] : Prop where
+  protected map_smul (f: F) (r: R) (a: α) : f (r • a) = r • f a := by intro f; exact f.map_smul
+
+structure SMulHom (R α β: Type*) [SMul R α] [SMul R β] extends Hom α β where
+  protected map_smul (r: R) (a: α) : toFun (r • a) = r • toFun a
+
+structure SMulEquiv (R α β: Type*) [SMul R α] [SMul R β] extends α ≃ β, SMulHom R α β where
+
 structure PreLogHom (α β: Type*) [Mul α] [Add β] extends Hom α β where
   protected map_mul_to_add (a₀ a₁): toFun (a₀ * a₁) = toFun a₀ + toFun a₁
 
@@ -130,14 +138,23 @@ section
 variable
   [FunLike F α β] [Add α] [Add β] [Add γ] [Mul α] [Mul β] [Mul γ]
   [IsMulHom F α β] [IsAddHom F α β] [IsLogHom F α β] [IsExpHom F α β]
+  [SMul R α] [SMul R β] [IsSMulHom F R α β]
 
 def map_mul (f: F) (a₀ a₁: α) : f (a₀ * a₁) =f a₀ * f a₁ := IsMulHom.map_mul f a₀ a₁
 
 def map_add (f: F) (a₀ a₁: α) : f (a₀ + a₁) = f a₀ + f a₁ := IsAddHom.map_add f a₀ a₁
 
+def map_smul (f: F) (r: R) (a: α) : f (r • a) = r • f a := IsSMulHom.map_smul _ _ _
+
 def map_mul_to_add (f: F) (a₀ a₁: α) : f (a₀ * a₁) = f a₀ + f a₁ := IsLogHom.map_mul_to_add f a₀ a₁
 
 def map_add_to_mul (f: F) (a₀ a₁: α) : f (a₀ + a₁) = f a₀ * f a₁ := IsExpHom.map_add_to_mul f a₀ a₁
+
+instance : FunLike (SMulHom R α β) α β where
+instance : IsSMulHom (SMulHom R α β) R α β where
+
+instance : FunLike (SMulEquiv R α β) α β where
+instance : IsSMulHom (SMulEquiv R α β) R α β where
 
 instance (priority := 10000) : FunLike (α →*ₙ β) α β where
 instance (priority := 10000) : FunLike (α →+ₙ β) α β where
