@@ -83,4 +83,9 @@ def exists_intCast (x: ZMod n) : ∃y: ℤ, x = y := by
   apply ZMod.val_inj.mp
   exact x.mod_eq_self.symm
 
+def nsmul_eq_natCast_mul (m: ℕ) (x: ZMod n) : m • x = m * x := by
+  apply ZMod.val_inj.mp
+  simp
+  rw [Int.mul_emod, x.mod_eq_self]
+
 end ZMod
