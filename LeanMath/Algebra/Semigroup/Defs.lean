@@ -402,6 +402,22 @@ def add_left_comm (a b c: α) [IsAddCommAt a b] : a + (b + c) = b + (a + c) :=
 def add_right_comm (a b c: α) [IsAddCommAt b c] : a + (b + c) = a + c + b :=
   mul_right_comm (a := MulOfAdd.mkHomₙ a) (b := MulOfAdd.mkHomₙ b) (c := MulOfAdd.mkHomₙ c)
 
+def mul_comm_left [Mul α] [IsSemigroup α]
+  (a b c: α) [IsCommAt a b] [IsCommAt a c] [IsCommAt b c] : a * b * c = c * b * a := by
+  rw [mul_assoc, mul_left_comm, mul_comm _ c, ←mul_assoc, mul_comm b]
+
+def mul_comm_right [Mul α] [IsSemigroup α]
+  (a b c: α) [IsCommAt b c] : a * b * c = a * c * b := by
+  rw [mul_assoc, mul_comm _ c, ←mul_assoc]
+
+def add_comm_right [Add α] [IsAddSemigroup α]
+  (a b c: α) [IsAddCommAt b c] : a + b + c = a + c + b := by
+  rw [add_assoc, add_comm _ c, ←add_assoc]
+
+def add_comm_left [Add α] [IsAddSemigroup α]
+  (a b c: α) [IsAddCommAt a c] [IsAddCommAt b c] [IsAddCommAt a b] : a + b + c = c + b + a := by
+  rw [add_assoc, add_left_comm, add_comm _ c, ←add_assoc, add_comm b]
+
 end
 
 instance [RelLike R α] [Mul α] [IsMulCon R] (r: R) : IsMulHom (AlgQuot.MkHom r) α (AlgQuot r) where
