@@ -29,7 +29,7 @@ inductive Closure (U: Set α) : α -> Prop where
 | of (a: α) (h: a ∈ U) : Closure U a
 | zero : Closure U 0
 | one : Closure U 1
-| neg {a: α} : Closure U a -> Closure U (-a)
+| neg ⦃a: α⦄ : Closure U a -> Closure U (-a)
 | add ⦃a b: α⦄ : Closure U a -> Closure U b -> Closure U (a + b)
 | mul ⦃a b: α⦄ : Closure U a -> Closure U b -> Closure U (a * b)
 
@@ -66,7 +66,7 @@ instance : Top (Subring α) where
     toSet := ⊤
     mem_zero := True.intro
     mem_one := True.intro
-    mem_neg _ := True.intro
+    mem_neg _ _ := True.intro
     mem_add _ _ _ _ := True.intro
     mem_mul _ _ _ _ := True.intro
   }

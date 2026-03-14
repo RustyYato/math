@@ -1,8 +1,8 @@
 import LeanMath.Algebra.Group.Defs
 import LeanMath.Algebra.Monoid.Set
 
-def MemInv [Inv α] [SetLike S α] (s: S) := ∀{a: α}, a ∈ s -> a⁻¹ ∈ s
-def MemNeg [Neg α] [SetLike S α] (s: S) := ∀{a: α}, a ∈ s -> -a ∈ s
+def MemInv [Inv α] [SetLike S α] (s: S) := ∀⦃a: α⦄, a ∈ s -> a⁻¹ ∈ s
+def MemNeg [Neg α] [SetLike S α] (s: S) := ∀⦃a: α⦄, a ∈ s -> -a ∈ s
 
 class IsMemInv (S α: Type*) [Inv α] [SetLike S α] where
   protected mem_inv (s: S) : MemInv s := by intro s; exact s.mem_inv
@@ -10,10 +10,10 @@ class IsMemInv (S α: Type*) [Inv α] [SetLike S α] where
 class IsMemNeg (S α: Type*) [Neg α] [SetLike S α] where
   protected mem_neg (s: S) : MemNeg s := by intro s; exact s.mem_neg
 
-def mem_inv [Inv α] [SetLike S α] [IsMemInv S α] (s: S) {a: α}: a ∈ s -> a⁻¹ ∈ s :=
+def mem_inv [Inv α] [SetLike S α] [IsMemInv S α] (s: S): MemInv s :=
   IsMemInv.mem_inv _
 
-def mem_neg [Neg α] [SetLike S α] [IsMemNeg S α] (s: S) {a: α}: a ∈ s -> -a ∈ s :=
+def mem_neg [Neg α] [SetLike S α] [IsMemNeg S α] (s: S): MemNeg s :=
   IsMemNeg.mem_neg _
 
 structure SubInv (α: Type*) [Inv α] where
@@ -51,7 +51,7 @@ variable [Mul α] [Mul β] [Inv α] [Inv β] [One α] [One β]
 inductive Closure (U: Set α) : α -> Prop where
 | of (a: α) (h: a ∈ U) : Closure U a
 | one : Closure U 1
-| inv {a: α} : Closure U a -> Closure U (a⁻¹)
+| inv ⦃a: α⦄ : Closure U a -> Closure U (a⁻¹)
 | mul ⦃a b: α⦄ : Closure U a -> Closure U b -> Closure U (a * b)
 
 def closure (U: Set α) : Subgroup α where
@@ -82,7 +82,7 @@ instance : Top (Subgroup α) where
   top := {
     toSet := ⊤
     mem_one := True.intro
-    mem_inv _ := True.intro
+    mem_inv _ _ := True.intro
     mem_mul _ _ _ _ := True.intro
   }
 
@@ -160,7 +160,7 @@ variable [Add α] [Add β] [Neg α] [Neg β] [Zero α] [Zero β]
 inductive Closure (U: Set α) : α -> Prop where
 | of (a: α) (h: a ∈ U) : Closure U a
 | zero : Closure U 0
-| neg {a: α} : Closure U a -> Closure U (-a)
+| neg ⦃a: α⦄ : Closure U a -> Closure U (-a)
 | add ⦃a b: α⦄ : Closure U a -> Closure U b -> Closure U (a + b)
 
 def closure (U: Set α) : AddSubgroup α where
@@ -190,7 +190,7 @@ instance : Top (AddSubgroup α) where
   top := {
     toSet := ⊤
     mem_zero := True.intro
-    mem_neg _ := True.intro
+    mem_neg _ _ := True.intro
     mem_add _ _ _ _ := True.intro
   }
 

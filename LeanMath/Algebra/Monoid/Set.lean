@@ -70,9 +70,9 @@ def closure (U: Set α) : SubMonoid α where
   mem_one := Closure.one
   mem_mul := Closure.mul
 
-def sub_closure (U: Set α) : U ⊆ SubSemigroup.closure U := by
+def sub_closure (U: Set α) : U ⊆ closure U := by
   intro a ha
-  apply SubSemigroup.Closure.of
+  apply Closure.of
   assumption
 
 def of_mem_closure [SetLike S α] [IsMemMul S α] [IsMemOne S α] (U: Set α) (s: S)

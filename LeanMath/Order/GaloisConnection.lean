@@ -427,6 +427,7 @@ abbrev GaloisInsertion.liftCompleteLattice
     gi.liftCompleteSemilatticeSup, gi.liftCompleteSemilatticeInf with
   }
 
+-- NOTE: the defaults given here are to make the algbra instances of this easier
 class LatticeBuilder (S: Type*) {α: outParam <| Type*} [SetLike S α] where
   protected closure: Set α -> S := by exact closure
   protected create: ∀u: Set α, (∃s: S, u = s) -> S
