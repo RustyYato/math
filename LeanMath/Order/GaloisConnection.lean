@@ -428,14 +428,23 @@ abbrev GaloisInsertion.liftCompleteLattice
   }
 
 class LatticeBuilder (S: Type*) {α: outParam <| Type*} [SetLike S α] where
-  protected closure: Set α -> S
+  protected closure: Set α -> S := by exact closure
   protected create: ∀u: Set α, (∃s: S, u = s) -> S
   protected create_spec: ∀(u: Set α) (h), create u h = u := by intros; rfl
-  protected gc: ∀(s: Set α) (t: S), s ⊆ t ↔ closure s ⊆ t
-  protected bot : { bot: S // ∀s, bot ⊆ closure s } := ⟨closure ⊥, by
-    intro s
-    apply (gc _ _).mp
-    apply Set.empty_sub⟩
+  protected gc: ∀(s: Set α) (t: S), s ⊆ t ↔ closure s ⊆ t := by
+    intro s i
+    apply Iff.intro
+    intro h x hx
+    show x ∈ i; apply of_mem_closure _ _ _ hx
+    apply h
+    intro h x hx
+    apply h
+    apply sub_closure
+    assumption
+  protected bot : { bot: S // ∀s, bot ⊆ closure s } := by exact {
+    val := ⊥
+    property u := bot_sub _
+  }
 
 namespace LatticeBuilder
 
