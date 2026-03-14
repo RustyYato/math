@@ -11,13 +11,17 @@ infixr:50 " ↪ " => Embedding
 class EmbeddingLike (F: Sort*) (α β: outParam Sort*) where
   protected coeEmbedding : F -> α ↪ β := by intro f; exact f.toEmbedding
   protected coeInj : Function.Injective coeEmbedding := by
+    first|(
+      intro a b h
+      dsimp at h
+      exact DFunLike.coeInj (Embedding.mk.inj h))|(
     intro a b h
     cases a; cases b
     dsimp at h
     congr
     try
       apply EmbeddingLike.coeInj
-      assumption
+      assumption)
 
 --- This is not the interface for ops, just ensures that
 --- all ops are implemented
