@@ -37,8 +37,8 @@ instance [SetLike S α] : SetLike (MulOfAdd S) (MulOfAdd α) where
     replace hx : MulOfAdd.get (MulOfAdd.mk x) ∈ _ := hx
     rwa [←Set.mem_preimage, ←h, Set.mem_preimage] at hx
 
-def MemMul [SetLike S α] [Mul α] (s: S) := ∀{a b: α}, a ∈ s -> b ∈ s -> a * b ∈ s
-def MemAdd [SetLike S α] [Add α] (s: S) := ∀{a b: α}, a ∈ s -> b ∈ s -> a + b ∈ s
+def MemMul [SetLike S α] [Mul α] (s: S) := ∀⦃a b: α⦄, a ∈ s -> b ∈ s -> a * b ∈ s
+def MemAdd [SetLike S α] [Add α] (s: S) := ∀⦃a b: α⦄, a ∈ s -> b ∈ s -> a + b ∈ s
 
 class IsMemMul (S α: Type*) [Mul α] [SetLike S α] where
   protected mem_mul (s: S) : MemMul s := by intro s; exact s.mem_mul
@@ -92,7 +92,7 @@ namespace SubSemigroup
 
 inductive Closure (U: Set α) : α -> Prop where
 | of (a: α) (h: a ∈ U) : Closure U a
-| mul {a b: α} : Closure U a -> Closure U b -> Closure U (a * b)
+| mul ⦃a b: α⦄ : Closure U a -> Closure U b -> Closure U (a * b)
 
 def closure (U: Set α) : SubSemigroup α where
   toSet := Set.ofMem (Closure U)
@@ -118,7 +118,7 @@ def of_mem_closure [SetLike S α] [IsMemMul S α] (U: Set α) (s: S)
 instance : Top (SubSemigroup α) where
   top := {
     toSet := ⊤
-    mem_mul _ _ := True.intro
+    mem_mul _ _ _ _ := True.intro
   }
 
 instance : Bot (SubSemigroup α) where
@@ -170,7 +170,7 @@ namespace AddSubSemigroup
 
 inductive Closure (U: Set α) : α -> Prop where
 | of (a: α) (h: a ∈ U) : Closure U a
-| add {a b: α} : Closure U a -> Closure U b -> Closure U (a + b)
+| add ⦃a b: α⦄ : Closure U a -> Closure U b -> Closure U (a + b)
 
 def closure (U: Set α) : AddSubSemigroup α where
   toSet := Set.ofMem (Closure U)
@@ -196,7 +196,7 @@ def of_mem_closure [SetLike S α] [IsMemAdd S α] (U: Set α) (s: S)
 instance : Top (AddSubSemigroup α) where
   top := {
     toSet := ⊤
-    mem_add _ _ := True.intro
+    mem_add _ _ _ _ := True.intro
   }
 
 instance : Bot (AddSubSemigroup α) where

@@ -52,7 +52,7 @@ inductive Closure (U: Set α) : α -> Prop where
 | of (a: α) (h: a ∈ U) : Closure U a
 | one : Closure U 1
 | inv {a: α} : Closure U a -> Closure U (a⁻¹)
-| mul {a b: α} : Closure U a -> Closure U b -> Closure U (a * b)
+| mul ⦃a b: α⦄ : Closure U a -> Closure U b -> Closure U (a * b)
 
 def closure (U: Set α) : Subgroup α where
   toSet := Set.ofMem (Closure U)
@@ -83,7 +83,7 @@ instance : Top (Subgroup α) where
     toSet := ⊤
     mem_one := True.intro
     mem_inv _ := True.intro
-    mem_mul _ _ := True.intro
+    mem_mul _ _ _ _ := True.intro
   }
 
 instance [IsLawfulOneMul α] [IsLawfulOneInv α] : Bot (Subgroup α) where
@@ -161,7 +161,7 @@ inductive Closure (U: Set α) : α -> Prop where
 | of (a: α) (h: a ∈ U) : Closure U a
 | zero : Closure U 0
 | neg {a: α} : Closure U a -> Closure U (-a)
-| add {a b: α} : Closure U a -> Closure U b -> Closure U (a + b)
+| add ⦃a b: α⦄ : Closure U a -> Closure U b -> Closure U (a + b)
 
 def closure (U: Set α) : AddSubgroup α where
   toSet := Set.ofMem (Closure U)
@@ -191,7 +191,7 @@ instance : Top (AddSubgroup α) where
     toSet := ⊤
     mem_zero := True.intro
     mem_neg _ := True.intro
-    mem_add _ _ := True.intro
+    mem_add _ _ _ _ := True.intro
   }
 
 instance [IsLawfulZeroAdd α] [IsLawfulNegZero α] : Bot (AddSubgroup α) where

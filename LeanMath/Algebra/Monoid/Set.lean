@@ -63,7 +63,7 @@ namespace SubMonoid
 inductive Closure (U: Set α) : α -> Prop where
 | of (a: α) (h: a ∈ U) : Closure U a
 | one : Closure U 1
-| mul {a b: α} : Closure U a -> Closure U b -> Closure U (a * b)
+| mul ⦃a b: α⦄ : Closure U a -> Closure U b -> Closure U (a * b)
 
 def closure (U: Set α) : SubMonoid α where
   toSet := Set.ofMem (Closure U)
@@ -90,7 +90,7 @@ instance : Top (SubMonoid α) where
   top := {
     toSet := ⊤
     mem_one := True.intro
-    mem_mul _ _ := True.intro
+    mem_mul _ _ _ _ := True.intro
   }
 
 instance [IsLawfulOneMul α] : Bot (SubMonoid α) where
@@ -154,7 +154,7 @@ namespace AddSubMonoid
 inductive Closure (U: Set α) : α -> Prop where
 | of (a: α) (h: a ∈ U) : Closure U a
 | zero : Closure U 0
-| add {a b: α} : Closure U a -> Closure U b -> Closure U (a + b)
+| add ⦃a b: α⦄ : Closure U a -> Closure U b -> Closure U (a + b)
 
 def closure (U: Set α) : AddSubMonoid α where
   toSet := Set.ofMem (Closure U)
@@ -181,7 +181,7 @@ instance : Top (AddSubMonoid α) where
   top := {
     toSet := ⊤
     mem_zero := True.intro
-    mem_add _ _ := True.intro
+    mem_add _ _ _ _ := True.intro
   }
 
 instance [IsLawfulZeroAdd α] : Bot (AddSubMonoid α) where

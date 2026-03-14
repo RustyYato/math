@@ -18,9 +18,9 @@ namespace Ideal
 inductive Closure (U: Set α) : α -> Prop where
 | of (a: α) (h: a ∈ U) : Closure U a
 | zero : Closure U 0
-| add {a b: α} : Closure U a -> Closure U b -> Closure U (a + b)
-| mul_left {a: α} (k: α) : Closure U a -> Closure U (k * a)
-| mul_right {a: α} (k: α) : Closure U a -> Closure U (a * k)
+| add ⦃a b: α⦄ : Closure U a -> Closure U b -> Closure U (a + b)
+| mul_left ⦃a: α⦄ (k: α) : Closure U a -> Closure U (k * a)
+| mul_right ⦃a: α⦄ (k: α) : Closure U a -> Closure U (a * k)
 
 def closure (U: Set α) : Ideal α where
   toSet := Set.ofMem (Closure U)
@@ -52,9 +52,9 @@ instance : Top (Ideal α) where
   top := {
     toSet := ⊤
     mem_zero := True.intro
-    mem_add _ _ := True.intro
-    mem_left_mul _ _ := True.intro
-    mem_right_mul _ _ := True.intro
+    mem_add _ _ _ _ := True.intro
+    mem_left_mul _ _ _ := True.intro
+    mem_right_mul _ _ _ := True.intro
   }
 
 instance : Bot (Ideal α) where

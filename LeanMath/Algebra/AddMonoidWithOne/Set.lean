@@ -44,7 +44,7 @@ inductive Closure (U: Set α) : α -> Prop where
 | of (a: α) (h: a ∈ U) : Closure U a
 | zero : Closure U 0
 | one : Closure U 1
-| add {a b: α} : Closure U a -> Closure U b -> Closure U (a + b)
+| add ⦃a b: α⦄ : Closure U a -> Closure U b -> Closure U (a + b)
 
 def closure (U: Set α) : AddSubMonoidWithOne α where
   toSet := Set.ofMem (Closure U)
@@ -73,7 +73,7 @@ instance : Top (AddSubMonoidWithOne α) where
     toSet := ⊤
     mem_zero := True.intro
     mem_one := True.intro
-    mem_add _ _ := True.intro
+    mem_add _ _ _ _ := True.intro
   }
 
 def mem_top (a: α) : a ∈ (⊤: AddSubMonoidWithOne α) := True.intro

@@ -1,8 +1,8 @@
 import LeanMath.Algebra.Semiring.Defs
 import LeanMath.Data.Set.Defs
 
-def MemLeftMul [SetLike S α] [Mul α] (s: S) := ∀{a: α} (k: α), a ∈ s -> k * a ∈ s
-def MemRightMul [SetLike S α] [Mul α] (s: S) := ∀{a: α} (k: α), a ∈ s -> a * k ∈ s
+def MemLeftMul [SetLike S α] [Mul α] (s: S) := ∀⦃a: α⦄ (k: α), a ∈ s -> k * a ∈ s
+def MemRightMul [SetLike S α] [Mul α] (s: S) := ∀⦃a: α⦄ (k: α), a ∈ s -> a * k ∈ s
 
 class IsMemLeftMul (S α: Type*) [SetLike S α] [Mul α] where
   protected mem_left_mul (s: S) : MemLeftMul s := by intro s; exact s.mem_left_mul

@@ -36,7 +36,7 @@ variable [Zero β] [Add β]
 inductive Span (R: Type*) [SMul R α] (U: Set α) : α -> Prop where
 | of (a: α) (h: a ∈ U) : Span R U a
 | zero : Span R U 0
-| add {a b: α} : Span R U a -> Span R U b -> Span R U (a + b)
+| add ⦃a b: α⦄ : Span R U a -> Span R U b -> Span R U (a + b)
 | smul (r: R) {a: α} : Span R U a -> Span R U (r • a)
 
 def span (R: Type*) [SMul R α] (U: Set α) : Submodule R α where
@@ -65,7 +65,7 @@ instance : Top (Submodule R α) where
   top := {
     toSet := ⊤
     mem_zero := True.intro
-    mem_add _ _ := True.intro
+    mem_add _ _ _ _ := True.intro
     mem_smul _ _ _ := True.intro
   }
 

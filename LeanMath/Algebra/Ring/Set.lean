@@ -30,8 +30,8 @@ inductive Closure (U: Set α) : α -> Prop where
 | zero : Closure U 0
 | one : Closure U 1
 | neg {a: α} : Closure U a -> Closure U (-a)
-| add {a b: α} : Closure U a -> Closure U b -> Closure U (a + b)
-| mul {a b: α} : Closure U a -> Closure U b -> Closure U (a * b)
+| add ⦃a b: α⦄ : Closure U a -> Closure U b -> Closure U (a + b)
+| mul ⦃a b: α⦄ : Closure U a -> Closure U b -> Closure U (a * b)
 
 def closure (U: Set α) : Subring α where
   toSet := Set.ofMem (Closure U)
@@ -67,8 +67,8 @@ instance : Top (Subring α) where
     mem_zero := True.intro
     mem_one := True.intro
     mem_neg _ := True.intro
-    mem_add _ _ := True.intro
-    mem_mul _ _ := True.intro
+    mem_add _ _ _ _ := True.intro
+    mem_mul _ _ _ _ := True.intro
   }
 
 def mem_top (a: α) : a ∈ (⊤: Subring α) := True.intro
