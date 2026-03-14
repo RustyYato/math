@@ -189,6 +189,8 @@ instance : IsLattice Int where
 
 variable [DecidableRel (α := α) (· ≤ ·)]
 
+def le_refl [IsPreorder α] (a: α) : a ≤ a := Relation.refl _
+
 def le_trans [IsPreorder α] {a b c: α} : a ≤ b -> b ≤ c -> a ≤ c := Relation.trans
 
 def lt_of_lt_of_le [IsPreorder α] {a b c: α} (h: a < b) (g: b ≤ c) : a < c := by

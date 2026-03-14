@@ -105,6 +105,11 @@ instance : Nonempty (Set α) := inferInstance
 @[simp] def not_mem_bot (a: α) : a ∉ (⊥: Set α) := nofun
 @[simp] def mem_top (a: α) : a ∈ (⊤: Set α) := True.intro
 
+@[simp] def empty_sub (a: Set α) : ∅ ⊆ a := nofun
+@[simp] def bot_sub (a: Set α) : ⊥ ⊆ a := nofun
+@[simp] def sub_top (a: Set α) : a ⊆ ⊤ := by intro _ _; trivial
+
+
 def ext_empty (a: Set α) : (∀x: α, ¬x ∈ a) -> a = ∅ := by
   intro h
   ext x
