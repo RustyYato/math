@@ -36,6 +36,56 @@ instance (priority := 100) [AddGroupOps α] : AddMonoidOps α := inferInstance
 
 instance (priority := 1100) [Zero α] [Add α] [SMul ℕ α] [Neg α] [Sub α] [SMul ℤ α] : AddGroupOps α where
 
+class IsLawfulInvRight (α: Type*) [Mul α] [Inv α] [One α] where
+  protected mul_inv_cancel (a: α) : a * a⁻¹ = 1
+
+class IsLawfulInvLeft (α: Type*) [Mul α] [Inv α] [One α] where
+  protected inv_mul_cancel (a: α) : a⁻¹ * a = 1
+
+class IsLawfulNegRight (α: Type*) [Add α] [Neg α] [Zero α] where
+  protected add_neg_cancel (a: α) : a + -a = 0
+
+class IsLawfulNegLeft (α: Type*) [Add α] [Neg α] [Zero α] where
+  protected neg_add_cancel (a: α) : -a + a = 0
+
+def inv_mul_cancel [Mul α] [Inv α] [One α] [IsLawfulInvLeft α] (a: α) : a⁻¹ * a = 1 :=
+  IsLawfulInvLeft.inv_mul_cancel _
+def mul_inv_cancel [Mul α] [Inv α] [One α] [IsLawfulInvRight α] (a: α) : a * a⁻¹ = 1 :=
+  IsLawfulInvRight.mul_inv_cancel _
+
+def add_neg_cancel [Add α] [Neg α] [Zero α] [IsLawfulNegRight α] (a: α) : a + -a = 0 :=
+  IsLawfulNegRight.add_neg_cancel _
+def neg_add_cancel [Add α] [Neg α] [Zero α] [IsLawfulNegLeft α] (a: α) : -a + a = 0 :=
+  IsLawfulNegLeft.neg_add_cancel _
+
+instance [Mul α] [Inv α] [One α] [IsLawfulInvLeft α] : IsLawfulInvRight αᵐᵒᵖ where
+  mul_inv_cancel := inv_mul_cancel (α := α)
+instance [Mul α] [Inv α] [One α] [IsLawfulInvRight α] : IsLawfulInvLeft αᵐᵒᵖ where
+  inv_mul_cancel := mul_inv_cancel (α := α)
+
+instance [Mul α] [Inv α] [One α] [IsLawfulInvLeft α] : IsLawfulNegLeft (AddOfMul α) where
+  neg_add_cancel := inv_mul_cancel (α := α)
+instance [Mul α] [Inv α] [One α] [IsLawfulInvRight α] : IsLawfulNegRight (AddOfMul α) where
+  add_neg_cancel := mul_inv_cancel (α := α)
+
+instance [Add α] [Neg α] [Zero α] [IsLawfulNegLeft α] : IsLawfulInvLeft (MulOfAdd α) where
+  inv_mul_cancel := neg_add_cancel (α := α)
+instance [Add α] [Neg α] [Zero α] [IsLawfulNegRight α] : IsLawfulInvRight (MulOfAdd α) where
+  mul_inv_cancel := add_neg_cancel (α := α)
+
+instance [Mul α] [Inv α] [One α] [IsSemigroup α] [IsLawfulOneMul α] [IsLawfulInvLeft α] : IsLawfulInvRight α where
+  mul_inv_cancel a := by
+    rw (occs := [1]) [←one_mul a, ←inv_mul_cancel (a⁻¹)]
+    rw [mul_assoc (a⁻¹⁻¹), inv_mul_cancel, mul_one, inv_mul_cancel]
+
+instance [Mul α] [Inv α] [One α] [IsSemigroup α] [IsLawfulOneMul α] [IsLawfulInvRight α] : IsLawfulInvLeft α where
+  inv_mul_cancel := mul_inv_cancel (α := αᵐᵒᵖ)
+
+instance [Add α] [Neg α] [Zero α] [IsAddSemigroup α] [IsLawfulZeroAdd α] [IsLawfulNegLeft α] : IsLawfulNegRight α where
+  add_neg_cancel := add_neg_cancel (α := AddOfMul (MulOfAdd α))
+instance [Add α] [Neg α] [Zero α] [IsAddSemigroup α] [IsLawfulZeroAdd α] [IsLawfulNegRight α] : IsLawfulNegLeft α where
+  neg_add_cancel := inv_mul_cancel (α := MulOfAdd α)
+
 class IsLawfulDiv (α: Type*) [Mul α] [Inv α] [Div α] where
   protected div_eq_mul_inv (a b: α) : a / b = a * b⁻¹
 class IsLawfulSub (α: Type*) [Add α] [Neg α] [Sub α] where
@@ -72,14 +122,9 @@ class IsLawfulZSMul (α: Type*) [AddGroupOps α] : Prop extends IsLawfulNSMul α
 def ofNat_zsmul [AddGroupOps α] [IsLawfulZSMul α] (a: α) (n: ℕ) : (n: ℤ) • a = n • a := IsLawfulZSMul.ofNat_zsmul _ _
 def negSucc_zsmul [AddGroupOps α] [IsLawfulZSMul α] (a: α) (n: ℕ) : (Int.negSucc n) • a = -((n + 1) • a) := IsLawfulZSMul.negSucc_zsmul _ _
 
-class IsGroup (α: Type*) [GroupOps α] : Prop extends IsMonoid α, IsLawfulDiv α, IsLawfulPowZ α where
-  protected mul_inv_cancel (a: α) : a * a⁻¹ = 1
+class IsGroup (α: Type*) [GroupOps α] : Prop extends IsMonoid α, IsLawfulDiv α, IsLawfulPowZ α, IsLawfulInvRight α where
 
-class IsAddGroup (α: Type*) [AddGroupOps α] : Prop extends IsAddMonoid α, IsLawfulSub α, IsLawfulZSMul α where
-  protected add_neg_cancel (a: α) : a + -a = 0
-
-def mul_inv_cancel [GroupOps α] [IsGroup α] (a: α) : a * a⁻¹ = 1 := IsGroup.mul_inv_cancel _
-def add_neg_cancel [AddGroupOps α] [IsAddGroup α] (a: α) : a + -a = 0 := IsAddGroup.add_neg_cancel _
+class IsAddGroup (α: Type*) [AddGroupOps α] : Prop extends IsAddMonoid α, IsLawfulSub α, IsLawfulZSMul α, IsLawfulNegRight α where
 
 instance : IsAddGroup ℤ where
   sub_eq_add_neg _ _ := Int.sub_eq_add_neg
@@ -124,14 +169,6 @@ def eq_inv_of_mul (a b: α) (h: a * b = 1) : a = b⁻¹ := by
 
 def eq_neg_of_add (a b: α) (h: a + b = 0) : a = -b :=
   eq_inv_of_mul (α := MulOfAdd α) _ _ h
-
-def inv_mul_cancel (a: α) : a⁻¹ * a = 1 := by
-  rw (occs := [2]) [←mul_one a]
-  rw (occs := [1]) [←mul_inv_cancel (a⁻¹)]
-  rw [←mul_assoc a, mul_inv_cancel, one_mul, mul_inv_cancel]
-
-def neg_add_cancel (a: α) : -a + a = 0 :=
-  inv_mul_cancel (α := MulOfAdd α) _
 
 def div_self (a: α) : a / a = 1 := by
   rw [div_eq_mul_inv, mul_inv_cancel]

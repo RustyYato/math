@@ -91,4 +91,7 @@ instance [Mul α] : Mul (MulOpp α) where
 instance [Pow α ℕ] : Pow (MulOpp α) ℕ where
   pow a n := .mk (a.get ^ n)
 
+instance [Inv α] : Inv (MulOpp α) where
+  inv a := .mk (a.get⁻¹)
+
 @[simp] def MulOpp.mul_get [Mul α] (a b: MulOpp α) : (a * b).get = b.get * a.get := rfl
