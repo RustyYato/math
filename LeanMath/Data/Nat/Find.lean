@@ -1,4 +1,5 @@
 import LeanMath.Tactic.TypeStar
+import LeanMath.Tactic.AxiomBlame
 
 variable {P: ℕ -> Prop} [DecidablePred P] (h: ∃n, P n)
 
@@ -6,14 +7,14 @@ private structure find_measure (h: ∃n, P n) where
   val: ℕ
   spec: ∀x < val, ¬P x
 
-def find_measure.le_limit {limit: ℕ} (plimit: P limit) (m: find_measure h) : m.val ≤ limit :=
+private def find_measure.le_limit {limit: ℕ} (plimit: P limit) (m: find_measure h) : m.val ≤ limit :=
   Nat.le_of_not_lt fun h => m.spec _ h plimit
 
-def find_measure.of_val (n: ℕ) (hn: ∀m < n, ¬P m) : find_measure h where
+private def find_measure.of_val (n: ℕ) (hn: ∀m < n, ¬P m) : find_measure h where
   val := n
   spec := hn
 
-instance : WellFoundedRelation (find_measure h) where
+instance instWf : WellFoundedRelation (find_measure h) where
   rel x y := y.val < x.val
   wf := by
     -- use id to hide the relation between h and limit
@@ -26,7 +27,11 @@ instance : WellFoundedRelation (find_measure h) where
     apply Acc.intro
     intro b hb
     obtain ⟨k', h⟩ := Nat.exists_eq_add_of_le (b.le_limit h plimit)
-    have : k' < k := by omega
+    have : k' < k := by
+      apply Nat.add_lt_add_iff_left.mp
+      rw [h]
+      apply Nat.add_lt_add_iff_right.mpr
+      assumption
     apply ih
     assumption
     rwa [←h]
