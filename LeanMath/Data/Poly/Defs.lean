@@ -457,4 +457,56 @@ instance [IsComm P] : IsAlgebra P P[X] where
     show C p * ps = ps * C p
     rw [mul_comm]
 
+variable [SemiringOps S] [IsSemiring S] [IsComm S]
+  [SMul P S] [AlgebraMap P S] [IsAlgebra P S]
+
+private def preEval (x: S) : P[X] →+ S :=
+  liftAdd (fun n => {
+    toFun p := p • x ^ n
+    map_zero := by rw [zero_smul]
+    map_add a b := by rw [add_smul]
+  })
+
+def eval
+  (P: Type*) [SemiringOps P] [IsSemiring P]
+  [SMul P S] [AlgebraMap P S] [IsAlgebra P S]
+  (x: S) : P[X] →ₐ[P] S where
+  toAddGroupHom := preEval x
+  map_one := by
+    show liftAdd _ (term _ _) = _
+    rw [liftAdd_term']; simp
+    rw [npow_zero, one_smul]
+  map_mul a b := by
+    show liftAdd _ _ = liftAdd _ a * liftAdd _ b
+    induction a with
+    | add a b iha ihb => simp [add_mul, map_add, iha, ihb]
+    | term =>
+    induction b with
+    | add a b iha ihb => simp [mul_add, map_add, iha, ihb]
+    | term =>
+      simp [liftAdd_term', term_mul_term, smul_def]
+      rw [npow_add, map_mul]
+      ac_rfl
+  map_smul r p := by
+    show preEval _ (r • p) = r • preEval _ p
+    induction p with
+    | add a b iha ihb => rw [smul_add, map_add, iha, ihb,
+      map_add, smul_add]
+    | term p n =>
+      show liftAdd _ _ = r • liftAdd _ _
+      rw [smul_term, liftAdd_term', liftAdd_term']
+      dsimp
+      rw [smul_assoc]
+
+def eval_term (x: S) (n: ℕ) (p: P) : eval P x (term n p) = p • x ^ n := by
+  apply liftAdd_term'
+
+def eval_X (x: S) : eval P x (X: P[X]) = x := by
+  simp [Poly.X]
+  rw [eval_term, npow_one, one_smul]
+
+def eval_C (x: S) (p: P) : eval P x (C p) = algebraMap P p := by
+  show eval P x (term 0 p) = algebraMap P p
+  rw [eval_term, npow_zero, smul_def, mul_one]
+
 end Poly
