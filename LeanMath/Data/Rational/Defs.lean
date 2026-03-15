@@ -1,5 +1,6 @@
 import LeanMath.Algebra.Field.Defs
 import LeanMath.Algebra.Dvd.Defs
+import LeanMath.Data.Int.Prime
 import LeanMath.Tactic.AxiomBlame
 
 @[ext]
@@ -101,29 +102,6 @@ def mk_rel (q: Fract) : (mk q).toFract ≈ q := by
   apply Int.gcd_dvd_right
   apply Int.gcd_dvd_left
 
-private def int_natCast_dvd_natCast {a b: ℕ} : (a: ℤ) ∣ (b: ℤ) ↔ a ∣ b := by
-  apply Iff.intro
-  · intro ⟨k, ha⟩
-    cases k with
-    | negSucc k =>
-      rw [Int.ofNat_mul_negSucc] at ha
-      match a with
-      | a + 1 =>
-        have := Int.natCast_nonneg b
-        rw [ha] at this
-        contradiction
-      | 0 =>
-        rw [zero_mul, natCast_zero, neg_zero] at ha
-        cases Int.ofNat.inj ha
-        apply Nat.dvd_refl
-    | ofNat k =>
-      rw [←natCast_mul] at ha
-      cases Int.ofNat.inj ha
-      apply Nat.dvd_mul_right
-  · intro ⟨k, h⟩
-    exists k
-    rw [←natCast_mul]; congr
-
 private def is_reduced_spec (a b: Fract) :
   a.is_reduced -> b.is_reduced ->
   a ≈ b -> a = b := by
@@ -132,7 +110,7 @@ private def is_reduced_spec (a b: Fract) :
   have h₁ : (b.den: ℤ) ∣ b.num * a.den := by rw [←h]; apply Int.dvd_mul_left
   rw [←Int.dvd_gcd_mul_gcd_iff_dvd_mul, Int.gcd_comm] at h₀ h₁
   rw [ha] at h₀; rw [hb] at h₁
-  rw [natCast_one, one_mul, Int.gcd_natCast_natCast, int_natCast_dvd_natCast] at h₀ h₁
+  rw [natCast_one, one_mul, Int.gcd_natCast_natCast, Int.natCast_dvd_natCast'] at h₀ h₁
   rw [Nat.gcd_comm] at h₁
   have := Nat.dvd_antisymm h₀ (Nat.gcd_dvd_left _ _)
   rw [←Nat.dvd_antisymm h₁ (Nat.gcd_dvd_right _ _)] at this

@@ -25,7 +25,7 @@ def irreducible_iff {n: ℕ} : IsIrreducible n ∧ n ≠ 0 ↔ ∀x, x ∣ n -> 
   apply Iff.intro
   · intro ⟨irred, nz⟩ x hx
     obtain ⟨k, rfl⟩ := hx
-    rcases irred x k rfl with h | h
+    rcases irred rfl with h | h
     · left; apply Nat.dvd_antisymm
       apply Nat.dvd_mul_right
       assumption

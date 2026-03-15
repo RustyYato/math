@@ -1,7 +1,64 @@
 import LeanMath.Algebra.Ring.Defs
 import LeanMath.Algebra.Dvd.Defs
+import LeanMath.Data.Nat.Prime
 
 namespace Int
+
+def natCast_dvd_natCast' {a b: ℕ} : (a: ℤ) ∣ b ↔ a ∣ b := by
+  apply Iff.intro
+  · intro ⟨k, ha⟩
+    cases k with
+    | negSucc k =>
+      rw [Int.ofNat_mul_negSucc] at ha
+      match a with
+      | a + 1 =>
+        have := Int.natCast_nonneg b
+        rw [ha] at this
+        contradiction
+      | 0 =>
+        rw [zero_mul, natCast_zero, neg_zero] at ha
+        cases Int.ofNat.inj ha
+        apply Nat.dvd_refl
+    | ofNat k =>
+      rw [←natCast_mul] at ha
+      cases Int.ofNat.inj ha
+      apply Nat.dvd_mul_right
+  · intro ⟨k, h⟩
+    exists k
+    rw [←natCast_mul]; congr
+
+def minFact (z: ℤ) : ℕ := Nat.minFact z.natAbs
+
+def minFact_dvd (z: ℤ) : (z.minFact: ℤ) ∣ z := by
+  rw [←Int.dvd_natAbs, Int.natCast_dvd_natCast']
+  apply Nat.minFact_dvd
+
+def natCast_is_prime (n: ℕ) (hz: IsPrime n) : IsPrime (n: ℤ) where
+  ne_zero h := hz.ne_zero (Int.ofNat.inj h)
+  not_unit := by
+    intro h
+    rw [Int.is_unit_iff] at h
+    rcases h with h | h
+    cases Int.ofNat.inj h
+    exact hz.not_unit inferInstance
+    contradiction
+  irreducible := by
+    intro a b h
+    have : n = Int.natAbs (a * b) := by rw [←h, Int.natAbs_natCast]
+    rw [Int.natAbs_mul] at this
+    iterate 2 rw [←Int.dvd_natAbs, Int.natCast_dvd_natCast']
+    exact hz.irreducible this
+
+def minFact_prime (z: ℤ) (hz: ¬IsUnit z) : IsPrime (z.minFact: ℤ) := by
+  apply natCast_is_prime
+  apply Nat.minFact_prime
+  intro h
+  rw [Int.natAbs_eq_iff] at h
+  rcases h with rfl | rfl
+  exact hz (by simp; infer_instance)
+  exact hz (by simp; infer_instance)
+
+#print axioms Int.natCast_dvd_natCast
 
 def of_dvd_one (a: ℤ) : a ∣ 1 -> a = 1 ∨ a = -1 := by
   intro h
@@ -56,8 +113,7 @@ def of_eq_one {a b: ℤ} : a * b = 1 -> a = 1 ∧ b = 1 ∨ a = -1 ∧ b = -1 :=
       apply htemp₀
       assumption
 
-def gcd_eq_zero_iff_no_common_prime_factors {a b: ℤ} :
-  Int.gcd a b = 1 ↔ ∀k: ℤ, IsPrime k -> k ∣ a -> k ∣ b -> False := by
+def gcd_eq_one_iff_no_common_prime_factors {a b: ℤ} : Int.gcd a b = 1 ↔ ∀k: ℤ, IsPrime k -> k ∣ a -> k ∣ b -> False := by
   apply Iff.intro
   · intro h k kprime ka kb
     obtain ⟨a, rfl⟩ := ka
@@ -68,6 +124,16 @@ def gcd_eq_zero_iff_no_common_prime_factors {a b: ℤ} :
     exact kprime.not_unit (by simp; infer_instance)
     exact kprime.not_unit (by simp; infer_instance)
   · intro hk
-    sorry
+    apply Decidable.byContradiction
+    intro h
+    refine hk (Nat.minFact (a.gcd b)) (natCast_is_prime _ (Nat.minFact_prime _ h)) ?_ ?_
+    apply Int.dvd_trans
+    apply Int.natCast_dvd_natCast'.mpr
+    apply Nat.minFact_dvd
+    apply Int.gcd_dvd_left
+    apply Int.dvd_trans
+    apply Int.natCast_dvd_natCast'.mpr
+    apply Nat.minFact_dvd
+    apply Int.gcd_dvd_right
 
 end Int
