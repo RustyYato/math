@@ -291,6 +291,24 @@ def not_le [IsLinearOrder α] {a b: α} : ¬a ≤ b ↔ b < a := by
   intro h g
   exact Relation.irrefl (lt_of_le_of_lt g h)
 
+def min_eq [IsLinearOrder α] [IsLattice α] (a b: α) : a ⊓ b = a ∨ a ⊓ b = b := by
+  rcases le_total a b with h | h
+  left; apply le_antisymm
+  apply min_le_left; apply le_min
+  rfl; assumption
+  right; apply le_antisymm
+  apply min_le_right; apply le_min
+  assumption; rfl
+
+def max_eq [IsLinearOrder α] [IsLattice α] (a b: α) : a ⊔ b = a ∨ a ⊔ b = b := by
+  rcases le_total a b with h | h
+  right; apply le_antisymm
+  apply max_le; assumption; rfl
+  apply right_le_max
+  left; apply le_antisymm
+  apply max_le; rfl; assumption
+  apply left_le_max
+
 end
 
 instance [DecidableRel (· ≤ ·: α -> α -> Prop)] [FunLike F α β] [IsOrderHom F α β] [IsPartialOrder α] [IsPreorder β] : EmbeddingLike F α β where

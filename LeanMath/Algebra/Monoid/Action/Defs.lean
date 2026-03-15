@@ -174,3 +174,8 @@ instance [MonoidOps R] [IsMonoid R] [IsDistributiveAction R β] : IsDistributive
   smul_add _ _ _ := by
     apply DFunLike.ext; intro x
     apply smul_add
+
+instance [Zero α] [Mul α] [IsLawfulZeroMul α] : IsLawfulSMulZero α α where
+  smul_zero := mul_zero
+instance [Zero α] [Mul α] [IsLawfulZeroMul α] : IsLawfulZeroSMul α α where
+  zero_smul := zero_mul

@@ -223,3 +223,46 @@ def sum_pairwise (f g: ι -> α) : (∑i, f i + g i) = (∑i, f i) + (∑i, g i)
 
 def prod_pairwise (f g: ι -> α) : (∏i, f i * g i) = (∏i, f i) * (∏i, g i) :=
   sum_pairwise (α := AddOfMul α) _ _
+
+def sum_comm (f: ι -> ι' -> α) : ∑i j, f i j = ∑j i, f i j := by
+  rw [sum_sum, sum_sum]
+  apply sum_reindex Equiv.pprod_comm.toBij
+
+def fin_sum_min (f: Fin n -> α) (m: ℕ) (hm: m ≤ n)
+  : ∑i, f i = (∑i: Fin m, f (i.castLE hm)) + ∑i: Fin (n - m), f ((i.addNat m).cast (by rw [Nat.sub_add_cancel hm])) := by
+  induction n generalizing m with
+  | zero =>
+    cases Nat.le_zero.mp hm
+    symm; apply add_zero
+  | succ n ih =>
+    cases m with
+    | zero =>
+      rw [fin_sum_zero, zero_add]
+      rfl
+    | succ m =>
+      rw [fin_sum_succ, fin_sum_succ, add_assoc]
+      congr 1
+      rw [ih (f := fun i => f i.succ) (m := m)]
+      congr 1
+      rw [sum_reindex (ι' := Fin ((n + 1) - (m + 1))) (ι := Fin (n - m)) (Equiv.fin_cast (by
+        rw [Nat.succ_sub_succ])).toBij]
+      dsimp
+      congr
+      apply Nat.le_of_succ_le_succ
+      assumption
+
+def fin_sum_min' (f: Fin n -> α) (m: ℕ) (hm: m ≤ n) (h: ∀i: Fin n, m ≤ i.val -> f i = 0)
+  : ∑i, f i = (∑i: Fin m, f (i.castLE hm))  := by
+  rw [fin_sum_min f m hm]
+  conv => { lhs; rhs; arg 1; intro i; rw [h _ (by
+    simp)] }
+  rw [sum_zero, add_zero]
+
+def fin_sum_succ_last (f: Fin (n + 1) -> α) : ∑i, f i = (∑i, f (Fin.castSucc i)) + f (Fin.last n) := by
+  rw [sum_reindex Equiv.fin_rev.toBij, fin_sum_succ, sum_reindex Equiv.fin_rev.toBij, add_comm]
+  congr 2; ext i; congr 1
+  show Fin.rev (Fin.rev i).succ = _
+  rw [Fin.rev_succ, Fin.rev_rev]
+
+def sum_zero' (f: ι -> α) (hf: ∀i, f i = 0) : ∑i, f i = 0 := by
+  simp [hf, sum_zero]

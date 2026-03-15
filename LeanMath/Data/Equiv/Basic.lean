@@ -313,6 +313,12 @@ def of_fin_succ (f: Fin (n + 1) ≃ Fin (m + 1)) : Fin n ≃ Fin m :=
     rightInv := by intro x; simp
   }
 
+def fin_cast (h: n = m) : Fin n ≃ Fin m where
+  toFun := Fin.cast h
+  invFun := Fin.cast h.symm
+  leftInv _ := rfl
+  rightInv _ := rfl
+
 def of_fin_eqv (h: Fin n ≃ Fin m) : n = m := by
   induction n generalizing m with
   | zero =>
@@ -323,6 +329,12 @@ def of_fin_eqv (h: Fin n ≃ Fin m) : n = m := by
     cases m with
     | zero => exact (h 0).elim0
     | succ m => rw [ih (of_fin_succ h)]
+
+def fin_rev : Fin n ≃ Fin n where
+  toFun := Fin.rev
+  invFun := Fin.rev
+  leftInv := Fin.rev_rev
+  rightInv := Fin.rev_rev
 
 def ulift (α: Type*) : α ≃ ULift α where
   toFun := ULift.up
