@@ -349,6 +349,11 @@ protected def AddGroupHom.comp [Add γ] [Zero γ] (f: β →+ γ) (g: α →+ β
 @[ext] def LogHom.ext (f g: α →ₘ+ β) (h: ∀x, f x = g x) : f = g := DFunLike.ext f g h
 @[ext] def ExpHom.ext (f g: α →ₐ* β) (h: ∀x, f x = g x) : f = g := DFunLike.ext f g h
 
+@[simp] def GroupHom.apply_mk (f: α -> β) (h) (g) (x: α) : ({toFun := f, map_one := h, map_mul := g }: GroupHom α β) x = f x := rfl
+@[simp] def AddGroupHom.apply_mk (f: α -> β) (h) (g) (x: α) : ({toFun := f, map_zero := h, map_add := g  }: AddGroupHom α β) x = f x := rfl
+@[simp] def LogHom.apply_mk (f: α -> β) (h) (g) (x: α) : ({toFun := f, map_one_to_zero := h, map_mul_to_add := g }: LogHom α β) x = f x := rfl
+@[simp] def ExpHom.apply_mk (f: α -> β) (h) (g) (x: α) : ({toFun := f, map_zero_to_one := h, map_add_to_mul := g }: ExpHom α β) x = f x := rfl
+
 def AddOfMul.mkHom : α →ₘ+ AddOfMul α where
   toFun := mk
   map_one_to_zero := rfl
