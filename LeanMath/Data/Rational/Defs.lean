@@ -360,105 +360,89 @@ instance : Pow Fract ℕ where
 @[simp] def Fract.npow_num (a: Fract) (n: ℕ) : (a ^ n).num = a.num ^ n := rfl
 @[simp] def Fract.npow_den (a: Fract) (n: ℕ) : (a ^ n).den = a.den ^ n := rfl
 
--- private def of_dvd_one (a: ℤ) : a ∣ 1 -> a = 1 ∨ a = -1 := by
---   intro h
---   rcases Int.le_total a 0 with g | g
---   right
---   have := Int.eq_one_of_dvd_one (Int.neg_le_neg g) (by rwa [Int.neg_dvd])
---   rw [←this, neg_neg]
---   left; apply Int.eq_one_of_dvd_one <;> assumption
+instance : Pow ℚ ℕ where
+  pow a n := {
+    toFract := a.toFract ^ n
+    reduced := by
+      show Int.gcd _ _ = _
+      simp
+      apply Int.gcd_eq_one_iff_no_common_prime_factors.mpr
+      have hq := Int.gcd_eq_one_iff_no_common_prime_factors.mp a.reduced
+      intro k kprime ha hb
+      exact hq k kprime (Int.prime_dvd_pow _ _ _ kprime ha) (Int.prime_dvd_pow _ _ _ kprime hb)
+  }
 
--- private def of_dvd_pow (a b: ℤ) (n: ℕ) : a ∣ b ^ n -> a ∣ b ∨ (a = 1 ∨ a = -1) := by
---   intro ha
---   obtain ⟨k, h⟩ := ha
---   have htemp₀ (a k: ℕ) : 1 ≠ (a + 2) * (k + 1) := by
---     rw [mul_add, add_mul, add_mul]
---     simp only [←add_assoc]; intro h
---     have : 2 ≤ 1 := by rw [h]; apply Nat.le_add_left
---     contradiction
---   have htemp₁ (a k: ℕ) : (1: ℤ) ≠ -((a + 2) * k: ℕ) := by
---     intro h
---     have := Int.zero_lt_one
---     rw [h] at this
---     exact Int.not_le.mpr this (Int.neg_natCast_le_ofNat _ _)
---   induction n generalizing k with
---   | zero =>
---     simp at h
---     match a with
---     | 1 | -1 => right; decide
---     | 0 => rw [zero_mul] at h; contradiction
---     | (a + 2: ℕ) =>
---       match k with
---       | 0 => rw [mul_zero] at h; contradiction
---       | (k + 1: ℕ) =>
---         rw [←natCast_mul] at h
---         have := Int.ofNat.inj h
---         exfalso; apply htemp₀
---         assumption
---       | -(k + 1: ℕ) =>
---         exfalso
---         rw [←neg_mul_right, ←natCast_mul] at h
---         apply htemp₁
---         assumption
---     | -(a + 2: ℕ) =>
---       rw [←neg_mul_left] at h
---       exfalso
---       match k with
---       | (k: ℕ) =>
---         rw [←natCast_mul] at h
---         apply htemp₁
---         assumption
---       | -(k + 1: ℕ) =>
---         rw [neg_mul_right, neg_neg, ←natCast_mul] at h
---         replace h := Int.ofNat.inj h
---         apply htemp₀
---         assumption
---   | succ n ih =>
---     rw [npow_succ] at h
+#print axioms instPowNat
 
---     sorry
---     -- rcases ih with ih | ih
---     -- · sorry
---     -- sorry
+instance : CheckedDiv? ℚ where
+  checked_div a b hb := a * b⁻¹?
 
--- #axiom_blame of_dvd_pow
+instance : CheckedZPow? ℚ where
+  checked_pow a n ha :=
+    match n with
+    | .ofNat n => a ^ n
+    | .negSucc n => (a⁻¹?) ^ (n + 1)
 
--- instance : Pow ℚ ℕ where
---   pow a n := {
---     toFract := a.toFract ^ n
---     reduced := by
---       show Int.gcd _ _ = _
---       simp
---       obtain ⟨⟨num, den, dnz⟩, h⟩ := a
---       dsimp; rename_i h; clear h
---       dsimp [Fract.is_reduced] at h
---       refine Int.gcd_eq_one_iff.mpr ?_
---       intro k hk₀ hk₁
---       refine if hk:k = 1 ∨ k = -1 then ?_ else ?_
---       rcases hk with rfl | rfl <;> decide
---       simp at hk
+instance : Neg Fract where
+  neg a := {
+    num := -a.num
+    den := a.den
+    den_ne_zero := a.den_ne_zero
+  }
 
---       have numk : num ∣ k := by
---         obtain ⟨k', hk'⟩ := hk₀
---         sorry
---       have denk : (den: ℤ) ∣ k := by
---         sorry
---       sorry
---       -- induction n with
---       -- | zero => simp
---       -- | succ n ih =>
---       --   simp [npow_succ]
---   }
+@[simp] def Fract.neg_num (a: Fract) : (-a).num = -a.num := rfl
+@[simp] def Fract.neg_den (a: Fract) : (-a).den = a.den := rfl
 
--- #print axioms instPowNat
+instance : Neg ℚ where
+  neg a := {
+    toFract := -a.toFract
+    reduced := by
+      show _ = _; simp
+      exact a.reduced
+  }
 
--- instance : CheckedDiv? ℚ where
---   checked_div a b hb := a * b⁻¹?
+def neg_congr (a b: Fract) (h: a ≈ b) : (-a) ≈ (-b) := by
+  show _ = _; simp
+  rw [←neg_mul_left, ←neg_mul_left, h]
 
--- instance : CheckedZPow? ℚ where
---   checked_pow a n ha :=
---     match n with
---     | .ofNat n => sorry
---     | .negSucc n => (a⁻¹?) ^ (n + 1)
+@[simp] def mk_neg (a: Fract) : -mk a = mk (-a) := by
+  apply toFract_inj
+  show -_ = _
+  apply is_reduced_spec
+  apply (-(mk a)).reduced
+  apply (mk _).reduced
+  apply flip Relation.trans
+  apply Relation.symm
+  apply mk_rel
+  apply neg_congr
+  apply mk_rel
+
+instance : Sub Fract where
+  sub a b := {
+    num := a.num * b.den - b.num * a.den
+    den := a.den * b.den
+    den_ne_zero := by
+      intro h; rcases of_mul_eq_zero h with h | h
+      exact a.den_ne_zero h
+      exact b.den_ne_zero h
+  }
+
+instance : IsLawfulSub Fract where
+  sub_eq_add_neg a b := by
+    obtain ⟨na, da, ha⟩ := a
+    obtain ⟨nb, db, hb⟩ := b
+    show Fract.mk _ _ _ = Fract.mk _ _ _
+    dsimp; congr 1
+    rw [sub_eq_add_neg, neg_mul_left]
+
+instance : Sub ℚ where
+  sub := lift₂ (fun a b => mk (a - b)) <| by
+    intro a b c d ac bd
+    simp
+    rw [sub_eq_add_neg, sub_eq_add_neg, ←mk_add, ←mk_add,
+      ←mk_neg, ←mk_neg, sound ac, sound bd]
+
+instance : FieldOps ℚ := inferInstance
+-- instance : IsField ℚ where
 
 end Rational

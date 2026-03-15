@@ -3,6 +3,10 @@ import LeanMath.Algebra.Semifield.Defs
 
 class FieldOps (α: Type*) extends SemifieldOps α, RingOps α where
 
+instance [ha: GroupWithZeroOps α] [hb: AddGroupWithOneOps α] : FieldOps α := {
+    ha, hb with
+}
+
 class IsDivisionRing (α: Type*) [FieldOps α] : Prop extends IsDivisionSemiring α, IsRing α where
 class IsField (α: Type*) [FieldOps α] : Prop extends IsDivisionRing α, IsSemifield α where
 

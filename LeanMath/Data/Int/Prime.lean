@@ -68,6 +68,10 @@ def of_dvd_one (a: ℤ) : a ∣ 1 -> a = 1 ∨ a = -1 := by
   rw [←this, neg_neg]
   left; apply Int.eq_one_of_dvd_one <;> assumption
 
+def unit_of_dvd_one (a: ℤ) : a ∣ 1 -> IsUnit a := by
+  rw [is_unit_iff]
+  apply of_dvd_one
+
 def of_eq_one {a b: ℤ} : a * b = 1 -> a = 1 ∧ b = 1 ∨ a = -1 ∧ b = -1 := by
   intro h
   have htemp₀ (a k: ℕ) : (a + 2) * (k + 1) ≠ 1 := by
@@ -135,5 +139,8 @@ def gcd_eq_one_iff_no_common_prime_factors {a b: ℤ} : Int.gcd a b = 1 ↔ ∀k
     apply Int.natCast_dvd_natCast'.mpr
     apply Nat.minFact_dvd
     apply Int.gcd_dvd_right
+
+def prime_dvd_pow (a b: ℤ) (n: ℕ) (ha: IsPrime a) : a ∣ b ^ n -> a ∣ b := by
+  sorry
 
 end Int
