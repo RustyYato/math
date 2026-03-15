@@ -5,6 +5,9 @@ import LeanMath.Data.Equiv.Defs
 structure FreeMonoid (α: Type*) where
   ofList :: toList : List α
 
+instance [Repr α] : Repr (FreeMonoid α) where
+  reprPrec a := reprPrec a.toList
+
 namespace FreeMonoid
 
 instance : One (FreeMonoid α) where

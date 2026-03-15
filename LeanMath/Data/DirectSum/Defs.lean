@@ -20,6 +20,9 @@ def DirectSum.Con [∀a, Zero (R a)] [∀a, Add (R a)] : MulCon (FreeMonoid (Σa
 structure DirectSum [∀a, Zero (R a)] [∀a, Add (R a)] where
   ofQuot :: toQuot : AlgQuot (DirectSum.Con R)
 
+unsafe instance [∀a, Zero (R a)] [∀a, Add (R a)] [Repr α] [∀a, Repr (R a)] : Repr (DirectSum R) where
+  reprPrec a := reprPrec (a.toQuot.lift id lcProof)
+
 section Syntax
 
 open Lean
