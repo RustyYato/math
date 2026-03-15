@@ -107,3 +107,11 @@ instance [IsSemigroup α] : Relation.IsTrans (α := α) (· ∣ ·) where
   trans := dvd_trans
 
 end
+
+def IsIrreducible (a: α) [Mul α] [Dvd α] : Prop :=
+  ∀x y: α, a = x * y -> a ∣ x ∨ a ∣ y
+
+structure IsPrime (a: α) [Mul α] [Dvd α] [One α] [Zero α] : Prop where
+  irreducible: IsIrreducible a
+  ne_zero: a ≠ 0
+  not_unit: ¬IsUnit a
