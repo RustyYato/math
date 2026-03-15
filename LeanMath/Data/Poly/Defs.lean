@@ -105,8 +105,6 @@ instance : IsAddMonoid P[X] where
   succ_nsmul _ _ := by ext i; apply succ_nsmul
 
 
-variable [AddMonoidOps S] [IsAddMonoid S] [IsAddComm S]
-
 private def erase (i: ℕ) (p: P[X]) : P[X] where
   toFun j := if j = i then 0 else p j
   spec := p.spec.map fun hp => {
@@ -200,6 +198,10 @@ private def induction
     apply term
     assumption
 
+section
+
+variable [AddMonoidOps S] [IsAddMonoid S] [IsAddComm S]
+
 private def preLiftAdd' (f: ℕ -> P →+ S) (p: P[X]) : S :=
   p.spec.lift (fun ha => ∑i: Fin ha.degree_p1, f i.val (p i.val)) <| by
     show ∀a b: DegreeRepr p, _
@@ -277,6 +279,8 @@ def map_liftAdd_add_func (f g: ℕ -> P →+ S) (p: P[X]) :
   | term =>
     simp [liftAdd_term']
     rfl
+
+end
 
 def mulHom : P[X] →+ P[X] →+ P[X] :=
   liftAdd <| fun n => {
