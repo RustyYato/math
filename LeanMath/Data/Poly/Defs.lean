@@ -146,6 +146,14 @@ instance : IsModule P P[X] where
   smul_add _ _ _ := by ext i; apply mul_add
   add_smul _ _ _ := by ext i; apply add_smul
 
+instance [SemiringOps R] [IsSemiring R] [SMul R P] [IsModule R P] : IsModule R P[X] where
+  zero_smul _ := by ext i; apply zero_smul
+  smul_zero _ := by ext i; apply smul_zero
+  one_smul _ := by ext i; apply one_smul
+  mul_smul _ _ _ := by ext i; apply mul_smul
+  smul_add _ _ _ := by ext i; apply smul_add
+  add_smul _ _ _ := by ext i; apply add_smul
+
 private def list_induction'
   {motive: P[X] -> Prop}
   (zero: motive 0)
