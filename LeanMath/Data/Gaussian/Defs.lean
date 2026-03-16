@@ -104,17 +104,67 @@ def ofPoly : ℤ[X] →+* Gaussian :=
   }
 
 def sound (a b: ℤ[X]) : Rel a b -> ofPoly a = ofPoly b := by
+
   intro h
   show Gaussian.ofQuot (AlgQuot.mk Gaussian.Con _) = Gaussian.ofQuot (AlgQuot.mk Gaussian.Con _)
   rw [AlgQuot.sound]
   apply RingCon.generate_of
   assumption
 
+def ind {motive: Gaussian -> Prop} (ofPoly: ∀x, motive (ofPoly x)) (z: Gaussian) : motive z := by
+  obtain ⟨z⟩ := z
+  induction z with | _ z =>
+  apply ofPoly
+
 def i := ofPoly Poly.X
+
+instance : AlgebraMap ℤ Gaussian where
+  toAlgebraMap := ofPoly.comp Poly.C.toRingHom
+
+instance : IsAlgebra ℤ Gaussian where
+  smul_def r a := by
+    induction a using ind with | _ a =>
+    show ofPoly (r • a) = ofPoly (algebraMap ℤ r * a)
+    rw [smul_def]
+  commutes _ _ := mul_comm _ _
 
 def isqp1 : i ^ 2 + 1 = 0 := by
   show ofPoly _ = ofPoly _
   apply sound
   apply Rel.intro
+
+def isq : i ^ 2 = -1 := by
+  rw [←zero_add (-1), ←isqp1, add_assoc,
+    add_neg_cancel, add_zero]
+
+def isq' : i * i = -1 := by
+  rw [←isq, npow_succ, npow_one]
+
+def basis (z: Gaussian) : ∃a b: ℤ, z = algebraMap ℤ a + b • i := by
+  induction z using ind with | _ z =>
+  induction z with
+  | add a b iha ihb =>
+    obtain ⟨a₀, b₀, h₀⟩ := iha
+    obtain ⟨a₁, b₁, h₁⟩ := ihb
+    exists (a₀ + a₁)
+    exists (b₀ + b₁)
+    rw [map_add, map_add, add_smul, h₀, h₁]
+    ac_rfl
+  | term p n =>
+    rw [Poly.term_def, ←Poly.C_mul_eq_smul]
+    induction n with
+    | zero =>
+      simp [npow_zero]
+      exists p; exists 0
+      rw [zero_smul, add_zero]
+      rw [mul_one]; rfl
+    | succ n ih =>
+      obtain ⟨a, b, h⟩ := ih
+      simp [npow_succ]
+      exists -b; exists a
+      rw [←mul_assoc, map_mul, h,
+        add_mul, ←i, smul_def, mul_assoc,
+        isq', ←neg_mul_right, mul_one, add_comm, smul_def,
+        map_neg]
 
 end Gaussian
