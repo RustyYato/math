@@ -138,14 +138,6 @@ def smul_term [SMul R P] [IsLawfulSMulZero R P] (n: ℕ) (r: R) (p: P) : r • t
   ext j; simp
   split; rfl; rw [smul_zero]
 
-instance : IsModule P P[X] where
-  zero_smul _ := by ext i; apply zero_mul
-  smul_zero _ := by ext i; apply mul_zero
-  one_smul _ := by ext i; apply one_mul
-  mul_smul _ _ _ := by ext i; apply mul_assoc
-  smul_add _ _ _ := by ext i; apply mul_add
-  add_smul _ _ _ := by ext i; apply add_smul
-
 instance [SemiringOps R] [IsSemiring R] [SMul R P] [IsModule R P] : IsModule R P[X] where
   zero_smul _ := by ext i; apply zero_smul
   smul_zero _ := by ext i; apply smul_zero
@@ -153,6 +145,8 @@ instance [SemiringOps R] [IsSemiring R] [SMul R P] [IsModule R P] : IsModule R P
   mul_smul _ _ _ := by ext i; apply mul_smul
   smul_add _ _ _ := by ext i; apply smul_add
   add_smul _ _ _ := by ext i; apply add_smul
+
+instance : IsModule P P[X] := inferInstance
 
 private def list_induction'
   {motive: P[X] -> Prop}
