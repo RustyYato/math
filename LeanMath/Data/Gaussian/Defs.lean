@@ -94,4 +94,15 @@ instance : IsLawfulIntCast Gaussian where
 instance : RingOps Gaussian := inferInstance
 instance : IsRing Gaussian where
 
+private def ofPoly : ℤ[X] →+* Gaussian :=
+  equivQuot.symm.toRingHom.comp {
+    toFun := AlgQuot.mk Gaussian.Con
+    map_zero := map_zero _
+    map_one := map_one _
+    map_add := map_add _
+    map_mul := map_mul _
+  }
+
+def i := ofPoly Poly.X
+
 end Gaussian

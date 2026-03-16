@@ -77,6 +77,13 @@ def RingEmbedding.comp (f: β ↪+* γ) (g: α ↪+* β) : α ↪+* γ where
   map_mul := map_mul <| f.toMulEmbedding.comp g.toMulEmbedding
 def RingEmbedding.trans (g: α ↪+* β) (f: β ↪+* γ) : α ↪+* γ := f.comp g
 
+def RingHom.comp (f: β →+* γ) (g: α →+* β) : α →+* γ where
+  toFun := f ∘ g
+  map_zero := map_zero <| f.toZeroHom.comp g.toZeroHom
+  map_one := map_one <| f.toOneHom.comp g.toOneHom
+  map_add := map_add <| f.toAddHom.comp g.toAddHom
+  map_mul := map_mul <| f.toMulHom.comp g.toMulHom
+
 def RingEquiv.comp (f: β ≃+* γ) (g: α ≃+* β) : α ≃+* γ where
   toEquiv := f.toEquiv.comp g.toEquiv
   map_zero := map_zero <| f.toZeroEquiv.comp g.toZeroEquiv

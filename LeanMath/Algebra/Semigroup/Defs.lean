@@ -220,6 +220,17 @@ def MulOfAdd.get_mk_homₙ (a: MulOfAdd α) : mkHomₙ (getHomₙ a) = a := rfl
 @[simp] def PreLogEquiv.apply_toEquiv (f: α ≃ₘ+ₙ β) (x: α) : f.toEquiv x = f x := rfl
 @[simp] def PreExpEquiv.apply_toEquiv (f: α ≃ₐ*ₙ β) (x: α) : f.toEquiv x = f x := rfl
 
+def AddHom.comp (f: β →+ₙ γ) (g: α →+ₙ β) : α →+ₙ γ where
+  toFun := f ∘ g
+  map_add a b := by
+    dsimp
+    rw [map_add, map_add]
+def MulHom.comp (f: β →*ₙ γ) (g: α →*ₙ β) : α →*ₙ γ where
+  toFun := f ∘ g
+  map_mul a b := by
+    dsimp
+    rw [map_mul, map_mul]
+
 def AddEmbedding.comp (f: β ↪+ₙ γ) (g: α ↪+ₙ β) : α ↪+ₙ γ where
   toEmbedding := f.toEmbedding.comp g.toEmbedding
   map_add a b := by
