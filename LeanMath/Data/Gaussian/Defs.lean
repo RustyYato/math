@@ -94,7 +94,7 @@ instance : IsLawfulIntCast Gaussian where
 instance : RingOps Gaussian := inferInstance
 instance : IsRing Gaussian where
 
-private def ofPoly : ℤ[X] →+* Gaussian :=
+def ofPoly : ℤ[X] →+* Gaussian :=
   equivQuot.symm.toRingHom.comp {
     toFun := AlgQuot.mk Gaussian.Con
     map_zero := map_zero _
@@ -103,6 +103,18 @@ private def ofPoly : ℤ[X] →+* Gaussian :=
     map_mul := map_mul _
   }
 
+def sound (a b: ℤ[X]) : Rel a b -> ofPoly a = ofPoly b := by
+  intro h
+  show Gaussian.ofQuot (AlgQuot.mk Gaussian.Con _) = Gaussian.ofQuot (AlgQuot.mk Gaussian.Con _)
+  rw [AlgQuot.sound]
+  apply RingCon.generate_of
+  assumption
+
 def i := ofPoly Poly.X
+
+def isqp1 : i ^ 2 + 1 = 0 := by
+  show ofPoly _ = ofPoly _
+  apply sound
+  apply Rel.intro
 
 end Gaussian
