@@ -69,6 +69,11 @@ instance (priority := 10000) : IsAddHom (α ≃+* β) α β where
 instance (priority := 10000) : IsOneHom (α ≃+* β) α β where
 instance (priority := 10000) : IsMulHom (α ≃+* β) α β where
 
+@[ext]
+def RingHom.ext (f g: α →+* β) (h: ∀x, f x = g x) : f = g := DFunLike.ext f g h
+
+@[simp] def RingHom.apply_mk (f: α -> β) (h₀ h₁ h₂ h₃) : ({ toFun := f,  map_zero := h₀, map_one := h₁, map_add := h₂, map_mul := h₃ }: α →+* β) a = f a := rfl
+
 def RingEmbedding.comp (f: β ↪+* γ) (g: α ↪+* β) : α ↪+* γ where
   toEmbedding := f.toEmbedding.comp g.toEmbedding
   map_zero := map_zero <| f.toZeroEmbedding.comp g.toZeroEmbedding
@@ -97,6 +102,8 @@ def RingEquiv.symm (f: α ≃+* β) : β ≃+* α where
   map_one := map_one f.toOneEquiv.symm
   map_add := map_add f.toAddEquiv.symm
   map_mul := map_mul f.toMulEquiv.symm
+
+@[simp] def RingHom.apply_comp (f: β →+* γ) (g: α →+* β) : (f.comp g) x = f (g x) := rfl
 
 @[simp] def RingEmbedding.apply_comp (f: β ↪+* γ) (g: α ↪+* β) : (f.comp g) x = f (g x) := rfl
 @[simp] def RingEmbedding.apply_trans (g: α ↪+* β) (f: β ↪+* γ) : (g.trans f) x = f (g x) := rfl
@@ -204,6 +211,71 @@ variable [RelLike R α] [IsCon R] [IsAddCon R] [IsMulCon R] (r: R)
 instance : IsSemiring (AlgQuot r) where
 
 end
+
+namespace AlgQuot
+
+variable
+  [RelLike R α] [AddMonoidOps α] [MonoidOps α] [IsAddMonoid α] [IsMonoid α] [IsAddCon R] [IsMulCon R]
+  [RelLike S β] [AddMonoidOps β] [MonoidOps β] [IsAddMonoid β] [IsMonoid β] [IsAddCon S] [IsMulCon S]
+  {r: R} {s: S}
+
+def MkHom.toRingHom (_: MkHom r) : α →+* AlgQuot r where
+  toFun := AlgQuot.mk r
+  map_zero := rfl
+  map_one := rfl
+  map_add _ _ := rfl
+  map_mul _ _ := rfl
+
+def liftRingHom : { f: α →+* β // ∀a b, r a b -> f a = f b } ≃ AlgQuot r →+* β where
+  toFun f := {
+    toFun := Quotient.lift f.val f.property
+    map_zero := map_zero f.val
+    map_one := map_one f.val
+    map_add a b := by
+      induction a with | _ a =>
+      induction b with | _ b =>
+      exact map_add f.val _ _
+    map_mul a b := by
+      induction a with | _ a =>
+      induction b with | _ b =>
+      exact map_mul f.val _ _
+  }
+  invFun f := {
+    val := {
+      toFun a := f (AlgQuot.mk r a)
+      map_zero := map_zero f
+      map_one := map_one f
+      map_add _ _ := by rw [map_add, map_add]
+      map_mul _ _ := by rw [map_mul, map_mul]
+    }
+    property := by
+      intro a b h; dsimp
+      rw [AlgQuot.sound _ _ _ h]
+  }
+  leftInv x := by
+    ext a; induction a with | mk a =>
+    rfl
+  rightInv x := by
+    ext a; rfl
+
+@[simp] def mk_liftRingHom (f: { f: α →+* β // ∀a b, r a b -> f a = f b }): liftRingHom f (mk r a) = f.val a := rfl
+
+@[simp] def apply_mkHom_toRingHom : MkHom.toRingHom f x = AlgQuot.mk r x := rfl
+
+def mapRingHom (f: α →+* β) (h: ∀x y, r x y -> s (f x) (f y)) : AlgQuot r →+* AlgQuot s :=
+  liftRingHom (r := r) (β := AlgQuot s) {
+    val := (AlgQuot.mk s).toRingHom.comp f
+    property := by
+      intro x y rxy
+      simp
+      apply sound
+      apply h
+      assumption
+  }
+
+@[simp] def mapRingHom_mk (f: α →+* β) {h} : mapRingHom f h (mk r x) = mk s (f x) := rfl
+
+end AlgQuot
 
 section
 

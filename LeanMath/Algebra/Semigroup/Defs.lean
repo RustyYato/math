@@ -524,3 +524,5 @@ instance : IsLeftCancel₀ ℤ where
 
 instance : IsRightCancel₀ ℕ := inferInstance
 instance : IsRightCancel₀ ℤ := inferInstance
+
+def smul_eq_mul [Mul α] (a b: α) : a • b = a * b := rfl

@@ -143,6 +143,8 @@ instance [SMul R α] [Add α] [SMul R β] [IsSMulComm R R β] [Add β] [IsRightD
     apply DFunLike.ext; intro x
     apply mul_smul
 
+section
+
 variable [SMul R α] [Add α] [SMul R β] [AddMonoidOps β] [IsAddComm β] [IsAddMonoid β] [IsLawfulSMulZero R β] [IsSMulComm R R β] [IsRightDistribSMul R β]
 
 instance : IsAddComm (α →ₗ[R] β) where
@@ -179,3 +181,15 @@ instance [Zero α] [Mul α] [IsLawfulZeroMul α] : IsLawfulSMulZero α α where
   smul_zero := mul_zero
 instance [Zero α] [Mul α] [IsLawfulZeroMul α] : IsLawfulZeroSMul α α where
   zero_smul := zero_mul
+
+end
+
+variable
+  [AddMonoidOps α] [IsAddMonoid α] [AddMonoidOps β] [IsAddMonoid β]
+  [FunLike F α β] [IsZeroHom F α β] [IsAddHom F α β]
+
+instance : IsSMulHom F ℕ α β where
+  map_smul f n a := by
+    induction n with
+    | zero => rw [zero_smul, zero_smul, map_zero]
+    | succ n ih => rw [succ_nsmul, succ_nsmul, map_add, ih]

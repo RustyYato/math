@@ -270,7 +270,7 @@ def liftAdd : (ℕ -> P →+ S) ≃ (P[X] →+ S) where
     ext n p; simp
     rw [preLiftAdd_term]
 
-private def liftAdd_term' (f: ℕ -> P →+ S) (n: ℕ) (p: P) : liftAdd f (term n p) = f n p := preLiftAdd_term _ _ _
+def liftAdd_term (f: ℕ -> P →+ S) (n: ℕ) (p: P) : liftAdd f (term n p) = f n p := preLiftAdd_term _ _ _
 
 def map_liftAdd_add_func (f g: ℕ -> P →+ S) (p: P[X]) :
   liftAdd (fun n => f n + g n) p = liftAdd f p + liftAdd g p := by
@@ -279,7 +279,7 @@ def map_liftAdd_add_func (f g: ℕ -> P →+ S) (p: P[X]) :
     rw [map_add, map_add, map_add, iha, ihb]
     ac_rfl
   | term =>
-    simp [liftAdd_term']
+    simp [liftAdd_term]
     rfl
 
 end
@@ -298,7 +298,7 @@ def mulHom : P[X] →+ P[X] →+ P[X] :=
       induction b with
       | add _ _ iha ihb => rw [map_add, map_add, iha, ihb]
       | term =>
-        rw [liftAdd_term']
+        rw [liftAdd_term]
         rfl
     map_add a₀ a₁ := by
       apply DFunLike.ext; intro p
@@ -349,7 +349,7 @@ def coeff (k: ℕ) : P[X] →+ P where
 def term_mul_term (n m: ℕ) (a b: P) : term n a * term m b = term (n + m) (a * b) := by
   show mulHom _ _ = _
   unfold mulHom
-  simp [liftAdd_term']
+  simp [liftAdd_term]
 
 def C : P ↪+* P[X] where
   toAddGroupHom := preC
@@ -476,7 +476,7 @@ def eval
   toAddGroupHom := preEval x
   map_one := by
     show liftAdd _ (term _ _) = _
-    rw [liftAdd_term']; simp
+    rw [liftAdd_term]; simp
     rw [npow_zero, one_smul]
   map_mul a b := by
     show liftAdd _ _ = liftAdd _ a * liftAdd _ b
@@ -486,7 +486,7 @@ def eval
     induction b with
     | add a b iha ihb => simp [mul_add, map_add, iha, ihb]
     | term =>
-      simp [liftAdd_term', term_mul_term, smul_def]
+      simp [liftAdd_term, term_mul_term, smul_def]
       rw [npow_add, map_mul]
       ac_rfl
   map_smul r p := by
@@ -496,12 +496,12 @@ def eval
       map_add, smul_add]
     | term p n =>
       show liftAdd _ _ = r • liftAdd _ _
-      rw [smul_term, liftAdd_term', liftAdd_term']
+      rw [smul_term, liftAdd_term, liftAdd_term]
       dsimp
       rw [smul_assoc]
 
 def eval_term (x: S) (n: ℕ) (p: P) : eval P x (term n p) = p • x ^ n := by
-  apply liftAdd_term'
+  apply liftAdd_term
 
 def eval_X (x: S) : eval P x (X: P[X]) = x := by
   simp [Poly.X]

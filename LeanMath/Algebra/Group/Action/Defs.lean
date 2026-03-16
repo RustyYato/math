@@ -44,6 +44,8 @@ instance [SMul R α] [AddGroupOps α] [IsAddGroup α] [IsRightDistribSMul R α] 
     | ofNat r => rw [ofNat_zsmul, ofNat_zsmul, smul_comm]
     | negSucc r => rw [negSucc_zsmul, negSucc_zsmul, smul_comm, smul_neg]
 
+section
+
 variable [SMul R α] [Add α] [SMul R β] [AddGroupOps β] [IsAddComm β] [IsAddGroup β] [IsLawfulSMulZero R β] [IsSMulComm R R β] [IsRightDistribSMul R β]
 
 instance : Neg (α →ₗ[R] β) where
@@ -74,3 +76,16 @@ instance : IsAddGroup (α →ₗ[R] β) where
   add_neg_cancel _ := by
     apply DFunLike.ext; intro x
     apply add_neg_cancel
+
+end
+
+variable
+  [AddGroupOps α] [IsAddGroup α] [AddGroupOps β] [IsAddGroup β]
+  [FunLike F α β] [IsZeroHom F α β] [IsAddHom F α β]
+
+instance : IsSMulHom F ℤ α β where
+  map_smul f r a := by
+    cases r
+    rw [ofNat_zsmul, ofNat_zsmul, map_smul]
+    rw [negSucc_zsmul, negSucc_zsmul,
+      map_neg, map_smul]

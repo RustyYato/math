@@ -67,7 +67,7 @@ structure AddCon (α: Type*) [Add α] extends Con α where
 instance [Add α] : RelLike (AddCon α) α where
 instance [Add α] : IsAddCon (AddCon α) where
 
-private inductive AddCon.GenerateRel [Add α] (r: α -> α -> Prop) : α -> α -> Prop where
+inductive AddCon.GenerateRel [Add α] (r: α -> α -> Prop) : α -> α -> Prop where
 | of (a b: α) : r a b -> GenerateRel r a b
 | add (a b c d: α) : GenerateRel r a c -> GenerateRel r b d -> GenerateRel r (a + b) (c + d)
 | refl (a: α) : GenerateRel r a a
@@ -116,7 +116,7 @@ structure MulCon (α: Type*) [Mul α] extends Con α where
 instance [Mul α] : RelLike (MulCon α) α where
 instance [Mul α] : IsMulCon (MulCon α) where
 
-private inductive MulCon.GenerateRel [Mul α] (r: α -> α -> Prop) : α -> α -> Prop where
+inductive MulCon.GenerateRel [Mul α] (r: α -> α -> Prop) : α -> α -> Prop where
 | of (a b: α) : r a b -> GenerateRel r a b
 | mul (a b c d: α) : GenerateRel r a c -> GenerateRel r b d -> GenerateRel r (a * b) (c * d)
 | refl (a: α) : GenerateRel r a a
@@ -158,7 +158,7 @@ structure SMulCon (S α: Type*) [SMul S α] extends Con α where
 instance [SMul S α] : RelLike (SMulCon S α) α where
 instance [SMul S α] : IsSMulCon (SMulCon S α) S where
 
-private inductive SMulCon.GenerateRel [SMul S α] (r: α -> α -> Prop) : α -> α -> Prop where
+inductive SMulCon.GenerateRel [SMul S α] (r: α -> α -> Prop) : α -> α -> Prop where
 | of (a b: α) : r a b -> GenerateRel r a b
 | smul (s: S) (a b: α) : GenerateRel r a b -> GenerateRel r (s • a) (s • b)
 | refl (a: α) : GenerateRel r a a
@@ -206,7 +206,7 @@ instance [Add α] [Mul α] : RelLike (RingCon α) α where
 instance [Add α] [Mul α] : IsAddCon (RingCon α) where
 instance [Add α] [Mul α] : IsMulCon (RingCon α) where
 
-private inductive RingCon.GenerateRel [Add α] [Mul α] (r: α -> α -> Prop) : α -> α -> Prop where
+inductive RingCon.GenerateRel [Add α] [Mul α] (r: α -> α -> Prop) : α -> α -> Prop where
 | of (a b: α) : r a b -> GenerateRel r a b
 | add (a b c d: α) : GenerateRel r a c -> GenerateRel r b d -> GenerateRel r (a + b) (c + d)
 | mul (a b c d: α) : GenerateRel r a c -> GenerateRel r b d -> GenerateRel r (a * b) (c * d)
@@ -261,7 +261,7 @@ instance [Add α] [SMul S α] : RelLike (ModuleCon S α) α where
 instance [Add α] [SMul S α] : IsAddCon (ModuleCon S α) where
 instance [Add α] [SMul S α] : IsSMulCon (ModuleCon S α) S where
 
-private inductive ModuleCon.GenerateRel [Add α] [SMul S α] (r: α -> α -> Prop) : α -> α -> Prop where
+inductive ModuleCon.GenerateRel [Add α] [SMul S α] (r: α -> α -> Prop) : α -> α -> Prop where
 | of (a b: α) : r a b -> GenerateRel r a b
 | add (a b c d: α) : GenerateRel r a c -> GenerateRel r b d -> GenerateRel r (a + b) (c + d)
 | smul (s: S) (a b: α) : GenerateRel r a b -> GenerateRel r (s • a) (s • b)

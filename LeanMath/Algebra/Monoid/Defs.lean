@@ -971,32 +971,103 @@ def MkHom.toGroupHom (_: MkHom r) : α →* AlgQuot r where
   map_one := rfl
   map_mul _ _ := rfl
 
+def liftGroupHom : { f: α →* β // ∀a b, r a b -> f a = f b } ≃ AlgQuot r →* β where
+  toFun f := {
+    toFun := Quotient.lift f.val f.property
+    map_one := map_one f.val
+    map_mul a b := by
+      induction a with | _ a =>
+      induction b with | _ b =>
+      exact map_mul f.val _ _
+  }
+  invFun f := {
+    val := {
+      toFun a := f (AlgQuot.mk r a)
+      map_one := map_one f
+      map_mul _ _ := by rw [map_mul, map_mul]
+    }
+    property := by
+      intro a b h; dsimp
+      rw [AlgQuot.sound _ _ _ h]
+  }
+  leftInv x := by
+    ext a; induction a with | mk a =>
+    rfl
+  rightInv x := by
+    ext a; rfl
+
+@[simp] def mk_liftGroupHom (f: { f: α →* β // ∀a b, r a b -> f a = f b }): liftGroupHom f (mk r a) = f.val a := rfl
+
 @[simp] def apply_mkHom_toGroupHom : MkHom.toGroupHom f x = AlgQuot.mk r x := rfl
 
-def liftGroupHom (f: α →* β) (h: ∀x y, r x y -> f x = f y) : AlgQuot r →* β where
-  toFun := Quotient.lift f (by
-    intro a b ab
-    apply h
-    assumption)
-  map_one := by
-    show f 1 = 1
-    rw [map_one]
-  map_mul a b := by
-    induction a with | mk a =>
-    induction b with | mk b =>
-    show f (a * b) = _
-    apply map_mul
-
 def mapGroupHom (f: α →* β) (h: ∀x y, r x y -> s (f x) (f y)) : AlgQuot r →* AlgQuot s :=
-  liftGroupHom (r := r) (β := AlgQuot s) ((AlgQuot.mk s).toGroupHom.comp f) <| by
-    intro x y rxy
-    simp
-    apply sound
-    apply h
-    assumption
+  liftGroupHom (r := r) (β := AlgQuot s) {
+    val := (AlgQuot.mk s).toGroupHom.comp f
+    property := by
+      intro x y rxy
+      simp
+      apply sound
+      apply h
+      assumption
+  }
 
-@[simp] def liftGroupHom_mk (f: α →* β) {h} : liftGroupHom f h (mk r x) = f x := rfl
 @[simp] def mapGroupHom_mk (f: α →* β) {h} : mapGroupHom f h (mk r x) = mk s (f x) := rfl
+
+end AlgQuot
+
+namespace AlgQuot
+
+variable
+  [RelLike R α] [AddMonoidOps α] [IsAddMonoid α] [IsAddCon R]
+  [RelLike S β] [AddMonoidOps β] [IsAddMonoid β] [IsAddCon S]
+  {r: R} {s: S}
+
+def MkHom.toAddGroupHom (_: MkHom r) : α →+ AlgQuot r where
+  toFun := AlgQuot.mk r
+  map_zero := rfl
+  map_add _ _ := rfl
+
+def liftAddGroupHom : { f: α →+ β // ∀a b, r a b -> f a = f b } ≃ AlgQuot r →+ β where
+  toFun f := {
+    toFun := Quotient.lift f.val f.property
+    map_zero := map_zero f.val
+    map_add a b := by
+      induction a with | _ a =>
+      induction b with | _ b =>
+      exact map_add f.val _ _
+  }
+  invFun f := {
+    val := {
+      toFun a := f (AlgQuot.mk r a)
+      map_zero := map_zero f
+      map_add _ _ := by rw [map_add, map_add]
+    }
+    property := by
+      intro a b h; dsimp
+      rw [AlgQuot.sound _ _ _ h]
+  }
+  leftInv x := by
+    ext a; induction a with | mk a =>
+    rfl
+  rightInv x := by
+    ext a; rfl
+
+@[simp] def mk_liftAddGroupHom (f: { f: α →+ β // ∀a b, r a b -> f a = f b }): liftAddGroupHom f (mk r a) = f.val a := rfl
+
+@[simp] def apply_mkHom_toAddGroupHom : MkHom.toAddGroupHom f x = AlgQuot.mk r x := rfl
+
+def mapAddGroupHom (f: α →+ β) (h: ∀x y, r x y -> s (f x) (f y)) : AlgQuot r →+ AlgQuot s :=
+  liftAddGroupHom (r := r) (β := AlgQuot s) {
+    val := (AlgQuot.mk s).toAddGroupHom.comp f
+    property := by
+      intro x y rxy
+      simp
+      apply sound
+      apply h
+      assumption
+  }
+
+@[simp] def mapAddGroupHom_mk (f: α →+ β) {h} : mapAddGroupHom f h (mk r x) = mk s (f x) := rfl
 
 end AlgQuot
 

@@ -623,6 +623,13 @@ def sub_eq_zero_of_eq (a b: α) : a = b -> a - b = 0 := by
 def sub_eq_zero (a b: α) : a = b ↔ a - b = 0 :=
   div_eq_one (α := MulOfAdd α) _ _
 
+def negHom [IsAddComm α] : α →+ α where
+  toFun a := -a
+  map_zero := by rw [neg_zero]
+  map_add a b := by rw [add_comm, neg_add_rev]
+
+@[simp] def apply_negHom [IsAddComm α] (a: α) : negHom a = -a := rfl
+
 end
 
 def IsGroup.lift
