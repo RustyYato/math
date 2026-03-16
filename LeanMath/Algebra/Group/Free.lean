@@ -155,8 +155,6 @@ private def preLift (f: α -> G) : FreeGroup α →* G where
 
 private def preLift_toFreeGroup (f: α -> G) (x: α) : preLift f (toFreeGroup x) = f x := by
   simp [preLift, toFreeGroup]
-  show GroupQuot.lift _ _ (GroupQuot.mk _ _) = _
-  simp
 
 def lift : (α -> G) ≃ (FreeGroup α →* G) where
   toFun := preLift
