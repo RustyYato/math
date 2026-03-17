@@ -404,6 +404,12 @@ def MulOfAdd.get_mk_hom (a: MulOfAdd α) : mkHom (getHom a) = a := rfl
 @[simp] def LogEquiv.apply_toEquiv (f: α ≃ₘ+ β) (x: α) : f.toEquiv x = f x := rfl
 @[simp] def ExpEquiv.apply_toEquiv (f: α ≃ₐ* β) (x: α) : f.toEquiv x = f x := rfl
 
+instance : Zero (α →₀ β) where
+  zero := {
+    toFun _ := 0
+    map_zero := rfl
+  }
+
 def ZeroHom.comp (f: β →₀ γ) (g: α →₀ β) : α →₀ γ where
   toFun := f ∘ g
   map_zero := by
