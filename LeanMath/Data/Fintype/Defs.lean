@@ -310,7 +310,6 @@ instance [ft: Fintype ι] : Fintype (POption ι) where
     try_decode := .none -- FIXME
   }
 
-
 def fin_foldr_eq_list_foldr
   {ι α: Type*}
   (f: ι -> α -> α)
@@ -514,3 +513,22 @@ def finEquiv (ι: Sort*) [Fintype ι] [DecidableEq ι] : Trunc (Fin (card ι) �
   rfl
 
 end Fintype
+
+namespace Finite
+
+def ofBij [ft: Finite α] (f: α ↭ β) : Finite β :=
+  have ⟨_⟩ := ft
+  have := Fintype.ofBij f
+  inferInstance
+
+def finBij (ι: Sort*) [ft: Finite ι] : ∃card: ℕ, Nonempty (Fin card ↭ ι) := by
+  obtain ⟨ft⟩ := ft
+  induction Fintype.finBij ι with | _ x =>
+  exists Fintype.card ι
+  exact ⟨x⟩
+
+instance [ft: Finite ι] : Finite (POption ι) := by
+  obtain ⟨ ⟩ := ft
+  infer_instance
+
+end Finite

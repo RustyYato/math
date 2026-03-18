@@ -76,3 +76,27 @@ instance [fa: Fintype α] [fb: Fintype β] : Fintype (α × β) :=
   ofEquiv Equiv.prod_equiv_pprod.symm
 
 end Fintype
+
+namespace Finite
+
+instance [fa: Finite α] [fb: Finite β] : Finite (α ⊕' β) := by
+  obtain ⟨fa⟩ := fa
+  obtain ⟨fb⟩ := fb
+  infer_instance
+
+instance [fa: Finite α] [fb: Finite β] : Finite (α ×' β) := by
+  obtain ⟨fa⟩ := fa
+  obtain ⟨fb⟩ := fb
+  infer_instance
+
+instance [fa: Finite α] [fb: Finite β] : Finite (α ⊕ β) := by
+  obtain ⟨fa⟩ := fa
+  obtain ⟨fb⟩ := fb
+  infer_instance
+
+instance [fa: Finite α] [fb: Finite β] : Finite (α × β) := by
+  obtain ⟨fa⟩ := fa
+  obtain ⟨fb⟩ := fb
+  infer_instance
+
+end Finite
