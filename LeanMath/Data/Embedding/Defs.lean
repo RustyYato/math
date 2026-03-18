@@ -212,4 +212,42 @@ def cantor [h: Nontrivial β] (f: (α -> β) ↪ α) : False := by
     apply Classical.choose_spec spec
   contradiction
 
+def erase_fin (i: Fin m) (f: α ↪ Fin m) (hi: ∀x, f x ≠ i) : α ↪ Fin (m - 1) where
+  toFun x :=
+    let v := f x
+    if hv:v.val ≤ i.val then
+      ⟨v.val, by
+        have := hi x
+        omega⟩
+    else
+      ⟨v.val - 1, by
+        omega⟩
+  inj := by
+    have not_between (a b: ℕ) (h₀: a < b) (h₁: b < a + 1) : False := by omega
+    intro a b h
+    dsimp at h
+    split at h <;> split at h <;> (rename_i ha hb; simp at h)
+    rw [Fin.val_inj] at h
+    · exact f.inj h
+    · rw [h] at ha
+      simp at hb
+      rw [←Nat.pred_eq_sub_one, Nat.pred_le_iff] at ha
+      rcases Nat.lt_or_eq_of_le ha with ha | ha
+      have := not_between _ _ hb ha
+      contradiction
+      simp [ha, Fin.val_inj] at h
+      nomatch hi _ h
+    · rw [←h] at hb
+      simp at ha
+      rw [←Nat.pred_eq_sub_one, Nat.pred_le_iff] at hb
+      rcases Nat.lt_or_eq_of_le hb with hb | hb
+      have := not_between _ _ ha hb
+      contradiction
+      simp [hb, Fin.val_inj] at h
+      nomatch hi _ h.symm
+    · simp at ha hb
+      have : (f a).val = (f b).val := by omega
+      rw [Fin.val_inj] at this
+      exact f.inj this
+
 end Embedding
