@@ -204,7 +204,7 @@ private def instFuncFin : Fintype (Fin n -> Fin m) where
 
 section
 
-variable {α: ι -> Type*} [fι: Fintype ι] [DecidableEq ι] [fα: ∀i, Fintype (α i)]
+variable {ι: Sort*} {α: ι -> Sort*} [fι: Fintype ι] [DecidableEq ι] [fα: ∀i, Fintype (α i)]
 
 instance (priority := 100) : Fintype (∀i, α i) :=
   (Fintype.finEquiv ι).recOnSubsingleton fun rι =>
@@ -270,7 +270,7 @@ end
 
 section
 
-variable [fι: Fintype ι] [DecidableEq ι] [fα: Fintype α]
+variable {ι α: Sort*} [fι: Fintype ι] [DecidableEq ι] [fα: Fintype α]
 
 instance (priority := 10000) instFintypeFunc : Fintype (ι -> α) :=
   (Fintype.finEquiv ι).recOnSubsingleton fun rι =>
@@ -298,5 +298,15 @@ instance (priority := 10000) instFintypeFunc : Fintype (ι -> α) :=
   }
 
 end
+
+variable
+  {α: ι -> Sort*}
+  [fι: Finite ι] [DecidableEq ι] [fα: ∀i, Finite (α i)]
+
+instance : Finite (∀i, α i) := by
+  have ⟨fα⟩ := finChoose fα
+  obtain ⟨fι⟩ := fι
+  have : DecidableEq ι := inferInstance
+  exact ⟨inferInstance⟩
 
 end Pi

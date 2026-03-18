@@ -35,6 +35,10 @@ class Fintype (α: Sort u) : Sort (max u 1) where
   card: Nat
   repr: Trunc (Fintype.Repr α card)
 
+abbrev Finite (α: Sort u) : Prop := Nonempty (Fintype α)
+
+instance [Fintype α] : Finite α := ⟨inferInstance⟩
+
 namespace Fintype
 
 def card_eq (fa fb: Fintype α) : fa.card = fb.card := by

@@ -26,7 +26,8 @@ private def finChoose' {α: Fin n -> Sort*} (h: ∀i, Nonempty (α i)) : Nonempt
       | ⟨0, _⟩ => f₀
       | ⟨i + 1, hi⟩ => f₁ ⟨i, Nat.lt_of_succ_lt_succ hi⟩⟩
 
-def finChoose [DecidableEq ι] [ft: Fintype ι] {α: ι -> Sort*} (h: ∀i, Nonempty (α i)) : Nonempty (∀i, α i) := by
+def finChoose [DecidableEq ι] [ft: Finite ι] {α: ι -> Sort*} (h: ∀i, Nonempty (α i)) : Nonempty (∀i, α i) := by
+  have ⟨ft⟩ := ft
   induction (Fintype.finEquiv ι) with | mk eqv =>
   suffices Nonempty (∀i: Fin (Fintype.card ι), α (eqv i)) by
     obtain ⟨f⟩ := this
@@ -36,7 +37,7 @@ def finChoose [DecidableEq ι] [ft: Fintype ι] {α: ι -> Sort*} (h: ∀i, None
   apply finChoose'
   intro i; apply h
 
-def finChoice [DecidableEq ι] [ft: Fintype ι] {α: ι -> Sort*} {P: ∀{i}, α i -> Prop} (h: ∀i, ∃a: α i, P a) : ∃f: ∀i, α i, ∀i, P (f i) := by
+def finChoice [DecidableEq ι] [ft: Finite ι] {α: ι -> Sort*} {P: ∀{i}, α i -> Prop} (h: ∀i, ∃a: α i, P a) : ∃f: ∀i, α i, ∀i, P (f i) := by
   have ⟨f⟩ := finChoose (ι := ι) (α := fun i: ι => { a: α i // P a }) ?_
   exists fun i => (f i).val
   intro i
