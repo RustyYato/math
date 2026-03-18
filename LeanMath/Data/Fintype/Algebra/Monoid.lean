@@ -1,6 +1,6 @@
 import LeanMath.Data.Fintype.Defs
 import LeanMath.Data.Fintype.Pairing
-import LeanMath.Algebra.Monoid.Defs
+import LeanMath.Algebra.Monoid.Action.Defs
 
 def sum [Fintype ι] [AddMonoidOps α] [IsAddMonoid α] [IsAddComm α]
   (f: ι -> α) : α :=
@@ -266,3 +266,10 @@ def fin_sum_succ_last (f: Fin (n + 1) -> α) : ∑i, f i = (∑i, f (Fin.castSuc
 
 def sum_zero' (f: ι -> α) (hf: ∀i, f i = 0) : ∑i, f i = 0 := by
   simp [hf, sum_zero]
+
+def smul_sum
+  [SMul R α] [MonoidOps R] [IsMonoid R] [IsDistributiveAction R α]
+  (r: R) (f: ι -> α) : ∑i, r • f i = r • ∑i, f i := by
+  show ∑i, smulHom R (α := α) r (f i) = _
+  rw [map_sum]
+  rfl
