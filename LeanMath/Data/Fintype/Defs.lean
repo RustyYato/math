@@ -512,6 +512,50 @@ def finEquiv (ι: Sort*) [Fintype ι] [DecidableEq ι] : Trunc (Fin (card ι) �
   rw [Fin.foldr_succ]
   rfl
 
+def any [Fintype ι] (f: ι -> Bool) : Bool :=
+  fold (fun i acc => acc || f i) (by
+    intro i j a
+    dsimp
+    cases a <;> cases f j <;> cases f i <;> rfl) false
+
+def all [Fintype ι] (f: ι -> Bool) : Bool :=
+  !any (fun i => !f i)
+
+private def any_spec' (f: Fin n -> Bool) : any f ↔ ∃i, f i := by
+  unfold any
+  induction n with
+  | zero => simp
+  | succ n ih =>
+    simp [ih]
+    apply Iff.intro
+    intro h
+    rcases h with ⟨i, hi⟩ | h
+    exists i.succ
+    exists 0
+    intro ⟨i, hi⟩
+    cases i using Fin.cases with
+    | zero => right; assumption
+    | succ i => left; exists i
+
+def any_spec [Fintype ι] (f: ι -> Bool) : any f ↔ ∃i, f i := by
+  unfold any
+  induction finBij ι with | mk g =>
+  rw [fold_bij g]
+  apply Iff.trans (any_spec' (f ∘ g))
+  apply Iff.intro
+  · intro ⟨i, hi⟩
+    exists g i
+  · intro ⟨i, hi⟩
+    obtain ⟨i, rfl⟩ := g.surj i
+    exists i
+
+def all_spec [Fintype ι] (f: ι -> Bool) : all f ↔ ∀i, f i := by
+  unfold all
+  simp [←Bool.not_eq_true]
+  rw [any_spec]
+  apply Iff.trans _ Decidable.not_exists_not
+  simp
+
 end Fintype
 
 namespace Finite
@@ -532,3 +576,13 @@ instance [ft: Finite ι] : Finite (POption ι) := by
   infer_instance
 
 end Finite
+
+namespace Fintype
+
+instance [Fintype ι] {P: ι -> Prop} [DecidablePred P] : Decidable (∃x, P x) :=
+  decidable_of_bool (any (fun i => decide (P i))) <| by simp [any_spec]
+
+instance [Fintype ι] {P: ι -> Prop} [DecidablePred P] : Decidable (∀x, P x) :=
+  decidable_of_iff _  Decidable.not_exists_not
+
+end Fintype
