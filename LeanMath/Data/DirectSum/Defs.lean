@@ -226,22 +226,24 @@ instance : IsDistributiveAction S (⊕i, R i) where
 variable [AddMonoidOps M] [IsAddMonoid M] [IsAddComm M]
 
 private def preLift₀ (f: ∀a, R a →+ M) : AlgQuot (DirectSum.Con R) →* MulOfAdd M :=
-  AlgQuot.liftGroupHom
-    (FreeMonoid.lift (fun x => MulOfAdd.mk (f x.1 x.2))) <| by
-    intro x y h
-    apply MulCon.map (S := EqCon _) _ _ h
-    exact default
-    intro a b r
-    show _ = _
-    cases r with
-    | comm => rw [map_mul, map_mul, mul_comm]
-    | ι_mul_ι =>
-      simp [map_mul, FreeMonoid.lift_ι, map_add]
-      rfl
-    | ι_zero_eq_one =>
-      simp
-      rw [map_zero, map_one]
-      rfl
+  AlgQuot.liftGroupHom {
+    val := (FreeMonoid.lift (fun x => MulOfAdd.mk (f x.1 x.2)))
+    property := by
+      intro x y h
+      apply MulCon.map (S := EqCon _) _ _ h
+      exact default
+      intro a b r
+      show _ = _
+      cases r with
+      | comm => rw [map_mul, map_mul, mul_comm]
+      | ι_mul_ι =>
+        simp [map_mul, FreeMonoid.lift_ι, map_add]
+        rfl
+      | ι_zero_eq_one =>
+        simp
+        rw [map_zero, map_one]
+        rfl
+  }
 
 private def preLift (f: ∀a, R a →+ M) : (⊕a, R a) →+ M where
   toFun x := (preLift₀ f x.toQuot).get
