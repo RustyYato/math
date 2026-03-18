@@ -202,6 +202,10 @@ private def instFuncFin : Fintype (Fin n -> Fin m) where
     bij := func _ _
   }
 
+end Pi
+
+namespace Fintype
+
 section
 
 variable {ι: Sort*} {α: ι -> Sort*} [fι: Fintype ι] [DecidableEq ι] [fα: ∀i, Fintype (α i)]
@@ -209,12 +213,12 @@ variable {ι: Sort*} {α: ι -> Sort*} [fι: Fintype ι] [DecidableEq ι] [fα: 
 instance (priority := 100) : Fintype (∀i, α i) :=
   (Fintype.finEquiv ι).recOnSubsingleton fun rι =>
   (finTruncChoice (fun i => Fintype.finBij (α i))).recOnSubsingleton fun rα =>
-  match card_all_eq (Fintype.card ι) (fun i hi => Fintype.card (α (rι ⟨i, hi⟩))) with
+  match Pi.card_all_eq (Fintype.card ι) (fun i hi => Fintype.card (α (rι ⟨i, hi⟩))) with
   | .some ⟨card, hcard⟩ => by
     replace rα (i: ι) : Fin card ↭ α i :=
       (Equiv.fin_cast ?_).toBij.trans (rα i)
     · -- this is a function type, where all targets have the same cardinality
-      have := @instFuncFin
+      have := @Pi.instFuncFin
       apply Fintype.ofBij (α := Fin (Fintype.card ι) -> Fin card)
       exact {
         toFun f i := rα i (f (rι.symm i))
@@ -237,7 +241,7 @@ instance (priority := 100) : Fintype (∀i, α i) :=
     · rw [←hcard (rι.symm i) (Fin.isLt _)]
       congr <;> (show rι (rι.symm _) = _; simp)
   | .none => by
-    have := @instPiFin
+    have := @Pi.instPiFin
     apply Fintype.ofBij (α := ∀i: Fin (Fintype.card ι), Fin (Fintype.card (α (rι i))))
     exact {
       toFun f i := rα i <| (f (rι.symm i)).cast <| by
@@ -272,10 +276,10 @@ section
 
 variable {ι α: Sort*} [fι: Fintype ι] [DecidableEq ι] [fα: Fintype α]
 
-instance (priority := 10000) instFintypeFunc : Fintype (ι -> α) :=
+instance (priority := 10000) instFunc : Fintype (ι -> α) :=
   (Fintype.finEquiv ι).recOnSubsingleton fun rι =>
   (Fintype.finBij α).recOnSubsingleton fun rα => by
-  have := @instFuncFin
+  have := @Pi.instFuncFin
   let card := Fintype.card α
   apply Fintype.ofBij (α := Fin (Fintype.card ι) -> Fin card)
   exact {
@@ -299,6 +303,10 @@ instance (priority := 10000) instFintypeFunc : Fintype (ι -> α) :=
 
 end
 
+end Fintype
+
+namespace Finite
+
 variable
   {α: ι -> Sort*}
   [fι: Finite ι] [DecidableEq ι] [fα: ∀i, Finite (α i)]
@@ -309,4 +317,4 @@ instance : Finite (∀i, α i) := by
   have : DecidableEq ι := inferInstance
   exact ⟨inferInstance⟩
 
-end Pi
+end Finite
