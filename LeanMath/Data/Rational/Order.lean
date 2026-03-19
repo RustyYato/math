@@ -1,6 +1,5 @@
 import LeanMath.Data.Rational.Defs
-import LeanMath.Algebra.Semiring.Order
-import LeanMath.Algebra.Group.Order
+import LeanMath.Algebra.Ring.Order
 
 namespace Rational
 
@@ -100,28 +99,28 @@ instance : DecidableLT ℚ :=
 instance : Min ℚ := minOfLe
 instance : Max ℚ := maxOfLe
 
-def min_eq (a b: ℚ) : a ⊓ b = if a ≤ b then a else b := rfl
-def max_eq (a b: ℚ) : a ⊔ b = if a ≤ b then b else a := rfl
+protected def min_eq (a b: ℚ) : a ⊓ b = if a ≤ b then a else b := rfl
+protected def max_eq (a b: ℚ) : a ⊔ b = if a ≤ b then b else a := rfl
 
 instance : IsLattice ℚ where
   left_le_max {_ _} := by
-    rw [max_eq]; split; assumption
+    rw [Rational.max_eq]; split; assumption
     rfl
   right_le_max {_ _} := by
-    rw [max_eq]; split; rfl
+    rw [Rational.max_eq]; split; rfl
     apply le_of_lt; apply not_le.mp
     assumption
   max_le _ _ := by
-    rw [max_eq]; split <;> assumption
+    rw [Rational.max_eq]; split <;> assumption
   min_le_left {_ _} := by
-    rw [min_eq]; split; rfl
+    rw [Rational.min_eq]; split; rfl
     apply le_of_lt; apply not_le.mp
     assumption
   min_le_right {_ _} := by
-    rw [min_eq]; split; assumption
+    rw [Rational.min_eq]; split; assumption
     rfl
   le_min _ _ := by
-    rw [min_eq]; split <;> assumption
+    rw [Rational.min_eq]; split <;> assumption
 
 private def nonneg_iff {a: ℚ} : 0 ≤ a ↔ IsNonneg a := by
   show IsNonneg _ ↔ _

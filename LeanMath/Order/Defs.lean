@@ -309,6 +309,36 @@ def max_eq [IsLinearOrder α] [IsLattice α] (a b: α) : a ⊔ b = a ∨ a ⊔ b
   apply max_le; rfl; assumption
   apply left_le_max
 
+def max_eq_left [IsSemiLatticeMax α] {a b: α} (h: b ≤ a) : a ⊔ b = a := by
+  apply le_antisymm
+  apply max_le; rfl
+  assumption
+  apply left_le_max
+
+def max_eq_right [IsSemiLatticeMax α] {a b: α} (h: a ≤ b) : a ⊔ b = b := by
+  apply le_antisymm
+  apply max_le
+  assumption; rfl
+  apply right_le_max
+
+def min_eq_left [IsSemiLatticeMin α] {a b: α} (h: a ≤ b) : a ⊓ b = a :=
+  max_eq_left (α := αᵒᵖ) h
+
+def min_eq_right [IsSemiLatticeMin α] {a b: α} (h: b ≤ a) : a ⊓ b = b :=
+  max_eq_right (α := αᵒᵖ) h
+
+def le_or_lt [IsLinearOrder α] (a b: α) : a ≤ b ∨ b < a := by
+  rcases Relation.trichotomous (α := α) (· < ·) a b with h | h | h
+  left; apply le_of_lt; assumption
+  left; rw [h]
+  right; assumption
+
+def lt_or_le [IsLinearOrder α] (a b: α) : a < b ∨ b ≤ a := by
+  rcases Relation.trichotomous (α := α) (· < ·) a b with h | h | h
+  left; assumption
+  right; rw [h]
+  right; apply le_of_lt; assumption
+
 end
 
 instance [DecidableRel (· ≤ ·: α -> α -> Prop)] [FunLike F α β] [IsOrderHom F α β] [IsPartialOrder α] [IsPreorder β] : EmbeddingLike F α β where

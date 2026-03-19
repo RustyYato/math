@@ -2,9 +2,9 @@ import LeanMath.Algebra.MonoidWithZero.Defs
 import LeanMath.Algebra.Monoid.Order
 
 class IsOrderedZeroMul (α: Type*) [LE α] [LT α] [Mul α] [Zero α] extends IsLawfulZeroMul α where
-  mul_nonneg: ∀{a b: α}, 0 ≤ a -> 0 ≤ b -> 0 ≤ a * b
-  mul_le_mul_of_nonneg_left: ∀{a b: α}, a ≤ b -> ∀c, 0 ≤ c -> c * a ≤ c * b
-  mul_le_mul_of_nonneg_right: ∀{a b: α}, a ≤ b -> ∀c, 0 ≤ c -> a * c ≤ b * c
+  protected mul_nonneg: ∀{a b: α}, 0 ≤ a -> 0 ≤ b -> 0 ≤ a * b
+  protected mul_le_mul_of_nonneg_left: ∀{a b: α}, a ≤ b -> ∀c, 0 ≤ c -> c * a ≤ c * b
+  protected mul_le_mul_of_nonneg_right: ∀{a b: α}, a ≤ b -> ∀c, 0 ≤ c -> a * c ≤ b * c
 
 instance [LE α] [LT α] [MonoidOps α] [Zero α] [IsLawfulZeroMul α] [IsZeroLEOne α] [IsOrderedCommMonoid α] : IsOrderedZeroMul α where
   mul_nonneg {a b} ha hb := by
@@ -24,3 +24,9 @@ instance : IsOrderedZeroMul ℤ where
   mul_nonneg := Int.mul_nonneg
   mul_le_mul_of_nonneg_left {_ _} h _:= Int.mul_le_mul_of_nonneg_left h
   mul_le_mul_of_nonneg_right {_ _} h _:= Int.mul_le_mul_of_nonneg_right h
+
+variable [LE α] [LT α] [Mul α] [Zero α] [IsOrderedZeroMul α]
+
+def mul_nonneg: ∀{a b: α}, 0 ≤ a -> 0 ≤ b -> 0 ≤ a * b := IsOrderedZeroMul.mul_nonneg
+def mul_le_mul_of_nonneg_left: ∀{a b: α}, a ≤ b -> ∀c, 0 ≤ c -> c * a ≤ c * b := IsOrderedZeroMul.mul_le_mul_of_nonneg_left
+def mul_le_mul_of_nonneg_right: ∀{a b: α}, a ≤ b -> ∀c, 0 ≤ c -> a * c ≤ b * c := IsOrderedZeroMul.mul_le_mul_of_nonneg_right
