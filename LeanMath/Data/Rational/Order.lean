@@ -1,5 +1,6 @@
 import LeanMath.Data.Rational.Defs
-import LeanMath.Order.Defs
+import LeanMath.Algebra.Semiring.Order
+import LeanMath.Algebra.Group.Order
 
 namespace Rational
 
@@ -91,10 +92,10 @@ instance : IsLinearOrder ℚ where
     have := le_antisymm (α := ℤ) g h
     rw [(sub_eq_zero _ _).mpr (eq_zero_of_num_eq_zero _ this)]
 
-instance : DecidableRel (· ≤ ·: ℚ -> ℚ -> Prop) :=
-  fun a b => decidable_of_iff (0 ≤ (b - a).num) Iff.rfl
-instance : DecidableRel (· < ·: ℚ -> ℚ -> Prop) :=
-  fun a b => decidable_of_iff (0 < (b - a).num) Iff.rfl
+instance : DecidableLE ℚ :=
+  fun a b => inferInstanceAs (Decidable (0 ≤ (b - a).num))
+instance : DecidableLT ℚ :=
+  fun a b => inferInstanceAs (Decidable (0 < (b - a).num))
 
 instance : Min ℚ := minOfLe
 instance : Max ℚ := maxOfLe
@@ -121,5 +122,60 @@ instance : IsLattice ℚ where
     rfl
   le_min _ _ := by
     rw [min_eq]; split <;> assumption
+
+private def nonneg_iff {a: ℚ} : 0 ≤ a ↔ IsNonneg a := by
+  show IsNonneg _ ↔ _
+  rw [sub_zero]
+
+private def pos_iff {a: ℚ} : 0 < a ↔ IsPos a := by
+  show IsPos _ ↔ _
+  rw [sub_zero]
+
+def mk_pos (a: Fract) : (mk a).IsPos ↔ a.IsPos := by
+  rw [←pos_iff, ←not_le]
+  show ¬IsNonneg _ ↔ _
+  rw [mk_zero, mk_sub, sub_eq_add_neg, ←mk_add, ←mk_zero, zero_add,
+    mk_nonneg, Fract.IsNonneg, Fract.IsPos]
+  rw [not_le]; show -a.num < 0 ↔ _
+  apply neg_lt_neg_iff (α := Int) (b := a.num) (a:= 0)
+
+private def nonneg_mul : ∀ {a b : ℚ}, IsNonneg a -> IsNonneg b -> IsNonneg (a * b) := by
+  intro a b ha hb
+  induction a with | mk a =>
+  induction b with | mk b =>
+  simp [mk_nonneg, Fract.IsNonneg] at *
+  apply Int.mul_nonneg <;> assumption
+
+private def pos_mul : ∀ {a b : ℚ}, IsPos a -> IsPos b -> IsPos (a * b) := by
+  intro a b ha hb
+  induction a with | mk a =>
+  induction b with | mk b =>
+  simp [mk_pos, Fract.IsPos] at *
+  apply Int.mul_pos <;> assumption
+
+private def mul_le_mul_of_nonneg_left : ∀ {a b : ℚ}, a ≤ b → ∀ (c : ℚ), 0 ≤ c → c * a ≤ c * b := by
+  intro a b h k hk
+  show IsNonneg _
+  rw [←mul_sub]
+  apply nonneg_mul
+  rwa [nonneg_iff] at hk
+  assumption
+
+instance : IsStrictOrderedSemiring ℚ where
+  add_le_add_left {a b} h k := by
+    show IsNonneg _
+    rwa [add_comm k a, sub_add, add_sub_comm,
+      sub_self, zero_add]
+  mul_nonneg {a b} := by
+    iterate 3 rw [nonneg_iff]
+    apply nonneg_mul
+  mul_le_mul_of_nonneg_left := mul_le_mul_of_nonneg_left
+  mul_le_mul_of_nonneg_right := by
+    intro a b h k hk
+    rw [mul_comm _ k, mul_comm _ k]
+    apply mul_le_mul_of_nonneg_left <;> assumption
+  mul_pos {a b} ha hb := by
+    simp [pos_iff] at *
+    apply pos_mul <;> assumption
 
 end Rational
