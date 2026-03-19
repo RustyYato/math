@@ -96,6 +96,10 @@ class IsZeroNeOne (α: Type*) [Zero α] [One α] : Prop where
 
 def zero_ne_one (α: Type*) [Zero α] [One α] [IsZeroNeOne α] : (0: α) ≠ (1: α) := IsZeroNeOne.zero_ne_one
 
+def subingleton_of_zero_eq_one (α: Type*) [Zero α] [One α] [Mul α] [IsLawfulZeroMul α] [IsLawfulOneMul α] (h: (0: α) = (1: α)) : Subsingleton α where
+  allEq a b := by
+    rw [←one_mul a, ←one_mul b, ←h, zero_mul, zero_mul]
+
 instance [Nontrivial α] [DecidableEq α] [Zero α] [One α] [Mul α]
   [IsLawfulOneMul α] [IsLawfulZeroMul α] : IsZeroNeOne α where
   zero_ne_one := by

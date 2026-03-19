@@ -26,10 +26,19 @@ instance [AddMonoidOps α] [IsAddMonoid α] : IsLeftDistribSMul ℕ α where
 instance [AddMonoidOps α] [IsAddMonoid α] : IsLawfulZeroSMul ℕ α where
   zero_smul a := by rw [zero_nsmul]
 
-instance [AddMonoidOps α] [IsAddMonoid α] : IsScalarTower ℕ ℕ α where
+instance
+  [AddMonoidOps R] [IsAddMonoid R]
+  [AddMonoidOps α] [IsAddMonoid α]
+  [SMul R α]
+  [IsLeftDistribSMul R α]
+  [IsLawfulZeroSMul R α]
+  : IsScalarTower ℕ R α where
   smul_assoc r s a := by
-    show (r * s) • a = _
-    rw [mul_comm, mul_nsmul]
+    induction r with
+    | zero => rw [zero_nsmul, zero_nsmul, zero_smul]
+    | succ r ih => rw [succ_nsmul, add_smul, ih, succ_nsmul]
+
+instance [AddMonoidOps α] [IsAddMonoid α] : IsScalarTower ℕ ℕ α := inferInstance
 
 instance [SMul R α] [AddMonoidOps α] [IsAddMonoid α] [IsRightDistribSMul R α] [IsLawfulSMulZero R α] : IsSMulComm ℕ R α where
   smul_comm r s a := by

@@ -419,6 +419,10 @@ def mul_div_cancel_left (a b: α) [IsCommAt a b] : a * b / a = b := by
 def div_one (a: α) : a / 1 = a := by
   rw [div_eq_mul_inv, one_inv, mul_one]
 
+def one_div (a: α) : 1 / a = a⁻¹ := by
+  apply eq_inv_of_mul
+  rw [div_eq_mul_inv, mul_assoc, inv_mul_cancel, mul_one]
+
 def one_zpow (z: ℤ) : (1: α) ^ z = 1 := by
   cases z
   rw [zpow_ofNat, one_npow]
@@ -569,6 +573,9 @@ def add_sub_comm (a b c: α) [IsAddCommAt b c] : a + c - b = a - b + c :=
 
 def sub_zero (a: α) : a - 0 = a :=
   div_one (α := MulOfAdd α) _
+
+def zero_sub (a: α) : 0 - a = -a :=
+  one_div (α := MulOfAdd α) _
 
 def zsmul_zero (z: ℤ) : z • (0: α) = 0 :=
   one_zpow (α := MulOfAdd α) _

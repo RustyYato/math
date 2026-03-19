@@ -17,15 +17,33 @@ instance [AddGroupOps α] [IsAddGroup α] : IsLawfulZeroSMul ℤ α where
 instance [AddGroupOps α] [IsAddGroup α] [IsAddComm α] : IsDistributiveAction ℤ α where
   smul_add r a b := by rw [zsmul_add]
 
-instance [AddGroupOps α] [IsAddGroup α] : IsScalarTower ℕ ℤ α where
-  smul_assoc r s a := by
-    show (r * s) • a = _
-    rw [mul_comm, mul_zsmul, ofNat_zsmul]
+def neg_smul_left [AddGroupOps R] [AddGroupOps α] [IsAddGroup R] [IsAddGroup α] [SMul R α] [IsLeftDistribSMul R α] [IsLawfulZeroSMul R α] (r: R) (a: α) : -(r • a) = (-r) • a := by
+  symm; apply eq_neg_of_add
+  rw [←add_smul, neg_add_cancel, zero_smul]
 
-instance [AddGroupOps α] [IsAddGroup α] : IsScalarTower ℤ ℤ α where
+def neg_smul_right [AddGroupOps R] [AddGroupOps α] [IsAddGroup R] [IsAddGroup α] [SMul R α] [IsRightDistribSMul R α] [IsLawfulSMulZero R α] (r: R) (a: α) : -(r • a) = r • (-a) := by
+  symm; apply eq_neg_of_add
+  rw [←smul_add, neg_add_cancel, smul_zero]
+
+def neg_smul [AddGroupOps α] [IsAddGroup α] [SMul R α]
+  [IsRightDistribSMul R α] [IsLawfulSMulZero R α]
+  (r: R) (a: α) : r • (-a) = -(r • a) := by
+  apply eq_neg_of_add
+  rw [←smul_add, neg_add_cancel, smul_zero]
+
+instance
+  [AddGroupOps R] [IsAddGroup R]
+  [AddGroupOps α] [IsAddGroup α]
+  [SMul R α] [IsLeftDistribSMul R α]
+  [IsLawfulZeroSMul R α]
+  : IsScalarTower ℤ R α where
   smul_assoc r s a := by
-    show (r * s) • a = _
-    rw [mul_comm, mul_zsmul]
+    cases r with
+    | ofNat r => rw [ofNat_zsmul, ofNat_zsmul, smul_assoc]
+    | negSucc r => rw [negSucc_zsmul, negSucc_zsmul, ←neg_smul_left, smul_assoc]
+
+instance [AddGroupOps α] [IsAddGroup α] : IsScalarTower ℕ ℤ α := inferInstance
+instance [AddGroupOps α] [IsAddGroup α] : IsScalarTower ℤ ℤ α := inferInstance
 
 def smul_neg [AddGroupOps α] [IsAddGroup α] [SMul R α]
   [IsRightDistribSMul R α] [IsLawfulSMulZero R α]
