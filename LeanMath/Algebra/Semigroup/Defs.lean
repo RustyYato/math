@@ -2,7 +2,7 @@ import LeanMath.Logic.Funlike
 import LeanMath.Logic.Nontrivial
 import LeanMath.Data.Embedding.Defs
 import LeanMath.Data.Equiv.Defs
-import LeanMath.Data.AddMul
+import LeanMath.Data.AddMul.Defs
 import LeanMath.Data.Cong.Defs
 import LeanMath.Data.Hom
 
@@ -521,6 +521,12 @@ instance : IsLeftCancel₀ ℤ where
     intro k a b hk h
     apply Int.eq_of_mul_eq_mul_left _ h
     assumption
+
+instance : IsLeftAddCancel ℕ where
+  of_add_left := Nat.add_left_cancel
+
+instance : IsLeftAddCancel ℤ where
+  of_add_left := Int.add_left_cancel
 
 instance : IsRightCancel₀ ℕ := inferInstance
 instance : IsRightCancel₀ ℤ := inferInstance
