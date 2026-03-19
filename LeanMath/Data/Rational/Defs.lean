@@ -8,7 +8,7 @@ structure Rational.Fract where
   num: ℤ
   den: ℕ
   den_ne_zero: den ≠ 0 := by decide
-deriving Repr
+deriving Repr, DecidableEq
 
 def Rational.Fract.is_reduced (q: Fract) : Prop :=
   Int.gcd q.num q.den = 1
@@ -16,7 +16,7 @@ def Rational.Fract.is_reduced (q: Fract) : Prop :=
 structure Rational extends Rational.Fract where
   ofFract ::
   reduced: toFract.is_reduced
-deriving Repr
+deriving Repr, DecidableEq
 
 notation "ℚ" => Rational
 
@@ -372,6 +372,22 @@ instance : Pow ℚ ℕ where
       exact hq k kprime (Int.prime_dvd_pow _ _ _ kprime ha) (Int.prime_dvd_pow _ _ _ kprime hb)
   }
 
+def npow_congr (a b: Fract) (n: ℕ) (h: a ≈ b) : a ^ n ≈ b ^ n := by
+  show _ = _
+  simp
+  rw [←mul_npow, ←mul_npow, h]
+
+def mk_npow (a: Fract) (n: ℕ) : (mk a) ^ n = mk (a ^ n) := by
+  apply toFract_inj
+  apply is_reduced_spec
+  apply (mk a ^ n).reduced
+  apply (mk _).reduced
+  apply flip Relation.trans
+  apply Relation.symm
+  apply mk_rel
+  apply npow_congr
+  apply mk_rel
+
 instance : CheckedDiv? ℚ where
   checked_div a b hb := a * b⁻¹?
 
@@ -425,6 +441,9 @@ instance : Sub Fract where
       exact b.den_ne_zero h
   }
 
+@[simp] def Fract.sub_num (a b: Fract) : (a - b).num = a.num * b.den - b.num * a.den := rfl
+@[simp] def Fract.sub_den (a b: Fract) : (a - b).den = a.den * b.den := rfl
+
 instance : IsLawfulSub Fract where
   sub_eq_add_neg a b := by
     obtain ⟨na, da, ha⟩ := a
@@ -441,5 +460,135 @@ instance : Sub ℚ where
       ←mk_neg, ←mk_neg, sound ac, sound bd]
 
 instance : FieldOps ℚ := inferInstance
+
+@[simp] def mk_sub (a b: Fract) : mk a - mk b = mk (a - b) := by
+  apply lift₂_mk
+def mk_zero : 0 = mk 0 := rfl
+def mk_one : 1 = mk 1 := rfl
+@[simp] def Fract.num_zero : Fract.num 0 = 0 := rfl
+@[simp] def Fract.den_zero : Fract.den 0 = 1 := rfl
+@[simp] def Fract.num_one : Fract.num 1 = 1 := rfl
+@[simp] def Fract.den_one : Fract.den 1 = 1 := rfl
+@[simp] def Fract.num_natCast (n: ℕ) : Fract.num n = n := rfl
+@[simp] def Fract.den_natCast (n: ℕ) : Fract.den n = 1 := rfl
+@[simp] def Fract.num_intCast (n: ℤ) : Fract.num n = n := rfl
+@[simp] def Fract.den_intCast (n: ℤ) : Fract.den n = 1 := rfl
+
+instance : IsComm ℚ where
+  mul_comm a b := by
+    induction a using ind with | mk a =>
+    induction b using ind with | mk b =>
+    simp; apply sound
+    show _ = _
+    simp
+    ac_rfl
+instance : IsAddComm ℚ where
+  add_comm a b := by
+    induction a using ind with | mk a =>
+    induction b using ind with | mk b =>
+    simp; apply sound
+    show _ = _
+    simp
+    ac_rfl
+instance : IsLeftDistrib ℚ where
+  mul_add a b c := by
+    induction a using ind with | mk a =>
+    induction b using ind with | mk b =>
+    induction c using ind with | mk c =>
+    simp; apply sound
+    show _ = _
+    simp [mul_add, add_mul]
+    ac_rfl
+instance : IsLawfulNatCast ℚ where
+  natCast_zero := rfl
+  natCast_one := rfl
+  natCast_succ n := by
+    simp [←mk_natCast, mk_one]
+    apply sound
+    show _ = _; simp
+instance : IsLawfulIntCast ℚ where
+  intCast_ofNat _ := rfl
+  intCast_negSucc _ := rfl
+instance : IsGroupWithZero ℚ where
+  zero_ne_one := by decide
+  mul_assoc a b c := by
+    induction a using ind with | mk a =>
+    induction b using ind with | mk b =>
+    induction c using ind with | mk c =>
+    simp; apply sound
+    show _ = _
+    simp
+    ac_rfl
+  one_mul a := by
+    induction a using ind with | mk a =>
+    simp [mk_one, mk_mul]; apply sound
+    show _ = _; simp
+  mul_one a := by
+    induction a using ind with | mk a =>
+    simp [mk_one, mk_mul]; apply sound
+    show _ = _; simp
+  zero_mul a := by
+    induction a using ind with | mk a =>
+    simp [mk_zero, mk_mul]; apply sound
+    show _ = _; simp
+  mul_zero a := by
+    induction a using ind with | mk a =>
+    simp [mk_zero, mk_mul]; apply sound
+    show _ = _; simp
+  npow_zero a := by
+    induction a using ind with | mk a =>
+    simp [mk_one, mk_npow]; apply sound
+    show _ = _; simp
+  npow_succ a n := by
+    induction a using ind with | mk a =>
+    simp [mk_mul, mk_npow]; apply sound
+    show _ = _; simp [npow_succ]
+  mul_inv?_cancel a h := by
+    induction a using ind with | mk a =>
+    simp [mk_mul, mk_inv?, mk_one]; apply sound
+    show _ = _; simp
+    rw [←mul_assoc, Int.mul_sign_self, mul_comm]
+  div?_eq_mul_inv? _ _ _ := rfl
+  zpow?_ofNat _ _ := rfl
+  zpow?_negSucc _ _ _ := rfl
+instance : IsAddGroup ℚ where
+  add_assoc a b c := by
+    induction a using ind with | mk a =>
+    induction b using ind with | mk b =>
+    induction c using ind with | mk c =>
+    simp; apply sound
+    show _ = _
+    simp [add_mul]
+    ac_rfl
+  zero_add a := by
+    induction a using ind with | mk a =>
+    simp [mk_zero, mk_add]; apply sound
+    show _ = _; simp
+  add_zero a := by
+    induction a using ind with | mk a =>
+    simp [mk_zero, mk_add]; apply sound
+    show _ = _; simp
+  sub_eq_add_neg a b := by
+    induction a using ind with | mk a =>
+    induction b using ind with | mk b =>
+    simp; apply sound
+    show _ = _
+    simp [sub_eq_add_neg]
+  zero_nsmul := zero_mul
+  succ_nsmul n a := by
+    show _ * _  = _
+    rw [natCast_succ, add_mul, one_mul]; rfl
+  ofNat_zsmul _ _ := rfl
+  negSucc_zsmul a n := by
+    induction a using ind with | mk a =>
+    show _ * _ = -(_ * _)
+    simp [←mk_intCast, ←mk_natCast]
+    apply sound
+    show _ = _; simp [neg_mul_left, Int.negSucc_eq]
+  add_neg_cancel a := by
+    induction a using ind with | mk a =>
+    simp [mk_zero]; apply sound
+    show _ = _; simp [←neg_mul_left, add_neg_cancel]
+instance : IsField ℚ where
 
 end Rational
