@@ -17,9 +17,16 @@ def Rational.Fract.is_reduced (q: Fract) : Prop :=
 structure Rational extends Rational.Fract where
   ofFract ::
   reduced: toFract.is_reduced
-deriving Repr, DecidableEq
+deriving DecidableEq
 
 notation "ℚ" => Rational
+
+instance : Repr ℚ where
+  reprPrec a p :=
+    if a.den = 1 then
+      reprPrec a.num p
+    else
+      reprPrec a.num p ++ " / " ++ reprPrec a.den p
 
 namespace Rational
 
