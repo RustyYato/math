@@ -19,6 +19,7 @@ variable
   [IsZeroNeOne γ]
   [IsOrderedAddCommMonoid γ]
 
+@[simp]
 def abs_one : ‖(1: γ)‖ = 1 := by
   have : ‖(1: γ)‖ = ‖(1: γ)‖ * ‖(1: γ)‖ := by
     rw (occs := [1]) [←one_mul 1]
