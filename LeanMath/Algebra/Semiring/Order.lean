@@ -17,3 +17,46 @@ instance : IsStrictOrderedSemiring ℕ where
 
 instance : IsStrictOrderedSemiring ℤ where
   mul_pos := Int.mul_pos
+
+section IsStrictOrderedSemiring
+
+variable [LE α] [LT α] [AddMonoidWithOneOps α] [IsAddMonoidWithOne α] [IsOrderedCancelAddCommMonoid α]
+  [IsZeroLEOne α] [IsZeroNeOne α]
+
+def nonneg_natCast (n: ℕ) : 0 ≤ (n: α) := by
+  induction n with
+  | zero => rw [natCast_zero]
+  | succ n ih =>
+    rw [natCast_succ]
+    apply nonneg_add
+    assumption
+    apply zero_le_one
+
+def natCast_le_natCast [IsLeftAddCancel α] (n m: ℕ) : (n: α) ≤ m ↔ n ≤ m := by
+  induction n generalizing m with
+  | zero =>
+    simp; rw [natCast_zero]
+    induction m with
+    | zero => rw [natCast_zero]
+    | succ n ih =>
+      rw [natCast_succ]
+      apply nonneg_add
+      assumption
+      apply zero_le_one
+  | succ n ih =>
+    cases m with
+    | zero =>
+      simp
+      intro g
+      rw [natCast_zero, natCast_succ] at g
+      have : 1 ≤ (n: α) + 1 := by apply le_add_left; apply nonneg_natCast
+      exact zero_ne_one _ (le_antisymm (zero_le_one _) (le_trans this g))
+    | succ m =>
+      simp; rw [←ih]
+      rw [natCast_succ, natCast_succ]
+      apply add_le_add_right_iff
+
+def natCast_lt_natCast [IsLeftAddCancel α] (n m: ℕ) : (n: α) < m ↔ n < m := by
+  rw [lt_iff_le_and_not_ge, lt_iff_le_and_not_ge, natCast_le_natCast, natCast_le_natCast]
+
+end IsStrictOrderedSemiring
