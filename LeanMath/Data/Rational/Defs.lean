@@ -1,4 +1,5 @@
 import LeanMath.Algebra.Field.Defs
+import LeanMath.Algebra.Semiring.Char
 import LeanMath.Algebra.Dvd.Defs
 import LeanMath.Data.Int.Prime
 import LeanMath.Tactic.AxiomBlame
@@ -590,5 +591,15 @@ instance : IsAddGroup ℚ where
     simp [mk_zero]; apply sound
     show _ = _; simp [←neg_mul_left, add_neg_cancel]
 instance : IsField ℚ where
+
+def ofInt : ℤ ↪+* ℚ where
+  toRingHom := intCastHom
+  inj := by
+    intro a b h
+    replace h : (a: ℚ) = b := h
+    exact (Fract.mk.inj (Rational.ofFract.inj h)).left
+
+instance : HasChar ℚ 0 :=
+  HasChar.of_ring_emb ofInt
 
 end Rational
