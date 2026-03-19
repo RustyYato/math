@@ -59,4 +59,19 @@ def natCast_le_natCast [IsLeftAddCancel α] (n m: ℕ) : (n: α) ≤ m ↔ n ≤
 def natCast_lt_natCast [IsLeftAddCancel α] (n m: ℕ) : (n: α) < m ↔ n < m := by
   rw [lt_iff_le_and_not_ge, lt_iff_le_and_not_ge, natCast_le_natCast, natCast_le_natCast]
 
+def pos_natCast (n: ℕ) : (0: α) < (n + 1: ℕ) := by
+  rw [←natCast_zero]
+  apply (natCast_lt_natCast _ _).mpr
+  apply Nat.zero_lt_succ
+def natCast_ne_zero (n: ℕ) : (n + 1: ℕ) ≠ (0: α) := by
+  intro h
+  have := h ▸ pos_natCast (α := α) n
+  exact Relation.irrefl this
+
+end IsStrictOrderedSemiring
+
+section IsStrictOrderedSemiring
+
+variable [LE α] [LT α] [SemiringOps α] [IsOrderedSemiring α]
+
 end IsStrictOrderedSemiring

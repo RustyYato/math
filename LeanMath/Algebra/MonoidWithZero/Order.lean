@@ -25,8 +25,14 @@ instance : IsOrderedZeroMul ℤ where
   mul_le_mul_of_nonneg_left {_ _} h _:= Int.mul_le_mul_of_nonneg_left h
   mul_le_mul_of_nonneg_right {_ _} h _:= Int.mul_le_mul_of_nonneg_right h
 
+section
+
 variable [LE α] [LT α] [Mul α] [Zero α] [IsOrderedZeroMul α]
 
 def mul_nonneg: ∀{a b: α}, 0 ≤ a -> 0 ≤ b -> 0 ≤ a * b := IsOrderedZeroMul.mul_nonneg
 def mul_le_mul_of_nonneg_left: ∀{a b: α}, a ≤ b -> ∀c, 0 ≤ c -> c * a ≤ c * b := IsOrderedZeroMul.mul_le_mul_of_nonneg_left
 def mul_le_mul_of_nonneg_right: ∀{a b: α}, a ≤ b -> ∀c, 0 ≤ c -> a * c ≤ b * c := IsOrderedZeroMul.mul_le_mul_of_nonneg_right
+
+end
+
+variable [LE α] [LT α] [Mul α] [Zero α] [IsOrderedZeroMul α] [IsPartialOrder α]

@@ -217,6 +217,17 @@ def lt_of_le_of_lt [IsPreorder α] {a b c: α} (h: a ≤ b) (g: b < c) : a < c :
     apply Relation.trans
     assumption
     assumption
+def lt_of_le_of_ne [IsPartialOrder α] {a b: α} (h: a ≤ b) (g: a ≠ b) : a < b := by
+  apply lt_iff_le_and_not_ge.mpr
+  apply And.intro
+  assumption
+  intro h'
+  exact g (Relation.antisymm h h')
+
+def ne_of_lt [IsPreorder α] {a b: α} : a < b -> a ≠ b := by
+  rintro h rfl
+  exact Relation.irrefl h
+def ne_of_gt [IsPreorder α] {a b: α} : a > b -> a ≠ b := Ne.symm ∘ ne_of_lt
 
 def lt_or_eq_of_le [IsPartialOrder α] {a b: α} (h: a ≤ b) : a < b ∨ a = b := by
   by_cases g:b ≤ a
