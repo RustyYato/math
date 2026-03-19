@@ -53,8 +53,8 @@ class IsGroupWithZero (α: Type*) [GroupWithZeroOps α] : Prop
   extends IsMonoidWithZero α, IsLawfulDiv? α, IsLawfulZPow? α, IsZeroNeOne α where
   protected mul_inv?_cancel (a: α) (h: a ≠ 0) : a * a⁻¹? = 1
 
-variable [GroupWithZeroOps α] [IsGroupWithZero α] [DecidableEq α]
-   [GroupWithZeroOps β] [IsGroupWithZero β] [DecidableEq β]
+variable [GroupWithZeroOps α] [IsGroupWithZero α]
+   [GroupWithZeroOps β] [IsGroupWithZero β]
 
 def mul_inv?_cancel (a: α) (h: a ≠ 0) : a * a⁻¹? = 1 :=
   IsGroupWithZero.mul_inv?_cancel _ _
@@ -71,7 +71,7 @@ def of_mul_ne_zero {a b: α} (h: a * b ≠ 0) : a ≠ 0 ∧ b ≠ 0 := by
 macro_rules
 | `(tactic|invert_tactic_trivial_low_priority) => `(tactic|first|apply (of_mul_ne_zero (by assumption)).left|apply (of_mul_ne_zero (by assumption)).right)
 
-instance : NoZeroDivisors α where
+instance [DecidableEq α] : NoZeroDivisors α where
   of_mul_eq_zero {a b} h := by
     apply Decidable.or_iff_not_imp_right.mpr
     intro g
@@ -79,9 +79,14 @@ instance : NoZeroDivisors α where
     rw [mul_assoc, mul_inv?_cancel, mul_one] at this
     assumption
 
+variable [NoZeroDivisors α]
+
 def mul_ne_zero {a b: α} (ha: a ≠ 0) (hb: b ≠ 0) : a * b ≠ 0 := by
   intro g
   cases of_mul_eq_zero g <;> contradiction
+
+macro_rules
+| `(tactic|invert_tactic_trivial) => `(tactic|first|apply mul_ne_zero <;> invert_tactic)
 
 def inv_ne_zero {a: α} (h: a ≠ 0) : a⁻¹? ≠ 0 := by
   intro g
@@ -275,6 +280,9 @@ def div?_div? (a b c: α) (hb: b ≠ 0) (hc: c ≠ 0) : a /? c /? b = a /? (b * 
 def mul_div?_comm (a b c: α) [IsCommAt b c] (h: b ≠ 0) : a * c /? b = a /? b * c := by
   rw [div?_eq_mul_inv?, div?_eq_mul_inv?,
     mul_assoc, mul_assoc, mul_comm _ c]
+
+def div?_mul_cancel (a b: α) (h: b ≠ 0) : a /? b * b = a := by
+  rw [div?_eq_mul_inv?, mul_assoc, inv?_mul_cancel, mul_one]
 
 def div?_one (a: α) : a /? 1 = a := by
   rw [div?_eq_mul_inv?, one_inv?, mul_one]

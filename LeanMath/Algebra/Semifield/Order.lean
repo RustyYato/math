@@ -70,7 +70,7 @@ def pos_mul_of_pos (a b: α) (ha: 0 < a) (hb: 0 < b) : 0 < a * b := by
   intro g
   rcases of_mul_eq_zero (le_antisymm g (mul_nonneg ha hb)) with rfl | rfl <;> contradiction
 
-def pos_div?_natCast (a: α) (ha: 0 < a) (n: ℕ) : 0 < a /? (n + 1: ℕ) := by
+def pos_div?_natCast {a: α} (ha: 0 < a) (n: ℕ) : 0 < a /? (n + 1: ℕ) := by
   rw [div?_eq_mul_inv?]
   apply pos_mul_of_pos
   assumption

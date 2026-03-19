@@ -402,6 +402,9 @@ instance : IsLawfulOneInv α where
 def mul_div_assoc (a b c: α) : (a * b) / c = a * (b / c) := by
   rw [div_eq_mul_inv, div_eq_mul_inv, mul_assoc]
 
+def div_mul_assoc (a b c: α) : (a / b) * c = a * (b⁻¹ * c) := by
+  rw [div_eq_mul_inv, mul_assoc]
+
 def div_mul (a b c: α) : a / (b * c) = a / c / b := by
   rw [div_eq_mul_inv, div_eq_mul_inv, div_eq_mul_inv,
     inv_mul_rev, mul_assoc]
@@ -564,6 +567,9 @@ instance : IsLawfulNegZero α where
 
 def add_sub_assoc (a b c: α) : (a + b) - c = a + (b - c) :=
   mul_div_assoc (α := MulOfAdd α) _ _ _
+
+def sub_add_assoc (a b c: α) : (a - b) + c = a + (-b + c) :=
+  div_mul_assoc (α := MulOfAdd α) _ _ _
 
 def sub_add (a b c: α) : a - (b + c) = a - c - b :=
     div_mul (α := MulOfAdd α) _ _ _

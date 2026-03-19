@@ -68,6 +68,9 @@ def natCast_ne_zero (n: ℕ) : (n + 1: ℕ) ≠ (0: α) := by
   have := h ▸ pos_natCast (α := α) n
   exact Relation.irrefl this
 
+instance (n: ℕ) : NeZero ((n + 1: ℕ): α) where
+  out := natCast_ne_zero n
+
 end IsStrictOrderedSemiring
 
 section IsStrictOrderedSemiring
