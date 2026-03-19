@@ -41,7 +41,7 @@ def mul_lt_mul_of_pos_right: ∀(a b : α), a < b → ∀ (c : α), 0 < c → a 
   subst b
   exact Relation.irrefl ab
 
-variable [IsLinearOrder α] [DecidableLE α] [IsZeroLEOne α]
+variable [IsLinearOrder α] [IsZeroLEOne α]
 
 def pos_inv? (a: α) (ha: 0 < a) : 0 < a⁻¹? := by
   apply not_le.mp

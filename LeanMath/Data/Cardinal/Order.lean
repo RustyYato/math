@@ -100,6 +100,8 @@ noncomputable def to_initial_ord_lt : (· < ·: Cardinal -> Cardinal -> Prop) �
     rfl
 
 instance : @Relation.IsTotal Cardinal (· ≤ ·) := to_initial_ord.liftTotal
+open Classical in
+instance : @Relation.IsTrichotomous Cardinal (· < ·) (· = ·) := inferInstance
 instance : @Relation.IsWelFounded Cardinal (· < ·) := to_initial_ord_lt.liftWellfounded
 instance : IsLinearOrder Cardinal where
 

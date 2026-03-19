@@ -84,25 +84,25 @@ def lt_inv_of_lt_one {a: α} : a < 1 -> a < a⁻¹ := by
   apply inv_lt_inv
   assumption
 
-def one_le_of_inv_le [DecidableLE α] [IsLinearOrder α] {a: α} : a⁻¹ ≤ a -> 1 ≤ a := by
+def one_le_of_inv_le [IsLinearOrder α] {a: α} : a⁻¹ ≤ a -> 1 ≤ a := by
   intro h; apply not_lt.mp
   intro g
   replace g := lt_inv_of_lt_one g
   exact Relation.irrefl (lt_of_le_of_lt h g)
 
-def one_lt_of_inv_lt [DecidableLE α] [IsLinearOrder α] {a: α} : a⁻¹ < a -> 1 < a := by
+def one_lt_of_inv_lt [IsLinearOrder α] {a: α} : a⁻¹ < a -> 1 < a := by
   intro h; apply not_le.mp
   intro g
   replace g := le_inv_of_le_one g
   exact Relation.irrefl (lt_of_lt_of_le h g)
 
-def le_one_of_le_inv [DecidableLE α] [IsLinearOrder α] {a: α} : a ≤ a⁻¹ -> a ≤ 1 := by
+def le_one_of_le_inv [IsLinearOrder α] {a: α} : a ≤ a⁻¹ -> a ≤ 1 := by
   intro h; apply not_lt.mp
   intro g
   replace g := inv_lt_of_one_lt g
   exact Relation.irrefl (lt_of_le_of_lt h g)
 
-def lt_one_of_lt_inv [DecidableLE α] [IsLinearOrder α] {a: α} : a < a⁻¹ -> a < 1 := by
+def lt_one_of_lt_inv [IsLinearOrder α] {a: α} : a < a⁻¹ -> a < 1 := by
   intro h; apply not_le.mp
   intro g
   replace g := inv_le_of_one_le g
@@ -164,16 +164,16 @@ def neg_lt_of_pos {a: α} : 0 < a -> -a < a :=
 def lt_neg_of_neg {a: α} : a < 0 -> a < -a :=
   lt_inv_of_lt_one (α := MulOfAdd α)
 
-def nonneg_of_neg_le [DecidableLE α] [IsLinearOrder α] {a: α} : -a ≤ a -> 0 ≤ a :=
+def nonneg_of_neg_le [IsLinearOrder α] {a: α} : -a ≤ a -> 0 ≤ a :=
   one_le_of_inv_le (α := MulOfAdd α)
 
-def pos_of_neg_lt [DecidableLE α] [IsLinearOrder α] {a: α} : -a < a -> 0 < a :=
+def pos_of_neg_lt [IsLinearOrder α] {a: α} : -a < a -> 0 < a :=
   one_lt_of_inv_lt (α := MulOfAdd α)
 
-def nonpos_of_le_neg [DecidableLE α] [IsLinearOrder α] {a: α} : a ≤ -a -> a ≤ 0 :=
+def nonpos_of_le_neg [IsLinearOrder α] {a: α} : a ≤ -a -> a ≤ 0 :=
   le_one_of_le_inv (α := MulOfAdd α)
 
-def neg_of_lt_neg [DecidableLE α] [IsLinearOrder α] {a: α} : a < -a -> a < 0 :=
+def neg_of_lt_neg [IsLinearOrder α] {a: α} : a < -a -> a < 0 :=
   lt_one_of_lt_inv (α := MulOfAdd α)
 
 def sub_le_sub {a b c d: α} : a ≤ c -> d ≤ b -> a - b ≤ c - d :=

@@ -191,7 +191,7 @@ end IsOrderedAddCommMonoid
 
 section IsOrderedCommMonoid
 
-variable [LE α] [LT α] [MonoidOps α] [IsLeftCancel α] [DecidableLE α] [IsOrderedCommMonoid α] [IsLinearOrder α]
+variable [LE α] [LT α] [MonoidOps α] [IsLeftCancel α] [IsOrderedCommMonoid α] [IsLinearOrder α]
 
 def le_of_npow_le_npow (a b: α) (n: ℕ) (h: 0 < n) : a ^ n ≤ b ^ n -> a ≤ b :=
   (npow_strict_mono n h).le_iff_le.mp
@@ -200,7 +200,7 @@ end IsOrderedCommMonoid
 
 section IsOrderedAddCommMonoid
 
-variable [LE α] [LT α] [AddMonoidOps α] [IsLeftAddCancel α] [DecidableLE α] [IsOrderedAddCommMonoid α] [IsLinearOrder α]
+variable [LE α] [LT α] [AddMonoidOps α] [IsLeftAddCancel α] [IsOrderedAddCommMonoid α] [IsLinearOrder α]
 
 def le_of_nsmul_le_nsmul (a b: α) (n: ℕ) (h: 0 < n) : n • a ≤ n •  b -> a ≤ b :=
   (nsmul_strict_mono n h).le_iff_le.mp

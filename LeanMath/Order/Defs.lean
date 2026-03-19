@@ -48,8 +48,11 @@ class IsPreorder (α: Type*) [LE α] [LT α] : Prop
 class IsPartialOrder (α: Type*) [LE α] [LT α] : Prop
   extends IsPreorder α, Relation.IsAntisymm (α := α) (· ≤ ·) (· = ·) where
 
+abbrev IsLETotal (α: Type*) [LE α] := @Relation.IsTotal α (· ≤ ·)
+abbrev IsLTTrichotomous (α: Type*) [LT α] := @Relation.IsTrichotomous α (· < ·) (· = ·)
+
 class IsLinearOrder (α: Type*) [LE α] [LT α] : Prop
-  extends IsPartialOrder α, @Relation.IsTotal α (· ≤ ·) where
+  extends IsPartialOrder α, IsLTTrichotomous α where
 
 class IsLawfulMax (α: Type*) [LE α] [Max α] : Prop where
   protected left_le_max {a b: α} : a ≤ a ⊔ b
@@ -66,6 +69,17 @@ class IsSemiLatticeMin (α: Type*) [LE α] [LT α] [Min α] : Prop extends IsPar
   protected le_min {x a b: α} : x ≤ a -> x ≤ b -> x ≤ a ⊓ b
 
 class IsLattice (α: Type*) [LE α] [LT α] [Max α] [Min α] : Prop extends IsSemiLatticeMax α, IsSemiLatticeMin α where
+
+class LemLE (α: Type*) [LE α] where
+  protected le_or_not_le (a b: α) : a ≤ b ∨ ¬a ≤ b
+
+def le_or_not_le [LE α] [LemLE α] (a b: α) : a ≤ b ∨ ¬a ≤ b := LemLE.le_or_not_le _ _
+
+instance [LE α] [DecidableLE α] : LemLE α where
+  le_or_not_le a b := by
+    by_cases a ≤ b
+    left; assumption
+    right; assumption
 
 variable [LE α] [LT α] [Min α] [Max α] [Top α] [Bot α]
   [LE β] [LT β]
@@ -134,7 +148,7 @@ def not_le_of_lt (h: a < b) : ¬b ≤ a := (lt_iff_le_and_not_ge.mp h).right
 instance [@Relation.IsRefl α (· ≤ ·)] : @Relation.IsIrrefl α (· < ·) where
   irrefl h := (not_le_of_lt h) (Relation.refl _)
 
-instance (priority := 900) [@Relation.IsRefl α (· ≤ ·)] [Relation.IsTrichotomous (α := α) (· < ·) (· = ·)] : @Relation.IsTotal α (· ≤ ·) where
+instance (priority := 900) [@Relation.IsRefl α (· ≤ ·)] [IsLTTrichotomous α] : IsLETotal α where
   total a b := by
     rcases trichotomous (· < ·) a b with h | rfl | h
     · left; apply le_of_lt
@@ -143,15 +157,15 @@ instance (priority := 900) [@Relation.IsRefl α (· ≤ ·)] [Relation.IsTrichot
     · right; apply le_of_lt
       assumption
 
-instance (priority := 900) [DecidableRel (α := α) (· ≤ ·)] [@Relation.IsAntisymm α (· ≤ ·) (· = ·)] [@Relation.IsTotal α (· ≤ ·)] : Relation.IsTrichotomous (α := α) (· < ·) (· = ·) where
+instance (priority := 900) [LemLE α] [@Relation.IsAntisymm α (· ≤ ·) (· = ·)] [IsLETotal α] : IsLTTrichotomous α where
   trichotomous a b := by
     rcases total (· ≤ ·) a b with g | g
-    by_cases h:b ≤ a
+    rcases le_or_not_le b a with h | h
     · right; left
       exact antisymm g h
     · left; apply lt_iff_le_and_not_ge.mpr
       apply And.intro <;> assumption
-    by_cases h:a ≤ b
+    rcases le_or_not_le a b with h | h
     · right; left
       exact antisymm h g
     · right; right; apply lt_iff_le_and_not_ge.mpr
@@ -162,14 +176,14 @@ instance : IsLinearOrder Nat where
   refl := Nat.le_refl
   trans := Nat.le_trans
   antisymm := Nat.le_antisymm
-  total := Nat.le_total
+  trichotomous := Nat.lt_trichotomy
 
 instance : IsLinearOrder Int where
   lt_iff_le_and_not_ge := Int.lt_iff_le_not_le
   refl := Int.le_refl
   trans := Int.le_trans
   antisymm := Int.le_antisymm
-  total := Int.le_total
+  trichotomous := Int.lt_trichotomy
 
 instance : IsLattice Nat where
   left_le_max := Nat.le_max_left _ _
@@ -187,7 +201,7 @@ instance : IsLattice Int where
   min_le_right := Int.min_le_right _ _
   le_min h g := Int.le_min.mpr ⟨h, g⟩
 
-variable [DecidableRel (α := α) (· ≤ ·)]
+-- variable [DecidableLE α]
 
 def le_refl [IsPreorder α] (a: α) : a ≤ a := Relation.refl _
 
@@ -229,8 +243,8 @@ def ne_of_lt [IsPreorder α] {a b: α} : a < b -> a ≠ b := by
   exact Relation.irrefl h
 def ne_of_gt [IsPreorder α] {a b: α} : a > b -> a ≠ b := Ne.symm ∘ ne_of_lt
 
-def lt_or_eq_of_le [IsPartialOrder α] {a b: α} (h: a ≤ b) : a < b ∨ a = b := by
-  by_cases g:b ≤ a
+def lt_or_eq_of_le [LemLE α] [IsPartialOrder α] {a b: α} (h: a ≤ b) : a < b ∨ a = b := by
+  rcases le_or_not_le b a with g | g
   right; exact antisymm h g
   left; apply lt_iff_le_and_not_ge.mpr
   apply And.intro
@@ -245,6 +259,14 @@ def lt_trichotomy [IsLinearOrder α] (a b: α) : a < b ∨ a = b ∨ b < a := tr
 
 def lt_trans [IsPreorder α] {a b c: α} : a < b -> b < c -> a < c := Relation.trans
 def le_antisymm [IsPartialOrder α] {a b: α} : a ≤ b -> b ≤ a -> a = b := Relation.antisymm
+
+instance [LE α] [LT α] [IsLinearOrder α] : LemLE α where
+  le_or_not_le a b := by
+    rcases lt_trichotomy a b with h | rfl | h
+    left; apply le_of_lt; assumption
+    left; rfl
+    right
+    exact not_le_of_lt h
 
 def min_comm [IsSemiLatticeMin α] (a b: α) : a ⊓ b = b ⊓ a := by
   apply le_antisymm
@@ -352,7 +374,7 @@ def lt_or_le [IsLinearOrder α] (a b: α) : a < b ∨ b ≤ a := by
 
 end
 
-instance [DecidableRel (· ≤ ·: α -> α -> Prop)] [FunLike F α β] [IsOrderHom F α β] [IsPartialOrder α] [IsPreorder β] : EmbeddingLike F α β where
+instance [DecidableLE α] [FunLike F α β] [IsOrderHom F α β] [IsPartialOrder α] [IsPreorder β] : EmbeddingLike F α β where
   coeEmbedding f := {
     toFun := f
     inj := by

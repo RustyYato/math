@@ -14,7 +14,7 @@ def StrictMonotone.dual [LT α] [LT β] {f: α -> β} (hf: StrictMonotone f) : S
   apply hf
   assumption
 
-def StrictMonotone.le_iff_le [LE α] [LT α] [LE β] [LT β] [DecidableLE α] [IsLinearOrder α] [IsPreorder β] {f: α -> β} (hf : StrictMonotone f) {a b : α} : f a ≤ f b ↔ a ≤ b := by
+def StrictMonotone.le_iff_le [LE α] [LT α] [LE β] [LT β] [IsLinearOrder α] [IsPreorder β] {f: α -> β} (hf : StrictMonotone f) {a b : α} : f a ≤ f b ↔ a ≤ b := by
   apply Iff.intro
   · intro h
     apply not_lt.mp

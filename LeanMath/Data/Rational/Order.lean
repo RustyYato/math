@@ -36,7 +36,17 @@ instance : LE ℚ where
 instance : LT ℚ where
   lt a b := (b - a).IsPos
 
-instance : IsLinearOrder ℚ where
+instance : IsLETotal ℚ where
+  total := by
+    intro a b
+    rcases le_total 0 (b - a).num with h | h
+    · left
+      assumption
+    · right
+      have : 0 ≤ (-(b - a)).num := Int.neg_le_neg_iff.mpr h
+      rwa [neg_sub] at this
+
+instance : IsPartialOrder ℚ where
   lt_iff_le_and_not_ge {a b} := by
     show IsPos _ ↔ IsNonneg _ ∧ ¬IsNonneg  _
     apply Iff.intro
@@ -74,14 +84,6 @@ instance : IsLinearOrder ℚ where
     apply Int.le_of_mul_le_mul_right h
     apply Int.ofNat_lt.mpr
     exact b.den_pos
-  total := by
-    intro a b
-    rcases le_total 0 (b - a).num with h | h
-    · left
-      assumption
-    · right
-      have : 0 ≤ (-(b - a)).num := Int.neg_le_neg_iff.mpr h
-      rwa [neg_sub] at this
   antisymm {a b} h g := by
     replace h : 0 ≤ (b - a).num := h
     replace g : 0 ≤ (a - b).num := g
@@ -95,6 +97,8 @@ instance : DecidableLE ℚ :=
   fun a b => inferInstanceAs (Decidable (0 ≤ (b - a).num))
 instance : DecidableLT ℚ :=
   fun a b => inferInstanceAs (Decidable (0 < (b - a).num))
+
+instance : IsLinearOrder ℚ where
 
 instance : Min ℚ := minOfLe
 instance : Max ℚ := maxOfLe
