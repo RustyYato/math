@@ -1,4 +1,5 @@
 import LeanMath.Algebra.AddMonoidWithOne.Defs
+import LeanMath.Algebra.MonoidWithZero.Defs
 
 class SemiringOps (α: Type*) extends AddMonoidWithOneOps α, MonoidOps α where
 
@@ -27,7 +28,16 @@ instance (priority := 100) [Mul α] [Add α] [IsComm α] [IsRightDistrib α]
     repeat rw [mul_comm k]
     rw [add_mul]
 
-class IsSemiring (α: Type*) [SemiringOps α] : Prop extends IsAddMonoidWithOne α, IsMonoid α, IsLeftDistrib α, IsRightDistrib α, IsLawfulZeroMul α, IsAddComm α where
+class IsNonUnitalNonAssocSemiring (α: Type*)
+  [AddMonoidOps α] [Mul α] extends IsAddMonoid α, IsLeftDistrib α, IsRightDistrib α, IsLawfulZeroMul α, IsAddComm α  where
+
+class IsNonUnitalSemiring (α: Type*)
+  [AddMonoidOps α] [Mul α] extends IsNonUnitalNonAssocSemiring α, IsSemigroup α where
+
+class IsNonAssocSemiring (α: Type*)
+  [AddMonoidWithOneOps α] [Mul α] extends IsNonUnitalNonAssocSemiring α, IsAddMonoidWithOne α, IsLawfulOneMul α where
+
+class IsSemiring (α: Type*) [SemiringOps α] : Prop extends IsNonUnitalSemiring α, IsNonAssocSemiring α, IsMonoidWithZero α where
 
 section
 

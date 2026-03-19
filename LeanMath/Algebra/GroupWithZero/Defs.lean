@@ -1,4 +1,5 @@
 import LeanMath.Algebra.Group.Defs
+import LeanMath.Algebra.MonoidWithZero.Defs
 import LeanMath.Logic.Checked
 import LeanMath.Logic.Nontrivial
 
@@ -49,8 +50,7 @@ def zpow?_negSucc  (a: α) (n: ℕ) (h: a ≠ 0) : a ^? (Int.negSucc n) = a⁻¹
 end
 
 class IsGroupWithZero (α: Type*) [GroupWithZeroOps α] : Prop
-  extends IsMonoid α, IsLawfulDiv? α, IsLawfulZPow? α, IsZeroNeOne α,
-    IsLawfulZeroMul α where
+  extends IsMonoidWithZero α, IsLawfulDiv? α, IsLawfulZPow? α, IsZeroNeOne α where
   protected mul_inv?_cancel (a: α) (h: a ≠ 0) : a * a⁻¹? = 1
 
 variable [GroupWithZeroOps α] [IsGroupWithZero α] [DecidableEq α]
