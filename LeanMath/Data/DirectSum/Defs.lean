@@ -1,4 +1,4 @@
-  import LeanMath.Algebra.Monoid.Free
+import LeanMath.Algebra.Monoid.Free
 import LeanMath.Algebra.Monoid.Action.Defs
 
 section

@@ -1,6 +1,6 @@
 import LeanMath.Algebra.Ring.Defs
 import LeanMath.Algebra.Dvd.Defs
-import LeanMath.Data.Nat.Prime
+import LeanMath.Data.Nat.Prime.Defs
 
 namespace Int
 
@@ -140,7 +140,19 @@ def gcd_eq_one_iff_no_common_prime_factors {a b: ℤ} : Int.gcd a b = 1 ↔ ∀k
     apply Nat.minFact_dvd
     apply Int.gcd_dvd_right
 
-def prime_dvd_pow (a b: ℤ) (n: ℕ) (ha: IsPrime a) : a ∣ b ^ n -> a ∣ b := by
+def prime_of_dvd_mul {p a b: ℤ} (ha: IsPrime p) : p ∣ a * b -> p ∣ a ∨ p ∣ b := by
+  intro h
   sorry
+
+def prime_dvd_pow (a b: ℤ) (n: ℕ) (ha: IsPrime a) : a ∣ b ^ n -> a ∣ b := by
+  induction n with
+  | zero =>
+    simp; intro h
+    nomatch ha.not_unit (unit_of_dvd_one _ h)
+  | succ n ih =>
+    rw [npow_succ]; intro h
+    rcases prime_of_dvd_mul ha h with h | h
+    · exact ih h
+    · exact h
 
 end Int

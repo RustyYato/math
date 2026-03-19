@@ -112,6 +112,6 @@ def IsIrreducible (a: α) [Mul α] [Dvd α] : Prop :=
   ∀⦃x y: α⦄, a = x * y -> a ∣ x ∨ a ∣ y
 
 structure IsPrime (a: α) [Mul α] [Dvd α] [One α] [Zero α] : Prop where
-  irreducible: IsIrreducible a
+  irreducible: ∀⦃x y: α⦄, a ∣ x * y -> a ∣ x ∨ a ∣ y
   ne_zero: a ≠ 0
   not_unit: ¬IsUnit a
