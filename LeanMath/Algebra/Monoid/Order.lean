@@ -198,3 +198,35 @@ def le_of_nsmul_le_nsmul (a b: α) (n: ℕ) (h: 0 < n) : n • a ≤ n •  b ->
   (nsmul_strict_mono n h).le_iff_le.mp
 
 end IsOrderedAddCommMonoid
+
+section IsOrderedCancelCommMonoid
+
+variable [LE α] [LT α] [MonoidOps α] [IsOrderedCancelCommMonoid α]
+
+def lt_of_mul_lt_mul_left : ∀{k a b: α}, k * a < k * b → a < b := by
+  intro k a b h; rw [lt_iff_le_and_not_ge] at *
+  obtain ⟨h, g⟩ := h; apply And.intro
+  apply le_of_mul_le_mul_left
+  assumption
+  intro g'; apply g
+  apply mul_le_mul_left
+  assumption
+
+def lt_of_mul_lt_mul_right : ∀{k a b: α}, a * k < b * k → a < b := by
+  intro k a b h; rw [mul_comm _ k, mul_comm _ k] at h
+  apply lt_of_mul_lt_mul_left
+  assumption
+
+end IsOrderedCancelCommMonoid
+
+section IsOrderedCancelAddCommMonoid
+
+variable [LE α] [LT α] [AddMonoidOps α] [IsOrderedCancelAddCommMonoid α]
+
+def lt_of_add_lt_add_left : ∀{k a b: α}, k + a < k + b → a < b :=
+  lt_of_mul_lt_mul_left (α := MulOfAdd α)
+
+def lt_of_add_lt_add_right : ∀{k a b: α}, a + k < b + k → a < b :=
+  lt_of_mul_lt_mul_right (α := MulOfAdd α)
+
+end IsOrderedCancelAddCommMonoid

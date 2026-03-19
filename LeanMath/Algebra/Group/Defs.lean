@@ -410,6 +410,12 @@ def mul_div_comm (a b c: α) [IsCommAt b c] : a * c / b = a / b * c := by
   rw [div_eq_mul_inv, div_eq_mul_inv,
     mul_assoc, mul_assoc, mul_comm _ c]
 
+def mul_div_cancel_right (a b: α) : a * b / b = a := by
+  rw [div_eq_mul_inv, mul_assoc, mul_inv_cancel, mul_one]
+
+def mul_div_cancel_left (a b: α) [IsCommAt a b] : a * b / a = b := by
+  rw [mul_comm a, mul_div_cancel_right]
+
 def div_one (a: α) : a / 1 = a := by
   rw [div_eq_mul_inv, one_inv, mul_one]
 
