@@ -61,12 +61,20 @@ instance [LE α] [LT α] [AddMonoidOps α] [IsOrderedCancelAddCommMonoid α] : I
 instance [LE α] [LT α] [MonoidOps α] [IsOrderedCancelCommMonoid α] : IsOrderedCancelAddCommMonoid (AddOfMul α) where
   le_of_add_le_add_left := le_of_mul_le_mul_left (α := α)
 
+instance : IsZeroLEOne ℕ where
+  zero_le_one := by decide
+instance : IsZeroLEOne ℤ where
+  zero_le_one := by decide
+
 instance : IsOrderedCancelAddCommMonoid ℕ where
   add_le_add_left := Nat.add_le_add_left
   le_of_add_le_add_left := Nat.le_of_add_le_add_left
 instance : IsOrderedCancelAddCommMonoid ℤ where
   add_le_add_left := Int.add_le_add_left
   le_of_add_le_add_left := Int.le_of_add_le_add_left
+
+instance : IsOrderedCommMonoid ℕ where
+  mul_le_mul_left h _ := Nat.mul_le_mul_left _ h
 
 section IsOrderedCommMonoid
 

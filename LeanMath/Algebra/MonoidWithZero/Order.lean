@@ -1,0 +1,26 @@
+import LeanMath.Algebra.MonoidWithZero.Defs
+import LeanMath.Algebra.Monoid.Order
+
+class IsOrderedZeroMul (α: Type*) [LE α] [LT α] [Mul α] [Zero α] extends IsLawfulZeroMul α where
+  mul_nonneg: ∀{a b: α}, 0 ≤ a -> 0 ≤ b -> 0 ≤ a * b
+  mul_le_mul_of_nonneg_left: ∀{a b: α}, a ≤ b -> ∀c, 0 ≤ c -> c * a ≤ c * b
+  mul_le_mul_of_nonneg_right: ∀{a b: α}, a ≤ b -> ∀c, 0 ≤ c -> a * c ≤ b * c
+
+instance [LE α] [LT α] [MonoidOps α] [Zero α] [IsLawfulZeroMul α] [IsZeroLEOne α] [IsOrderedCommMonoid α] : IsOrderedZeroMul α where
+  mul_nonneg {a b} ha hb := by
+    rw [←mul_zero 0]
+    apply mul_le_mul
+    assumption
+    assumption
+  mul_le_mul_of_nonneg_left {a b} h k hk := by
+    apply mul_le_mul_left
+    assumption
+  mul_le_mul_of_nonneg_right  {a b} h k hk := by
+    apply mul_le_mul_right
+    assumption
+
+instance : IsOrderedZeroMul ℕ := inferInstance
+instance : IsOrderedZeroMul ℤ where
+  mul_nonneg := Int.mul_nonneg
+  mul_le_mul_of_nonneg_left {_ _} h _:= Int.mul_le_mul_of_nonneg_left h
+  mul_le_mul_of_nonneg_right {_ _} h _:= Int.mul_le_mul_of_nonneg_right h
