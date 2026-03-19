@@ -372,8 +372,6 @@ instance : Pow ℚ ℕ where
       exact hq k kprime (Int.prime_dvd_pow _ _ _ kprime ha) (Int.prime_dvd_pow _ _ _ kprime hb)
   }
 
-#print axioms instPowNat
-
 instance : CheckedDiv? ℚ where
   checked_div a b hb := a * b⁻¹?
 
@@ -443,6 +441,5 @@ instance : Sub ℚ where
       ←mk_neg, ←mk_neg, sound ac, sound bd]
 
 instance : FieldOps ℚ := inferInstance
--- instance : IsField ℚ where
 
 end Rational

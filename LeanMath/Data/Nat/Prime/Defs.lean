@@ -1,5 +1,7 @@
 import LeanMath.Data.Nat.Find
 import LeanMath.Data.Nat.Basic
+import LeanMath.Data.Nat.Gcd
+import LeanMath.Data.Int.Defs
 import LeanMath.Algebra.Dvd.Defs
 import LeanMath.Tactic.AxiomBlame
 
@@ -41,10 +43,24 @@ private def semiprime_iff {n: ℕ} : (∀⦃x y: ℕ⦄, n ∣ x * y -> n ∣ x 
     intro rfl
     have := h 2
     contradiction
-    intro x y g
-    obtain ⟨k, hk⟩ := g
-
-    sorry
+    intro a b g
+    rcases h (Nat.gcd n a) (Nat.gcd_dvd_left _ _) with h | h
+    rw [←h]
+    left; apply Nat.gcd_dvd_right
+    right
+    have := Nat.bezout n a
+    rw [h, Int.natCast_one] at this
+    apply Int.natCast_dvd_natCast'.mp
+    rw [←Int.mul_one b]
+    rw [this, Int.mul_add, Int.mul_left_comm, ←Int.mul_assoc b,
+      Int.mul_comm b a]
+    apply Int.dvd_add
+    apply Int.dvd_mul_right
+    apply flip Int.dvd_trans
+    apply Int.dvd_mul_right
+    rw [←Int.natCast_mul]
+    apply Int.natCast_dvd_natCast'.mpr
+    assumption
 
 def minFact_ne_zero (n: ℕ) : n.minFact ≠ 0 := by
   match n with

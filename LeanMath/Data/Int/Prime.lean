@@ -1,31 +1,10 @@
 import LeanMath.Algebra.Ring.Defs
 import LeanMath.Algebra.Dvd.Defs
 import LeanMath.Data.Nat.Prime.Defs
+import LeanMath.Data.Int.Gcd
+import LeanMath.Data.Int.Defs
 
 namespace Int
-
-def natCast_dvd_natCast' {a b: ℕ} : (a: ℤ) ∣ b ↔ a ∣ b := by
-  apply Iff.intro
-  · intro ⟨k, ha⟩
-    cases k with
-    | negSucc k =>
-      rw [Int.ofNat_mul_negSucc] at ha
-      match a with
-      | a + 1 =>
-        have := Int.natCast_nonneg b
-        rw [ha] at this
-        contradiction
-      | 0 =>
-        rw [zero_mul, natCast_zero, neg_zero] at ha
-        cases Int.ofNat.inj ha
-        apply Nat.dvd_refl
-    | ofNat k =>
-      rw [←natCast_mul] at ha
-      cases Int.ofNat.inj ha
-      apply Nat.dvd_mul_right
-  · intro ⟨k, h⟩
-    exists k
-    rw [←natCast_mul]; congr
 
 def minFact (z: ℤ) : ℕ := Nat.minFact z.natAbs
 
@@ -44,10 +23,12 @@ def natCast_is_prime (n: ℕ) (hz: IsPrime n) : IsPrime (n: ℤ) where
     contradiction
   irreducible := by
     intro a b h
-    have : n = Int.natAbs (a * b) := by rw [←h, Int.natAbs_natCast]
-    rw [Int.natAbs_mul] at this
-    iterate 2 rw [←Int.dvd_natAbs, Int.natCast_dvd_natCast']
-    exact hz.irreducible this
+    rw [←Int.dvd_natAbs, Int.natAbs_mul,
+      Int.natCast_mul] at h
+    rcases hz.irreducible (Int.natCast_dvd_natCast'.mp h) with h | h
+    all_goals rw [←Int.natCast_dvd_natCast', Int.dvd_natAbs] at h
+    left; assumption
+    right; assumption
 
 def minFact_prime (z: ℤ) (hz: ¬IsUnit z) : IsPrime (z.minFact: ℤ) := by
   apply natCast_is_prime
@@ -140,10 +121,6 @@ def gcd_eq_one_iff_no_common_prime_factors {a b: ℤ} : Int.gcd a b = 1 ↔ ∀k
     apply Nat.minFact_dvd
     apply Int.gcd_dvd_right
 
-def prime_of_dvd_mul {p a b: ℤ} (ha: IsPrime p) : p ∣ a * b -> p ∣ a ∨ p ∣ b := by
-  intro h
-  sorry
-
 def prime_dvd_pow (a b: ℤ) (n: ℕ) (ha: IsPrime a) : a ∣ b ^ n -> a ∣ b := by
   induction n with
   | zero =>
@@ -151,7 +128,7 @@ def prime_dvd_pow (a b: ℤ) (n: ℕ) (ha: IsPrime a) : a ∣ b ^ n -> a ∣ b :
     nomatch ha.not_unit (unit_of_dvd_one _ h)
   | succ n ih =>
     rw [npow_succ]; intro h
-    rcases prime_of_dvd_mul ha h with h | h
+    rcases ha.irreducible h with h | h
     · exact ih h
     · exact h
 

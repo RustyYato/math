@@ -17,3 +17,26 @@ def Int.succ_pred_induction {motive: ℤ -> Prop}
   · induction z with
     | zero => apply pred 0 zero
     | succ n ih => apply pred (Int.negSucc n) ih
+
+def Int.natCast_dvd_natCast' {a b: ℕ} : (a: ℤ) ∣ b ↔ a ∣ b := by
+  apply Iff.intro
+  · intro ⟨k, ha⟩
+    cases k with
+    | negSucc k =>
+      rw [Int.ofNat_mul_negSucc] at ha
+      match a with
+      | a + 1 =>
+        have := Int.natCast_nonneg b
+        rw [ha] at this
+        contradiction
+      | 0 =>
+        rw [Nat.zero_mul, Int.natCast_zero, Int.neg_zero] at ha
+        cases Int.ofNat.inj ha
+        apply Nat.dvd_refl
+    | ofNat k =>
+      rw [←natCast_mul] at ha
+      cases Int.ofNat.inj ha
+      apply Nat.dvd_mul_right
+  · intro ⟨k, h⟩
+    exists k
+    rw [←natCast_mul]; congr
