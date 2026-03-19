@@ -1,6 +1,7 @@
 import LeanMath.Algebra.Ring.Defs
 import LeanMath.Algebra.Semiring.Order
 import LeanMath.Algebra.Group.Order
+import LeanMath.Tactic.AxiomBlame
 
 section
 
@@ -54,6 +55,7 @@ def intCast_le_intCast (n m: ℤ) : (n: α) ≤ m ↔ n ≤ m := by
   | .ofNat n, .negSucc m =>
     simp [intCast_ofNat, intCast_negSucc]
     apply flip Iff.intro
+    intro; exfalso
     omega; intro h; exfalso
     have := neg_lt_neg_iff.mpr <| (natCast_lt_natCast (α := α) 0 (m + 1)).mpr (Nat.zero_lt_succ _)
     rw [natCast_zero, neg_zero] at this
