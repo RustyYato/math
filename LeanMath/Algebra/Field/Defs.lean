@@ -24,7 +24,7 @@ end
 
 variable {R D: Type*} [FunLike F D R] [FieldOps D] [RingOps R] [IsRing R] [IsDivisionRing D]
   [IsZeroHom F D R] [IsOneHom F D R] [IsAddHom F D R] [IsMulHom F D R]
-  [Nontrivial R] [DecidableEq D] [DecidableEq R]
+  [IsZeroNeOne R] [DecidableEq D]
 
 instance : EmbeddingLike F D R where
   coeEmbedding f := {
@@ -40,5 +40,5 @@ instance : EmbeddingLike F D R where
       intro g
       have : f (x * x⁻¹?) = 1 := by rw [mul_inv?_cancel, map_one]
       rw [map_mul, h, zero_mul] at this
-      contradiction
+      exact zero_ne_one _ this
   }

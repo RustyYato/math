@@ -26,7 +26,7 @@ instance : IsModule ℚ ℝ := inferInstance
 
 def ofRat : ℚ ↪+* ℝ where
     toRingHom := algebraMap ℚ
-    inj := CauchySeq.Completion.const_inj
+    inj := inj (algebraMap ℚ (α := ℝ))
 
 end
 
