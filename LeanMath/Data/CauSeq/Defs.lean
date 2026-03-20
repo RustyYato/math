@@ -7,6 +7,9 @@ import LeanMath.Algebra.Module.Defs
 import LeanMath.Data.Fintype.Order
 import LeanMath.Tactic.AxiomBlame
 
+variable {α β γ: Type*}
+variable [DecidableEq α]
+
 section
 
 namespace CauchySeq
@@ -64,7 +67,9 @@ def Eventually₂.merge
 
 end CauchySeq
 
-variable {α β γ: Type*} [Norm α γ] [Norm β γ] [LE γ] [LT γ] [IsLinearOrder γ]
+section
+
+variable [Norm α γ] [Norm β γ] [LE γ] [LT γ] [IsLinearOrder γ]
   [FieldOps α] [IsField α] [FieldOps β] [IsField β]
   [FieldOps γ] [IsField γ]
 
@@ -80,21 +85,66 @@ structure CauchySeq (α γ: Type*)
   toFun : ℕ -> α
   protected is_cauchy': is_cauchy toFun
 
+end
+
+private class MetricFieldOps (γ: Type*) extends FieldOps γ, LE γ, LT γ, Max γ, Norm γ γ where
+
+private class IsMetricField (γ: Type*)
+  [MetricFieldOps γ] : Prop
+  extends
+  IsField γ,
+  IsLinearOrder γ, IsSemiLatticeMax γ,
+  IsZeroLEOne γ, IsStrictOrderedSemiring γ,
+  IsLawfulAbs γ, IsAbsMax γ
+  where
+
+instance
+  (priority := 100)
+  [LE γ] [LT γ] [FieldOps γ] [Norm γ γ] [Max γ]
+  : MetricFieldOps γ where
+
+instance
+  (priority := 100)
+  [MetricFieldOps γ]
+  [IsLinearOrder γ] [IsField γ]
+  [IsZeroLEOne γ] [IsStrictOrderedSemiring γ]
+  [IsSemiLatticeMax γ] [IsLawfulAbs γ] [IsAbsMax γ]
+  : IsMetricField γ where
+
+-- private class VectorSpaceOps (α: Type*) (γ: outParam Type*) [MetricField γ] [FieldOps α] [IsField α] [Norm α γ]
+--   extends SMul γ α, IsLawfulNorm α γ,
+--     IsDistributiveAction γ α, IsLeftDistribSMul γ α, IsLawfulZeroSMul γ α where
+
+private class VectorSpaceOps (α: Type*) (γ: outParam Type*) [MetricFieldOps γ] [FieldOps α] extends Norm α γ, SMul γ α where
+
+private class IsVectorSpace (α γ: Type*) [MetricFieldOps γ] [IsMetricField γ] [FieldOps α] [IsField α] [VectorSpaceOps α γ]
+  : Prop extends IsLawfulNorm α γ, IsDistributiveAction γ α, IsLeftDistribSMul γ α, IsLawfulZeroSMul γ α where
+
+instance
+  (priority := 100)
+  [MetricFieldOps γ] [FieldOps α]
+  [Norm α γ] [SMul γ α] : VectorSpaceOps α γ where
+
+instance
+  (priority := 100)
+  [MetricFieldOps γ] [IsMetricField γ] [FieldOps α] [IsField α]
+  [VectorSpaceOps α γ]
+  [IsLawfulNorm α γ]
+  [IsDistributiveAction γ α] [IsLeftDistribSMul γ α]
+  [IsLawfulZeroSMul γ α] : IsVectorSpace α γ where
+
+section
+
 variable
-  [Norm γ γ] [SMul γ α] [SMul γ β]
-  [IsLawfulAbs γ] [IsLawfulNorm α γ] [IsLawfulNorm β γ]
-  [IsDistributiveAction γ α] [IsDistributiveAction γ β]
-  [IsLeftDistribSMul γ α] [IsLeftDistribSMul γ β]
-  [IsLawfulZeroSMul γ α] [IsLawfulZeroSMul γ β]
-  [IsZeroLEOne γ] [IsStrictOrderedSemiring γ] [IsZeroNeOne γ]
-  [Max γ] [IsSemiLatticeMax γ] [IsAbsMax γ]
+  [MetricFieldOps γ] [IsMetricField γ]
+  [FieldOps α] [IsField α] [FieldOps β] [IsField β]
+  [VectorSpaceOps α γ] [VectorSpaceOps β γ]
+  [IsVectorSpace α γ] [IsVectorSpace β γ]
 
 local macro_rules
 | `(tactic|invert_tactic_trivial) => `(tactic|apply natCast_ne_zero)
 
 private def half_pos {a: γ} (h: 0 < a) : 0 < a /? (2: ℕ) := pos_div?_natCast h 1
-
-variable [DecidableEq α]
 
 def safe_inv (a: ℕ -> α) (i: ℕ): α :=
   if hb:a i = 0 then 0 else (a i)⁻¹?
@@ -172,7 +222,17 @@ def bounded_difference {a b: ℕ -> α} (h: is_cauchy_eqv a b) : ∃B, ∀i, ‖
     apply zero_le_one
     apply bot_le_max_of_range_with
 
+end
+
 namespace CauchySeq
+
+section
+
+variable
+  [MetricFieldOps γ] [IsMetricField γ]
+  [FieldOps α] [IsField α] [FieldOps β] [IsField β]
+  [VectorSpaceOps α γ] [VectorSpaceOps β γ]
+  [IsVectorSpace α γ] [IsVectorSpace β γ]
 
 instance : FunLike (CauchySeq α γ) ℕ α where
 
@@ -303,18 +363,27 @@ def _root_.is_cauchy_eqv.mul
     rw [mul_assoc, mul_inv?_cancel, mul_one, ←div?_eq_mul_inv?]
     assumption
 
+end
+
 structure Completion (α γ: Type*)
-  [Norm α γ] [LE γ] [LT γ] [IsLinearOrder γ]
+
+  [LE γ] [LT γ] [IsLinearOrder γ]
+  [FieldOps γ] [IsField γ] [Norm γ γ]
+  [IsZeroLEOne γ] [IsStrictOrderedSemiring γ]
+  [Max γ] [IsSemiLatticeMax γ] [IsLawfulAbs γ] [IsAbsMax γ]
+
   [FieldOps α] [IsField α]
-  [FieldOps γ] [IsField γ]
-  [Norm γ γ] [SMul γ α]
-  [IsLawfulAbs γ] [IsLawfulNorm α γ]
-  [IsStrictOrderedSemiring γ] [IsZeroNeOne γ]
-  [IsDistributiveAction γ α]
-  [IsLeftDistribSMul γ α]
+  [Norm α γ] [SMul γ α] [IsLawfulNorm α γ]
+  [IsDistributiveAction γ α] [IsLeftDistribSMul γ α]
   [IsLawfulZeroSMul γ α]
-  [IsZeroLEOne γ] where
+  where
   ofQuot :: toQuot : Quotient (setoid (α := α))
+
+variable
+  [MetricFieldOps γ] [IsMetricField γ]
+  [FieldOps α] [IsField α] [FieldOps β] [IsField β]
+  [VectorSpaceOps α γ] [VectorSpaceOps β γ]
+  [IsVectorSpace α γ] [IsVectorSpace β γ]
 
 def const (a: α) : CauchySeq α γ where
   toFun _ := a
@@ -362,7 +431,7 @@ def copy_eq (c: CauchySeq α γ) (f: ℕ -> α) (hf: ∀i, c i = f i) : c.copy f
 
 def Completion.const : α -> Completion α γ := ofSeq ∘ .const
 
-def Completion.const_inj [DecidableEq α] : Function.Injective (const (α := α)) := by
+def Completion.const_inj : Function.Injective (const (α := α)) := by
   intro a b h
   replace h := exact h
   apply Decidable.byContradiction; intro g
@@ -672,6 +741,8 @@ instance : IsLawfulZeroMul (Completion α γ) where
     show ofSeq _ = ofSeq _; congr 1; ext i
     apply mul_zero
 
+instance : RingOps (Completion α γ) where
+
 instance : IsRing (Completion α γ) where
   natCast_zero := by
     show Completion.const _ = Completion.const _
@@ -734,6 +805,10 @@ macro_rules
 private def norm_inv? (a: α) (ha: a ≠ 0) : ‖a⁻¹?‖ = ‖a‖⁻¹? := by
   apply eq_inv?_of_mul
   rw [←norm_mul, inv?_mul_cancel, norm_one]
+
+instance : IsLinearOrder γ := inferInstance
+instance : @Relation.IsIrrefl γ (· < ·) := inferInstance
+instance : @Relation.IsAsymm γ (· < ·) := inferInstance
 
 protected def is_cauchy_eqv.safe_inv
   [IsLawfulMulNorm α γ]
