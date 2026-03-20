@@ -114,5 +114,11 @@ instance : IsLawfulAbs ℚ where
     assumption
     intro rfl
     decide +kernel
+instance : IsAbsMax ℚ where
+  abs_eq_of_nonneg a ha := by
+    show _ ⊔ _ = _
+    rw [max_eq_left]
+    apply neg_le_of_nonneg
+    assumption
 
 end Rational

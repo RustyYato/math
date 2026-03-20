@@ -1092,7 +1092,7 @@ instance : CheckedZPow? (Completion α γ) where
 
 instance : GroupWithZeroOps (Completion α γ) := inferInstance
 instance : AddGroupWithOneOps (Completion α γ) := inferInstance
-instance : FieldOps (Completion α γ) := instFieldOpsOfGroupWithZeroOpsOfAddGroupWithOneOps
+instance (priority := 100000) : FieldOps (Completion α γ) := instFieldOpsOfGroupWithZeroOpsOfAddGroupWithOneOps
 
 def eventually_ne_zero_of_ne_zero (a: CauchySeq α γ) (h: ¬a ≈ 0) : Eventually fun i => a i ≠ 0 := by
   have ⟨B, Bpos, k, h⟩ := norm_pos_of_ne_zero _ h
@@ -1137,7 +1137,7 @@ instance : IsGroupWithZero (Completion α γ) where
     assumption
 
 open Classical in
-instance : IsField (Completion α γ) where
+instance (priority := 100000) : IsField (Completion α γ) where
 
 end CauchySeq
 
