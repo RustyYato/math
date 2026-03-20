@@ -4,6 +4,8 @@ import LeanMath.Algebra.Group.Action.Defs
 import LeanMath.Algebra.Module.Defs
 import LeanMath.Order.Defs
 
+section
+
 variable
   [Norm α γ] [Norm γ γ]
   [LE γ] [LT γ] [SMul γ α]
@@ -65,3 +67,40 @@ def abs_eq_max [Max γ] [IsSemiLatticeMax γ] [IsAbsMax γ] (a: γ) : ‖a‖ = 
   rw [max_eq_left (neg_le_of_nonneg h)]
   apply abs_eq_of_nonneg
   assumption
+
+end
+
+section
+
+variable
+  [Norm α γ] [Norm γ γ]
+  [LE γ] [LT γ] [SMul γ α]
+  [RingOps α] [IsRing α]
+  [RingOps γ] [IsRing γ]
+  [IsLawfulAbs γ] [IsLawfulNorm α γ]
+  [IsDistributiveAction γ α]
+  [IsLeftDistribSMul γ α]
+  [IsLawfulZeroSMul γ α]
+  [IsLinearOrder γ]
+  [NoZeroDivisors γ]
+  [IsZeroLEOne γ]
+  [IsZeroNeOne γ]
+  [IsOrderedAddCommMonoid γ]
+  [IsLawfulMulNorm α γ]
+
+@[simp]
+def norm_one [hα: Nontrivial α] : ‖(1: α)‖ = 1 := by
+  have : ‖(1: α)‖ = ‖(1: α)‖ * ‖(1: α)‖ := by
+    rw (occs := [1]) [←one_mul 1]
+    rw [norm_mul]
+  rw (occs := [1]) [←mul_one (‖(1: α)‖)] at this
+  rw [Eq.comm, sub_eq_zero] at this
+  rw [←mul_sub] at this
+  rcases of_mul_eq_zero this with h | h
+  have := subingleton_of_zero_eq_one _ (of_norm_eq_zero h).symm
+  exfalso; have ⟨x, y, h⟩ := hα
+  exact h (Subsingleton.allEq _ _)
+  rw [←sub_eq_zero _ _] at h
+  assumption
+
+end

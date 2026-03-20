@@ -287,6 +287,9 @@ def div?_mul_cancel (a b: α) (h: b ≠ 0) : a /? b * b = a := by
 def div?_one (a: α) : a /? 1 = a := by
   rw [div?_eq_mul_inv?, one_inv?, mul_one]
 
+def one_div? (a: α) (ha: a ≠ 0) : 1 /? a = a⁻¹? := by
+  rw [div?_eq_mul_inv?, one_mul]
+
 def one_zpow? (z: ℤ) : (1: α) ^? z = 1 := by
   cases z
   rw [zpow?_ofNat, one_npow]

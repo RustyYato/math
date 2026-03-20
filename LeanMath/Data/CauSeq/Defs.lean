@@ -30,10 +30,40 @@ def Eventually₂.merge₂
   apply le_trans _ hj
   apply right_le_max
 
+def Eventually.merge
+  {P Q: ℕ -> Prop} (h: Eventually P) (g: Eventually Q) : Eventually fun i => P i ∧ Q i := by
+  obtain ⟨k₀, hk₀⟩ := h
+  obtain ⟨k₁, hk₁⟩ := g
+  exists k₀ ⊔ k₁
+  intro i hi
+  apply And.intro
+  apply hk₀
+  apply le_trans _ hi
+  apply left_le_max
+  apply hk₁
+  apply le_trans _ hi
+  apply right_le_max
+
+def Eventually₂.merge
+  {P: ℕ -> ℕ -> Prop} {Q: ℕ -> Prop} (h: Eventually₂ P) (g: Eventually Q) : Eventually₂ fun i j => P i j ∧ Q i := by
+  obtain ⟨k₀, hk₀⟩ := h
+  obtain ⟨k₁, hk₁⟩ := g
+  exists k₀ ⊔ k₁
+  intro i j hi hj
+  apply And.intro
+  apply hk₀
+  apply le_trans _ hi
+  apply left_le_max
+  apply le_trans _ hj
+  apply left_le_max
+  apply hk₁
+  apply le_trans _ hi
+  apply right_le_max
+
 end CauchySeq
 
 variable {α γ: Type*} [Norm α γ] [LE γ] [LT γ] [IsLinearOrder γ]
-  [RingOps α] [IsRing α]
+  [FieldOps α] [IsField α]
   [FieldOps γ] [IsField γ]
 
 def is_cauchy_eqv (f g: ℕ -> α) : Prop :=
@@ -43,7 +73,7 @@ def is_cauchy (f: ℕ -> α) : Prop := is_cauchy_eqv f f
 
 structure CauchySeq (α γ: Type*)
   [Norm α γ] [LE γ] [LT γ] [IsLinearOrder γ]
-  [RingOps α] [IsRing α]
+  [FieldOps α] [IsField α]
   [FieldOps γ] [IsField γ] where
   toFun : ℕ -> α
   protected is_cauchy': is_cauchy toFun
@@ -62,6 +92,11 @@ local macro_rules
 | `(tactic|invert_tactic_trivial) => `(tactic|apply natCast_ne_zero)
 
 private def half_pos {a: γ} (h: 0 < a) : 0 < a /? (2: ℕ) := pos_div?_natCast h 1
+
+variable [DecidableEq α]
+
+def safe_inv (a: ℕ -> α) (i: ℕ): α :=
+  if hb:a i = 0 then 0 else (a i)⁻¹?
 
 def is_cauchy_eqv.add
   {a b c d: ℕ -> α}
@@ -216,7 +251,7 @@ def bounded_with (c: CauchySeq α γ) (lb: γ) : ∃B, lb < B ∧ ∀i, ‖c i�
   apply lt_of_lt_of_le _ left_le_max
   apply hB
 
-def is_cauchy_eqv.mul
+def _root_.is_cauchy_eqv.mul
   [IsLawfulMulNorm α γ]
   {a b c d: CauchySeq α γ}
   (ac: a ≈ c)
@@ -269,7 +304,7 @@ def is_cauchy_eqv.mul
 
 structure Completion (α γ: Type*)
   [Norm α γ] [LE γ] [LT γ] [IsLinearOrder γ]
-  [RingOps α] [IsRing α]
+  [FieldOps α] [IsField α]
   [FieldOps γ] [IsField γ]
   [Norm γ γ] [SMul γ α]
   [IsLawfulAbs γ] [IsLawfulNorm α γ]
@@ -428,6 +463,138 @@ instance : Mul (Completion α γ) where
     apply sound; apply is_cauchy_eqv.mul
     assumption
     assumption
+
+variable [LE α] [LT α] [IsPartialOrder α]
+
+def IsPos (c: CauchySeq α γ) : Prop :=
+  ∃B, 0 < B ∧ Eventually fun i => B < c i
+
+protected def is_cauchy_eqv.IsPos (a b: CauchySeq α γ) (h: a ≈ b) : a.IsPos -> b.IsPos := sorry
+
+def norm_pos_of_ne_zero (c: CauchySeq α γ) (h: ¬c ≈ 0) : ‖c‖.IsPos := by
+  apply Classical.byContradiction; intro g
+  replace g := not_exists.mp g
+  simp [Eventually ,not_lt] at g
+  replace g : ∀ε: γ, 0 < ε -> ∀i, ∃j, i ≤ j ∧ ‖c j‖  ≤ ε := g
+  apply h; clear h
+  intro ε εpos
+  have := g _ (half_pos εpos)
+  have ⟨k, hk⟩ := c.is_cauchy _ (half_pos εpos)
+  exists k; intro i j hi hj
+  show ‖c i - 0‖ < ε; rw [sub_zero]
+  clear hj j
+  have ⟨j, i_le_j, hj⟩ := this i
+  rw [←add_zero (c i), ←neg_add_cancel (c j)]
+  rw [←add_assoc, ←sub_eq_add_neg, ←half_add_half ε]
+  apply lt_of_le_of_lt
+  apply norm_add_le_add_norm
+  apply lt_of_le_of_lt
+  apply add_le_add_left
+  assumption
+  apply add_lt_add_right
+  apply hk
+  assumption
+  apply le_trans
+  assumption
+  assumption
+
+def norm_ne_zero (a: α) (ha: a ≠ 0) : ‖a‖ ≠ 0 := by
+  intro h; apply ha
+  apply of_norm_eq_zero
+  assumption
+
+macro_rules
+| `(tactic|invert_tactic_trivial) => `(tactic|apply norm_ne_zero <;> invert_tactic)
+
+private def norm_inv? (a: α) (ha: a ≠ 0) : ‖a⁻¹?‖ = ‖a‖⁻¹? := by
+  apply eq_inv?_of_mul
+  rw [←norm_mul, inv?_mul_cancel, norm_one]
+
+protected def is_cauchy_eqv.safe_inv
+  [IsLawfulMulNorm α γ]
+  {a b: CauchySeq α γ}
+  (h: a ≈ b) (ha: ¬a ≈ 0) :
+  is_cauchy_eqv (safe_inv a) (safe_inv b) := by
+  have hb: ¬b ≈ 0 := by intro hb; exact ha (Relation.trans h hb)
+  have ⟨Ba, Ba_pos, hBa⟩ := norm_pos_of_ne_zero _ ha
+  have ⟨Bb, Bb_pos, hBb⟩ := norm_pos_of_ne_zero _ hb
+  have hB := hBa.merge hBb; clear hBa hBb
+  intro ε εpos
+  replace h := (h _ (pos_mul_of_pos _ _ εpos (pos_mul_of_pos _ _ Ba_pos Bb_pos))).merge hB; clear hB
+  obtain ⟨k, hk⟩ := h
+  exists k
+  intro i j hi hj
+  simp [safe_inv]
+  replace ⟨y, x, hBb⟩ := hk j i hj hi; clear x y
+  replace ⟨hk, hBa, hBb'⟩ := hk i j hi hj; clear hBb'
+  replace hBa : Ba < ‖a i‖ := hBa
+  replace hBb : Bb < ‖b j‖ := hBb
+  have := pos_mul_of_pos _ _ (lt_trans Ba_pos hBa) (lt_trans Bb_pos hBb)
+  rw [dif_neg, dif_neg]
+  · rw [←one_div?, ←one_div?, div?_sub_div?, one_mul, one_mul]
+    rw [div?_eq_mul_inv?, norm_mul, norm_inv?, norm_sub]
+    apply lt_of_lt_of_le
+    apply mul_lt_mul_of_pos_right
+    assumption
+    apply pos_inv?
+    apply not_le.mp
+    intro g
+    replace g := le_antisymm g (norm_nonneg _)
+    rw [norm_mul] at g
+    rw [g] at this
+    exact Relation.irrefl this
+    rw (occs := [2]) [←mul_one ε]; rw [mul_assoc]
+    apply mul_le_mul_of_nonneg_left
+    apply le_of_lt
+    apply lt_of_mul_lt_mul_of_pos_right
+    show 0 < ‖a i * b j‖
+    rw [norm_mul]; assumption
+    rw [mul_assoc, inv?_mul_cancel, one_mul, norm_mul, mul_one]
+    apply lt_trans
+    apply mul_lt_mul_of_pos_left
+    assumption
+    assumption
+    apply mul_lt_mul_of_pos_right
+    assumption
+    apply flip lt_trans
+    assumption
+    assumption
+    apply le_of_lt
+    assumption
+  · intro h; rw [h, norm_zero] at hBb
+    exact Relation.asymm hBb Bb_pos
+  · intro h; rw [h, norm_zero] at hBa
+    exact Relation.asymm hBa Ba_pos
+
+instance : CheckedInv (CauchySeq α γ) (fun a => ¬a ≈ 0) where
+  checked_inv a h := {
+    toFun := safe_inv a
+    is_cauchy' := by
+      apply is_cauchy_eqv.safe_inv
+      rfl
+      assumption
+  }
+
+def lift_with {P: Completion α γ -> Prop} (f: ∀c, P (ofSeq c) -> β) (hf: ∀(a b: CauchySeq α γ) (h: a ≈ b) (pa: P (ofSeq a)), f a pa = f b (sound h ▸ pa)) (a: Completion α γ) (pa: P a) : β :=
+  (a.toQuot.hrecOn (motive := fun c: Quotient (setoid (α := α) (γ := γ)) => P (.ofQuot c) -> β) f · pa) <| by
+    intro a b h
+    apply Function.hfunext
+    have := hf a b h
+    rw [sound h]
+    intro ha hb h_
+    simp; apply hf
+    assumption
+
+instance : CheckedInv? (Completion α γ) where
+  checked_inv := lift_with (P := (· ≠ 0)) (fun c hc =>
+    have : ¬c ≈ 0 := fun g => hc (sound g)
+    ofSeq c⁻¹?) <| by
+    intro a b h pa
+    dsimp
+    apply sound
+    apply is_cauchy_eqv.safe_inv
+    assumption
+    intro g; exact pa (sound g)
 
 end CauchySeq
 
