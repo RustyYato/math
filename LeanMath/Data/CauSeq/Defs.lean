@@ -541,7 +541,7 @@ instance : SMul (CauchySeq γ γ) (CauchySeq α γ) where
     is_cauchy' := by apply is_cauchy_eqv.smul <;> rfl
   }
 
-instance : SMul (Completion γ γ) (Completion α γ) where
+instance Completion.instSmul : SMul (Completion γ γ) (Completion α γ) where
   smul := lift₂ (fun a b => ofSeq (a • b)) <| by
     intro a b c d ac bd; apply sound
     apply is_cauchy_eqv.smul
@@ -1020,9 +1020,67 @@ instance : IsLinearOrder (Completion γ γ) where
     symm; assumption
     assumption
 
--- instance : IsLawfulNorm (Completion α γ) (Completion γ γ) where
+def le_of_eventually_le (a b: CauchySeq γ γ) : (Eventually fun i => a i ≤ b i) -> ofSeq a ≤ ofSeq b := by
+  intro h
+  apply not_lt.mp
+  intro ⟨B, Bpos, hB⟩
+  have ⟨k, hk⟩ := h.merge hB; clear h hB
+  have := hk k (Nat.le_refl _)
+  dsimp at this
+  obtain ⟨h, g⟩ := this
+  have : 0 < a k - b k := lt_trans Bpos g
+  rw [lt_sub_iff_add_lt, zero_add] at this
+  exact not_le_of_lt this h
 
--- instance : IsLinearOrder
+protected def Completion.norm_add_le_add_norm (a b: Completion α γ) : ‖a + b‖ ≤ ‖a‖ + ‖b‖ := by
+  induction a with | _ a =>
+  induction b with | _ b =>
+  apply le_of_eventually_le
+  exists 0; intro i hi
+  apply norm_add_le_add_norm
+
+protected def Completion.norm_nonneg (a: Completion α γ) : 0 ≤ ‖a‖ := by
+  induction a with | _ a =>
+  apply le_of_eventually_le
+  exists 0; intro i hi
+  apply norm_nonneg
+
+protected def Completion.norm_smul (a: Completion γ γ) (b: Completion α γ) : ‖a • b‖ = ‖a‖ * ‖b‖  := by
+  induction a with | _ a =>
+  induction b with | _ b =>
+  show ofSeq _ = ofSeq _; congr 1; ext i
+  apply norm_smul
+
+protected def Completion.norm_zero : ‖(0: Completion α γ)‖ = 0  := by
+  show ofSeq _ = ofSeq _; congr 1; ext i
+  apply norm_zero
+protected def Completion.of_norm_eq_zero (a: Completion α γ) : ‖a‖ = 0 -> a = 0 := by
+
+  induction a with | _ a =>
+  intro h; replace h : ‖a‖ ≈ 0 := exact h
+  apply sound
+  intro ε εpos
+  replace ⟨k, h⟩ := h ε εpos
+  exists k; intro i j hi hj
+  show ‖a i - 0‖ < _; rw [sub_zero]
+  have : ‖‖a i‖ - 0‖ < ε := h i j hi hj
+  rwa [sub_zero, norm_abs] at this
+protected def Completion.norm_eq_zero {a: Completion α γ} : ‖a‖ = 0 ↔ a = 0 := by
+  apply Iff.intro
+  apply Completion.of_norm_eq_zero
+  intro rfl; exact Completion.norm_zero
+
+instance : IsLawfulAbs (Completion γ γ) where
+  abs_nonneg := Completion.norm_nonneg
+  abs_mul := Completion.norm_smul
+  abs_add_le_add_abs := Completion.norm_add_le_add_norm
+  abs_eq_zero := Completion.norm_eq_zero
+
+instance : IsLawfulNorm (Completion α γ) (Completion γ γ) where
+  norm_nonneg := Completion.norm_nonneg
+  norm_smul := Completion.norm_smul
+  norm_add_le_add_norm := Completion.norm_add_le_add_norm
+  norm_eq_zero := Completion.norm_eq_zero
 
 end CauchySeq
 

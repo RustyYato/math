@@ -80,6 +80,14 @@ def norm_pos {a: α} : 0 < ‖a‖ ↔ a ≠ 0 := by
   have := of_norm_eq_zero g.symm
   contradiction
 
+def norm_abs [Max γ] [IsSemiLatticeMax γ] [IsAbsMax γ] (a: α) : ‖‖a‖‖ = ‖a‖ := by
+  rw [abs_eq_max]
+  apply le_antisymm _ left_le_max
+  apply max_le
+  rfl
+  apply neg_le_of_nonneg
+  apply norm_nonneg
+
 end
 
 section
