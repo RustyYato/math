@@ -54,6 +54,18 @@ def pos_inv? (a: α) (ha: 0 < a) : 0 < a⁻¹? := by
   rw [g, mul_zero] at this
   exact zero_ne_one _ this
 
+def lt_of_mul_lt_mul_of_pos_left: ∀(a b c : α), 0 < c → c * a < c * b -> a < b := by
+  intro a b c cpos h
+  have := mul_lt_mul_of_pos_left _ _ h (c⁻¹?) (pos_inv? _ cpos)
+  rwa [←mul_assoc, ←mul_assoc, inv?_mul_cancel,
+    one_mul, one_mul] at this
+
+def lt_of_mul_lt_mul_of_pos_right: ∀(a b c : α), 0 < c → a * c < b * c -> a < b := by
+  intro a b c cpos h
+  have := mul_lt_mul_of_pos_right _ _ h (c⁻¹?) (pos_inv? _ cpos)
+  rwa [mul_assoc, mul_assoc, mul_inv?_cancel,
+    mul_one, mul_one] at this
+
 local macro_rules
 | `(tactic|invert_tactic_trivial) => `(tactic|apply natCast_ne_zero)
 
@@ -70,9 +82,14 @@ def pos_mul_of_pos (a b: α) (ha: 0 < a) (hb: 0 < b) : 0 < a * b := by
   intro g
   rcases of_mul_eq_zero (le_antisymm g (mul_nonneg ha hb)) with rfl | rfl <;> contradiction
 
-def pos_div?_natCast {a: α} (ha: 0 < a) (n: ℕ) : 0 < a /? (n + 1: ℕ) := by
+def pos_div? {a b: α} (ha: 0 < a) (hb: 0 < b) : 0 < a /? b := by
   rw [div?_eq_mul_inv?]
   apply pos_mul_of_pos
   assumption
   apply pos_inv?
+  assumption
+
+def pos_div?_natCast {a: α} (ha: 0 < a) (n: ℕ) : 0 < a /? (n + 1: ℕ) := by
+  apply pos_div?
+  assumption
   apply pos_natCast

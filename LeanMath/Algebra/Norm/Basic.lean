@@ -23,7 +23,7 @@ variable
 def abs_one : ‖(1: γ)‖ = 1 := by
   have : ‖(1: γ)‖ = ‖(1: γ)‖ * ‖(1: γ)‖ := by
     rw (occs := [1]) [←one_mul 1]
-    rw [abs_mul]
+    rw [norm_mul]
   rw (occs := [1]) [←mul_one (‖(1: γ)‖)] at this
   rw [Eq.comm, sub_eq_zero] at this
   rw [←mul_sub] at this
@@ -34,7 +34,7 @@ def abs_one : ‖(1: γ)‖ = 1 := by
 
 def abs_neg_one: ‖(-1: γ)‖ = 1 := by
   have : ‖(-1: γ)‖ * ‖(-1: γ)‖ = 1 := by
-    rw [←abs_mul, ←neg_mul_left, ←neg_mul_right, neg_neg, one_mul, abs_one]
+    rw [←norm_mul, ←neg_mul_left, ←neg_mul_right, neg_neg, one_mul, abs_one]
   replace : (‖(-1: γ)‖ + 1) * (‖(-1: γ)‖ - 1) = 0 := by
     rw [mul_sub, add_mul, add_mul]
     simp [one_mul, mul_one, this]
@@ -55,3 +55,13 @@ def neg_norm (a: α): ‖-a‖ = ‖a‖ := by
 
 def norm_sub (a b: α) : ‖a - b‖ = ‖b - a‖ := by
   rw [←neg_sub, neg_norm]
+
+def abs_eq_max [Max γ] [IsSemiLatticeMax γ] [IsAbsMax γ] (a: γ) : ‖a‖ = a ⊔ -a := by
+  rcases le_total a 0 with h | h
+  rw [max_eq_right (le_neg_of_nonpos h)]
+  rw [←neg_norm, abs_eq_of_nonneg]
+  rw [←neg_zero]; apply neg_le_neg
+  assumption
+  rw [max_eq_left (neg_le_of_nonneg h)]
+  apply abs_eq_of_nonneg
+  assumption
