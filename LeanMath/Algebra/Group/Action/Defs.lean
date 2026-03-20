@@ -56,6 +56,11 @@ def smul_sub [AddGroupOps α] [IsAddGroup α] [SMul R α]
   (r: R) (a b: α) : r • (a - b) = r • a - r • b := by
   rw [sub_eq_add_neg, smul_add, smul_neg, ←sub_eq_add_neg]
 
+def sub_smul [AddGroupOps α] [IsAddGroup α] [AddGroupOps R] [IsAddGroup R] [SMul R α]
+  [IsLeftDistribSMul R α] [IsLawfulZeroSMul R α]
+  (r s: R) (a: α) : (r - s) • a = r • a - s • a := by
+  rw [sub_eq_add_neg, add_smul, ←neg_smul_left, sub_eq_add_neg]
+
 instance [SMul R α] [AddGroupOps α] [IsAddGroup α] [IsRightDistribSMul R α] [IsLawfulSMulZero R α] : IsSMulComm ℤ R α where
   smul_comm r s a := by
     cases r with

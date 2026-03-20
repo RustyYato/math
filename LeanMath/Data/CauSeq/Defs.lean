@@ -62,8 +62,8 @@ def Eventually₂.merge
 
 end CauchySeq
 
-variable {α γ: Type*} [Norm α γ] [LE γ] [LT γ] [IsLinearOrder γ]
-  [FieldOps α] [IsField α]
+variable {α β γ: Type*} [Norm α γ] [Norm β γ] [LE γ] [LT γ] [IsLinearOrder γ]
+  [FieldOps α] [IsField α] [FieldOps β] [IsField β]
   [FieldOps γ] [IsField γ]
 
 def is_cauchy_eqv (f g: ℕ -> α) : Prop :=
@@ -79,13 +79,12 @@ structure CauchySeq (α γ: Type*)
   protected is_cauchy': is_cauchy toFun
 
 variable
-  [Norm γ γ] [SMul γ α]
-  [IsLawfulAbs γ] [IsLawfulNorm α γ]
-  [IsStrictOrderedSemiring γ] [IsZeroNeOne γ]
-  [IsDistributiveAction γ α]
-  [IsLeftDistribSMul γ α]
-  [IsLawfulZeroSMul γ α]
-  [IsZeroLEOne γ]
+  [Norm γ γ] [SMul γ α] [SMul γ β]
+  [IsLawfulAbs γ] [IsLawfulNorm α γ] [IsLawfulNorm β γ]
+  [IsDistributiveAction γ α] [IsDistributiveAction γ β]
+  [IsLeftDistribSMul γ α] [IsLeftDistribSMul γ β]
+  [IsLawfulZeroSMul γ α] [IsLawfulZeroSMul γ β]
+  [IsZeroLEOne γ] [IsStrictOrderedSemiring γ] [IsZeroNeOne γ]
   [Max γ] [IsSemiLatticeMax γ] [IsAbsMax γ]
 
 local macro_rules
@@ -253,7 +252,7 @@ def bounded_with (c: CauchySeq α γ) (lb: γ) : ∃B, lb < B ∧ ∀i, ‖c i�
 
 def _root_.is_cauchy_eqv.mul
   [IsLawfulMulNorm α γ]
-  {a b c d: CauchySeq α γ}
+  (a b c d: CauchySeq α γ)
   (ac: a ≈ c)
   (bd: b ≈ d) :
   is_cauchy_eqv (fun i => a i * b i) (fun i => c i * d i) := by
@@ -341,13 +340,13 @@ def ind {motive: Completion α γ -> Prop} (ofSeq : ∀c, motive (ofSeq c)) (c: 
   induction c using Quotient.ind
   apply ofSeq
 
-def lift (f: CauchySeq α γ -> β) (h: ∀a b, a ≈ b -> f a = f b) (c: Completion α γ) : β :=
+def lift (f: CauchySeq α γ -> Γ) (h: ∀a b, a ≈ b -> f a = f b) (c: Completion α γ) : Γ :=
   c.toQuot.lift f h
-def lift₂ (f: CauchySeq α γ -> CauchySeq α γ -> β) (h: ∀a b c d, a ≈ c -> b ≈ d -> f a b = f c d) (a b: Completion α γ) : β :=
+def lift₂ (f: CauchySeq α γ -> CauchySeq β γ -> Γ) (h: ∀a b c d, a ≈ c -> b ≈ d -> f a b = f c d) (a: Completion α γ) (b: Completion β γ) : Γ :=
   a.toQuot.liftOn₂ b.toQuot f h
 
-@[simp] def lift_ofSeq (f: CauchySeq α γ -> β) (h) (a: CauchySeq α γ) : lift f h (ofSeq a) = f a := rfl
-@[simp] def lift₂_ofSeq (f: CauchySeq α γ -> CauchySeq α γ -> β) (h) (a b: CauchySeq α γ) : lift₂ f h (ofSeq a) (ofSeq b) = f a b := rfl
+@[simp] def lift_ofSeq (f: CauchySeq α γ -> Γ) (h) (a: CauchySeq α γ) : lift f h (ofSeq a) = f a := rfl
+@[simp] def lift₂_ofSeq (f: CauchySeq α γ -> CauchySeq β γ -> Γ) (h) (a: CauchySeq α γ) (b: CauchySeq β γ) : lift₂ f h (ofSeq a) (ofSeq b) = f a b := rfl
 
 @[ext] def ext (a b: CauchySeq α γ) (h: ∀i, a i = b i) : a = b := DFunLike.ext a b h
 def copy (c: CauchySeq α γ) (f: ℕ -> α) (hf: ∀i, c i = f i) : CauchySeq α γ where
@@ -464,12 +463,234 @@ instance : Mul (Completion α γ) where
     assumption
     assumption
 
+def is_cauchy_eqv.npow (a b: CauchySeq α γ) (n: ℕ) (h: a ≈ b) : is_cauchy_eqv (fun i => a i ^ n) (fun i => b i ^ n) := by
+  induction n generalizing a b with
+  | zero => simp [npow_zero]; apply (CauchySeq.is_cauchy 1)
+  | succ n ih =>
+    simp [npow_succ]
+    let an : CauchySeq α γ := {
+      toFun i := a i ^ n
+      is_cauchy' := ih _ _ (Relation.refl _)
+    }
+    let bn : CauchySeq α γ := {
+      toFun i := b i ^ n
+      is_cauchy' := ih _ _ (Relation.refl _)
+    }
+    apply is_cauchy_eqv.mul an a bn b
+    apply ih
+    assumption
+    assumption
+
+instance : Pow (CauchySeq α γ) ℕ where
+  pow a n := {
+    toFun i := a i ^ n
+    is_cauchy' := by apply is_cauchy_eqv.npow <;> rfl
+  }
+
+instance : Pow (Completion α γ) ℕ where
+  pow := flip fun n => lift (fun a => ofSeq (a ^ n)) <| by
+    intro a b ab
+    apply sound; apply is_cauchy_eqv.npow
+    assumption
+
+def is_cauchy_eqv.smul (a c: CauchySeq γ γ) (b d: CauchySeq α γ) : a ≈ c -> b ≈ d -> is_cauchy_eqv (fun i => a i • b i) (fun i => c i • d i) := by
+  intro ac bd ε εpos
+  have ⟨Ba, Ba_pos, hBa⟩ := a.bounded_with 0
+  have ⟨Bd, Bd_pos, hBd⟩ := d.bounded_with 0
+  let ε₀ := ε /? (2: ℕ) /? Bd
+  let ε₁ := ε /? (2: ℕ) /? Ba
+  have hε₀ : 0 < ε₀ := by
+    apply pos_div?
+    apply half_pos
+    assumption
+    assumption
+  have hε₁ : 0 < ε₁ := by
+    apply pos_div?
+    apply half_pos
+    assumption
+    assumption
+
+  have ⟨k, hk⟩ := (ac _ hε₀).merge₂ (bd _ hε₁)
+  exists k; intro i j hi hj; dsimp
+  replace ⟨ac, bd⟩ := hk i j hi hj; clear hk
+  rw [←add_zero (_ • _), ←neg_add_cancel (a i • d j),
+    ←add_assoc, ←sub_eq_add_neg, add_sub_assoc,
+    ←smul_sub, ←sub_smul]
+  apply lt_of_le_of_lt
+  apply norm_add_le_add_norm
+  rw [norm_smul, norm_smul, ←half_add_half ε]
+  apply add_lt_add
+  · apply lt_of_le_of_lt
+    apply mul_le_mul_of_nonneg_right
+    apply le_of_lt; apply hBa
+    apply norm_nonneg
+    apply lt_of_mul_lt_mul_of_pos_left
+    exact pos_inv? _ Ba_pos
+    rwa [←mul_assoc, inv?_mul_cancel, one_mul, mul_comm, ←div?_eq_mul_inv?]
+  · apply lt_of_le_of_lt
+    apply mul_le_mul_of_nonneg_left
+    apply le_of_lt; apply hBd
+    apply norm_nonneg
+    apply lt_of_mul_lt_mul_of_pos_right
+    exact pos_inv? _ Bd_pos
+    rwa [mul_assoc, mul_inv?_cancel, mul_one, ←div?_eq_mul_inv?]
+
+instance : SMul (CauchySeq γ γ) (CauchySeq α γ) where
+  smul a b := {
+    toFun i := a i • b i
+    is_cauchy' := by apply is_cauchy_eqv.smul <;> rfl
+  }
+
+instance : SMul (Completion γ γ) (Completion α γ) where
+  smul := lift₂ (fun a b => ofSeq (a • b)) <| by
+    intro a b c d ac bd; apply sound
+    apply is_cauchy_eqv.smul
+    assumption
+    assumption
+
+instance
+  [SMul R α] [SMul R γ]
+  [IsScalarTower R γ α]
+  : SMul R (Completion α γ) where
+  smul r a := (Completion.const (r • (1 : γ))) • a
+
+@[simp] def const_zero : const (0: α) = (0: CauchySeq α γ) := rfl
+@[simp] def Completion.const_zero : const (0: α) = (0: Completion α γ) := rfl
+
+@[simp] def const_one : const (1: α) = (1: CauchySeq α γ) := rfl
+@[simp] def Completion.const_one : const (1: α) = (1: Completion α γ) := rfl
+
+instance : NatCast (Completion α γ) where
+  natCast a := Completion.const a
+instance : IntCast (Completion α γ) where
+  intCast a := Completion.const a
+
+instance : IsComm (Completion α γ) where
+  mul_comm a b := by
+    induction a with | _ a =>
+    induction b with | _ b =>
+    show ofSeq _ = ofSeq _; congr 1; ext i
+    apply mul_comm
+
+instance : IsAddComm (Completion α γ) where
+  add_comm a b := by
+    induction a with | _ a =>
+    induction b with | _ b =>
+    show ofSeq _ = ofSeq _; congr 1; ext i
+    apply add_comm
+
+instance : IsAddMonoid (Completion α γ) where
+  add_assoc a b c := by
+    induction a with | _ a =>
+    induction b with | _ b =>
+    induction c with | _ c =>
+    show ofSeq _ = ofSeq _; congr 1; ext i
+    apply add_assoc
+  add_zero a := by
+    induction a with | _ a =>
+    show ofSeq _ = ofSeq _; congr 1; ext i
+    apply add_zero
+  zero_add a := by
+    induction a with | _ a =>
+    show ofSeq _ = ofSeq _; congr 1; ext i
+    apply zero_add
+  zero_nsmul a := by
+    induction a with | _ a =>
+    show ofSeq _ = ofSeq _; congr 1; ext i
+    simp [zero_nsmul]
+    apply zero_smul
+  succ_nsmul n a := by
+    induction a with | _ a =>
+    show ofSeq _ = ofSeq _; congr 1; ext i
+    simp [succ_nsmul, add_smul, zero_smul, zero_add]
+    rw [←natCast_eq_nsmul_one]
+    show (n + 1 : γ) • a i = _
+    rw [add_smul, one_smul]; rfl
+
+instance : IsMonoid (Completion α γ) where
+  mul_assoc a b c := by
+    induction a with | _ a =>
+    induction b with | _ b =>
+    induction c with | _ c =>
+    show ofSeq _ = ofSeq _; congr 1; ext i
+    apply mul_assoc
+  mul_one a := by
+    induction a with | _ a =>
+    show ofSeq _ = ofSeq _; congr 1; ext i
+    apply mul_one
+  one_mul a := by
+    induction a with | _ a =>
+    show ofSeq _ = ofSeq _; congr 1; ext i
+    apply one_mul
+  npow_zero a := by
+    induction a with | _ a =>
+    show ofSeq _ = ofSeq _; congr 1; ext i
+    apply npow_zero
+  npow_succ a n := by
+    induction a with | _ a =>
+    show ofSeq _ = ofSeq _; congr 1; ext i
+    apply npow_succ
+
+instance : IsLeftDistrib (Completion α γ) where
+  mul_add a b c := by
+    induction a with | _ a =>
+    induction b with | _ b =>
+    induction c with | _ c =>
+    show ofSeq _ = ofSeq _; congr 1; ext i
+    apply mul_add
+
+instance : IsAddGroup (Completion α γ) where
+  sub_eq_add_neg a b := by
+    induction a with | _ a =>
+    induction b with | _ b =>
+    show ofSeq _ = ofSeq _; congr 1; ext i
+    apply sub_eq_add_neg
+  add_neg_cancel a := by
+    induction a with | _ a =>
+    show ofSeq _ = ofSeq _; congr 1; ext i
+    apply add_neg_cancel
+  ofNat_zsmul a n := by
+    induction a with | _ a =>
+    show ofSeq _ = ofSeq _; congr 1; ext i
+    simp [ofNat_zsmul]
+  negSucc_zsmul a n := by
+    induction a with | _ a =>
+    show ofSeq _ = ofSeq _; congr 1; ext i
+    simp [negSucc_zsmul]
+    show (-((n + 1: ℕ) • (1: γ))) • a i = -(((n + 1: ℕ) • (1: γ)) • a i)
+    rw [←neg_smul_left]
+
+instance : IsLawfulZeroMul (Completion α γ) where
+  zero_mul a := by
+    induction a with | _ a =>
+    show ofSeq _ = ofSeq _; congr 1; ext i
+    apply zero_mul
+  mul_zero a := by
+    induction a with | _ a =>
+    show ofSeq _ = ofSeq _; congr 1; ext i
+    apply mul_zero
+
+instance : IsRing (Completion α γ) where
+  natCast_zero := by
+    show Completion.const _ = Completion.const _
+    rw [natCast_zero]
+  natCast_one := by
+    show Completion.const _ = Completion.const _
+    rw [natCast_one]
+  natCast_succ n := by
+    show Completion.const _ = Completion.const _ + 1
+    rw [natCast_succ]; rfl
+  intCast_ofNat n := by
+    show Completion.const _ = Completion.const _
+    rw [intCast_ofNat]
+  intCast_negSucc n := by
+    show Completion.const (Int.negSucc n: α) = -(Completion.const (_))
+    rw [intCast_negSucc]; rfl
+
 variable [LE α] [LT α] [IsPartialOrder α]
 
-def IsPos (c: CauchySeq α γ) : Prop :=
+def IsPos (c: CauchySeq γ γ) : Prop :=
   ∃B, 0 < B ∧ Eventually fun i => B < c i
-
-protected def is_cauchy_eqv.IsPos (a b: CauchySeq α γ) (h: a ≈ b) : a.IsPos -> b.IsPos := sorry
 
 def norm_pos_of_ne_zero (c: CauchySeq α γ) (h: ¬c ≈ 0) : ‖c‖.IsPos := by
   apply Classical.byContradiction; intro g

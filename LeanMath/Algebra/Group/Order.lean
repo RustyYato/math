@@ -115,6 +115,13 @@ def div_le_div {a b c d: α} : a ≤ c -> d ≤ b -> a / b ≤ c / d := by
   apply inv_le_inv
   assumption
 
+def div_lt_div {a b c d: α} : a < c -> d < b -> a / b < c / d := by
+  intro ac db; rw [div_eq_mul_inv, div_eq_mul_inv]
+  apply mul_lt_mul
+  assumption
+  apply inv_lt_inv
+  assumption
+
 end IsOrderedCommGroup
 
 section IsOrderedAddCommGroup
@@ -178,5 +185,8 @@ def neg_of_lt_neg [IsLinearOrder α] {a: α} : a < -a -> a < 0 :=
 
 def sub_le_sub {a b c d: α} : a ≤ c -> d ≤ b -> a - b ≤ c - d :=
   div_le_div (α := MulOfAdd α)
+
+def sub_lt_sub {a b c d: α} : a < c -> d < b -> a - b < c - d :=
+  div_lt_div (α := MulOfAdd α)
 
 end IsOrderedAddCommGroup

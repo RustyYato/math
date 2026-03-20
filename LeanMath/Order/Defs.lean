@@ -372,6 +372,18 @@ def lt_or_le [IsLinearOrder α] (a b: α) : a < b ∨ b ≤ a := by
   right; rw [h]
   right; apply le_of_lt; assumption
 
+def of_lt_max [IsLinearOrder α] [IsSemiLatticeMax α] {x a b: α} : x < a ⊔ b -> x < a ∨ x < b := by
+  intro h
+  rcases le_or_not_le a x with ha | ha
+  rcases le_or_not_le b x with hb | hb
+  · nomatch not_le_of_lt h (max_le ha hb)
+  · right
+    apply not_le.mp
+    assumption
+  · left
+    apply not_le.mp
+    assumption
+
 end
 
 instance [DecidableLE α] [FunLike F α β] [IsOrderHom F α β] [IsPartialOrder α] [IsPreorder β] : EmbeddingLike F α β where

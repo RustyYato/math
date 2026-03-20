@@ -68,6 +68,18 @@ def abs_eq_max [Max γ] [IsSemiLatticeMax γ] [IsAbsMax γ] (a: γ) : ‖a‖ = 
   apply abs_eq_of_nonneg
   assumption
 
+def norm_pos {a: α} : 0 < ‖a‖ ↔ a ≠ 0 := by
+  apply Iff.intro
+  rintro h rfl
+  rw [norm_zero] at h
+  exact Relation.irrefl h
+  intro h
+  apply lt_of_le_of_ne
+  apply norm_nonneg
+  intro g
+  have := of_norm_eq_zero g.symm
+  contradiction
+
 end
 
 section
