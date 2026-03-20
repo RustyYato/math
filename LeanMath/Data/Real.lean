@@ -12,6 +12,8 @@ section
 
 unseal Real
 
+variable [LEM]
+
 instance : FieldOps ℝ := inferInstanceAs (FieldOps (CauchySeq.Completion ℚ ℚ))
 instance : IsField ℝ := inferInstanceAs (IsField (CauchySeq.Completion ℚ ℚ))
 instance : LT ℝ := inferInstanceAs (LT (CauchySeq.Completion ℚ ℚ))
@@ -27,6 +29,8 @@ instance : IsModule ℚ ℝ := inferInstance
 def ofRat : ℚ ↪+* ℝ where
     toRingHom := algebraMap ℚ
     inj := inj (algebraMap ℚ (α := ℝ))
+
+#print axioms ofRat
 
 instance : AlgebraMap ℤ ℝ where
     toAlgebraMap := intCastHom

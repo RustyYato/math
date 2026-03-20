@@ -694,11 +694,13 @@ variable [LE α] [LT α] [IsPartialOrder α]
 def IsPos (c: CauchySeq γ γ) : Prop :=
   ∃B, 0 < B ∧ Eventually fun i => B < c i
 
+variable [LEM]
+
 def norm_pos_of_ne_zero (c: CauchySeq α γ) (h: ¬c ≈ 0) : ‖c‖.IsPos := by
-  apply Classical.byContradiction; intro g
+  apply LEM.byContradiction; intro g
   replace g := not_exists.mp g
-  simp [Eventually ,not_lt] at g
-  replace g : ∀ε: γ, 0 < ε -> ∀i, ∃j, i ≤ j ∧ ‖c j‖  ≤ ε := g
+  simp only [Eventually, not_and, not_exists, LEM.not_forall, not_lt] at g
+  replace g : ∀ε: γ, 0 < ε -> ∀i, ∃(j: ℕ) (h: i ≤ j), ‖c j‖ ≤ ε := g
   apply h; clear h
   intro ε εpos
   have := g _ (half_pos εpos)
@@ -928,7 +930,7 @@ instance : LE (Completion γ γ) where
 
 instance : IsLTTrichotomous (Completion γ γ) where
   trichotomous a b := by
-    by_cases h:a = b
+    rcases em (a = b) with h | h
     right; left; assumption
     have : b - a ≠ 0 := by
       intro g; rw [←sub_eq_zero] at g

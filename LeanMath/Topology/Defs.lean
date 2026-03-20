@@ -59,9 +59,9 @@ def IsOpen.Interior (s: Set α) : Interior s ∈ OpenSets α := by
   intro x hx
   exact hx.left
 
-instance IsContinuous.const (x: β) : IsContinuous (fun _: α => x) where
+instance IsContinuous.const [LEM] (x: β) : IsContinuous (fun _: α => x) where
   isOpen_preimage s sopen := by
-    by_cases h:x ∈ s
+    rcases em (x ∈ s) with h | h
     suffices s.preimage (fun _: α => x) = (⊤: Set α) by
       rw [this]
       apply OpenSets.univ
@@ -85,13 +85,13 @@ inductive IsTrivial : Set α -> Prop where
 | empty : IsTrivial ⊥
 | univ : IsTrivial ⊤
 
-instance : Top (Topology α) where
+instance [LEM] : Top (Topology α) where
   top := {
     IsOpen := IsTrivial
     open_univ := IsTrivial.univ
     open_sUnion := by
       intro U hU
-      by_cases htop:⊤ ∈ U
+      rcases em (⊤ ∈ U) with htop | htop
       rw [show ⋃ U = ⊤ from ?_]; apply IsTrivial.univ
       ext; simp; exists ⊤
       rw [show ⋃ U = ⊥ from ?_]; apply IsTrivial.empty

@@ -330,13 +330,12 @@ def from_elements_set_nodup
   apply h; assumption
   apply h; assumption
 
-def exists_nodup_elements (lc: ⊕a, R a) : ∃elements: List (Σa, R a), elements.Pairwise (fun x y => x.1 ≠ y.1) ∧ lc = from_elements elements := by
-  classical
+private def exists_nodup_elements' [LEM] (lc: ⊕a, R a) : ∃elements: List (Σa, R a), elements.Pairwise (fun x y => x.1 ≠ y.1) ∧ lc = from_elements elements := by
   induction lc using list_induction with
   | zero => exact ⟨[], List.Pairwise.nil, rfl⟩
   | ι_add a r as ih =>
     obtain ⟨elements, nodup, eq⟩ := ih
-    by_cases ha:∃index: Fin elements.length, elements[index].1 = a
+    rcases em (∃index: Fin elements.length, elements[index].1 = a) with ha | ha
     · simp at ha
       obtain ⟨index, _⟩ := ha
       subst a
@@ -361,6 +360,36 @@ def exists_nodup_elements (lc: ⊕a, R a) : ∃elements: List (Σa, R a), elemen
         contradiction
         assumption
       · simp; congr
+
+def exists_nodup_elements [LEM] (lc: ⊕a, R a) : ∃elements: List (Σa, R a), elements.Pairwise (fun x y => x.1 ≠ y.1) ∧ lc = from_elements elements ∧ ∀x ∈ elements, x.2 ≠ 0 := by
+  have ⟨elements, nodup, eq⟩ := exists_nodup_elements' lc; subst lc
+  suffices ∃e: List (Σa, R a), e.Sublist elements ∧ from_elements elements = from_elements e ∧ ∀x ∈ e, x.2 ≠ 0 by
+    obtain ⟨e, sub, eq, h⟩ := this
+    refine ⟨e, ?_, eq, h⟩
+    apply List.pairwise_of_forall_sublist
+    intro x y h
+    replace h := List.Sublist.trans h sub
+    apply List.pairwise_iff_forall_sublist.mp nodup
+    assumption
+  induction nodup with
+  | nil => exact ⟨[], List.Sublist.slnil, rfl, nofun⟩
+  | @cons a as head tail ih =>
+    obtain ⟨bs, bssub, bseq, bsnezero⟩ := ih
+    rcases em (a.2 = 0) with hr | hr
+    · refine ⟨bs, ?_, ?_, ?_⟩
+      · apply List.Sublist.cons
+        assumption
+      · rw [from_elements_cons, bseq, hr, map_zero, zero_add]
+      · assumption
+    · refine ⟨a::bs, ?_, ?_, ?_⟩
+      · apply List.Sublist.cons₂
+        assumption
+      · rw [from_elements_cons, from_elements_cons, bseq]
+      · intro x hx
+        cases hx
+        assumption
+        apply bsnezero
+        assumption
 
 end
 

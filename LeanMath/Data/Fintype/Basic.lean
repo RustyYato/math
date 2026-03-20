@@ -7,8 +7,7 @@ noncomputable scoped instance (priority := 10) Classical.instFintypeOfFinite [f:
 
 namespace Finite
 
-private def ofEmbed' (emb: α ↪ Fin n) : Finite α := by
-  open Classical in
+private def ofEmbed' [LEM] (emb: α ↪ Fin n) : Finite α := by
   induction n with
   | zero =>
     · have : IsEmpty α := {
@@ -16,7 +15,7 @@ private def ofEmbed' (emb: α ↪ Fin n) : Finite α := by
       }
       infer_instance
   | succ n ih =>
-    by_cases hf:Function.Surjective emb
+    rcases em (Function.Surjective emb) with hf | hf
     · have bij : α ↭ Fin (n + 1) := {
         toFun := emb
         inj' := emb.inj
@@ -29,7 +28,7 @@ private def ofEmbed' (emb: α ↪ Fin n) : Finite α := by
       exact ih (emb.erase_fin _ hx)
 
 def ofEmbed [Finite β] (emb: α ↪ β) : Finite α := by
-  open Classical in
+  open Classical in -- FIXME[classical]: use multisets/finsets to redo this proof
   induction Fintype.finEquiv β with | _ f =>
   apply ofEmbed'
   exact emb.trans f.symm.toEmbedding

@@ -161,34 +161,24 @@ def from_elements : List (α × R) -> LinearCombo R α :=
 @[simp] def from_elements_nil : from_elements (α := α) (R := R) [] = 0 := rfl
 @[simp] def from_elements_cons (a: α × R) (as: List (α × R)) : from_elements (a::as) = ι a.1 a.2 + from_elements as := rfl
 
-def exists_nodup_elements (lc: LinearCombo R α) : ∃elements: List (α × R), elements.Pairwise (fun x y => x.1 ≠ y.1) ∧ lc = from_elements elements := by
-  have ⟨elements, nodup, eq⟩ := DirectSum.exists_nodup_elements (equivDirectSum lc)
-  refine ⟨elements.map fun x => ⟨x.1, x.2⟩, ?_, ?_⟩
+def exists_nodup_elements [LEM] (lc: LinearCombo R α) : ∃elements: List (α × R), elements.Pairwise (fun x y => x.1 ≠ y.1) ∧ lc = from_elements elements ∧ ∀x ∈ elements, x.2 ≠ 0 := by
+  have ⟨elements, nodup, eq, nezero⟩ := DirectSum.exists_nodup_elements (equivDirectSum lc)
+  refine ⟨elements.map fun x => ⟨x.1, x.2⟩, ?_, ?_, ?_⟩
   · apply nodup.map
     intro x y h
     assumption
   · show equivDirectSum.symm (equivDirectSum lc) = _
-    rw [eq]; clear eq nodup
+    rw [eq]; clear eq nodup nezero
     induction elements with
     | nil => rfl
     | cons a as ih =>
       simp [map_add]
       congr
-
-def exists_nodup_elements' (lc: LinearCombo R α) : ∃elements: List (α × R), elements.Pairwise (fun x y => x.1 ≠ y.1) ∧ (∀a r, (a, r) ∈ elements -> r ≠ 0) ∧ lc = from_elements elements := by
-  classical
-  have ⟨elements, nodup, eq⟩ := exists_nodup_elements lc
-  refine ⟨elements.filter fun x => x.2 ≠ 0, ?_, ?_, ?_⟩
-  · apply nodup.filter
-  · simp
-  · rw [eq]; clear eq nodup
-    induction elements with
-    | nil => rfl
-    | cons a as ih =>
-      rw [List.filter_cons, from_elements_cons]
-      split <;> (rename_i h; simp at h)
-      · rw [from_elements_cons, ih]
-      · rw [h, map_zero, zero_add]; assumption
+  · intro x hx
+    simp at hx
+    obtain ⟨x, hx, rfl⟩ := hx
+    apply nezero
+    assumption
 
 def from_elements_eq_of_perm (as bs: List (α × R)) (h: as ≈ bs) : from_elements as = from_elements bs := by
   induction h with

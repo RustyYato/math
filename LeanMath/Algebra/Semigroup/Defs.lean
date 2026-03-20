@@ -1,5 +1,6 @@
 import LeanMath.Logic.Funlike
 import LeanMath.Logic.Nontrivial
+import LeanMath.Logic.LEM
 import LeanMath.Data.Embedding.Defs
 import LeanMath.Data.Equiv.Defs
 import LeanMath.Data.AddMul.Defs

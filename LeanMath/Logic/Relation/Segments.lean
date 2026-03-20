@@ -144,7 +144,8 @@ instance [Relation.IsTrans s] : IsInitialSegment (r ≃r s) r s where
   isInitial f := f.toInitialSegment.isInitial
 
 def InitialSegment.principal_or_eqv [Relation.IsWellOrder s] (f: r ≼r s) : Nonempty (r ≺r s) ∨ Nonempty (r ≃r s) := by
-  apply Classical.or_iff_not_imp_left.mpr
+  open Classical in
+  apply or_iff_not_imp_left.mpr
   intro h
   have hf : ¬∃top, Relation.IsPrincipal s f top := fun hf => h ⟨{
     toRelEmbedding := f.toRelEmbedding
@@ -168,7 +169,7 @@ def InitialSegment.principal_or_eqv [Relation.IsWellOrder s] (f: r ≼r s) : Non
       have := f.IsInitial a b g
       simpa using this
   clear hf
-  obtain ⟨g, hg⟩ := Classical.axiomOfChoice hb
+  obtain ⟨g, hg⟩ := axiomOfChoice hb
   refine ⟨?_⟩
   exact {
     toFun := f

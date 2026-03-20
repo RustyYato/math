@@ -136,7 +136,7 @@ protected def Subset.sSup (U: Set (Subset F V))
     have : _ ↔ U = ⊥ := Set.not_nonempty (a := U)
     rw [←Classical.not_iff, Iff.comm, Classical.not_iff] at this
     rw [this] at hU; clear this
-    obtain ⟨elements, nodup, nontrivial, rfl⟩ := LinearCombo.exists_nodup_elements' lc
+    obtain ⟨elements, nodup, rfl, nontrivial⟩ := LinearCombo.exists_nodup_elements lc
     have : ∃u ∈ U, ∀x ∈ elements, x.fst.val ∈ u := by
       clear nodup nontrivial hlc
       induction elements with

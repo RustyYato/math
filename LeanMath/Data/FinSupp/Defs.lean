@@ -149,7 +149,9 @@ def smul_single [DecidableEq ι] [Zero α] [SMul R α] [IsLawfulSMulZero R α] (
   split; rfl
   rw [smul_zero]
 
-instance [Add α] [Zero α] [IsLawfulZeroAdd α] : Add (Finsupp ι α) where
+variable [LEM]
+
+instance instAdd [Add α] [Zero α] [IsLawfulZeroAdd α] : Add (Finsupp ι α) where
   add f g := {
     toFun x := f x + g x
     spec :=
@@ -175,7 +177,7 @@ instance [Add α] [Zero α] [IsLawfulZeroAdd α] : Add (Finsupp ι α) where
         spec := by
           intro x h
           rw [LazyList.mem_append]
-          by_cases hx:f x = 0
+          rcases em (f x = 0) with hx | hx
           rw [hx, zero_add] at h
           right; apply gsupp.spec
           assumption
@@ -290,7 +292,7 @@ def simple_support [DecidableEq ι] [Zero α] (f: Finsupp ι α) : Trunc (Finsup
 def support_eq_simple_supprt [DecidableEq ι] [Zero α] (f: Finsupp ι α) :
   f.support = f.simple_support := Subsingleton.allEq _ _
 
-variable [DecidableEq ι]
+variable [DecidableEq ι] [LEM]
 
 def fold [Zero α] (f: α -> β -> β) (acc: β) (hzero: ∀b, f 0 b = b) (hcomm: ∀a₀ a₁ b, f a₀ (f a₁ b) = f a₁ (f a₀ b)) (f₀: Finsupp ι α) : β :=
   f₀.support.lift (fun supp => supp.allowed_values.fold (f ∘ f₀) acc) <| by
@@ -311,7 +313,7 @@ def fold [Zero α] (f: α -> β -> β) (acc: β) (hzero: ∀b, f 0 b = b) (hcomm
       | cons b bs ih =>
         simp
         have : f₀ b = 0 := by
-          apply Classical.byContradiction
+          apply LEM.byContradiction
           intro g
           have := h _ g
           simp at this
@@ -328,7 +330,7 @@ def fold [Zero α] (f: α -> β -> β) (acc: β) (hzero: ∀b, f 0 b = b) (hcomm
       replace ih := ih (by
         apply LazyList.of_nodup_cons
         assumption)
-      by_cases ha:f₀ a = 0
+      rcases em (f₀ a = 0) with ha | ha
       · rw [ha, hzero]
         apply ih
         · assumption
@@ -466,9 +468,8 @@ def compute_basis_congr (f g: Finsupp ι α) (as: LazyList ι) :
     apply hi
     simp [h]
 
-private def exists_basis (f: Finsupp ι α) :
+private def exists_basis [LEM] (f: Finsupp ι α) :
   ∃as: LazyList ι, as.Nodup ∧ f = compute_basis f 0 as := by
-  classical
   have supp := f.support
   induction supp with | mk supp =>
   obtain ⟨supp, nodup, hsupp⟩ := supp
@@ -479,7 +480,7 @@ private def exists_basis (f: Finsupp ι α) :
   | nil =>
     simp; apply DFunLike.ext
     intro i
-    apply Decidable.byContradiction
+    apply LEM.byContradiction
     intro h
     nomatch hsupp i h
   | cons a as ih =>
@@ -501,7 +502,6 @@ def list_induction
   (zero: motive 0)
   (single_add: ∀i a f, f i = 0 -> motive f -> motive (.single i a + f))
   (f: Finsupp ι α) : motive f := by
-  classical
   have supp := f.support
   induction supp with | mk supp =>
   obtain ⟨supp, nodup, hsupp⟩ := supp
@@ -512,7 +512,7 @@ def list_induction
       apply zero
     apply DFunLike.ext
     intro i
-    apply Decidable.byContradiction
+    apply LEM.byContradiction
     intro h
     nomatch hsupp i h
   | cons a as ih =>
@@ -604,7 +604,7 @@ def map_eq_mapHom [FunLike F α β] [IsZeroHom F α β] [IsAddHom F α β] (f: F
 @[simp]
 def sum_single (i: ι) (a: α) : sum (single i a) = a := preSum_single _ _
 
-def map_sum [DecidableEq β] [FunLike F α β] [IsZeroHom F α β] [IsAddHom F α β] (f: F) (f₀: Finsupp ι α) : (f₀.map f).sum = f f₀.sum := by
+def map_sum [LEM] [DecidableEq β] [FunLike F α β] [IsZeroHom F α β] [IsAddHom F α β] (f: F) (f₀: Finsupp ι α) : (f₀.map f).sum = f f₀.sum := by
   induction f₀ with
   | zero => repeat rw [map_zero]
   | single => simp
@@ -612,7 +612,7 @@ def map_sum [DecidableEq β] [FunLike F α β] [IsZeroHom F α β] [IsAddHom F �
     simp [map_add, map_eq_mapHom]
     simp [←map_eq_mapHom, iha, ihb]
 
-def sumHom [SMul R α] [MonoidOps R] [IsMonoid R] [IsDistributiveAction R α] : Finsupp ι α →ₗ[R] α where
+def sumHom [LEM] [SMul R α] [MonoidOps R] [IsMonoid R] [IsDistributiveAction R α] : Finsupp ι α →ₗ[R] α where
   toAddHom := sum.toAddHom
   map_smul := by
     intro r a

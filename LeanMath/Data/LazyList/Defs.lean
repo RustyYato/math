@@ -1,4 +1,6 @@
 import LeanMath.Tactic.TypeStar
+import LeanMath.Tactic.AxiomBlame
+import LeanMath.Logic.LEM
 
 structure LazyList (α: Type*) where
   size: ℕ
@@ -146,7 +148,7 @@ def cons (a: α) (as: LazyList α) : LazyList α where
   size := as.size + 1
   getElem
   | ⟨0, _⟩ => a
-  | ⟨n + 1, _⟩ => as[n]
+  | ⟨n + 1, h⟩ => as[n]'(Nat.lt_of_succ_lt_succ h)
 
 @[simp]
 def size_cons : (cons a as).size = as.size + 1 := rfl
@@ -159,7 +161,11 @@ def getElem_cons_succ (n: ℕ) (h: n < as.size): (cons a as)[n + 1]'(by simp [h]
 
 def append (as bs: LazyList α) : LazyList α where
   size := as.size + bs.size
-  getElem x := if h:x < as.size then as[x] else bs[x - as.size]
+  getElem x := if h:x < as.size then as[x]'(h) else bs[x - as.size]'(by
+    apply Nat.sub_lt_left_of_lt_add
+    apply Nat.le_of_not_lt
+    assumption
+    exact x.isLt)
 
 instance : Append (LazyList α) where
   append := append
@@ -261,16 +267,16 @@ instance : Membership α (LazyList α) where
     omega
 
 def cons_eq_singleton_append (a: α) (as: LazyList α) : cons a as = singleton a ++ as := by
-  ext i; simp; omega
-  simp
+  ext i; simp; rw [Nat.add_comm]
+  dsimp
   cases i using Fin.cases with
   | zero => rfl
   | succ i =>
-    simp
     by_cases h:i.val < as.size
     rw [getElem_append_of_ge]
-    simp
-    simp; omega
+    rfl
+    apply Nat.le_add_left
+    rfl
 
 def Nodup (as: LazyList α) := Function.Injective as.getElem
 
@@ -377,7 +383,8 @@ def basic_dedup_nodup [DecidableEq α] (as: LazyList α) : as.basic_dedup.Nodup 
   exists ⟨i, h⟩
 
 @[simp] def mem_toArray (as: LazyList α) : x ∈ as.toArray ↔ x ∈ as := by
-  simp [toArray]
+  unfold toArray
+  rw [Array.mem_ofFn] -- FIXME[classical] Array uses classical recklessly, so it's not practical to avoid it
   rfl
 
 def basic_dedup_mem [DecidableEq α] (as: LazyList α) : ∀{x}, x ∈ as.basic_dedup ↔ x ∈ as := by

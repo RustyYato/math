@@ -1,6 +1,7 @@
 import LeanMath.Data.Hom
 import LeanMath.Data.Embedding.Defs
 import LeanMath.Data.Equiv.Defs
+import LeanMath.Logic.LEM
 
 class IsRelMap (F: Type*) [FunLike F α β] (r: outParam <| α -> α -> Prop) (s: outParam <| β -> β -> Prop) where
   protected map_rel₀ (f: F) : ∀{a b: α}, r a b -> s (f a) (f b) := by intro f; exact f.map_rel₀
@@ -330,11 +331,11 @@ section WellFounded
 
 variable (R: α -> α -> Prop) [Relation.IsWelFounded R] {P: α -> Prop} (h: ∃a, P a)
 
-def exists_min : ∃a, P a ∧ ∀b, R b a -> ¬P b := by
+def exists_min [LEM] : ∃a, P a ∧ ∀b, R b a -> ¬P b := by
   obtain ⟨x, Pa⟩ := h
   induction x using (wf R).induction with
   | h a ih =>
-  by_cases g:∃x, P x ∧ R x a
+  rcases em (∃x, P x ∧ R x a) with g | g
   · obtain ⟨x, Px, hx⟩ := g
     apply ih
     assumption
@@ -344,9 +345,11 @@ def exists_min : ∃a, P a ∧ ∀b, R b a -> ¬P b := by
     apply g
     refine ⟨_, px, hx⟩
 
-noncomputable def min : α := Classical.choose (exists_min R h)
-def min_spec : P (min R h) := (Classical.choose_spec (exists_min R h)).left
-def min_minimal : ∀a, R a (min R h) -> ¬P a := (Classical.choose_spec (exists_min R h)).right
+open Classical
+
+noncomputable def min : α := choose (exists_min R h)
+def min_spec : P (min R h) := (choose_spec (exists_min R h)).left
+def min_minimal : ∀a, R a (min R h) -> ¬P a := (choose_spec (exists_min R h)).right
 
 attribute [irreducible] min
 

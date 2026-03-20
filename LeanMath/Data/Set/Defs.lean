@@ -1,4 +1,5 @@
 import LeanMath.Tactic.TypeStar
+import LeanMath.Logic.LEM
 import LeanMath.Data.TopBot.Defs
 
 structure Set (α: Type*) where
@@ -250,9 +251,10 @@ protected abbrev Nonempty (s: Set α) : Prop := Nonempty s
   obtain ⟨x, hx⟩ := h
   contradiction
 
-@[simp] def ne_empty {a: Set α} : a ≠ ∅ ↔ a.Nonempty := by
-  classical
-  simp [Decidable.not_iff_not.symm]
+@[simp] def ne_empty [LEM] {a: Set α} : a ≠ ∅ ↔ a.Nonempty := by
+  apply LEM.not_iff_not.mp
+  apply Iff.trans LEM.not_not
+  exact not_nonempty.symm
 
 def nonempty_iff_exists {s: Set α} : s.Nonempty ↔ ∃x, x ∈ s := by
   apply Iff.intro
