@@ -138,3 +138,7 @@ instance [IsAlgebra R α] : IsModule R α where
   smul_add r a b := by rw [smul_def, smul_def, smul_def, mul_add]
   zero_smul a := by rw [smul_def, map_zero, zero_mul]
   add_smul r s a := by rw [smul_def, smul_def, smul_def, map_add, add_mul]
+
+instance [SMul R α] [AlgebraMap R α] [IsAlgebra R α] (r :R) (a: α) : IsCommAt (algebraMap R r) a where
+  mul_comm := IsAlgebra.commutes _ _
+instance [SMul R α] [AlgebraMap R α] [IsAlgebra R α] (r :R) (a: α) : IsCommAt a (algebraMap R r) := inferInstance
