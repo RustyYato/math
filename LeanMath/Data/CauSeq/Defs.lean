@@ -1215,7 +1215,7 @@ instance : IsGroupWithZero (Completion α γ) where
     apply hk
     assumption
 
-open Classical in
+instance : NoZeroDivisors (Completion α γ) := inferInstance
 instance (priority := 100000) : IsField (Completion α γ) where
 
 instance : IsZeroLEOne (Completion γ γ) where

@@ -81,9 +81,9 @@ instance (priority := 100) NoZeroDivisors.ofLeftCancel₀ [Mul α] [Zero α] [Is
     intro ha
     rw [←mul_zero a] at h
     exact of_mul_left₀ ha h
-instance (priority := 100) [Mul α] [Zero α] [IsLawfulZeroMul α] [IsRightCancel₀ α] [DecidableEq α] : NoZeroDivisors α where
+instance (priority := 100) [Mul α] [Zero α] [IsLawfulZeroMul α] [IsRightCancel₀ α] [ExcludedMiddleEq α] : NoZeroDivisors α where
   of_mul_eq_zero {a b} h := by
-    apply Decidable.or_iff_not_imp_right.mpr
+    apply LEM.or_iff_not_imp_right.mpr
     intro hb
     rw [←zero_mul b] at h
     exact of_mul_right₀ hb h
