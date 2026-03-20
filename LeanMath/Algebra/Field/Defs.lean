@@ -24,7 +24,7 @@ end
 
 variable {R D: Type*} [FunLike F D R] [FieldOps D] [RingOps R] [IsRing R] [IsDivisionRing D]
   [IsZeroHom F D R] [IsOneHom F D R] [IsAddHom F D R] [IsMulHom F D R]
-  [IsZeroNeOne R] [DecidableEq D]
+  [IsZeroNeOne R] [ExcludedMiddleEq D]
 
 instance : EmbeddingLike F D R where
   coeEmbedding f := {
@@ -36,7 +36,7 @@ instance : EmbeddingLike F D R where
       rw [←sub_eq_add_neg]
       revert h; generalize a - b = x
       clear a b; intro h
-      apply Decidable.byContradiction
+      apply LEM.byContradiction
       intro g
       have : f (x * x⁻¹?) = 1 := by rw [mul_inv?_cancel, map_one]
       rw [map_mul, h, zero_mul] at this
