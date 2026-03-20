@@ -54,8 +54,8 @@ def conj : RsqrtD α r ↪+* RsqrtD α r where
     rw [←neg_mul_left, ←neg_mul_right, neg_neg]
     rw [←neg_mul_left, ←neg_mul_right, ←neg_add_rev, add_comm]
 
-def apply_conj_real (a: RsqrtD α r) : (conj a).real = a.real := rfl
-def apply_conj_imag (a: RsqrtD α r) : (conj a).imag = -a.imag := rfl
+@[simp] def apply_conj_real (a: RsqrtD α r) : (conj a).real = a.real := rfl
+@[simp] def apply_conj_imag (a: RsqrtD α r) : (conj a).imag = -a.imag := rfl
 
 def conj_conj (a: RsqrtD α r) : conj (conj a) = a := by
   ext; rfl; apply neg_neg
