@@ -142,3 +142,11 @@ instance [IsAlgebra R α] : IsModule R α where
 instance [SMul R α] [AlgebraMap R α] [IsAlgebra R α] (r :R) (a: α) : IsCommAt (algebraMap R r) a where
   mul_comm := IsAlgebra.commutes _ _
 instance [SMul R α] [AlgebraMap R α] [IsAlgebra R α] (r :R) (a: α) : IsCommAt a (algebraMap R r) := inferInstance
+
+instance : AlgebraMap ℕ α where
+  toAlgebraMap := natCastHom
+instance : IsAlgebra ℕ α where
+  smul_def n a := by rw [nsmul_eq_natCast_mul]; rfl
+  commutes n a := by
+    show n * a = a * n
+    rw [mul_comm]

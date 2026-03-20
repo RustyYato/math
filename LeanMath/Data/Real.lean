@@ -1,5 +1,6 @@
 import LeanMath.Data.CauSeq.Defs
 import LeanMath.Data.Rational.Norm
+import LeanMath.Algebra.Algebra.Ring
 
 variable [LEM]
 
@@ -30,23 +31,10 @@ def ofRat : ℚ ↪+* ℝ where
     toRingHom := algebraMap ℚ
     inj := inj (algebraMap ℚ (α := ℝ))
 
-instance : AlgebraMap ℤ ℝ where
-    toAlgebraMap := intCastHom
-instance : IsAlgebra ℤ ℝ where
-    commutes _ _ := by rw [mul_comm]
-    smul_def r x := by
-        show (r: ℚ) • x = _
-        rw [smul_def]
-        rfl
-
-instance : AlgebraMap ℕ ℝ where
-    toAlgebraMap := natCastHom
-instance : IsAlgebra ℕ ℝ where
-    commutes _ _ := by rw [mul_comm]
-    smul_def r x := by
-        show (r: ℚ) • x = _
-        rw [smul_def]
-        rfl
+instance : AlgebraMap ℤ ℝ := inferInstance
+instance : IsAlgebra ℤ ℝ := inferInstance
+instance : AlgebraMap ℕ ℝ := inferInstance
+instance : IsAlgebra ℕ ℝ := inferInstance
 
 end
 

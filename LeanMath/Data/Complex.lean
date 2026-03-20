@@ -1,12 +1,15 @@
 import LeanMath.Data.Real
 import LeanMath.Data.RsqrtD.Ring
 
+variable [LEM]
+
 abbrev Complex := RsqrtD ℝ (-1: ℤ)
 
 notation "ℂ" => Complex
 
 namespace Complex
 
+instance : RingOps ℂ := RsqrtD.instRingOps
 instance : RingOps ℂ := inferInstanceAs (RingOps (RsqrtD ℝ (-1: ℤ)))
 instance : IsRing ℂ := inferInstanceAs (IsRing (RsqrtD ℝ (-1: ℤ)))
 
