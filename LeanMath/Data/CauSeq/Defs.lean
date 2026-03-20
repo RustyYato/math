@@ -817,6 +817,213 @@ instance : CheckedInv? (Completion α γ) where
     assumption
     intro g; exact pa (sound g)
 
+private def is_cauchy_eqv.IsPos' (a b: CauchySeq γ γ) (h: a ≈ b) : a.IsPos -> b.IsPos := by
+  intro ⟨B, Bpos, hB⟩
+  have ⟨k, hk⟩ := (h _ (half_pos (norm_pos.mpr (ne_of_gt Bpos)))).merge hB
+  refine ⟨_, half_pos Bpos, ?_⟩
+  exists k; intro i hi
+  dsimp at hk
+  replace ⟨hk, hBa⟩ := hk i i hi hi
+  -- B ≤ B - B /? 2 < a i - ‖a i - b i‖ ≤ b i
+  rw [show B /? (2: ℕ) = B - B /? (2: ℕ) from ?_]
+  apply lt_of_lt_of_le
+  apply sub_lt_sub
+  assumption
+  rw [show B = ‖B‖ from ?_]
+  assumption
+  rw [abs_eq_max, max_eq_left]
+  apply neg_le_of_nonneg
+  apply le_of_lt; assumption
+  apply sub_le_iff_le_add.mpr
+  rw [add_comm]
+  apply le_add_iff_sub_le.mpr
+  rw [abs_eq_max]
+  apply left_le_max
+  rw (occs := [2]) [←half_add_half B]
+  rw [add_sub_assoc, sub_self, add_zero]
+
+protected def is_cauchy_eqv.IsPos (a b: CauchySeq γ γ) (h: a ≈ b) : a.IsPos ↔ b.IsPos := by
+  apply Iff.intro
+  apply is_cauchy_eqv.IsPos'
+  assumption
+  apply is_cauchy_eqv.IsPos'
+  apply Relation.symm; assumption
+
+protected def Completion.IsPos : Completion γ γ -> Prop := lift IsPos (fun _ _ h => propext (is_cauchy_eqv.IsPos _ _ h))
+
+def of_norm_pos (c: CauchySeq γ γ) : ‖c‖.IsPos -> c.IsPos ∨ (-c).IsPos := by
+  intro ⟨B, Bpos, hB⟩
+  replace hB := (c.is_cauchy _ (half_pos Bpos)).merge hB
+  replace ⟨k, hB⟩ := hB
+  dsimp at hB
+  -- have := hB k k (Nat.le_refl _) (Nat.le_refl _)
+  have : B < ‖c k‖ := (hB k k (Nat.le_refl _) (Nat.le_refl _)).right
+  rw [abs_eq_max] at this
+  rcases of_lt_max this with h | h
+  · left; refine ⟨_, Bpos, k, fun i hi => ?_⟩
+    dsimp
+    replace ⟨hc, hB⟩ := hB i k hi (Nat.le_refl _)
+    replace hB : B < ‖c i‖ := hB
+    rw [abs_eq_max] at hB
+    rcases of_lt_max hB with hB | hB
+    assumption
+    rw [←neg_lt_neg_iff, neg_neg] at hB
+    have := sub_lt_sub h hB
+    rw [sub_eq_add_neg, neg_neg] at this
+    rw [norm_sub, abs_eq_max] at hc
+    have := lt_trans this (lt_of_le_of_lt left_le_max hc)
+    rw [←zero_add (B /? (2: ℕ)), lt_add_iff_sub_lt, add_sub_assoc] at this
+    rw [show (B - B /? (2: ℕ)) = B /? (2: ℕ) by
+      rw (occs := [1]) [←half_add_half B]
+      rw [add_sub_assoc, sub_self, add_zero]] at this
+    have := lt_of_le_of_lt (by
+      show B ≤ B + B /? (2: ℕ)
+      apply le_add_right
+      apply le_of_lt
+      apply pos_div?_natCast
+      assumption) this
+    nomatch Relation.asymm Bpos this
+  · right; refine ⟨_, Bpos, k, fun i hi => ?_⟩
+    dsimp
+    replace ⟨hc, hB⟩ := hB i k hi (Nat.le_refl _)
+    replace hB : B < ‖c i‖ := hB
+    rw [abs_eq_max] at hB
+    rcases Or.symm (of_lt_max hB) with hB | hB
+    assumption
+    -- rw [←neg_lt_neg_iff, neg_neg] at hB
+    have := sub_lt_sub hB h
+    rw [sub_eq_add_neg, neg_neg, lt_sub_iff_add_lt,
+      add_assoc, add_comm (c k), ←add_assoc,
+      add_lt_iff_lt_sub] at this
+    rw [abs_eq_max] at hc
+    have := lt_trans this (lt_of_le_of_lt left_le_max hc)
+    rw [←zero_add (B /? (2: ℕ)), lt_add_iff_sub_lt, add_sub_assoc] at this
+    rw [show (B - B /? (2: ℕ)) = B /? (2: ℕ) by
+      rw (occs := [1]) [←half_add_half B]
+      rw [add_sub_assoc, sub_self, add_zero]] at this
+    have := lt_of_le_of_lt (by
+      show B ≤ B + B /? (2: ℕ)
+      apply le_add_right
+      apply le_of_lt
+      apply pos_div?_natCast
+      assumption) this
+    nomatch Relation.asymm Bpos this
+
+protected def Completion.of_norm_pos (c: Completion γ γ) : ‖c‖.IsPos -> c.IsPos ∨ (-c).IsPos := by
+  induction c with | _ c =>
+  apply of_norm_pos
+
+protected def Completion.norm_pos_of_ne_zero (c: Completion α γ) (h: c ≠ 0) : ‖c‖.IsPos := by
+  induction c with | _ c =>
+  apply norm_pos_of_ne_zero
+  intro g; apply h; apply sound
+  assumption
+
+instance : LT (Completion γ γ) where
+  lt a b := (b - a).IsPos
+instance : LE (Completion γ γ) where
+  le a b := a < b ∨ a = b
+
+instance : IsLTTrichotomous (Completion γ γ) where
+  trichotomous a b := by
+    by_cases h:a = b
+    right; left; assumption
+    have : b - a ≠ 0 := by
+      intro g; rw [←sub_eq_zero] at g
+      exact h g.symm
+    replace this := Completion.norm_pos_of_ne_zero _ this
+    rcases Completion.of_norm_pos _ this with h | h
+    left; assumption
+    right; right; rwa [neg_sub] at h
+
+def not_pos_and_neg (c: CauchySeq γ γ) : c.IsPos -> (-c).IsPos -> False := by
+  intro ⟨A, Apos, hA⟩ ⟨B, Bpos, hB⟩
+  have ⟨k, hk⟩ := hA.merge hB
+  have ⟨ha, hb⟩ := hk k (Nat.le_refl k)
+  replace hb : B < - c k := hb
+  rw [←neg_lt_neg_iff, neg_neg] at hb
+  apply Relation.asymm Apos
+  apply lt_trans (lt_trans ha hb)
+  rwa [←neg_lt_neg_iff, neg_zero, neg_neg]
+
+def ne_zero_of_pos (c: CauchySeq γ γ) : c.IsPos -> ¬c ≈ 0 := by
+  intro pos h
+  replace pos := is_cauchy_eqv.IsPos' _ _ h pos; clear h c
+  obtain ⟨B, Bpos, k, h⟩ := pos
+  exact Relation.asymm Bpos (h k (Nat.le_refl _))
+
+protected def pos_add (a b: CauchySeq γ γ) : a.IsPos -> b.IsPos -> (a + b).IsPos := by
+  intro ⟨A, Apos, hA⟩
+  intro ⟨B, Bpos, hB⟩
+  have ⟨k, hk⟩ := hA.merge hB
+  refine ⟨A + B, ?_, ?_⟩
+  apply pos_add
+  assumption
+  assumption
+  exists k; intro i hi
+  replace hk := hk i hi
+  apply add_lt_add
+  exact hk.left
+  exact hk.right
+
+protected def Completion.not_pos_and_neg (c: Completion γ γ) : c.IsPos -> (-c).IsPos -> False := by
+  induction c
+  apply not_pos_and_neg
+
+protected def Completion.ne_zero_of_pos (c: Completion γ γ) : c.IsPos -> c ≠ 0 := by
+  intro pos rfl
+  apply ne_zero_of_pos _ pos
+  rfl
+
+protected def Completion.pos_add (a b: Completion γ γ) : a.IsPos -> b.IsPos -> (a + b).IsPos := by
+  induction a
+  induction b
+  apply CauchySeq.pos_add
+
+instance : @Relation.IsTrans (Completion γ γ) (· < ·) where
+  trans {a b c} h g := by
+    show Completion.IsPos _
+    replace h : Completion.IsPos _ := h
+    replace g : Completion.IsPos _ := g
+    rw [←add_zero c, ←neg_add_cancel b, ←add_assoc, ←sub_eq_add_neg, add_sub_assoc]
+    apply Completion.pos_add <;> assumption
+instance : @Relation.IsIrrefl (Completion γ γ) (· < ·) where
+  irrefl {a} h := by
+    replace h : Completion.IsPos (a - a) := h
+    rw [sub_self] at h
+    exact Completion.ne_zero_of_pos _ h rfl
+instance : @Relation.IsAsymm (Completion γ γ) (· < ·) := inferInstance
+
+instance : IsLinearOrder (Completion γ γ) where
+  lt_iff_le_and_not_ge {a b} := by
+    apply Iff.intro
+    intro h; apply And.intro
+    left; assumption
+    intro g; rcases g with g | rfl
+    exact Relation.asymm h g
+    exact Relation.irrefl h
+    intro ⟨h, g⟩
+    rcases h with h | rfl
+    assumption
+    exfalso; apply g
+    right; rfl
+  refl _ := by right; rfl
+  trans {a b c} h g := by
+    rcases h with h | rfl <;> rcases g with g | rfl
+    left; apply Relation.trans h g
+    left; assumption
+    left; assumption
+    right; rfl
+  antisymm {a b} h g := by
+    rcases h with h | h; rcases g with g | g
+    nomatch Relation.asymm h g
+    symm; assumption
+    assumption
+
+-- instance : IsLawfulNorm (Completion α γ) (Completion γ γ) where
+
+-- instance : IsLinearOrder
+
 end CauchySeq
 
 end

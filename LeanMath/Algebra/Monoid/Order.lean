@@ -136,6 +136,12 @@ def one_le_mul {a b: α} (ha: 1 ≤ a) (hb: 1 ≤ b) : 1 ≤ a * b := by
   assumption
   assumption
 
+def one_lt_mul [IsLeftCancel α] {a b: α} (ha: 1 < a) (hb: 1 < b) : 1 < a * b := by
+  rw [←mul_one 1]
+  apply mul_lt_mul
+  assumption
+  assumption
+
 def npow_strict_mono (n: ℕ) (h: 0 < n) [IsLeftCancel α] : StrictMonotone (α := α) (· ^ n) := by
   intro a b h; dsimp
   cases n with
@@ -183,6 +189,9 @@ def le_add_right {a b: α} (h: 0 ≤ b) : a ≤ a + b :=
 
 def nonneg_add {a b: α} (ha: 0 ≤ a) (hb: 0 ≤ b) : 0 ≤ a + b :=
   one_le_mul (α := MulOfAdd α) ha hb
+
+def pos_add [IsLeftAddCancel α] {a b: α} (ha: 0 < a) (hb: 0 < b) : 0 < a + b :=
+  one_lt_mul (α := MulOfAdd α) ha hb
 
 def nsmul_strict_mono (n: ℕ) (h: 0 < n) [IsLeftAddCancel α] : StrictMonotone (α := α) (n • ·) :=
   npow_strict_mono (α := MulOfAdd α) n h
