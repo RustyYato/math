@@ -3,7 +3,7 @@ import LeanMath.Algebra.Semifield.Defs
 
 class FieldOps (α: Type*) extends SemifieldOps α, RingOps α where
 
-instance [ha: GroupWithZeroOps α] [hb: AddGroupWithOneOps α] : FieldOps α := {
+instance (priority := 1200) [ha: GroupWithZeroOps α] [hb: AddGroupWithOneOps α] : FieldOps α := {
     ha, hb with
 }
 

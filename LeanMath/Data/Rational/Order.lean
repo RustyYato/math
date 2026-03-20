@@ -181,4 +181,7 @@ instance : IsStrictOrderedSemiring ℚ where
     simp [pos_iff] at *
     apply pos_mul <;> assumption
 
+instance : IsZeroLEOne ℚ where
+  zero_le_one := by decide +kernel
+
 end Rational

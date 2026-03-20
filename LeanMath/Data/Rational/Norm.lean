@@ -96,8 +96,9 @@ instance : IsLawfulAbs ℚ where
     assumption
   abs_mul := abs_mul
   abs_add_le_add_abs := abs_add_le_add_abs
-  of_abs_eq_zero := by
-    intro a h
+  abs_eq_zero {a} := by
+    apply Iff.intro
+    intro h
     apply le_antisymm
     apply le_trans
     show a ≤ ‖a‖
@@ -111,5 +112,7 @@ instance : IsLawfulAbs ℚ where
     apply lt_of_lt_of_le _ right_le_max
     apply neg_lt_neg (a := a) (b := 0)
     assumption
+    intro rfl
+    decide +kernel
 
 end Rational

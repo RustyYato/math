@@ -1082,6 +1082,63 @@ instance : IsLawfulNorm (Completion α γ) (Completion γ γ) where
   norm_add_le_add_norm := Completion.norm_add_le_add_norm
   norm_eq_zero := Completion.norm_eq_zero
 
+instance : CheckedDiv? (Completion α γ) where
+  checked_div a b h := a * b⁻¹?
+instance : CheckedZPow? (Completion α γ) where
+  checked_pow a b h :=
+    match b with
+    | .ofNat b => a ^ b
+    | .negSucc b => a⁻¹? ^ (b + 1)
+
+instance : GroupWithZeroOps (Completion α γ) := inferInstance
+instance : AddGroupWithOneOps (Completion α γ) := inferInstance
+instance : FieldOps (Completion α γ) := instFieldOpsOfGroupWithZeroOpsOfAddGroupWithOneOps
+
+def eventually_ne_zero_of_ne_zero (a: CauchySeq α γ) (h: ¬a ≈ 0) : Eventually fun i => a i ≠ 0 := by
+  have ⟨B, Bpos, k, h⟩ := norm_pos_of_ne_zero _ h
+  exists k; intro i hi; replace h : B < ‖a i‖ := h i hi
+  intro  g
+  rw [←norm_eq_zero] at g
+  rw [g] at h
+  exact Relation.asymm Bpos h
+
+def of_eventually_pointwise (a b: CauchySeq α γ) (h: Eventually fun i => a i = b i) : a ≈ b := by
+  intro ε εpos
+  replace ⟨k, h⟩ := (b.is_cauchy _ εpos).merge h
+  exists k; intro i j hi hj
+  replace ⟨ha, h⟩ := h i j hi hj
+  rwa [h]
+
+instance : IsGroupWithZero (Completion α γ) where
+  zero_ne_one := by
+    intro h
+    replace h := exact h
+    have ⟨k, hk⟩ := h ((1: γ) /? (2: ℕ)) (by
+      apply pos_div?_natCast
+      apply zero_lt_one)
+    replace hk : ‖(0 - 1: α)‖ < (1: γ) /? (2: ℕ) := hk _ _ (Nat.le_refl _) (Nat.le_refl _)
+    dsimp at hk
+    rw [norm_sub, sub_zero, norm_one]  at hk
+    have := mul_lt_mul_of_pos_left _ _ hk (2: ℕ) (pos_natCast _)
+    rw [div?_eq_mul_inv?, one_mul, mul_inv?_cancel, mul_one, ←natCast_one,
+      natCast_lt_natCast] at this
+    contradiction
+  div?_eq_mul_inv? _ _ _ := rfl
+  zpow?_ofNat _ _ := rfl
+  zpow?_negSucc _ _ _ := rfl
+  mul_inv?_cancel a h := by
+    induction a with | _ a =>
+    have ⟨k, hk⟩ := eventually_ne_zero_of_ne_zero _ (fun g => h (sound g))
+    apply sound; apply of_eventually_pointwise; exists k; intro i hi
+    show a i * safe_inv a i = 1
+    unfold safe_inv; rw [dif_neg]
+    apply mul_inv?_cancel
+    apply hk
+    assumption
+
+open Classical in
+instance : IsField (Completion α γ) where
+
 end CauchySeq
 
 end
