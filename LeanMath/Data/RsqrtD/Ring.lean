@@ -29,6 +29,8 @@ instance [AddGroupOps α] [IsAddGroup α] : IsAddGroup (RsqrtD α r) where
   ofNat_zsmul _ _ := by ext <;> apply ofNat_zsmul
   negSucc_zsmul _ _ := by ext <;> apply negSucc_zsmul
 
+instance [RingOps α] [IsRing α] [RingOps R] [IsRing R] [AlgebraMap R α] [SMul R α] [IsAlgebra R α] : RingOps (RsqrtD α r) := inferInstance
+
 instance [RingOps α] [IsRing α] [RingOps R] [IsRing R] [AlgebraMap R α] [SMul R α] [IsAlgebra R α] : IsRing (RsqrtD α r) where
   intCast_ofNat _ := by ext; apply intCast_ofNat; rfl
   intCast_negSucc _ := by ext; apply intCast_negSucc; simp [neg_zero]

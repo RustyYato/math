@@ -28,6 +28,24 @@ def ofRat : ℚ ↪+* ℝ where
     toRingHom := algebraMap ℚ
     inj := inj (algebraMap ℚ (α := ℝ))
 
+instance : AlgebraMap ℤ ℝ where
+    toAlgebraMap := intCastHom
+instance : IsAlgebra ℤ ℝ where
+    commutes _ _ := by rw [mul_comm]
+    smul_def r x := by
+        show (r: ℚ) • x = _
+        rw [smul_def]
+        rfl
+
+instance : AlgebraMap ℕ ℝ where
+    toAlgebraMap := natCastHom
+instance : IsAlgebra ℕ ℝ where
+    commutes _ _ := by rw [mul_comm]
+    smul_def r x := by
+        show (r: ℚ) • x = _
+        rw [smul_def]
+        rfl
+
 end
 
 instance : HasChar ℝ 0 := HasChar.of_ring_emb ofRat

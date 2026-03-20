@@ -117,4 +117,19 @@ instance [SemiringOps α] [IsSemiring α] [SemiringOps R] [IsSemiring R] [Algebr
     ac_rfl
     ac_rfl
 
+def of_real [Zero α] [One α] [Mul α] [Add α] [SMul R α]
+  [IsLawfulZeroAdd α] [IsLawfulZeroMul α] [IsLawfulSMulZero R α]
+  : α ↪+* RsqrtD α r where
+  toFun a := {
+    real := a
+    imag := 0
+  }
+  inj := by
+    intro a b h
+    exact (RsqrtD.mk.inj h).left
+  map_zero := rfl
+  map_one := rfl
+  map_add _ _ := by ext; rfl; symm; apply add_zero
+  map_mul a b := by ext <;> simp [add_zero, mul_zero, smul_zero, zero_mul]
+
 end RsqrtD
