@@ -2,6 +2,7 @@ import LeanMath.Algebra.Field.Defs
 import LeanMath.Algebra.Ring.Order
 import LeanMath.Algebra.Semifield.Order
 import LeanMath.Algebra.Norm.Basic
+import LeanMath.Algebra.Module.Defs
 import LeanMath.Data.Fintype.Order
 import LeanMath.Tactic.AxiomBlame
 
@@ -1138,6 +1139,145 @@ instance : IsGroupWithZero (Completion α γ) where
 
 open Classical in
 instance (priority := 100000) : IsField (Completion α γ) where
+
+instance : IsZeroLEOne (Completion γ γ) where
+  zero_le_one := by
+    left; refine ⟨1 /? (2: ℕ), ?_, ?_⟩
+    apply pos_div?_natCast
+    apply zero_lt_one
+    exists 0; intro i hi
+    show _ < 1 - (0: γ)
+    rw [sub_zero]
+    apply lt_of_mul_lt_mul_of_pos_left _ _ ((2: ℕ): γ)
+    apply pos_natCast
+    rw [div?_eq_mul_inv?, one_mul, mul_inv?_cancel, mul_one, ←natCast_one]
+    rw [natCast_lt_natCast]
+    decide
+
+def lt_iff_ispos (a b: Completion γ γ) : a < b ↔ Completion.IsPos (b - a) := by
+  induction a with | _ a =>
+  induction b with | _ b =>
+  rfl
+
+protected def Completion.mul_pos {a b: Completion γ γ} (ha: 0 < a) (hb: 0 < b) : 0 < a * b := by
+    induction a with | _ a =>
+    induction b with | _ b =>
+    obtain ⟨A, Apos, hA⟩ := ha
+    obtain ⟨B, Bpos, hB⟩ := hb
+    obtain ⟨k, h⟩ := hA.merge hB; clear hA hB
+    refine ⟨A * B, ?_, ?_⟩
+    apply IsStrictOrderedNonUnitalNonAssocSemiring.mul_pos
+    assumption
+    assumption
+    exists k; intro i hi
+    replace ⟨ha, hb⟩ := h i hi
+    show A * B < a i * b i - 0
+    replace ha : A < a i - 0 := ha
+    replace hb : B < b i - 0 := hb
+    rw [sub_zero] at *
+    apply lt_trans
+    apply mul_lt_mul_of_pos_left
+    assumption
+    assumption
+    apply mul_lt_mul_of_pos_right
+    assumption
+    apply lt_trans Bpos
+    assumption
+
+protected def Completion.mul_le_mul_of_nonneg_left {a b: Completion γ γ} : a ≤ b → ∀ (c : Completion γ γ), 0 ≤ c → c * a ≤ c * b := by
+  intro h c hc
+  rcases Or.symm hc with rfl | hc
+  rw [zero_mul, zero_mul]
+  rcases Or.symm h with rfl | h
+  rfl
+  left;
+  rw [lt_iff_ispos] at *
+  rw [sub_zero] at hc
+  rw [←mul_sub, ←sub_zero (c * _)]
+  rw [←lt_iff_ispos]
+  apply Completion.mul_pos
+  rwa [lt_iff_ispos, sub_zero]
+  rwa [lt_iff_ispos, sub_zero]
+
+instance : IsStrictOrderedSemiring (Completion γ γ) where
+  add_le_add_left {a b} h c := by
+    rcases h with h | rfl
+    · left
+      rw [lt_iff_ispos, add_comm c a, sub_add, add_sub_comm, sub_self, zero_add]
+      rwa [lt_iff_ispos] at h
+    · rfl
+  mul_nonneg {a b} ha hb := by
+    rcases ha with ha | rfl
+    rcases hb with hb | rfl
+    left; apply Completion.mul_pos
+    assumption
+    assumption
+    rw [mul_zero]
+    rw [zero_mul]
+  mul_le_mul_of_nonneg_left := Completion.mul_le_mul_of_nonneg_left
+  mul_le_mul_of_nonneg_right {a b} h c hc := by
+    rw [mul_comm _ c, mul_comm _ c]
+    apply Completion.mul_le_mul_of_nonneg_left <;> assumption
+  mul_pos {a b} ha hb := by
+    induction a with | _ a =>
+    induction b with | _ b =>
+    obtain ⟨A, Apos, hA⟩ := ha
+    obtain ⟨B, Bpos, hB⟩ := hb
+    obtain ⟨k, h⟩ := hA.merge hB; clear hA hB
+    refine ⟨A * B, ?_, ?_⟩
+    apply IsStrictOrderedNonUnitalNonAssocSemiring.mul_pos
+    assumption
+    assumption
+    exists k; intro i hi
+    replace ⟨ha, hb⟩ := h i hi
+    show A * B < a i * b i - 0
+    replace ha : A < a i - 0 := ha
+    replace hb : B < b i - 0 := hb
+    rw [sub_zero] at *
+    apply lt_trans
+    apply mul_lt_mul_of_pos_left
+    assumption
+    assumption
+    apply mul_lt_mul_of_pos_right
+    assumption
+    apply lt_trans Bpos
+    assumption
+
+instance
+  [SMul R α] [SMul R γ] [IsScalarTower R γ α]
+  [SemiringOps R] [IsSemiring R]
+  [IsModule R γ] [IsModule γ α]
+  [IsRestrictionTower R γ α]
+  : IsModule R (Completion α γ) where
+  one_smul a := by
+    induction a with | _ a =>
+    show ofSeq _ = ofSeq _; congr 1; ext i
+    simp [one_smul]
+    apply one_smul
+  mul_smul r s a := by
+    induction a with | _ a =>
+    show ofSeq _ = ofSeq _; congr 1; ext i
+    simp [mul_smul]
+    show (r • s • (1: γ)) • a i = (r • (1: γ)) • ((s • (1: γ)) • a i)
+    rw [smul_assoc, smul_one_smul, smul_one_smul]
+  smul_zero r := by
+    show ofSeq _ = ofSeq _; congr 1; ext i
+    apply smul_zero
+  smul_add r a b := by
+    induction a with | _ a =>
+    induction b with | _ b =>
+    show ofSeq _ = ofSeq _; congr 1; ext i
+    apply smul_add
+  add_smul r s a := by
+    induction a with | _ a =>
+    show ofSeq _ = ofSeq _; congr 1; ext i
+    simp [add_smul];
+    apply add_smul
+  zero_smul a :=  by
+    induction a with | _ a =>
+    show ofSeq _ = ofSeq _; congr 1; ext i
+    simp [zero_smul]; apply zero_smul
+
 
 end CauchySeq
 

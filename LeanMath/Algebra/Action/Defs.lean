@@ -24,6 +24,9 @@ class IsSMulComm (R S α: Type*) [SMul R α] [SMul S α] where
 class IsScalarTower (R S α: Type*) [SMul R α] [SMul S α] [SMul R S] where
   protected smul_assoc (r: R) (s: S) (a: α) : (r • s) • a = r • s • a
 
+class IsRestrictionTower (R S α: Type*) [SMul R α] [SMul S α] [SMul R S] [One S] where
+  protected smul_one_smul (r: R) (a: α) : (r • (1: S)) • a = r • a
+
 class IsCentralScalar (R α : Type*) [SMul R α] [SMul Rᵐᵒᵖ α]: Prop where
   protected rsmul_eq_lsmul : ∀(r : R) (a : α), a <• r = r •> a
 
@@ -45,6 +48,8 @@ def smul_assoc [SMul R α] [SMul S α] [SMul R S] [IsScalarTower R S α] (r: R) 
   IsScalarTower.smul_assoc _ _ _
 def rsmul_eq_lsmul [SMul R α] [SMul Rᵐᵒᵖ α] [IsCentralScalar R α] (r : R) (a : α) : a <• r = r •> a :=
   IsCentralScalar.rsmul_eq_lsmul _ _
+def smul_one_smul [SMul R α] [SMul R S] [SMul S α] [One S] [IsRestrictionTower R S α] (r: R) (a: α) : (r • (1: S)) • a = r • a :=
+  IsRestrictionTower.smul_one_smul _ _
 
 instance [Mul R] [IsComm R] [SMul R α]
   [IsLawfulMulSMul R α] : IsSMulComm R R α where

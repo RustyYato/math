@@ -112,3 +112,16 @@ instance : IsSMulHom F ℤ α β where
     rw [ofNat_zsmul, ofNat_zsmul, map_smul]
     rw [negSucc_zsmul, negSucc_zsmul,
       map_neg, map_smul]
+
+instance
+  [AddGroupOps R] [IsAddGroup R]
+  [AddGroupOps S] [IsAddGroup S]
+  [SMul R S] [One R]
+  [IsLawfulZeroSMul R S]
+  [IsLeftDistribSMul R S]
+  [IsLawfulOneSMul R S] : IsRestrictionTower ℤ R S where
+  smul_one_smul a b := by
+    show (a • 1) • b = a • b
+    cases a with
+    | ofNat a => rw [ofNat_zsmul, ofNat_zsmul, smul_one_smul]
+    | negSucc a => rw [negSucc_zsmul, negSucc_zsmul, ←neg_smul_left, smul_one_smul]

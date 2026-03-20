@@ -28,6 +28,11 @@ instance : IsModule R R where
   add_smul := add_mul
   zero_smul := zero_mul
 
+instance [SMul R S] : IsRestrictionTower R R S where
+  smul_one_smul a b := by
+    show (a * 1) • b = a • b
+    rw [mul_one]
+
 instance : IsScalarTower ℕ R β where
   smul_assoc n r a := by
     induction n with
