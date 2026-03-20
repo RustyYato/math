@@ -20,17 +20,15 @@ instance : IsLinearOrder ℝ := inferInstanceAs (IsLinearOrder (CauchySeq.Comple
 instance : IsStrictOrderedSemiring ℝ := inferInstanceAs (IsStrictOrderedSemiring (CauchySeq.Completion ℚ ℚ))
 
 instance : SMul ℚ ℝ := inferInstanceAs (SMul ℚ (CauchySeq.Completion ℚ ℚ))
-instance : IsModule ℚ ℝ := inferInstanceAs (IsModule ℚ (CauchySeq.Completion ℚ ℚ))
+instance : AlgebraMap ℚ ℝ := inferInstanceAs (AlgebraMap ℚ (CauchySeq.Completion ℚ ℚ))
+instance : IsAlgebra ℚ ℝ := inferInstanceAs (IsAlgebra ℚ (CauchySeq.Completion ℚ ℚ))
+instance : IsModule ℚ ℝ := inferInstance
+
+def ofRat : ℚ ↪+* ℝ where
+    toRingHom := algebraMap ℚ
+    inj := CauchySeq.Completion.const_inj
 
 end
-
-unseal Real in def ofRat : ℚ ↪+* ℝ where
-    toFun := CauchySeq.Completion.const
-    inj := CauchySeq.Completion.const_inj
-    map_zero := rfl
-    map_one := rfl
-    map_add _ _ := rfl
-    map_mul _ _ := rfl
 
 instance : HasChar ℝ 0 := HasChar.of_ring_emb ofRat
 

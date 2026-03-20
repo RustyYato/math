@@ -2,6 +2,7 @@ import LeanMath.Algebra.Field.Defs
 import LeanMath.Algebra.Ring.Order
 import LeanMath.Algebra.Semifield.Order
 import LeanMath.Algebra.Norm.Basic
+import LeanMath.Algebra.Algebra.Defs
 import LeanMath.Algebra.Module.Defs
 import LeanMath.Data.Fintype.Order
 import LeanMath.Tactic.AxiomBlame
@@ -1247,7 +1248,6 @@ instance
   [SMul R α] [SMul R γ] [IsScalarTower R γ α]
   [SemiringOps R] [IsSemiring R]
   [IsModule R γ] [IsModule γ α]
-  [IsRestrictionTower R γ α]
   : IsModule R (Completion α γ) where
   one_smul a := by
     induction a with | _ a =>
@@ -1259,7 +1259,7 @@ instance
     show ofSeq _ = ofSeq _; congr 1; ext i
     simp [mul_smul]
     show (r • s • (1: γ)) • a i = (r • (1: γ)) • ((s • (1: γ)) • a i)
-    rw [smul_assoc, smul_one_smul, smul_one_smul]
+    rw [smul_assoc, smul_assoc, one_smul, smul_assoc r, one_smul]
   smul_zero r := by
     show ofSeq _ = ofSeq _; congr 1; ext i
     apply smul_zero
@@ -1278,6 +1278,23 @@ instance
     show ofSeq _ = ofSeq _; congr 1; ext i
     simp [zero_smul]; apply zero_smul
 
+instance : AlgebraMap α (Completion α γ) where
+  toAlgebraMap := {
+    toFun := CauchySeq.Completion.const
+    map_zero := rfl
+    map_one := rfl
+    map_add _ _ := rfl
+    map_mul _ _ := rfl
+  }
+
+instance [SMul α γ] [IsScalarTower α γ α] : IsAlgebra α (Completion α γ) where
+  commutes _ _ := by rw [mul_comm]
+  smul_def r a := by
+    induction a with | _ a =>
+    show ofSeq _ = ofSeq _; congr 1; ext i
+    show (r • (1: γ)) • a i = _
+    rw [smul_assoc, one_smul, smul_def]
+    rfl
 
 end CauchySeq
 

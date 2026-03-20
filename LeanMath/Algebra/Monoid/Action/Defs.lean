@@ -202,16 +202,3 @@ instance : IsSMulHom F ℕ α β where
     induction n with
     | zero => rw [zero_smul, zero_smul, map_zero]
     | succ n ih => rw [succ_nsmul, succ_nsmul, map_add, ih]
-
-instance
-  [AddMonoidOps R] [IsAddMonoid R]
-  [AddMonoidOps S] [IsAddMonoid S]
-  [SMul R S] [One R]
-  [IsLawfulZeroSMul R S]
-  [IsLeftDistribSMul R S]
-  [IsLawfulOneSMul R S] : IsRestrictionTower ℕ R S where
-  smul_one_smul a b := by
-    show (a • 1) • b = a • b
-    induction a with
-    | zero => simp [zero_smul]
-    | succ n ih => rw [succ_nsmul, add_smul, succ_nsmul, one_smul, ih]
