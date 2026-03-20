@@ -13,4 +13,11 @@ instance : IsRing ℂ := inferInstanceAs (IsRing (RsqrtD ℝ (-1: ℤ)))
 def ofReal : ℝ ↪+* ℂ := RsqrtD.of_real
 instance : HasChar ℂ 0 := HasChar.of_ring_emb ofReal
 
+def conj : ℂ ↪+* ℂ := RsqrtD.conj
+
+def apply_conj_real (a: ℂ) : (conj a).real = a.real := rfl
+def apply_conj_imag (a: ℂ) : (conj a).imag = -a.imag := rfl
+
+def conj_conj (a: ℂ) : conj (conj a) = a := RsqrtD.conj_conj _
+
 end Complex
