@@ -156,7 +156,7 @@ def bot_sub (a: Subalgebra R α) : ⊥ ⊆ a := by
   rintro x ⟨_, _, rfl⟩
   apply mem_algebraMap a
 
-@[simp] def closure_bot_eq_bot : span R (α := α) ⊥ = ⊥ := by
+@[simp] def closure_bot_eq_bot: span R (α := α) ⊥ = ⊥ := by
   symm; apply SetLike.ext
   intro a
   apply Iff.intro
