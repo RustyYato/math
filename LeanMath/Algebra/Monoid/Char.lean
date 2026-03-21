@@ -99,6 +99,7 @@ instance : HasChar ℕ 0 where
   dvd_iff_nsmul_eq_zero n := by
     apply Iff.intro
     rintro ⟨_, rfl⟩
+    intro
     simp [zero_nsmul]
     intro h
     cases n
@@ -110,6 +111,7 @@ instance : HasChar ℤ 0 where
   dvd_iff_nsmul_eq_zero n := by
     apply Iff.intro
     rintro ⟨_, rfl⟩
+    intro
     simp [zero_nsmul]
     intro h
     cases n

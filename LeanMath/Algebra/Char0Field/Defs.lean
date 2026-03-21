@@ -41,8 +41,10 @@ instance : RatCast ℚ where
 instance : IsChar0Field ℚ where
   ratCast_def q := by
     induction q using Rational.ind with | _ q =>
-    simp [Rational.cast, defaultRatCast, eq_div_iff_mul_eq,
-      ←Rational.mk_intCast, ←Rational.mk_natCast, Rational.mk_mul]
+    simp only [Rational.cast, RatCast.ratCast, id_eq]
+    unfold defaultRatCast
+    rw [Rational.lift_mk, eq_div_iff_mul_eq]
+    simp [←Rational.mk_intCast, ←Rational.mk_natCast, Rational.mk_mul]
     apply Rational.sound; show _ = _; simp
 
 def ratCast_zero [FieldOps α] [RatCast α] [IsChar0Field α] : Rational.cast 0 = (0: α) := by

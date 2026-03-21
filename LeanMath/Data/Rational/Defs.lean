@@ -493,7 +493,7 @@ instance : IsComm ℚ where
     simp; apply sound
     show _ = _
     simp
-    ac_rfl
+    rw [mul_comm a.num, mul_comm (b.den: ℤ)]
 instance : IsAddComm ℚ where
   add_comm a b := by
     induction a using ind with | mk a =>
@@ -501,7 +501,7 @@ instance : IsAddComm ℚ where
     simp; apply sound
     show _ = _
     simp
-    ac_rfl
+    rw [mul_comm (b.den: ℤ), add_comm]
 instance : IsLeftDistrib ℚ where
   mul_add a b c := by
     induction a using ind with | mk a =>
@@ -510,7 +510,11 @@ instance : IsLeftDistrib ℚ where
     simp; apply sound
     show _ = _
     simp [mul_add, add_mul]
-    ac_rfl
+    repeat rw [add_assoc]
+    repeat rw [mul_assoc]
+    congr 3
+    rw [mul_left_comm, mul_left_comm (b.den: ℤ)]
+    rw [mul_left_comm (b.den: ℤ) _ (c.den: ℤ), mul_left_comm]
 instance : IsLawfulNatCast ℚ where
   natCast_zero := rfl
   natCast_one := rfl
@@ -530,7 +534,8 @@ instance : IsGroupWithZero ℚ where
     simp; apply sound
     show _ = _
     simp
-    ac_rfl
+    rw [mul_assoc a.num]; congr 1
+    rw [mul_assoc]
   one_mul a := by
     induction a using ind with | mk a =>
     simp [mk_one, mk_mul]; apply sound
@@ -571,7 +576,12 @@ instance : IsAddGroup ℚ where
     simp; apply sound
     show _ = _
     simp [add_mul]
-    ac_rfl
+    repeat rw [add_assoc]
+    repeat rw [←mul_assoc]
+    congr 1
+    rw [mul_assoc b.num, mul_comm (a.den: ℤ), ←mul_assoc]
+    congr 4
+    rw [mul_comm_right]
   zero_add a := by
     induction a using ind with | mk a =>
     simp [mk_zero, mk_add]; apply sound
