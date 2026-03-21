@@ -150,3 +150,25 @@ instance : IsAlgebra ℕ α where
   commutes n a := by
     show n * a = a * n
     rw [mul_comm]
+
+namespace IsAlgebra
+
+-- an `α`-algebra structure on `β` given by the ring homomorphism
+def OfRingHom (f: α →+* β) (_: ∀a b, f a * b = b * f a) := β
+
+variable {f: α →+* β} {h: ∀a b, f a * b = b * f a}
+def OfRingHom.get : OfRingHom f h -> β := id
+def OfRingHom.mk : β -> OfRingHom f h := id
+
+instance : SemiringOps (OfRingHom f h) := inferInstanceAs (SemiringOps β)
+instance : IsSemiring (OfRingHom f h) := inferInstanceAs (IsSemiring β)
+instance [IsComm β] : IsComm (OfRingHom f h) := inferInstanceAs (IsComm β)
+instance : AlgebraMap α (OfRingHom f h) where
+  toAlgebraMap := f
+instance : SMul α (OfRingHom f h) where
+  smul a b := algebraMap α a * b
+instance : IsAlgebra α (OfRingHom f h) where
+  smul_def _ _ := rfl
+  commutes := h
+
+end IsAlgebra

@@ -511,4 +511,26 @@ def eval_C (x: S) (p: P) : eval P x (C p) = algebraMap P p := by
   show eval P x (term 0 p) = algebraMap P p
   rw [eval_term, npow_zero, smul_def, mul_one]
 
+variable [SemiringOps R] [IsSemiring R] [IsComm R]
+
+private def cast_val (f: P →+* R) : IsAlgebra.OfRingHom (C.toRingHom.comp f) (by intro _ _; rw [mul_comm]) :=
+  Poly.X
+
+def cast (f: P →+* R) : P[X] →+* R[X] :=
+  (eval P (cast_val f)).toRingHom
+
+def cast_term {f: P →+* R} (n: ℕ) (p: P) : cast f (term n p) = term n (f p) := by
+  unfold cast
+  show eval P (cast_val f) (term n p) = _
+  rw [eval_term, term_def, smul_def, smul_def]
+  rfl
+
+def cast_X {f: P →+* R} : cast f Poly.X = Poly.X := by
+  simp [Poly.X]
+  rw [cast_term, map_one]
+
+def cast_C {f: P →+* R} (p: P) : cast f (C p) = C (f p) := by
+  show cast f (term _ _) = term _ _
+  rw [cast_term]
+
 end Poly
