@@ -14,6 +14,10 @@ structure SubAlgebraMap (R α: Type*) [SemiringOps R] [SemiringOps α] [AlgebraM
   toSet : Set α
   protected mem_algebraMap : MemAlgebraMap R toSet
 
+-- this represents a unital sub-algebra of `α`, since `r • 1 = algebraMap R r`
+-- and `a ∈ s -> r • a ∈ s`, we can simplify conditions and only require
+-- that `algebraMap R r ∈ s` and `a ∈ s -> b ∈ s -> a * b ∈ s`
+-- to get the full scope when we know that `[IsAlgebra R α]`
 structure Subalgebra (R α: Type*) [SemiringOps R] [SemiringOps α] [AlgebraMap R α]
   extends AddSubSemigroup α, SubSemigroup α, SubAlgebraMap R α where
 
