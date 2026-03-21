@@ -4,7 +4,6 @@ import LeanMath.Algebra.Algebra.Ring
 
 variable [LEM]
 
-@[irreducible]
 def Real := CauchySeq.Completion ℚ ℚ
 
 notation "ℝ" => Real
@@ -13,12 +12,13 @@ namespace Real
 
 section
 
-unseal Real
+-- unseal Real
 
 instance : FieldOps ℝ := inferInstanceAs (FieldOps (CauchySeq.Completion ℚ ℚ))
 instance : IsField ℝ := inferInstanceAs (IsField (CauchySeq.Completion ℚ ℚ))
 instance : LT ℝ := inferInstanceAs (LT (CauchySeq.Completion ℚ ℚ))
 instance : LE ℝ := inferInstanceAs (LE (CauchySeq.Completion ℚ ℚ))
+instance : IsZeroLEOne ℝ := inferInstanceAs (IsZeroLEOne (CauchySeq.Completion ℚ ℚ))
 instance : IsLinearOrder ℝ := inferInstanceAs (IsLinearOrder (CauchySeq.Completion ℚ ℚ))
 instance : IsStrictOrderedSemiring ℝ := inferInstanceAs (IsStrictOrderedSemiring (CauchySeq.Completion ℚ ℚ))
 
