@@ -1,5 +1,6 @@
 import LeanMath.Algebra.Semiring.Defs
 import LeanMath.Algebra.Monoid.Char
+import LeanMath.Logic.Checked
 
 variable [SemiringOps α] [IsSemiring α] [SemiringOps β] [IsSemiring β]
 
@@ -40,11 +41,11 @@ def of_ring_emb [HasChar α n] (f: α ↪+* β) : HasChar β n := by
   apply inj f
   rwa [map_natCast f, map_zero]
 
-def HasChar.of_ring_equiv [HasChar β n] (eqv: α ≃+* β) : HasChar α n := by
+def of_ring_equiv [HasChar β n] (eqv: α ≃+* β) : HasChar α n := by
   apply of_ring_emb (α := β)
   exact { eqv.symm with inj := inj eqv.symm }
 
-def HasChar.natCast_inj [IsLeftAddCancel α] [HasChar α 0]: Function.Injective (fun n: ℕ => (n: α)) := by
+def natCast_inj [IsLeftAddCancel α] [HasChar α 0]: Function.Injective (fun n: ℕ => (n: α)) := by
   suffices ∀n m: ℕ, (n: α) = m -> n ≤ m -> n = m by
     intro n m eq
     rcases Nat.le_total n m with h | h
@@ -64,3 +65,11 @@ def HasChar.natCast_inj [IsLeftAddCancel α] [HasChar α 0]: Function.Injective 
   apply Nat.le_antisymm <;> assumption
 
 end HasChar
+
+def natCast_ne_zero [IsLeftAddCancel α] [HasChar α 0] (n: ℕ) (h: n ≠ 0) : (n: α) ≠ 0 := by
+  intro g
+  rw [←natCast_zero] at g
+  exact h (HasChar.natCast_inj g)
+
+macro_rules
+| `(tactic|invert_tactic_trivial) => `(tactic|apply natCast_ne_zero <;> invert_tactic)

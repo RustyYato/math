@@ -28,7 +28,11 @@ instance : Repr ℚ where
     else
       reprPrec a.num p ++ " / " ++ reprPrec a.den p
 
+macro_rules
+| `(tactic|invert_tactic_trivial) => `(tactic|apply Rational.Fract.den_ne_zero)
+
 namespace Rational
+
 
 def Rel (a b: Fract) : Prop := a.num * b.den = b.num * a.den
 

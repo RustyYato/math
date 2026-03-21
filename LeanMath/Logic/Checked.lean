@@ -46,6 +46,9 @@ def pow_of_negSucc (P: α -> Prop) (n: ℕ) (a: α) (h: P a) : 0 ≤ (Int.negSuc
   right; assumption
 
 macro_rules
+| `(tactic|invert_tactic_trivial) => `(tactic|apply NeZero.ne)
+
+macro_rules
 | `(tactic|invert_tactic_trivial) => `(tactic|apply inv_from_pow_negSucc <;> assumption)
 | `(tactic|invert_tactic_trivial_low_priority) => `(tactic|assumption)
 | `(tactic|invert_tactic) => `(tactic|first|assumption|trivial|invert_tactic_trivial|invert_tactic_trivial_low_priority)

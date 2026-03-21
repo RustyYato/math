@@ -20,6 +20,12 @@ def neg_div?_left (a b: α) (hb: b ≠ 0) : -(a /? b) = -a /? b := by
 def div?_sub_div? (a b c d: α) [IsCommAt b d] (hb: b ≠ 0) (hd: d ≠ 0) : a /? b - c /? d = (a * d - c * b) /? (b * d) := by
   rw [sub_eq_add_neg, neg_div?_left, sub_eq_add_neg, neg_mul_left, div?_add_div?]
 
+def intCast_div?_intCast (n m: ℤ) (h: m ∣ n) (hm: (m: α) ≠ 0 := by invert_tactic) : (n / m: ℤ) = (n: α) /? (m: α) := by
+  apply of_mul_right₀
+  assumption
+  rw [div?_mul_cancel, ←intCast_mul, Int.ediv_mul_cancel]
+  assumption
+
 end
 
 variable {R D: Type*} [FunLike F D R] [FieldOps D] [RingOps R] [IsRing R] [IsDivisionRing D]
