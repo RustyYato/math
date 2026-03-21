@@ -1,55 +1,25 @@
 import LeanMath.Algebra.Semiring.Defs
 import LeanMath.Algebra.Module.Defs
 
-class AlgebraMap (R α: Type*) [SemiringOps R] [SemiringOps α] where
-  protected toAlgebraMap : R →+* α
+section
 
-def algebraMap (R: Type*) [SemiringOps R] [SemiringOps α] [AlgebraMap R α] : R →+* α :=
-  AlgebraMap.toAlgebraMap
+variable [Zero α] [One α] [Add α] [Mul α] [SMul R α] [Zero β] [One β] [Add β] [Mul β] [SMul R β]
 
-class IsAlgebra (R α: Type*)
-  [SemiringOps R] [SemiringOps α]
-  [SMul R α] [AlgebraMap R α]
-  [IsSemiring R] [IsSemiring α] : Prop where
-  protected commutes (r: R) (a: α) : algebraMap R r * a = a * algebraMap R r
-  protected smul_def (r: R) (a: α) : r • a = algebraMap R r * a
+structure NonUnitalAlgebraHom (R α β: Type*)
+  [Add α] [Mul α] [SMul R α] [Add β] [Mul β] [SMul R β]
+  extends α →ₗ[R] β, MulHom α β where
 
-variable
-  [SemiringOps R] [SemiringOps α] [SemiringOps β] [SemiringOps γ]
-  [SMul R α] [AlgebraMap R α]
-  [SMul R β] [AlgebraMap R β]
-  [SMul R γ] [AlgebraMap R γ]
-  [IsSemiring R] [IsSemiring α] [IsSemiring β] [IsSemiring γ]
+instance : FunLike (NonUnitalAlgebraHom R α β) α β where
+instance : IsAddHom (NonUnitalAlgebraHom R α β) α β where
+instance : IsMulHom (NonUnitalAlgebraHom R α β) α β where
+instance : IsSMulHom (NonUnitalAlgebraHom R α β) R α β where
 
-def commutes [IsAlgebra R α] (r: R) (a: α) : algebraMap R r * a = a * algebraMap R r :=
-  IsAlgebra.commutes _ _
+instance [Zero R] [IsLawfulZeroSMul R α] [IsLawfulZeroSMul R β] : IsZeroHom (NonUnitalAlgebraHom R α β) α β where
+  map_zero := by
+    intro f
+    rw [←zero_smul (R := R) (0: α), map_smul, zero_smul]
 
-def smul_def [IsAlgebra R α] (r: R) (a: α) : r • a = algebraMap R r * a :=
-  IsAlgebra.smul_def _ _
-
-instance (priority := 900) : AlgebraMap R R where
-  toAlgebraMap := {
-    toFun := id
-    map_one := rfl
-    map_zero := rfl
-    map_add _ _ := rfl
-    map_mul _ _ := rfl
-  }
-
-def algebraMap_id (x: R) : algebraMap R x = x := rfl
-
-instance [IsComm R] : IsAlgebra R R where
-  commutes _ _ := mul_comm _ _
-  smul_def _ _ := rfl
-
-instance (priority := 500) [SemiringOps R] [IsSemiring R] : AlgebraMap Nat R where
-  toAlgebraMap := natCastHom
-
-instance [SemiringOps R] [IsSemiring R] : IsAlgebra Nat R where
-  commutes r x := by
-    show r * x = x * r
-    rw [←nsmul_eq_natCast_mul, ←nsmul_eq_mul_natCast]
-  smul_def a b := by rw [nsmul_eq_natCast_mul]; rfl
+notation:25 A " →ₐ₀[" R "] " B => NonUnitalAlgebraHom R A B
 
 structure AlgebraHom (R α β: Type*) [SMul R α] [SMul R β]
   [Zero α] [One α] [Add α] [Mul α]
@@ -77,6 +47,89 @@ instance : IsOneHom (α ≃ₐ[R] β) α β where
 instance : IsAddHom (α ≃ₐ[R] β) α β where
 instance : IsMulHom (α ≃ₐ[R] β) α β where
 instance : IsSMulHom (α ≃ₐ[R] β) R α β where
+
+end
+
+class AlgebraMap (R α: Type*) [SemiringOps R] [SemiringOps α] where
+  protected toAlgebraMap : R →+* α
+
+def algebraMap (R: Type*) [SemiringOps R] [SemiringOps α] [AlgebraMap R α] : R →+* α :=
+  AlgebraMap.toAlgebraMap
+
+class IsNonUnitalAlgebra (R α: Type*)
+  [AddMonoidOps R] [Mul R]
+  [AddMonoidOps α] [Mul α]
+  [SMul R α]
+  [IsNonUnitalNonAssocSemiring R] [IsNonUnitalNonAssocSemiring α] : Prop where
+  protected smul_compat (r s: R) (a b: α) : (r • a) * (s • b) = (r * s) • (a * b)
+
+section
+
+variable
+  [SemiringOps R]
+  [AddMonoidOps α] [AddMonoidOps β] [AddMonoidOps γ]
+  [Mul α] [Mul β] [Mul γ] [SMul R α] [SMul R β] [SMul R γ]
+  [IsSemiring R]
+  [IsNonUnitalNonAssocSemiring α] [IsNonUnitalNonAssocSemiring β]
+  [IsNonUnitalNonAssocSemiring γ]
+
+def smul_compat [IsNonUnitalAlgebra R α] (r s: R) (a b: α) : (r • a) * (s • b) = (r * s) • (a * b) :=
+  IsNonUnitalAlgebra.smul_compat _ _ _ _
+
+end
+
+class IsAlgebra (R α: Type*)
+  [SemiringOps R] [SemiringOps α]
+  [SMul R α] [AlgebraMap R α]
+  [IsSemiring R] [IsSemiring α] : Prop where
+  protected commutes (r: R) (a: α) : algebraMap R r * a = a * algebraMap R r
+  protected smul_def (r: R) (a: α) : r • a = algebraMap R r * a
+
+variable
+  [SemiringOps R] [SemiringOps α] [SemiringOps β] [SemiringOps γ]
+  [SMul R α] [AlgebraMap R α]
+  [SMul R β] [AlgebraMap R β]
+  [SMul R γ] [AlgebraMap R γ]
+  [IsSemiring R] [IsSemiring α] [IsSemiring β] [IsSemiring γ]
+
+def commutes [IsAlgebra R α] (r: R) (a: α) : algebraMap R r * a = a * algebraMap R r :=
+  IsAlgebra.commutes _ _
+
+def smul_def [IsAlgebra R α] (r: R) (a: α) : r • a = algebraMap R r * a :=
+  IsAlgebra.smul_def _ _
+
+instance [IsAlgebra R α] (r :R) (a: α) : IsCommAt (algebraMap R r) a where
+  mul_comm := IsAlgebra.commutes _ _
+instance [IsAlgebra R α] (r :R) (a: α) : IsCommAt a (algebraMap R r) := inferInstance
+
+instance [IsAlgebra R α] : IsNonUnitalAlgebra R α where
+  smul_compat r s a b := by
+    rw [smul_def, smul_def, smul_def,
+      map_mul, mul_assoc, mul_left_comm a, ←mul_assoc]
+
+instance (priority := 900) : AlgebraMap R R where
+  toAlgebraMap := {
+    toFun := id
+    map_one := rfl
+    map_zero := rfl
+    map_add _ _ := rfl
+    map_mul _ _ := rfl
+  }
+
+def algebraMap_id (x: R) : algebraMap R x = x := rfl
+
+instance [IsComm R] : IsAlgebra R R where
+  commutes _ _ := mul_comm _ _
+  smul_def _ _ := rfl
+
+instance (priority := 500) [SemiringOps R] [IsSemiring R] : AlgebraMap Nat R where
+  toAlgebraMap := natCastHom
+
+instance [SemiringOps R] [IsSemiring R] : IsAlgebra Nat R where
+  commutes r x := by
+    show r * x = x * r
+    rw [←nsmul_eq_natCast_mul, ←nsmul_eq_mul_natCast]
+  smul_def a b := by rw [nsmul_eq_natCast_mul]; rfl
 
 def map_algebraMap [IsAlgebra R α] [IsAlgebra R β] (f: F) [FunLike F α β] [IsSMulHom F R α β] [IsMulHom F α β] [IsOneHom F α β] : f (algebraMap R r) = algebraMap R r := by
   rw [←mul_one (algebraMap R r), ←mul_one (algebraMap (α := β) R r)]
@@ -138,10 +191,6 @@ instance [IsAlgebra R α] : IsModule R α where
   smul_add r a b := by rw [smul_def, smul_def, smul_def, mul_add]
   zero_smul a := by rw [smul_def, map_zero, zero_mul]
   add_smul r s a := by rw [smul_def, smul_def, smul_def, map_add, add_mul]
-
-instance [SMul R α] [AlgebraMap R α] [IsAlgebra R α] (r :R) (a: α) : IsCommAt (algebraMap R r) a where
-  mul_comm := IsAlgebra.commutes _ _
-instance [SMul R α] [AlgebraMap R α] [IsAlgebra R α] (r :R) (a: α) : IsCommAt a (algebraMap R r) := inferInstance
 
 instance : AlgebraMap ℕ α where
   toAlgebraMap := natCastHom

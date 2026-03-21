@@ -63,13 +63,13 @@ def pos_natCast (n: ℕ) : (0: α) < (n + 1: ℕ) := by
   rw [←natCast_zero]
   apply (natCast_lt_natCast _ _).mpr
   apply Nat.zero_lt_succ
-def natCast_ne_zero (n: ℕ) : (n + 1: ℕ) ≠ (0: α) := by
+def natCast_succ_ne_zero (n: ℕ) : (n + 1: ℕ) ≠ (0: α) := by
   intro h
   have := h ▸ pos_natCast (α := α) n
   exact Relation.irrefl this
 
 instance (n: ℕ) : NeZero ((n + 1: ℕ): α) where
-  out := natCast_ne_zero n
+  out := natCast_succ_ne_zero n
 
 end IsStrictOrderedSemiring
 

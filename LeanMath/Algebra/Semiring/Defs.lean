@@ -41,17 +41,33 @@ class IsSemiring (α: Type*) [SemiringOps α] : Prop extends IsNonUnitalSemiring
 
 section
 
+structure NonUnitalRingHom (α β: Type*)
+  [Add α] [Add β] [Zero α] [Zero β]
+  [Mul α] [Mul β] extends AddGroupHom α β, MulHom α β where
+
+structure NonUnitalRingEmbedding (α β: Type*)
+  [Add α] [Add β] [Zero α] [Zero β]
+  [Mul α] [Mul β] extends α ↪ β, NonUnitalRingHom α β, α ↪+ β, α ↪*ₙ β where
+
+structure NonUnitalRingEquiv (α β: Type*)
+  [Add α] [Add β] [Zero α] [Zero β]
+  [Mul α] [Mul β] extends α ≃ β, NonUnitalRingHom α β, α ≃+ β, α ≃*ₙ β where
+
 structure RingHom (α β: Type*)
   [Add α] [Add β] [Zero α] [Zero β]
-  [Mul α] [Mul β] [One α] [One β] extends Hom α β, MulHom α β, AddHom α β, α →₀ β, α →₁ β, α →* β, α →+ β, α →+₁ β where
+  [Mul α] [Mul β] [One α] [One β] extends Hom α β, MulHom α β, AddHom α β, α →₀ β, α →₁ β, α →* β, α →+ β, α →+₁ β, NonUnitalRingHom α β where
 
 structure RingEmbedding (α β: Type*)
   [Add α] [Add β] [Zero α] [Zero β]
-  [Mul α] [Mul β] [One α] [One β] extends α ↪ β, RingHom α β, α ↪+ β, α ↪* β where
+  [Mul α] [Mul β] [One α] [One β] extends α ↪ β, RingHom α β, α ↪+ β, α ↪* β, NonUnitalRingEmbedding α β where
 
 structure RingEquiv (α β: Type*)
   [Add α] [Add β] [Zero α] [Zero β]
-  [Mul α] [Mul β] [One α] [One β] extends α ≃ β, RingHom α β, α ≃+ β, α ≃* β where
+  [Mul α] [Mul β] [One α] [One β] extends α ≃ β, RingHom α β, α ≃+ β, α ≃* β, NonUnitalRingEquiv α β where
+
+infixr:80 " →+*₀ " => NonUnitalRingHom
+infixr:80 " ↪+*₀ " => NonUnitalRingEmbedding
+infixr:80 " ≃+*₀ " => NonUnitalRingEquiv
 
 infixr:80 " →+* " => RingHom
 infixr:80 " ↪+* " => RingEmbedding
@@ -60,6 +76,21 @@ infixr:80 " ≃+* " => RingEquiv
 variable
   [Add α] [Add β] [Add γ] [Zero α] [Zero β] [Zero γ]
   [Mul α] [Mul β] [Mul γ] [One α] [One β] [One γ]
+
+instance (priority := 10000) : FunLike (α →+*₀ β) α β where
+instance (priority := 10000) : IsZeroHom (α →+*₀ β) α β where
+instance (priority := 10000) : IsAddHom (α →+*₀ β) α β where
+instance (priority := 10000) : IsMulHom (α →+*₀ β) α β where
+
+instance (priority := 10000) : FunLike (α ↪+*₀ β) α β where
+instance (priority := 10000) : IsZeroHom (α ↪+*₀ β) α β where
+instance (priority := 10000) : IsAddHom (α ↪+*₀ β) α β where
+instance (priority := 10000) : IsMulHom (α ↪+*₀ β) α β where
+
+instance (priority := 10000) : FunLike (α ≃+*₀ β) α β where
+instance (priority := 10000) : IsZeroHom (α ≃+*₀ β) α β where
+instance (priority := 10000) : IsAddHom (α ≃+*₀ β) α β where
+instance (priority := 10000) : IsMulHom (α ≃+*₀ β) α β where
 
 instance (priority := 10000) : FunLike (α →+* β) α β where
 instance (priority := 10000) : IsZeroHom (α →+* β) α β where
@@ -83,6 +114,57 @@ instance (priority := 10000) : IsMulHom (α ≃+* β) α β where
 def RingHom.ext (f g: α →+* β) (h: ∀x, f x = g x) : f = g := DFunLike.ext f g h
 
 @[simp] def RingHom.apply_mk (f: α -> β) (h₀ h₁ h₂ h₃) : ({ toFun := f,  map_zero := h₀, map_one := h₁, map_add := h₂, map_mul := h₃ }: α →+* β) a = f a := rfl
+
+def NonUnitalRingEmbedding.comp (f: β ↪+*₀ γ) (g: α ↪+*₀ β) : α ↪+*₀ γ where
+  toEmbedding := f.toEmbedding.comp g.toEmbedding
+  map_zero := map_zero <| f.toZeroEmbedding.comp g.toZeroEmbedding
+  map_add := map_add <| f.toAddEmbedding.comp g.toAddEmbedding
+  map_mul := map_mul <| f.toMulEmbedding.comp g.toMulEmbedding
+def NonUnitalRingEmbedding.trans (g: α ↪+*₀ β) (f: β ↪+*₀ γ) : α ↪+*₀ γ := f.comp g
+
+def NonUnitalRingHom.comp (f: β →+*₀ γ) (g: α →+*₀ β) : α →+*₀ γ where
+  toFun := f ∘ g
+  map_zero := map_zero <| f.toZeroHom.comp g.toZeroHom
+  map_add := map_add <| f.toAddHom.comp g.toAddHom
+  map_mul := map_mul <| f.toMulHom.comp g.toMulHom
+
+def NonUnitalRingEquiv.comp (f: β ≃+*₀ γ) (g: α ≃+*₀ β) : α ≃+*₀ γ where
+  toEquiv := f.toEquiv.comp g.toEquiv
+  map_zero := map_zero <| f.toZeroEquiv.comp g.toZeroEquiv
+  map_add := map_add <| f.toAddEquiv.comp g.toAddEquiv
+  map_mul := map_mul <| f.toMulEquiv.comp g.toMulEquiv
+def NonUnitalRingEquiv.trans (g: α ≃+*₀ β) (f: β ≃+*₀ γ) : α ≃+*₀ γ := f.comp g
+def NonUnitalRingEquiv.symm (f: α ≃+*₀ β) : β ≃+*₀ α where
+  toEquiv := f.toEquiv.symm
+  map_zero := map_zero f.toZeroEquiv.symm
+  map_add := map_add f.toAddEquiv.symm
+  map_mul := map_mul f.toMulEquiv.symm
+
+@[simp] def NonUnitalRingHom.apply_comp (f: β →+*₀ γ) (g: α →+*₀ β) : (f.comp g) x = f (g x) := rfl
+
+@[simp] def NonUnitalRingEmbedding.apply_comp (f: β ↪+*₀ γ) (g: α ↪+*₀ β) : (f.comp g) x = f (g x) := rfl
+@[simp] def NonUnitalRingEmbedding.apply_trans (g: α ↪+*₀ β) (f: β ↪+*₀ γ) : (g.trans f) x = f (g x) := rfl
+
+@[simp] def NonUnitalRingEquiv.apply_comp (f: β ≃+*₀ γ) (g: α ≃+*₀ β) : (f.comp g) x = f (g x) := rfl
+@[simp] def NonUnitalRingEquiv.apply_trans (g: α ≃+*₀ β) (f: β ≃+*₀ γ) : (g.trans f) x = f (g x) := rfl
+
+@[simp] def NonUnitalRingEquiv.coe_symm (f: α ≃+*₀ β) : f.symm (f x) = x := Equiv.coe_symm _ _
+@[simp] def NonUnitalRingEquiv.symm_coe (f: α ≃+*₀ β) : f (f.symm x) = x := Equiv.symm_coe _ _
+
+def NonUnitalRingEmbedding.refl (α: Type*) [Zero α] [One α] [Add α] [Mul α] : α ↪+*₀ α where
+  toEmbedding := Embedding.id _
+  map_zero := rfl
+  map_add _ _ := rfl
+  map_mul _ _ := rfl
+
+def NonUnitalRingEquiv.refl (α: Type*) [Zero α] [One α] [Add α] [Mul α] : α ≃+*₀ α where
+  toEquiv := Equiv.id _
+  map_zero := rfl
+  map_add _ _ := rfl
+  map_mul _ _ := rfl
+
+@[simp] def NonUnitalRingEmbedding.apply_refl (x: α) : NonUnitalRingEmbedding.refl _ x = x := rfl
+@[simp] def NonUnitalRingEquiv.apply_refl (x: α) : NonUnitalRingEquiv.refl _ x = x := rfl
 
 def RingEmbedding.comp (f: β ↪+* γ) (g: α ↪+* β) : α ↪+* γ where
   toEmbedding := f.toEmbedding.comp g.toEmbedding
