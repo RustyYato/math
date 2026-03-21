@@ -60,16 +60,17 @@ class IsNonUnitalAlgebra (R α: Type*)
   [AddMonoidOps R] [Mul R]
   [AddMonoidOps α] [Mul α]
   [SMul R α]
-  [IsNonUnitalNonAssocSemiring R] [IsNonUnitalNonAssocSemiring α] : Prop where
+  [IsNonUnitalNonAssocSemiring R] [IsNonUnitalNonAssocSemiring α] : Prop
+  extends IsLawfulSMulZero R α where
   protected smul_compat (r s: R) (a b: α) : (r • a) * (s • b) = (r * s) • (a * b)
 
 section
 
 variable
-  [SemiringOps R]
+  [AddMonoidOps R] [Mul R]
   [AddMonoidOps α] [AddMonoidOps β] [AddMonoidOps γ]
   [Mul α] [Mul β] [Mul γ] [SMul R α] [SMul R β] [SMul R γ]
-  [IsSemiring R]
+  [IsNonUnitalNonAssocSemiring R]
   [IsNonUnitalNonAssocSemiring α] [IsNonUnitalNonAssocSemiring β]
   [IsNonUnitalNonAssocSemiring γ]
 
@@ -101,11 +102,6 @@ def smul_def [IsAlgebra R α] (r: R) (a: α) : r • a = algebraMap R r * a :=
 instance [IsAlgebra R α] (r :R) (a: α) : IsCommAt (algebraMap R r) a where
   mul_comm := IsAlgebra.commutes _ _
 instance [IsAlgebra R α] (r :R) (a: α) : IsCommAt a (algebraMap R r) := inferInstance
-
-instance [IsAlgebra R α] : IsNonUnitalAlgebra R α where
-  smul_compat r s a b := by
-    rw [smul_def, smul_def, smul_def,
-      map_mul, mul_assoc, mul_left_comm a, ←mul_assoc]
 
 instance (priority := 900) : AlgebraMap R R where
   toAlgebraMap := {
@@ -191,6 +187,11 @@ instance [IsAlgebra R α] : IsModule R α where
   smul_add r a b := by rw [smul_def, smul_def, smul_def, mul_add]
   zero_smul a := by rw [smul_def, map_zero, zero_mul]
   add_smul r s a := by rw [smul_def, smul_def, smul_def, map_add, add_mul]
+
+instance [IsAlgebra R α] : IsNonUnitalAlgebra R α where
+  smul_compat r s a b := by
+    rw [smul_def, smul_def, smul_def,
+      map_mul, mul_assoc, mul_left_comm a, ←mul_assoc]
 
 instance : AlgebraMap ℕ α where
   toAlgebraMap := natCastHom

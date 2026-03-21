@@ -11,8 +11,6 @@ instance [Add α] [Mul α] [Zero α] [One α] : IsMemZero (Subsemiring α) α wh
 
 section
 
-section
-
 variable (s: S) [SetLike S α] [Add α] [Mul α] [IsMemAdd S α] [IsMemMul S α]
 
 instance [IsLeftDistrib α] : IsLeftDistrib s where
@@ -26,6 +24,35 @@ instance [IsRightDistrib α] : IsRightDistrib s where
     apply add_mul
 
 end
+
+section
+
+variable (s: S) [SetLike S α] [AddMonoidOps α] [Mul α] [IsNonUnitalNonAssocSemiring α]
+  [IsMemAdd S α] [IsMemMul S α] [IsMemZero S α]
+
+instance : IsNonUnitalNonAssocSemiring s where
+
+end
+
+section
+
+variable (s: S) [SetLike S α] [AddMonoidOps α] [Mul α] [IsNonUnitalSemiring α]
+  [IsMemAdd S α] [IsMemMul S α] [IsMemZero S α]
+
+instance : IsNonUnitalSemiring s where
+
+end
+
+section
+
+variable (s: S) [SetLike S α] [AddMonoidWithOneOps α] [Mul α] [IsNonAssocSemiring α]
+  [IsMemAdd S α] [IsMemMul S α] [IsMemOne S α] [IsMemZero S α]
+
+instance : IsNonAssocSemiring s where
+
+end
+
+section
 
 variable (s: S) [SetLike S α] [SemiringOps α] [IsSemiring α] [IsMemAdd S α] [IsMemMul S α] [IsMemOne S α] [IsMemZero S α]
 

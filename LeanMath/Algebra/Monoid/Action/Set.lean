@@ -28,6 +28,22 @@ instance [Zero α] [Add α] [SMul R α] : IsMemSMul (Submodule R α) R α where
 variable (s: S) [SetLike S α] [SMul R α] [SMul R β]
 variable [IsMemSMul S R α] [MonoidOps R] [IsMonoid R]
 
+def MemSMul.preimage [SetLike S β] [IsMemSMul S R β] [FunLike F α β] [IsSMulHom F R α β]
+  (f: F) (U: S) : MemSMul R (Set.preimage f U) := by
+    intro r a ha
+    show f (r • a) ∈ U
+    rw [map_smul]
+    apply mem_smul
+    assumption
+
+def MemSMul.image [SetLike S α] [IsMemSMul S R α] [FunLike F α β] [IsSMulHom F R α β]
+  (f: F) (U: S) : MemSMul R (Set.image f U) := by
+    rintro r a ⟨a, _, rfl⟩
+    rw [←map_smul]
+    apply Set.mem_image'
+    apply mem_smul U r
+    assumption
+
 namespace Submodule
 
 variable [Zero α] [Add α] [IsMemAdd S α] [IsMemZero S α]
@@ -99,22 +115,6 @@ def bot_sub (a: Submodule R α) : ⊥ ⊆ a := by
   intro h
   apply of_mem_span _ _ _ h
   nofun
-
-def MemSMul.preimage [SetLike S β] [IsMemSMul S R β] [FunLike F α β] [IsSMulHom F R α β]
-  (f: F) (U: S) : MemSMul R (Set.preimage f U) := by
-    intro r a ha
-    show f (r • a) ∈ U
-    rw [map_smul]
-    apply mem_smul
-    assumption
-
-def MemSMul.image [SetLike S α] [IsMemSMul S R α] [FunLike F α β] [IsSMulHom F R α β]
-  (f: F) (U: S) : MemSMul R (Set.image f U) := by
-    rintro r a ⟨a, _, rfl⟩
-    rw [←map_smul]
-    apply Set.mem_image'
-    apply mem_smul U r
-    assumption
 
 variable [Zero R] [IsLawfulZeroSMul R α] [IsLawfulZeroSMul R β]
 
