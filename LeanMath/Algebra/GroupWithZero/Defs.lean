@@ -390,3 +390,10 @@ def zpow?_neg (a: α) (n: ℤ) (h: a ≠ 0) : a ^? (-n) = (a ^? n)⁻¹? := by
   apply eq_inv?_of_mul
   rw [←zpow?_add, neg_add_cancel, zpow?_zero]
   assumption
+
+def eq_div_iff_mul_eq (a b c: α) (hc: c ≠ 0) : a = b /? c ↔ a * c = b := by
+  apply Iff.intro
+  intro h
+  rw [h, div?_mul_cancel]
+  intro h
+  rw [←h, mul_div?_assoc, div?_self, mul_one]

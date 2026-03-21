@@ -14,6 +14,13 @@ def div?_add_div? (a b c d: α) [IsCommAt b d] (hb: b ≠ 0) (hd: d ≠ 0) : a /
   rw [div?_mul_cancel, add_mul, ←mul_assoc, div?_mul_cancel, mul_comm b d,
     ←mul_assoc, div?_mul_cancel]
 
+def div?_mul_div? (a b c d: α) [IsCommAt b d] [IsCommAt b c] (hb: b ≠ 0) (hd: d ≠ 0) : (a /? b) * (c /? d) = (a * c) /? (b * d) := by
+ rw [eq_div_iff_mul_eq, mul_comm b,
+    div?_eq_mul_inv?,div?_eq_mul_inv?,
+    mul_assoc, mul_assoc c, ←mul_assoc _ d, inv?_mul_cancel,
+    one_mul, mul_comm c, ←mul_assoc, mul_assoc a,
+    inv?_mul_cancel, mul_one]
+
 def half_add_half [NeZero ((2: ℕ): α)] (a: α) : a /? (2: ℕ) + a /? (2: ℕ) = a := by
   rw [div?_add_div?, ←mul_add, ←natCast_add]
   simp [←natCast_mul]
