@@ -46,18 +46,23 @@ def ClosedSets.union {_: Topology α} {a b: Set α} : a ∈ ClosedSets α -> b �
   assumption
   assumption
 
-variable {α β: Type*} [Topology α] [Topology β]
+variable {α β γ: Type*} [Topology α] [Topology β] [Topology γ]
 
 -- the interior of a set is the union of all open subsets
 def Interior (U: Set α) : Set α := ⋃ (OpenSets α ∩ U.powerset)
 -- the closure of a set is the intersection fo all closed supersets
 def Closure (U: Set α) : Set α := ⋂ (ClosedSets α ∩ Set.ofMem (U ⊆ ·))
 
-class IsContinuous (f : α → β) : Prop where
+class IsContinuousAt (f : α → β) (tα: Topology α) (tβ: Topology β) : Prop where
   isOpen_preimage : ∀s ∈ OpenSets β, s.preimage f ∈ OpenSets α
 
+abbrev IsContinuous (f : α → β) := IsContinuousAt f inferInstance inferInstance
+
 def OpenSets.preimage (f: α -> β) [IsContinuous f] : ∀s ∈ OpenSets β, s.preimage f ∈ OpenSets α :=
-  IsContinuous.isOpen_preimage
+  IsContinuousAt.isOpen_preimage
+
+def OpenSets.preimage_at (f: α -> β) [IsContinuousAt f tα tβ] : ∀s ∈ tβ.OpenSets β, s.preimage f ∈ tα.OpenSets α :=
+  IsContinuousAt.isOpen_preimage
 
 def IsOpen.Interior (s: Set α) : Interior s ∈ OpenSets α := by
   apply OpenSets.sUnion
@@ -312,5 +317,169 @@ instance : IsCompleteLattice (Topology α) where
   bot_le := by
     intro _ _ _
     trivial
+
+def induced (f: α -> β) (tβ: Topology β) : Topology α where
+  IsOpen s := ∃t ∈ tβ.OpenSets, t.preimage f = s
+  open_univ := by
+    exists ⊤
+    apply And.intro
+    apply OpenSets.univ
+    rfl
+  open_inter := by
+    rintro _ _ ⟨a, ha, rfl⟩ ⟨b, hb, rfl⟩
+    refine ⟨a ∩ b, ?_, ?_⟩
+    apply OpenSets.inter <;> assumption
+    ext; apply Iff.rfl
+  open_sUnion := by
+    intro U hU
+    let V : Set (Set β) := {
+      Mem v := ∃x ∈ U, v ∈ tβ.OpenSets ∧ v.preimage f = x
+    }
+    -- have ⟨sel, hsel⟩ := Classical.axiomOfChoice (fun a: U => hU a.val a.property)
+    refine ⟨⋃ V, ?_, ?_⟩
+    apply OpenSets.sUnion
+    intro u ⟨_, _, _, rfl⟩
+    assumption
+    ext a
+    apply Iff.intro
+    · rintro ⟨u, ⟨_, hu, u_in_U, rfl⟩, heq_⟩
+      exists u.preimage f
+    · rintro ⟨u, u_in_u, hu⟩
+      simp
+      obtain ⟨t, ht, rfl⟩ := hU u u_in_u
+      refine ⟨t, ?_, ?_⟩
+      exists t.preimage f
+      assumption
+
+def coinduced (f: α -> β) (tα: Topology α) : Topology β where
+  IsOpen s := s.preimage f ∈ tα.OpenSets
+  open_univ := OpenSets.univ
+  open_inter := by
+    intro a b ha hb
+    show a.preimage f ∩ b.preimage f ∈ _
+    apply OpenSets.inter
+    assumption
+    assumption
+  open_sUnion := by
+    intro U hU
+    rw [show (⋃U).preimage f = ⋃(U.image fun x => x.preimage f) from ?_]
+    apply OpenSets.sUnion
+    rintro _ ⟨u, hu, rfl⟩
+    apply hU
+    assumption
+    ext a
+    apply Iff.intro
+    · intro ⟨u, hu, hfa⟩
+      refine ⟨u.preimage f, ?_, ?_⟩
+      apply Set.mem_image'
+      assumption
+      assumption
+    · intro ⟨_, ⟨u, hu, rfl⟩, ha⟩
+      exists u
+
+instance topo_prod : Topology (α × β) :=
+  induced Prod.fst inferInstance ⊓ induced Prod.snd inferInstance
+instance topo_sum : Topology (α ⊕ β) :=
+  coinduced Sum.inl inferInstance ⊔ coinduced Sum.inr inferInstance
+
+def IsContinuous.min_left (t₀ t₁: Topology α) (f: α -> β) (_: IsContinuousAt f t₀ inferInstance) : IsContinuousAt f (t₀ ⊓ t₁) inferInstance where
+  isOpen_preimage s := by
+    intro h
+    apply mem_generate_of
+    left
+    apply OpenSets.preimage_at (tβ := inferInstance)
+    assumption
+
+def IsContinuous.min_right (t₀ t₁: Topology α) (f: α -> β) (_: IsContinuousAt f t₁ inferInstance) : IsContinuousAt f (t₀ ⊓ t₁) inferInstance where
+  isOpen_preimage s := by
+    intro h
+    apply mem_generate_of
+    right
+    apply OpenSets.preimage_at (tβ := inferInstance)
+    assumption
+
+def IsContinuous.max_left (t₀ t₁: Topology β) (f: α -> β) (_: IsContinuousAt f inferInstance t₀) : IsContinuousAt f inferInstance (t₀ ⊔ t₁) where
+  isOpen_preimage s := by
+    intro h
+    apply OpenSets.preimage_at f _ h.left
+
+def IsContinuous.max_right (t₀ t₁: Topology β) (f: α -> β) (_: IsContinuousAt f inferInstance t₁) : IsContinuousAt f inferInstance (t₀ ⊔ t₁) where
+  isOpen_preimage s := by
+    intro h
+    apply OpenSets.preimage_at f _ h.right
+
+instance {f: α -> β} : IsContinuousAt f (induced f inferInstance) inferInstance where
+  isOpen_preimage s hs := by exists s
+instance {f: α -> β} : IsContinuousAt f inferInstance (coinduced f inferInstance) where
+  isOpen_preimage s hs := by assumption
+
+instance : IsContinuous (Prod.fst: α × β -> α) := IsContinuous.min_left _ _ _ inferInstance
+instance : IsContinuous (Prod.snd: α × β -> β) := IsContinuous.min_right _ _ _ inferInstance
+instance : IsContinuous (Sum.inl: α -> α ⊕ β) := IsContinuous.max_left _ _ _ inferInstance
+instance : IsContinuous (Sum.inr: β -> α ⊕ β) := IsContinuous.max_right _ _ _ inferInstance
+
+instance topo_pi {ι : Type*} {Y : ι → Type v} [t₂:  ∀i: ι, Topology (Y i)] : Topology (∀i: ι, Y i) :=
+  ⨅i, induced (fun f => f i) (t₂ i)
+
+instance : IsContinuous (fun (f: α -> β) (a: α) => f a) where
+  isOpen_preimage s hs := by
+    apply of_mem_generate hs
+    intro u hu
+    simp at hu
+    obtain ⟨_, ⟨_, ⟨a, _, rfl⟩, rfl⟩, ⟨u, hu, rfl⟩⟩ := hu
+    apply mem_generate_of
+    simp
+    exact ⟨_, ⟨_, ⟨_, rfl⟩, rfl⟩, _, hu, rfl⟩
+
+instance (f: β -> γ) (g: α -> β) [IsContinuous f] [IsContinuous g] : IsContinuous (f ∘ g) where
+  isOpen_preimage s hs := by
+    show Set.preimage g (Set.preimage f s) ∈ _
+    apply OpenSets.preimage g
+    apply OpenSets.preimage f
+    assumption
+
+instance : IsContinuous (fun x: α => x) where
+  isOpen_preimage _ := id
+
+instance : IsContinuous (Prod.mk : α -> β -> α × β) where
+  isOpen_preimage s hs := by
+    induction hs with
+    | univ => apply OpenSets.univ
+    | inter =>
+      show Set.preimage _ _ ∩ Set.preimage _ _ ∈ _
+      apply OpenSets.inter <;> assumption
+    | @sUnion U hU ih =>
+      rw [Set.preiamge_sUnion]
+      apply OpenSets.sUnion
+      rintro _ ⟨u, hu, rfl⟩
+      apply ih
+      assumption
+    | of u hu =>
+      simp at hu
+      obtain ⟨_, ⟨_, ⟨b, ⟨_, _, rfl⟩, rfl⟩, rfl⟩, p, hp, rfl⟩ := hu
+      simp
+      rw [Function.comp_def]
+      induction hp with
+      | univ => apply OpenSets.univ
+      | inter =>
+        show Set.preimage _ _ ∩ Set.preimage _ _ ∈ _
+        apply OpenSets.inter <;> assumption
+      | @sUnion U hU ih =>
+        rw [Set.preiamge_sUnion]
+        apply OpenSets.sUnion
+        rintro _ ⟨u, hu, rfl⟩
+        apply ih
+        assumption
+      | of u hu =>
+        rcases hu with hu | hu
+        · obtain ⟨a, ha, rfl⟩ := hu
+          rw [Set.preimage_preimage, Function.comp_def]
+          dsimp
+          assumption
+        · obtain ⟨a, ha, rfl⟩ := hu
+          rw [Set.preimage_preimage, Function.comp_def]
+          dsimp
+          apply OpenSets.preimage
+          assumption
 
 end Topology

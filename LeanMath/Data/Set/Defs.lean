@@ -414,6 +414,17 @@ def preimage_compl_eq_image_compl (U: Set (Set α)) : U.preimage (·ᶜ) = U.ima
 def nonempty_iff (a: Set α) : a.Nonempty ↔ ¬∀x, x ∉ a := by
   simp; apply Iff.intro <;> (intro ⟨x, hx⟩; exists x)
 
+def preiamge_sUnion (f: α -> β) (u: Set (Set β)) : Set.preimage f (⋃ u) = ⋃ u.image (Set.preimage f) := by
+  ext a; apply Iff.intro
+  intro ⟨u, _, _⟩
+  exists u.preimage f
+  apply And.intro
+  apply Set.mem_image'
+  assumption
+  assumption
+  rintro ⟨_, ⟨u, _, rfl⟩, _⟩
+  exists u
+
 end Set
 
 def Subtype.val_inj {P: α -> Prop} : Function.Injective (Subtype.val (p := P)) := by
