@@ -37,7 +37,7 @@ instance instWf : WellFoundedRelation (find_measure h) where
     assumption
     rwa [←h]
 
-private def findAux
+protected def Nat.findAux
   (start step: ℕ) (hstep: 0 < step) (h: ∃k, P (k * step + start))
   (n: ℕ) (hn: ∃i, n = i * step + start)
   (gn: ∀k, k * step + start < n -> ¬P (k * step + start))
@@ -45,7 +45,7 @@ private def findAux
   if pn:P n then
     ⟨_, pn, gn⟩
   else
-    findAux start step hstep h (n + step) (by
+    Nat.findAux start step hstep h (n + step) (by
       obtain ⟨i, rfl⟩ := hn
       exists i + 1
       rw [Nat.succ_mul, Nat.add_right_comm]) <| by
@@ -80,14 +80,14 @@ decreasing_by
   obtain ⟨i, rfl⟩ := hn
   apply Nat.le_add_left
 
-protected def Nat.findAux := findAux (P := P) 0 1 (Nat.zero_lt_succ _) (
+protected def Nat.findAux' := Nat.findAux (P := P) 0 1 (Nat.zero_lt_succ _) (
     have ⟨n, hn⟩ := h
     ⟨n, Nat.mul_one _ ▸ hn⟩) 0 ⟨0, rfl⟩ nofun
 
-def Nat.find : ℕ := (Nat.findAux h).1
-def Nat.find_spec : P (find h) := (Nat.findAux h).2.1
+def Nat.find : ℕ := (Nat.findAux' h).1
+def Nat.find_spec : P (find h) := (Nat.findAux' h).2.1
 def Nat.find_minimal : ∀n < find h, ¬P n := by
   intro n hn
-  have := (Nat.findAux h).2.2 n
+  have := (Nat.findAux' h).2.2 n
   rw [Nat.mul_one] at this
   exact this hn

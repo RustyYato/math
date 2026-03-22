@@ -115,4 +115,78 @@ def two_le_prime (n: ℕ) (h: IsPrime n) : 2 ≤ n := by
   | 1 => nomatch h.not_unit inferInstance
   | n + 2 => apply Nat.le_add_left
 
+inductive Classify : ℕ -> Type where
+| unit : Classify 1
+| prime (p: ℕ) : IsPrime p -> Classify p
+| composite (c: ℕ) : IsComposite c -> Classify c
+deriving Repr
+
+instance : Subsingleton (Classify n) where
+  allEq := by
+    intro a b
+    have : ¬IsPrime (1: ℕ) := fun p => p.not_unit inferInstance
+    have : ¬IsComposite (1: ℕ) := fun c => c.not_unit inferInstance
+    cases a <;> cases b
+    any_goals rfl
+    any_goals contradiction
+    iterate 2
+    rename IsPrime n => hp
+    have := hp.not_composite
+    contradiction
+
+def classify (n: ℕ) : Classify n :=
+  if h₀:n = 1 then
+    h₀ ▸ .unit
+  else
+    let p := n.minFact
+    if h₁:p = n then
+      .prime n (by
+        rw [←h₁]
+        apply minFact_prime
+        assumption)
+    else
+        Classify.composite n <| by
+          have := Nat.mul_div_cancel' (n := p) (m := n) (Nat.minFact_dvd _)
+          refine ⟨p, n / p, ?_, ?_, this⟩
+          · intro h
+            apply IsPrime.not_unit (α := ℕ)
+            apply minFact_prime n h₀
+            assumption
+          · intro h
+            rw [Nat.is_unit_iff] at h
+            rw [h, Nat.mul_one] at this
+            contradiction
+
+def is_prime (n: ℕ) : Bool :=
+  match classify n with
+  | .prime _ _ => true
+  | .unit | .composite _ _ => false
+
+def is_composite (n: ℕ) : Bool :=
+  match classify n with
+  | .composite _ _ => true
+  | .unit | .prime _ _ => false
+
+instance (n: ℕ) : Decidable (IsPrime n) :=
+  decidable_of_bool n.is_prime <| by
+    unfold is_prime
+    cases classify n <;> dsimp
+    apply Iff.intro nofun
+    intro h; nomatch h.not_unit inferInstance
+    apply Iff.intro <;> (intro; trivial)
+    apply Iff.intro nofun
+    intro h; exfalso; apply h.not_composite
+    assumption
+
+instance (n: ℕ) : Decidable (IsComposite n) :=
+  decidable_of_bool n.is_composite <| by
+    unfold is_composite
+    cases classify n <;> dsimp
+    apply Iff.intro nofun
+    intro h; nomatch h.not_unit inferInstance
+    apply Iff.intro nofun
+    rename_i h; intro; exfalso
+    apply h.not_composite; assumption
+    apply Iff.intro <;> (intro; trivial)
+
 end Nat

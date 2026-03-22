@@ -33,7 +33,7 @@ def unit_dvd (a b: α) [IsUnit a] : a ∣ b := by
 class IsDvdAntisymm (α: Type*) [MonoidOps α] [IsMonoid α] [IsUnitsCentral α] [Dvd α] where
   dvd_antisymm {a b: α} (h₀: a ∣ b) (h₁: b ∣ a) : Units.Associates a b
 
-instance [DecidableEq α] [IsUnitsCentral α] [IsLeftCancel α] [IsRightCancel α] : IsDvdAntisymm α where
+instance [IsUnitsCentral α] [IsLeftCancel α] [IsRightCancel α] : IsDvdAntisymm α where
   dvd_antisymm :=  by
     intro a b h₀ h₁
     obtain ⟨k₀, rfl⟩ := dvd_iff.mp h₀; clear h₀
@@ -49,13 +49,13 @@ instance [DecidableEq α] [IsUnitsCentral α] [IsLeftCancel α] [IsRightCancel �
         rw [mul_assoc, h, one_mul, mul_one]
     }
 
-instance [DecidableEq α] [Zero α] [IsLawfulZeroMul α] [IsUnitsCentral α] [IsLeftCancel₀ α] [IsRightCancel₀ α] : IsDvdAntisymm α where
+instance [ExcludedMiddleEq α] [Zero α] [IsLawfulZeroMul α] [IsUnitsCentral α] [IsLeftCancel₀ α] [IsRightCancel₀ α] : IsDvdAntisymm α where
   dvd_antisymm :=  by
     intro a b h₀ h₁
     obtain ⟨k₀, rfl⟩ := dvd_iff.mp h₀; clear h₀
     obtain ⟨k₁, h⟩ := dvd_iff.mp h₁; clear h₁
     rw [mul_assoc] at h; rw (occs := [1]) [←mul_one a] at h
-    by_cases ha:a = 0
+    rcases em (a = 0) with ha | ha
     subst a; exists 1
     rw [zero_mul, zero_mul]
     replace h := of_mul_left₀ ha h.symm
@@ -115,3 +115,48 @@ structure IsPrime (a: α) [Mul α] [Dvd α] [One α] [Zero α] : Prop where
   irreducible: ∀⦃x y: α⦄, a ∣ x * y -> a ∣ x ∨ a ∣ y
   ne_zero: a ≠ 0
   not_unit: ¬IsUnit a
+
+structure IsComposite [Mul α] [One α] (n: α) : Prop where
+  exists_factors: ∃a b: α, ¬IsUnit a ∧ ¬IsUnit b ∧ a * b = n
+
+def IsComposite.not_unit [MonoidOps α] [IsComm α] [IsMonoid α] {c: α} (hc: IsComposite c) : ¬IsUnit c := by
+  intro h
+  obtain ⟨a, b, ha, hb, rfl⟩ := hc.exists_factors; clear hc
+  have ⟨u, g⟩ := h.exists_eq_unit; clear h
+  have : a * (b * u.inv) = 1 := by rw [←mul_assoc, g, u.val_mul_inv]
+  have : (b * u.inv) * a = 1 := by rw [mul_comm, this]
+  apply ha
+  exists {
+    val := a
+    inv := b * u.inv
+    val_mul_inv := by assumption
+    inv_mul_val := by assumption
+  }
+
+def IsPrime.not_composite [ExcludedMiddleEq α] [MonoidOps α] [Zero α] [IsMonoid α] [IsComm α] [Dvd α]
+  [IsLawfulZeroMul α] [IsLeftCancel₀ α] [IsRightCancel₀ α] [IsLawfulDvd α]
+  {n: α} (hp: IsPrime n) (hc: IsComposite n) : False := by
+  obtain ⟨a, b, ha, hb, rfl⟩ := hc
+  rcases em (a = 0) with rfl | ha'
+  rw [zero_mul] at hp
+  exact hp.ne_zero rfl
+  rcases em (b = 0) with rfl | hb'
+  rw [mul_zero] at hp
+  exact hp.ne_zero rfl
+  rcases hp.irreducible (dvd_refl _) with h | h
+  · have ⟨u, hu⟩ := dvd_antisymm h (dvd_mul_left _ _)
+    rw (occs := [2]) [←mul_one a] at hu
+    rw [mul_assoc] at hu
+    replace hu := of_mul_left₀ ha' hu
+    have : b = u.inv := by rw [←one_mul u.inv, ←hu, mul_assoc, u.val_mul_inv, mul_one]
+    rw [this] at hb
+    apply hb
+    exists u⁻¹
+  · have ⟨u, hu⟩ := dvd_antisymm h (dvd_mul_right _ _)
+    rw (occs := [2]) [←mul_one b] at hu
+    rw [mul_comm a, mul_assoc] at hu
+    replace hu := of_mul_left₀ hb' hu
+    have : a = u.inv := by rw [←one_mul u.inv, ←hu, mul_assoc, u.val_mul_inv, mul_one]
+    rw [this] at ha
+    apply ha
+    exists u⁻¹

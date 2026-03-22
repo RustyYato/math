@@ -1402,13 +1402,15 @@ def Int.is_unit_iff : IsUnit z ↔ z = 1 ∨ z = -1 := by
     inv_mul_val := rfl
   }
 
+def Nat.is_unit_iff : IsUnit n ↔ n = 1 := by
+  symm; apply Iff.intro
+  rintro rfl; infer_instance
+  rintro ⟨u, rfl⟩
+  rw [Subsingleton.allEq u 1]
+  rfl
+
 instance (z: ℤ) : Decidable (IsUnit z) :=
   decidable_of_iff _ Int.is_unit_iff.symm
 
 instance (n: ℕ) : Decidable (IsUnit n) :=
-  decidable_of_iff (n = 1) <| by
-    apply Iff.intro
-    rintro rfl; infer_instance
-    rintro ⟨u, rfl⟩
-    rw [Subsingleton.allEq u 1]
-    rfl
+  decidable_of_iff (n = 1) Nat.is_unit_iff.symm
