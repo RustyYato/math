@@ -377,12 +377,18 @@ def coinduced (f: α -> β) (tα: Topology α) : Topology β where
     · intro ⟨_, ⟨u, hu, rfl⟩, ha⟩
       exists u
 
-instance topo_prod : Topology (α × β) :=
+end Topology
+
+namespace Topology
+
+variable [LEM]
+
+instance topo_prod [Topology α] [Topology β] : Topology (α × β) :=
   induced Prod.fst inferInstance ⊓ induced Prod.snd inferInstance
-instance topo_sum : Topology (α ⊕ β) :=
+instance topo_sum [Topology α] [Topology β] : Topology (α ⊕ β) :=
   coinduced Sum.inl inferInstance ⊔ coinduced Sum.inr inferInstance
 
-def IsContinuous.min_left (t₀ t₁: Topology α) (f: α -> β) (_: IsContinuousAt f t₀ inferInstance) : IsContinuousAt f (t₀ ⊓ t₁) inferInstance where
+def IsContinuous.min_left [Topology α] [Topology β] (t₀ t₁: Topology α) (f: α -> β) (_: IsContinuousAt f t₀ inferInstance) : IsContinuousAt f (t₀ ⊓ t₁) inferInstance where
   isOpen_preimage s := by
     intro h
     apply mem_generate_of
@@ -390,7 +396,7 @@ def IsContinuous.min_left (t₀ t₁: Topology α) (f: α -> β) (_: IsContinuou
     apply OpenSets.preimage_at (tβ := inferInstance)
     assumption
 
-def IsContinuous.min_right (t₀ t₁: Topology α) (f: α -> β) (_: IsContinuousAt f t₁ inferInstance) : IsContinuousAt f (t₀ ⊓ t₁) inferInstance where
+def IsContinuous.min_right [Topology α] [Topology β] (t₀ t₁: Topology α) (f: α -> β) (_: IsContinuousAt f t₁ inferInstance) : IsContinuousAt f (t₀ ⊓ t₁) inferInstance where
   isOpen_preimage s := by
     intro h
     apply mem_generate_of
@@ -398,30 +404,30 @@ def IsContinuous.min_right (t₀ t₁: Topology α) (f: α -> β) (_: IsContinuo
     apply OpenSets.preimage_at (tβ := inferInstance)
     assumption
 
-def IsContinuous.max_left (t₀ t₁: Topology β) (f: α -> β) (_: IsContinuousAt f inferInstance t₀) : IsContinuousAt f inferInstance (t₀ ⊔ t₁) where
+def IsContinuous.max_left [Topology α] [Topology β] (t₀ t₁: Topology β) (f: α -> β) (_: IsContinuousAt f inferInstance t₀) : IsContinuousAt f inferInstance (t₀ ⊔ t₁) where
   isOpen_preimage s := by
     intro h
     apply OpenSets.preimage_at f _ h.left
 
-def IsContinuous.max_right (t₀ t₁: Topology β) (f: α -> β) (_: IsContinuousAt f inferInstance t₁) : IsContinuousAt f inferInstance (t₀ ⊔ t₁) where
+def IsContinuous.max_right [Topology α] [Topology β] (t₀ t₁: Topology β) (f: α -> β) (_: IsContinuousAt f inferInstance t₁) : IsContinuousAt f inferInstance (t₀ ⊔ t₁) where
   isOpen_preimage s := by
     intro h
     apply OpenSets.preimage_at f _ h.right
 
-instance {f: α -> β} : IsContinuousAt f (induced f inferInstance) inferInstance where
+instance [Topology α] [Topology β] {f: α -> β} : IsContinuousAt f (induced f inferInstance) inferInstance where
   isOpen_preimage s hs := by exists s
-instance {f: α -> β} : IsContinuousAt f inferInstance (coinduced f inferInstance) where
+instance [Topology α] [Topology β] {f: α -> β} : IsContinuousAt f inferInstance (coinduced f inferInstance) where
   isOpen_preimage s hs := by assumption
 
-instance : IsContinuous (Prod.fst: α × β -> α) := IsContinuous.min_left _ _ _ inferInstance
-instance : IsContinuous (Prod.snd: α × β -> β) := IsContinuous.min_right _ _ _ inferInstance
-instance : IsContinuous (Sum.inl: α -> α ⊕ β) := IsContinuous.max_left _ _ _ inferInstance
-instance : IsContinuous (Sum.inr: β -> α ⊕ β) := IsContinuous.max_right _ _ _ inferInstance
+instance [Topology α] [Topology β] : IsContinuous (Prod.fst: α × β -> α) := IsContinuous.min_left _ _ _ inferInstance
+instance [Topology α] [Topology β] : IsContinuous (Prod.snd: α × β -> β) := IsContinuous.min_right _ _ _ inferInstance
+instance [Topology α] [Topology β] : IsContinuous (Sum.inl: α -> α ⊕ β) := IsContinuous.max_left _ _ _ inferInstance
+instance [Topology α] [Topology β] : IsContinuous (Sum.inr: β -> α ⊕ β) := IsContinuous.max_right _ _ _ inferInstance
 
 instance topo_pi {ι : Type*} {Y : ι → Type v} [t₂:  ∀i: ι, Topology (Y i)] : Topology (∀i: ι, Y i) :=
   ⨅i, induced (fun f => f i) (t₂ i)
 
-instance : IsContinuous (fun (f: α -> β) (a: α) => f a) where
+instance IsContinuous.apply [Topology α] [Topology β] : IsContinuous (fun (f: α -> β) (a: α) => f a) where
   isOpen_preimage s hs := by
     apply of_mem_generate hs
     intro u hu
@@ -431,17 +437,32 @@ instance : IsContinuous (fun (f: α -> β) (a: α) => f a) where
     simp
     exact ⟨_, ⟨_, ⟨_, rfl⟩, rfl⟩, _, hu, rfl⟩
 
-instance (f: β -> γ) (g: α -> β) [IsContinuous f] [IsContinuous g] : IsContinuous (f ∘ g) where
+instance IsContinuous.comp [Topology α] [Topology β] [Topology γ]  (f: β -> γ) (g: α -> β) [IsContinuous f] [IsContinuous g] : IsContinuous (f ∘ g) where
   isOpen_preimage s hs := by
     show Set.preimage g (Set.preimage f s) ∈ _
     apply OpenSets.preimage g
     apply OpenSets.preimage f
     assumption
 
-instance : IsContinuous (fun x: α => x) where
+def IsContinuous.comp' [Topology α] [Topology β] [Topology γ]  (f: β -> γ) (g: α -> β) (hf: IsContinuous f) (hg: IsContinuous g) : IsContinuous (f ∘ g) :=
+  inferInstance
+
+instance IsContinuous.comp₂
+  [Topology γ']  [Topology α] [Topology β] [Topology γ]
+  (f: α -> β -> γ) (ga: γ' -> α) (gb: γ' -> β) [hf: IsContinuous f] [hga: IsContinuous ga] [hgb: IsContinuous gb] : IsContinuous (fun x => f (ga x) (gb x)) where
+  isOpen_preimage s hs := by
+
+    sorry
+
+def IsContinuous.comp₂'
+  [Topology γ'] [Topology α] [Topology β] [Topology γ]
+  (f: α -> β -> γ) (ga: γ' -> α) (gb: γ' -> β) (hf: IsContinuous f) (hga: IsContinuous ga) (hgb: IsContinuous gb) : IsContinuous (fun x => f (ga x) (gb x)) :=
+  IsContinuous.comp₂ _ _ _
+
+instance [Topology α] : IsContinuous (fun x: α => x) where
   isOpen_preimage _ := id
 
-instance : IsContinuous (Prod.mk : α -> β -> α × β) where
+instance [Topology α] [Topology β] : IsContinuous (Prod.mk : α -> β -> α × β) where
   isOpen_preimage s hs := by
     induction hs with
     | univ => apply OpenSets.univ
@@ -481,5 +502,14 @@ instance : IsContinuous (Prod.mk : α -> β -> α × β) where
           dsimp
           apply OpenSets.preimage
           assumption
+
+instance
+  [Topology α] [Topology β] [Topology γ]
+  (f: γ -> α)
+  (g: γ -> β)
+  [IsContinuous f]
+  [IsContinuous g]
+  : IsContinuous (fun x => (f x, g x)) := by
+    apply IsContinuous.comp₂' Prod.mk <;> infer_instance
 
 end Topology
