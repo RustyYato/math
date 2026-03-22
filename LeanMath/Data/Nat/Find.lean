@@ -1,5 +1,6 @@
 import LeanMath.Tactic.TypeStar
 import LeanMath.Tactic.AxiomBlame
+import LeanMath.Data.Nat.Basic
 
 variable {P: ℕ -> Prop} [DecidablePred P] (h: ∃n, P n)
 
@@ -36,19 +37,57 @@ instance instWf : WellFoundedRelation (find_measure h) where
     assumption
     rwa [←h]
 
-private def findAux (h: ∃n, P n) (n: ℕ) (hn: ∀m < n, ¬P m) : Σ'n, P n ∧ ∀m < n, ¬P m :=
+private def findAux
+  (start step: ℕ) (hstep: 0 < step) (h: ∃k, P (k * step + start))
+  (n: ℕ) (hn: ∃i, n = i * step + start)
+  (gn: ∀k, k * step + start < n -> ¬P (k * step + start))
+  : Σ'n, P n ∧ ∀k, k * step + start < n -> ¬P (k * step + start) :=
   if pn:P n then
-    ⟨_, pn, hn⟩
+    ⟨_, pn, gn⟩
   else
-    findAux h (n + 1) <| by
-      intro m hm
-      rw [Nat.lt_succ_iff, Nat.le_iff_lt_or_eq] at hm
-      rcases hm with hm | rfl
-      apply hn; assumption
+    findAux start step hstep h (n + step) (by
+      obtain ⟨i, rfl⟩ := hn
+      exists i + 1
+      rw [Nat.succ_mul, Nat.add_right_comm]) <| by
+      intro k hk gk
+      obtain ⟨i, rfl⟩ := hn
+      rw [Nat.add_right_comm, ←Nat.succ_mul,
+        Nat.add_lt_add_iff_right] at hk
+      replace hk := (Nat.mul_lt_mul_right' hstep).mp hk
+      rw [Nat.lt_succ_iff, Nat.le_iff_lt_or_eq, Or.comm] at hk
+      rcases hk with rfl | hk
+      contradiction
+      have := gn k ?_
+      contradiction
+      apply Nat.add_lt_add_right
+      apply Nat.mul_lt_mul_of_pos_right
       assumption
-termination_by find_measure.of_val h n hn
-decreasing_by exact Nat.lt_succ_self _
+      assumption
+termination_by find_measure.of_val h ((n - start) / step) (by
+  intro m hm
+  obtain ⟨i, rfl⟩ := hn
+  simp [hstep] at hm
+  apply gn m
+  apply Nat.add_lt_add_right
+  apply Nat.mul_lt_mul_of_pos_right
+  assumption
+  assumption)
+decreasing_by
+  show (n - start) / step < (n + step - start) / step
+  rw [Nat.add_comm _ step, Nat.add_sub_assoc, Nat.add_div_left]
+  apply Nat.lt_succ_self
+  assumption
+  obtain ⟨i, rfl⟩ := hn
+  apply Nat.le_add_left
 
-def Nat.find : ℕ := (findAux h 0 nofun).1
-def Nat.find_spec : P (find h) := (findAux h 0 nofun).2.1
-def Nat.find_minimal : ∀n < find h, ¬P n := (findAux h 0 nofun).2.2
+protected def Nat.findAux := findAux (P := P) 0 1 (Nat.zero_lt_succ _) (
+    have ⟨n, hn⟩ := h
+    ⟨n, Nat.mul_one _ ▸ hn⟩) 0 ⟨0, rfl⟩ nofun
+
+def Nat.find : ℕ := (Nat.findAux h).1
+def Nat.find_spec : P (find h) := (Nat.findAux h).2.1
+def Nat.find_minimal : ∀n < find h, ¬P n := by
+  intro n hn
+  have := (Nat.findAux h).2.2 n
+  rw [Nat.mul_one] at this
+  exact this hn

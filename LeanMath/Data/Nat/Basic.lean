@@ -16,6 +16,10 @@ def mul_lt_mul_left' {a b c : ℕ} : 0 < a → (a * b < a * c ↔ b < c) := by
     rw [Nat.add_lt_add_iff_right, Nat.succ_lt_succ_iff]
     apply ih
 
+def mul_lt_mul_right' {a b c : ℕ} : 0 < a → (b * a < c * a ↔ b < c) := by
+  rw [Nat.mul_comm _ a, Nat.mul_comm _ a]
+  apply mul_lt_mul_left'
+
 def div_lt_of_lt_mul' {m n k : ℕ} : m < n * k → m / n < k := by
   intro h
   rw [←Nat.div_add_mod m n] at h
