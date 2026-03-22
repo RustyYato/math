@@ -24,6 +24,34 @@ def minFact_dvd (n: ℕ) : Nat.minFact n ∣ n := by
     have := Nat.find_spec (minFac_exists (n + 2) nofun)
     exact this.left
 
+def one_lt_prime (p: ℕ) (hp: IsPrime p) : 1 < p := by
+  match p with
+  | 0 => have := hp.ne_zero; contradiction
+  | 1 => have := hp.not_unit inferInstance; contradiction
+  | n + 2 =>
+    apply Nat.succ_lt_succ
+    apply Nat.zero_lt_succ
+
+def minFact_minimal (n: ℕ) : ∀p, IsPrime p -> p ∣ n -> Nat.minFact n ≤ p := by
+  match n with
+  | 0 =>
+    intro p hp h; clear h
+    show 2 ≤ p
+    apply Nat.succ_le_of_lt
+    apply one_lt_prime
+    assumption
+  | 1 =>
+    intro p hp h
+    rw [Nat.dvd_one] at h
+    subst h
+    nomatch hp.not_unit inferInstance
+  | n + 2 =>
+    intro p hp h
+    refine Nat.not_lt.mp <| (Nat.find_minimal (minFac_exists (n + 2) nofun) p · ⟨?_, ?_⟩)
+    assumption
+    apply one_lt_prime
+    assumption
+
 private def semiprime_iff {n: ℕ} : (∀⦃x y: ℕ⦄, n ∣ x * y -> n ∣ x ∨ n ∣ y) ∧ n ≠ 0 ↔ ∀x, x ∣ n -> x = n ∨ x = 1 := by
   apply Iff.intro
   · intro ⟨irred, nz⟩ x hx
@@ -61,6 +89,12 @@ private def semiprime_iff {n: ℕ} : (∀⦃x y: ℕ⦄, n ∣ x * y -> n ∣ x 
     rw [←Int.natCast_mul]
     apply Int.natCast_dvd_natCast'.mpr
     assumption
+
+def prime_def {p: ℕ} (hp: IsPrime p) : ∀x, x ∣ p -> x = p ∨ x = 1 := by
+  rw [←semiprime_iff]
+  apply And.intro
+  apply hp.irreducible
+  exact hp.ne_zero
 
 def minFact_ne_zero (n: ℕ) : n.minFact ≠ 0 := by
   match n with

@@ -206,8 +206,8 @@ structure AddGroupHom (α β: Type*) [Zero α] [Zero β] [Add α] [Add β] exten
 structure LogHom (α β: Type*) [One α] [Zero β] [Mul α] [Add β] extends Hom α β, α →₁₀ β, α →ₘ+ₙ β where
 structure ExpHom (α β: Type*) [Zero α] [One β] [Add α] [Mul β] extends Hom α β, α →₀₁ β, α →ₐ*ₙ β where
 
-structure GroupEmbedding (α β: Type*) [One α] [One β] [Mul α] [Mul β] extends α ↪ β, α ↪₁ β, α ↪*ₙ β where
-structure AddGroupEmbedding (α β: Type*) [Zero α] [Zero β] [Add α] [Add β] extends α ↪ β, α ↪₀ β, α ↪+ₙ β where
+structure GroupEmbedding (α β: Type*) [One α] [One β] [Mul α] [Mul β] extends α ↪ β, α ↪₁ β, α ↪*ₙ β, GroupHom α β where
+structure AddGroupEmbedding (α β: Type*) [Zero α] [Zero β] [Add α] [Add β] extends α ↪ β, α ↪₀ β, α ↪+ₙ β, AddGroupHom α β where
 structure LogEmbedding (α β: Type*) [One α] [Zero β] [Mul α] [Add β] extends α ↪ β, α ↪₁₀ β, α ↪ₘ+ₙ β where
 structure ExpEmbedding (α β: Type*) [Zero α] [One β] [Add α] [Mul β] extends α ↪ β, α ↪₀₁ β, α ↪ₐ*ₙ β where
 
