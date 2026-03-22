@@ -14,6 +14,9 @@ deriving Repr, DecidableEq
 def Rational.Fract.is_reduced (q: Fract) : Prop :=
   Int.gcd q.num q.den = 1
 
+instance : DecidablePred Rational.Fract.is_reduced :=
+  inferInstanceAs (DecidablePred (fun x: Rational.Fract => Int.gcd x.num x.den = 1))
+
 structure Rational extends Rational.Fract where
   ofFract ::
   reduced: toFract.is_reduced
