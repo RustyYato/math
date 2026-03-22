@@ -90,18 +90,18 @@ abbrev trans (f: α ≃ β) (g: β ≃ γ) : α ≃ γ := g.comp f
 @[simp] def apply_comp (f: β ≃ γ) (g: α ≃ β) (x: α) : (f.comp g) x = f (g x) := rfl
 @[simp] def apply_trans (f: β ≃ γ) (g: α ≃ β) (x: α) : (g.trans f) x = f (g x) := rfl
 
-@[simp] def trans_assoc (f: α ≃ β) (g: β ≃ γ) (h: γ ≃ γ') :
-  f.trans (g.trans h) = (f.trans g).trans h := rfl
+  @[simp] def trans_assoc (f: α ≃ β) (g: β ≃ γ) (h: γ ≃ γ') :
+    f.trans (g.trans h) = (f.trans g).trans h := rfl
 
-@[simp] def symm_trans (f: α ≃ β) : f.symm.trans f = .id _ := by
-  apply DFunLike.ext; intro x
-  simp
-@[simp] def trans_symm (f: α ≃ β) : f.trans f.symm = .id _ := by
-  apply DFunLike.ext; intro x
-  simp
-@[simp] def id_symm : (Equiv.id _).symm = (Equiv.id α) := rfl
-@[simp] def id_trans (f: α ≃ β) : (Equiv.id _).trans f = f := rfl
-@[simp] def trans_id (f: α ≃ β) : f.trans (Equiv.id _) = f := rfl
+  @[simp] def symm_trans (f: α ≃ β) : f.symm.trans f = .id _ := by
+    apply DFunLike.ext; intro x
+    simp
+  @[simp] def trans_symm (f: α ≃ β) : f.trans f.symm = .id _ := by
+    apply DFunLike.ext; intro x
+    simp
+  @[simp] def id_symm : (Equiv.id _).symm = (Equiv.id α) := rfl
+  @[simp] def id_trans (f: α ≃ β) : (Equiv.id _).trans f = f := rfl
+  @[simp] def trans_id (f: α ≃ β) : f.trans (Equiv.id _) = f := rfl
 
 def inj (f: α ≃ β) : Function.Injective f := f.rightInv.injective
 def surj (f: α ≃ β) : Function.Surjective f := f.symm.rightInv.surjective
