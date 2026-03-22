@@ -23,3 +23,10 @@ def StrictMonotone.le_iff_le [LE α] [LT α] [LE β] [LT β] [IsLinearOrder α] 
   · intro h; rcases lt_or_eq_of_le h with h | rfl
     apply le_of_lt; apply hf; assumption
     rfl
+
+def StrictMonotone.inj [LT α] [LT β] [LE β] [IsPreorder β] [IsLTTrichotomous α] (f: α -> β) (hf: StrictMonotone f) : Function.Injective f := by
+  intro a b h
+  rcases lt_trichotomy a b with g | g | g
+  nomatch Relation.irrefl (h ▸ hf g)
+  assumption
+  nomatch Relation.irrefl (h ▸ hf g)

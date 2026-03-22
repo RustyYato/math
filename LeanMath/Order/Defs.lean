@@ -255,7 +255,7 @@ instance [IsPreorder α] : @Relation.IsTrans α (· < ·) where
   trans h g := lt_of_lt_of_le h (le_of_lt g)
 
 def le_total [IsLinearOrder α] (a b: α) : a ≤ b ∨ b ≤ a := total (· ≤ ·) a b
-def lt_trichotomy [IsLinearOrder α] (a b: α) : a < b ∨ a = b ∨ b < a := trichotomous (· < ·) a b
+def lt_trichotomy [IsLTTrichotomous α] (a b: α) : a < b ∨ a = b ∨ b < a := trichotomous (· < ·) a b
 
 def lt_trans [IsPreorder α] {a b c: α} : a < b -> b < c -> a < c := Relation.trans
 def le_antisymm [IsPartialOrder α] {a b: α} : a ≤ b -> b ≤ a -> a = b := Relation.antisymm

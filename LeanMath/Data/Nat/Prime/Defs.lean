@@ -134,6 +134,9 @@ instance : Subsingleton (Classify n) where
     have := hp.not_composite
     contradiction
 
+instance : DecidableEq (Classify n) :=
+  fun _ _ => .isTrue (Subsingleton.allEq _ _)
+
 def classify (n: ℕ) : Classify n :=
   if h₀:n = 1 then
     h₀ ▸ .unit
