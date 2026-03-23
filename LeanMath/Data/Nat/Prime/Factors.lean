@@ -1,5 +1,6 @@
 import LeanMath.Data.Nat.Prime.Defs
 import LeanMath.Data.DirectSum.Defs
+import LeanMath.Logic.Relation.Defs
 
 namespace Nat
 
@@ -35,6 +36,8 @@ instance : IsLawfulPowN PrimeFactors :=
   IsLawfulPowN.lift equivMulDirectSum (fun _ _ => rfl)
 instance : IsMonoid PrimeFactors :=
   IsMonoid.lift equivMulDirectSum
+instance : IsComm PrimeFactors :=
+  IsComm.lift equivMulDirectSum
 
 def list_induction
   {motive: PrimeFactors -> Prop}
@@ -95,7 +98,7 @@ private def eval'_of_prime : eval' (of_prime p hp) = p := by
 
 end PrimeFactors
 
-private def existsFactor (n: ℕ) (hn: n ≠ 0) : ∃k, n.minFact ^ (n - k) ∣ n := by
+private def existsFactorPow (n: ℕ) (hn: n ≠ 0) : ∃k, n.minFact ^ (n - k) ∣ n := by
   exists (n - 1)
   rw [Nat.sub_sub_eq_min, Nat.min_eq_right, npow_one]
   apply Nat.minFact_dvd
@@ -103,14 +106,14 @@ private def existsFactor (n: ℕ) (hn: n ≠ 0) : ∃k, n.minFact ^ (n - k) ∣ 
   apply Nat.pos_of_ne_zero
   assumption
 
-private def find_lt_existsFactor (n: ℕ) (hn: n ≠ 0) : Nat.find (existsFactor n hn) < n := by
+private def find_lt_existsFactor (n: ℕ) (hn: n ≠ 0) : Nat.find (existsFactorPow n hn) < n := by
   apply Nat.not_le.mp
   intro h; rw [Nat.le_iff_lt_or_eq] at h
   rcases h with h | h
   · have := Nat.find_minimal _ _ h
     rw [Nat.sub_self, npow_zero] at this
     exact this (Nat.one_dvd _)
-  · have := Nat.find_minimal (existsFactor n hn) (n - 1) ?_
+  · have := Nat.find_minimal (existsFactorPow n hn) (n - 1) ?_
     rw [Nat.sub_sub_self, npow_one] at this
     exact this (Nat.minFact_dvd _)
     apply Nat.succ_le_of_lt
@@ -121,7 +124,63 @@ private def find_lt_existsFactor (n: ℕ) (hn: n ≠ 0) : Nat.find (existsFactor
     | n + 1 =>
     apply Nat.lt_succ_self
 
-def factors_rec_lemma (n: ℕ) (hn: 1 < n) : n / (Nat.minFact n) ^ (n - Nat.find (existsFactor n (Nat.ne_zero_of_lt hn))) < n := by
+-- private def simple_factors_rec_lemma (n: ℕ) (h: 1 < n) : n / (Nat.minFact n) < n := by
+--   apply Nat.div_lt_of_lt_mul'
+--   rw (occs := [1]) [←Nat.one_mul n]
+--   apply (Nat.mul_lt_mul_right' _).mpr
+--   apply one_lt_prime
+--   exact Nat.minFact_prime _ (Nat.ne_of_gt h)
+--   apply Nat.zero_lt_of_lt h
+
+-- -- private def simple_factors_ne_zero
+
+-- private def simple_factors (n: ℕ) : PrimeFactors :=
+--   if h:1 < n then
+--     let m := n.minFact
+--     PrimeFactors.of_prime m (Nat.minFact_prime _ (Nat.ne_of_gt h)) *
+--       simple_factors (n / m)
+--   else
+--     1
+-- decreasing_by
+--   apply simple_factors_rec_lemma _ h
+
+-- private structure is_factorization_alg (f: ℕ -> PrimeFactors) : Prop where
+--   at_one: f 1 = 1
+--   step_prime (n: ℕ) (h: IsPrime n): f n = PrimeFactors.of_prime n h
+--   step_comp (n: ℕ): 1 < n -> IsComposite n -> ∃a b: ℕ, a * b = n -> 1 < a -> 1 < b -> f n = f a * f b
+
+-- private def is_factorization_alg.spec (f: ℕ -> PrimeFactors) (hf: is_factorization_alg f) : ∀a b, 0 < a -> 0 < b -> f a * f b = f (a * b) := by
+--   intro a b ha hb
+--   induction a using Nat.strongRecOn generalizing b with | ind a iha =>
+--   induction b using Nat.strongRecOn with | ind b ihb =>
+
+--   by_cases ha:a ≤ 1
+--   · match a with
+--     | a + 2 => nomatch Nat.not_lt_of_le ha (Nat.succ_lt_succ (Nat.zero_lt_succ _))
+--     | 1 => rw [hf.at_one, one_mul, one_mul]
+--   by_cases hb:b ≤ 1
+--   · match b with
+--     | b + 2 => nomatch Nat.not_lt_of_le hb (Nat.succ_lt_succ (Nat.zero_lt_succ _))
+--     | 1 => rw [hf.at_one, mul_one, mul_one]
+--   rw [Nat.not_le] at ha hb
+--   by_cases pa:IsPrime a
+--   · rw [hf.step_prime _ pa]
+--     sorry
+--   · sorry
+
+
+
+
+-- private def is_factorization_alg.spec (f₀ f₁: ℕ -> PrimeFactors) (h₀: is_factorization_alg f₀) (h₁: is_factorization_alg f₁) : ∀n, 0 < n -> f₀ n = f₁ n := by
+--   intro n hn
+--   induction n using Nat.strongRecOn with | ind n ih =>
+--   by_cases h:1 < n
+--   · sorry
+--   · match n with
+--     | n + 2 => nomatch h (Nat.succ_lt_succ (Nat.zero_lt_succ _))
+--     | 1 => rw [h₀.at_one, h₁.at_one]
+
+def factors_rec_lemma (n: ℕ) (hn: 1 < n) : n / (Nat.minFact n) ^ (n - Nat.find (existsFactorPow n (Nat.ne_zero_of_lt hn))) < n := by
   have npos := Nat.zero_lt_of_lt hn
   have n_ne_zero := Nat.ne_zero_of_lt hn
   apply div_lt_of_lt_mul'
@@ -136,8 +195,8 @@ def factors_rec_lemma (n: ℕ) (hn: 1 < n) : n / (Nat.minFact n) ^ (n - Nat.find
     intro rfl; contradiction
 
 def factors_rec_ne_zero (n: ℕ) (h: 1 < n) :
-  n / Nat.minFact n ^ (n - Nat.find (existsFactor n (Nat.ne_zero_of_lt h))) ≠ 0 := by
-  let hex := existsFactor n (Nat.ne_zero_of_lt h)
+  n / Nat.minFact n ^ (n - Nat.find (existsFactorPow n (Nat.ne_zero_of_lt h))) ≠ 0 := by
+  let hex := existsFactorPow n (Nat.ne_zero_of_lt h)
   have : Nat.minFact n ^ (n - Nat.find hex) ∣ n := Nat.find_spec hex
   replace := Nat.mul_div_cancel_left' this
   intro h; rw [h, mul_zero] at this
@@ -146,14 +205,7 @@ def factors_rec_ne_zero (n: ℕ) (h: 1 < n) :
 def factors (n: ℕ) : PrimeFactors :=
   if h₁:1 < n then
     let m := n.minFact
-    have existsFactor : ∃k, m ^ (n - k) ∣ n := by
-      exists (n - 1)
-      rw [Nat.sub_sub_eq_min, Nat.min_eq_right, npow_one]
-      apply Nat.minFact_dvd
-      apply Nat.succ_le_of_lt
-      apply Nat.pos_of_ne_zero
-      apply Nat.ne_zero_of_lt
-      assumption
+    have existsFactor : ∃k, m ^ (n - k) ∣ n := existsFactorPow _ (Nat.ne_zero_of_lt h₁)
     let k := n - Nat.find existsFactor
     PrimeFactors.of_prime m (n.minFact_prime (Nat.ne_of_gt h₁)) ^ k * (
       (n / (m ^ k)).factors)
@@ -200,8 +252,86 @@ def factors_one : factors 1 = 1 := by
   rw [dif_neg]
   apply Nat.lt_irrefl
 
-def factors_mul (a b: ℕ) (ha: a ≠ 0) (hb: b ≠ 0) : factors (a * b) = factors a * factors b := by
-  sorry
+-- def factors_prime (p: ℕ) (hp: IsPrime p) : factors p = PrimeFactors.of_prime p hp := by
+--   have minFact_eq_self : p.minFact = p := by
+--     rcases prime_def hp p.minFact (Nat.minFact_dvd p) with h | h
+--     assumption
+--     have := (minFact_prime p ?_).not_unit (h ▸ inferInstance)
+--     contradiction
+--     intro rfl
+--     exact hp.not_unit inferInstance
+--   have pow_eq_one : p - Nat.find (existsFactorPow p hp.ne_zero) = 1 := by
+--     have h := find_spec (existsFactorPow p hp.ne_zero)
+--     rw (occs := [1]) [minFact_eq_self] at h
+--     replace h := prime_def hp _ h
+--     rcases h with h | h
+--     · rwa [Nat.pow_eq_self_iff] at h
+--       · apply one_lt_prime
+--         assumption
+--     · rw [Nat.pow_eq_one] at h
+--       rcases h with h | h
+--       subst p; nomatch hp.not_unit inferInstance
+--       rw [Nat.sub_eq_zero_iff_le] at h
+--       have := Nat.not_le_of_gt (find_lt_existsFactor p hp.ne_zero) h
+--       contradiction
+--   unfold factors
+--   dsimp; rw [dif_pos (by
+--     apply one_lt_prime
+--     assumption)]
+--   rw [←mul_one (PrimeFactors.of_prime p hp)]; congr
+--   rw [show find (existsFactorPow p hp.ne_zero) = p - 1 from ?_]
+--   rw [Nat.sub_sub_self, npow_one]; congr
+--   · apply Nat.le_of_lt
+--     apply one_lt_prime
+--     assumption
+--   · apply Nat.eq_sub_of_add_eq'
+--     symm; apply Nat.eq_add_of_sub_eq
+--     apply Nat.le_of_lt
+--     apply find_lt_existsFactor
+--     exact hp.ne_zero
+--     assumption
+--   · rw (occs := [1]) [pow_eq_one, minFact_eq_self, npow_one]
+--     rw [Nat.div_self (Nat.pos_of_ne_zero hp.ne_zero), factors_one]
+
+-- private def factors_prime_mul (a b: ℕ) (ha: IsPrime a) (hb: b ≠ 0) : factors (a * b) = PrimeFactors.of_prime a ha * factors b := by
+--   induction b using Nat.strongRecOn generalizing a with
+--   | ind b ih =>
+--   have (h: b.minFact ≤ a) : (a * b).minFact = b.minFact := by
+--     sorry
+--   by_cases hb':b = 1
+--   · subst b
+--     rw [mul_one, factors_prime, factors_one, mul_one]
+--   have one_lt_b : 1 < b := match b with | b + 2 => by simp
+--   have ab_ne_zero : a * b ≠ 0 := by
+--     intro h; rw [mul_eq_zero] at h
+--     have := ha.ne_zero
+--     cases h <;> contradiction
+--   rcases Nat.lt_trichotomy b.minFact a with h | h | h
+--   · replace : (a * b).minFact = b.minFact := this (Nat.le_of_lt h)
+--     unfold factors; dsimp
+--     rw [dif_pos, dif_pos one_lt_b]
+--     rw [←mul_assoc, mul_comm (PrimeFactors.of_prime _ _), mul_assoc]
+--     · rw [show a * b - Nat.find (existsFactorPow (a * b) ab_ne_zero) = b - Nat.find (existsFactorPow b hb) from ?_]
+--       · congr 3
+--         rw [this]
+--         rw [Nat.mul_div_assoc _ (Nat.find_spec (existsFactorPow _ hb))]
+--         apply ih
+--         · apply factors_rec_lemma
+--           assumption
+--         · apply factors_rec_ne_zero
+--           assumption
+--       · have h₀ := Nat.find_spec (existsFactorPow _ hb)
+--         have h₁ := Nat.find_spec (existsFactorPow _ ab_ne_zero)
+--         rw (occs := [1]) [this] at h₁
+--         sorry
+--     · sorry
+--   · sorry
+--   · sorry
+
+-- def factors_mul (a b: ℕ) (ha: a ≠ 0) (hb: b ≠ 0) : factors (a * b) = factors a * factors b := by
+--   induction a using Nat.strongRecOn generalizing b with
+--   | ind a ih =>
+--     sorry
 
 private def PrimeFactors.eval'_ne_zero (a: PrimeFactors) : PrimeFactors.eval' a ≠ 0 := by
   induction a with
@@ -213,62 +343,22 @@ private def PrimeFactors.eval'_ne_zero (a: PrimeFactors) : PrimeFactors.eval' a 
     rw [PrimeFactors.eval'_of_prime]
     exact hp.ne_zero
 
-private def eval'_factors (a: PrimeFactors) : factors (PrimeFactors.eval' a) = a := by
-  induction a with
-  | one =>
-    rw [map_one, factors_one]
-  | mul =>
-    rw [map_mul, factors_mul]; congr
-    apply PrimeFactors.eval'_ne_zero
-    apply PrimeFactors.eval'_ne_zero
-  | prime p hp =>
-    have minFact_eq_self : p.minFact = p := by
-      rcases prime_def hp p.minFact (Nat.minFact_dvd p) with h | h
-      assumption
-      have := (minFact_prime p ?_).not_unit (h ▸ inferInstance)
-      contradiction
-      intro rfl
-      exact hp.not_unit inferInstance
-    have pow_eq_one : p - Nat.find (existsFactor p hp.ne_zero) = 1 := by
-      have h := find_spec (existsFactor p hp.ne_zero)
-      rw (occs := [1]) [minFact_eq_self] at h
-      replace h := prime_def hp _ h
-      rcases h with h | h
-      · rwa [Nat.pow_eq_self_iff] at h
-        · apply one_lt_prime
-          assumption
-      · rw [Nat.pow_eq_one] at h
-        rcases h with h | h
-        subst p; nomatch hp.not_unit inferInstance
-        rw [Nat.sub_eq_zero_iff_le] at h
-        have := Nat.not_le_of_gt (find_lt_existsFactor p hp.ne_zero) h
-        contradiction
-    rw [PrimeFactors.eval'_of_prime]
-    unfold factors
-    dsimp; rw [dif_pos (by
-      apply one_lt_prime
-      assumption)]
-    rw [←mul_one (PrimeFactors.of_prime p hp)]; congr
-    rw [show find (existsFactor p hp.ne_zero) = p - 1 from ?_]
-    rw [Nat.sub_sub_self, npow_one]; congr
-    · apply Nat.le_of_lt
-      apply one_lt_prime
-      assumption
-    · apply Nat.eq_sub_of_add_eq'
-      symm; apply Nat.eq_add_of_sub_eq
-      apply Nat.le_of_lt
-      apply find_lt_existsFactor
-      exact hp.ne_zero
-      assumption
-    · rw (occs := [1]) [pow_eq_one, minFact_eq_self, npow_one]
-      rw [Nat.div_self (Nat.pos_of_ne_zero hp.ne_zero), factors_one]
+-- private def eval'_factors (a: PrimeFactors) : factors (PrimeFactors.eval' a) = a := by
+--   induction a with
+--   | one =>
+--     rw [map_one, factors_one]
+--   | mul =>
+--     rw [map_mul, factors_mul]; congr
+--     apply PrimeFactors.eval'_ne_zero
+--     apply PrimeFactors.eval'_ne_zero
+--   | prime p hp => rw [PrimeFactors.eval'_of_prime, factors_prime]
 
-def PrimeFactors.eval : PrimeFactors ↪* ℕ where
-  toGroupHom := PrimeFactors.eval'
-  inj := by
-    intro a b h
-    replace h : eval' a = eval' b := h
-    have := eval'_factors b
-    rwa [←h, eval'_factors] at this
+-- def PrimeFactors.eval : PrimeFactors ↪* ℕ where
+--   toGroupHom := PrimeFactors.eval'
+--   inj := by
+--     intro a b h
+--     replace h : eval' a = eval' b := h
+--     have := eval'_factors b
+--     rwa [←h, eval'_factors] at this
 
 end Nat
