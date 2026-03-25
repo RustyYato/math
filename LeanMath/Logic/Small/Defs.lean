@@ -74,8 +74,21 @@ example : Small.{max u v, u} α := inferInstance
 
 end UnivLE
 
-def Shrink.{v, u} (α: Type u) [Small.{v, u} α] : Type v :=
-  Classical.choose (Small.exists_equiv.{v} α)
+-- make this opaque so that it cannot be inspected
+private noncomputable opaque ShrinkDef.{v, u} (α: Type u) [Small.{v, u} α] : Σβ: Type v, α ≃ β := {
+  fst := Classical.choose (Small.exists_equiv α)
+  snd := Classical.choice (Classical.choose_spec (Small.exists_equiv α))
+}
 
-noncomputable def Equiv.shrink {α: Type u} [Small.{v, u} α] : α ≃ Shrink.{v, u} α :=
-  Classical.choice (Classical.choose_spec (Small.exists_equiv α))
+def Shrink.{v, u} (α: Type u) [Small.{v, u} α] : Type v := (ShrinkDef α).1
+noncomputable def Equiv.shrink {α: Type u} [Small.{v, u} α] : α ≃ Shrink.{v, u} α := (ShrinkDef α).2
+
+/-- this is always safe because `Shrink` is opaque and defined via `Classical.choice`,
+  so we can specify the representation of `Shrink` -/
+unsafe def Equiv.runtime_shrink {α: Type u} [Small.{v, u} α] : α ≃ Shrink.{v, u} α where
+  toFun a := ULift.down.{max u v} (cast lcProof (ULift.up.{max u v, u} a))
+  invFun a := ULift.down.{max u v} (cast lcProof (ULift.up.{max u v, v} a))
+  leftInv := lcProof
+  rightInv := lcProof
+
+@[csimp] unsafe def Equiv.runtime_shrink_eq_shrink : @Equiv.shrink = @Equiv.runtime_shrink := lcProof
