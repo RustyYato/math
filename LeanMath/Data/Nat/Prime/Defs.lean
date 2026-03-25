@@ -32,24 +32,22 @@ def one_lt_prime (p: ℕ) (hp: IsPrime p) : 1 < p := by
     apply Nat.succ_lt_succ
     apply Nat.zero_lt_succ
 
-def minFact_minimal (n: ℕ) : ∀p, IsPrime p -> p ∣ n -> Nat.minFact n ≤ p := by
+def minFact_minimal (n: ℕ) : ∀p, 1 < p -> p ∣ n -> Nat.minFact n ≤ p := by
   match n with
   | 0 =>
     intro p hp h; clear h
     show 2 ≤ p
     apply Nat.succ_le_of_lt
-    apply one_lt_prime
     assumption
   | 1 =>
     intro p hp h
     rw [Nat.dvd_one] at h
     subst h
-    nomatch hp.not_unit inferInstance
+    apply Nat.le_refl
   | n + 2 =>
     intro p hp h
     refine Nat.not_lt.mp <| (Nat.find_minimal (minFac_exists (n + 2) nofun) p · ⟨?_, ?_⟩)
     assumption
-    apply one_lt_prime
     assumption
 
 private def semiprime_iff {n: ℕ} : (∀⦃x y: ℕ⦄, n ∣ x * y -> n ∣ x ∨ n ∣ y) ∧ n ≠ 0 ↔ ∀x, x ∣ n -> x = n ∨ x = 1 := by
@@ -148,6 +146,20 @@ def two_le_prime (n: ℕ) (h: IsPrime n) : 2 ≤ n := by
   | 0 => nomatch h.ne_zero
   | 1 => nomatch h.not_unit inferInstance
   | n + 2 => apply Nat.le_add_left
+
+def minFact_eq_of_minimal (n: ℕ) : ∀p, 1 < p -> p ∣ n -> (∀m, IsPrime m -> m ∣ n -> p ≤ m) -> Nat.minFact n = p := by
+  intro p pnontriv hp gp
+  apply Nat.le_antisymm
+  · apply minFact_minimal
+    assumption
+    assumption
+  · apply gp
+    · apply Nat.minFact_prime
+      intro rfl
+      rw [Nat.dvd_one] at hp
+      subst p
+      contradiction
+    apply Nat.minFact_dvd
 
 inductive Classify : ℕ -> Type where
 | unit : Classify 1

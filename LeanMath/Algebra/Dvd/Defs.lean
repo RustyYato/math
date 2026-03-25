@@ -33,6 +33,21 @@ def unit_dvd (a b: α) [IsUnit a] : a ∣ b := by
 class IsDvdAntisymm (α: Type*) [MonoidOps α] [IsMonoid α] [IsUnitsCentral α] [Dvd α] where
   dvd_antisymm {a b: α} (h₀: a ∣ b) (h₁: b ∣ a) : Units.Associates a b
 
+def unit_of_dvd_unit [IsComm α] (a b: α) (h: a ∣ b) [IsUnit b] : IsUnit a := by
+  rw [dvd_iff] at h
+  obtain ⟨x, rfl⟩ := h
+  rename_i h
+  obtain ⟨u, h⟩ := h
+  exists {
+    val := a
+    inv := x * u.inv
+    val_mul_inv := ?_
+    inv_mul_val := ?_
+  }
+  rw [←mul_assoc, h, u.val_mul_inv]
+  rw [mul_comm, ←mul_assoc, h, u.val_mul_inv]
+  rfl
+
 instance [IsUnitsCentral α] [IsLeftCancel α] [IsRightCancel α] : IsDvdAntisymm α where
   dvd_antisymm :=  by
     intro a b h₀ h₁
@@ -160,3 +175,20 @@ def IsPrime.not_composite [ExcludedMiddleEq α] [MonoidOps α] [Zero α] [IsMono
     rw [this] at ha
     apply ha
     exists u⁻¹
+
+def dvd_of_prime_dvd_npow [MonoidOps α] [IsMonoid α] [IsComm α] [Zero α] [Dvd α] [IsLawfulDvd α]
+  (p a: α) (hp: IsPrime p) (n: ℕ) : p ∣ a ^ n -> p ∣ a := by
+  intro h
+  induction n with
+  | zero =>
+    rw [npow_zero] at h
+    exfalso
+    apply hp.not_unit
+    apply unit_of_dvd_unit _ 1
+    assumption
+  | succ n ih =>
+    rw [npow_succ] at h
+    rcases hp.irreducible h with h | h
+    apply ih
+    assumption
+    assumption

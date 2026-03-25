@@ -159,4 +159,26 @@ def mul_add_lt (x y n: ℕ) (hx: x < n) (hy: y < m) : x * m + y < n * m := by
   apply Nat.le_of_lt_succ
   assumption
 
+def pow_right_inj' (ha : 1 < a) : a ^ m = a ^ n ↔ m = n := by
+  induction n generalizing m with
+  | zero =>
+    rw [Nat.pow_zero, Nat.pow_eq_one]
+    simp; intro rfl
+    contradiction
+  | succ n ih =>
+    cases m with
+    | zero =>
+      rw [Nat.pow_zero, Eq.comm, Nat.pow_eq_one]
+      apply Iff.intro _ nofun
+      rintro h
+      rcases h with rfl | h
+      contradiction
+      contradiction
+    | succ m =>
+      rw [Nat.pow_succ, Nat.pow_succ, Nat.succ_inj]
+      apply Iff.trans _ ih
+      refine Nat.mul_right_cancel_iff ?_
+      apply Nat.zero_lt_of_lt
+      assumption
+
 end Nat
