@@ -64,6 +64,14 @@ opaque Encodable.choose (h: Nonempty α) : α :=
     spec := Encoding.spec _
   }
 
+class EncodableZero (α: Type*) [Zero α] extends Encodable α where
+  protected encode_zero : encode 0  = 0
+
+def encode_zero (α: Type*) [Zero α] [EncodableZero α] : Encodable.encode (0: α) = 0 := EncodableZero.encode_zero
+
+def decode_zero (α: Type*) [Zero α] [EncodableZero α] : Encodable.decode 0 = .some (0: α) := by
+  rw [←encode_zero α, Encodable.spec]
+
 variable {P: α -> Prop} [DecidablePred P]
 
 instance : Encodable { a: α // P a } where
@@ -84,10 +92,11 @@ private def Encodable.choiceX (h: ∃a, P a) : { a // P a } := Encodable.choose 
 def Encodable.choice (h: ∃a, P a) : α := choiceX h
 def Encodable.choice_spec (h: ∃a, P a) : P (choice h) := (choiceX h).property
 
-instance : Encodable ℕ where
+instance : EncodableZero ℕ where
   decode := .some
   encode := id
   spec _ := rfl
+  encode_zero := rfl
 
 def Encodable.ofEquiv (f: α ≃ β) : Encodable β where
   decode n := match Encodable.decode n with

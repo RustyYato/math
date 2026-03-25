@@ -6,7 +6,7 @@ inductive POption (α: Sort u) where
 
 namespace POption
 
-variable {α: Sort*}
+variable {α β1: Sort*}
 
 def get (a: POption α) (h: a ≠ .none) : α :=
   match a with
@@ -18,5 +18,16 @@ def get (a: POption α) (h: a ≠ .none) : α :=
 def isSome : POption α -> Bool
 | .some _ => true
 | .none => false
+
+def and_then (f: α -> POption β) : POption α -> POption β
+| .some a => f a
+| .none => .none
+
+@[simp] def and_then_none (f: α -> POption β) : and_then f .none = .none := rfl
+@[simp] def and_then_some (f: α -> POption β) (a: α) : and_then f (.some a) = f a := rfl
+
+instance: Monad POption where
+  pure := .some
+  bind := flip and_then
 
 end POption

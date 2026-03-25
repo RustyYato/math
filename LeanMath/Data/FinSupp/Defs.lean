@@ -149,7 +149,7 @@ def smul_single [DecidableEq ι] [Zero α] [SMul R α] [IsLawfulSMulZero R α] (
   split; rfl
   rw [smul_zero]
 
-variable [LEM]
+variable [ExcludedMiddleEq α] [ExcludedMiddleEq β]
 
 instance instAdd [Add α] [Zero α] [IsLawfulZeroAdd α] : Add (Finsupp ι α) where
   add f g := {
@@ -292,7 +292,90 @@ def simple_support [DecidableEq ι] [Zero α] (f: Finsupp ι α) : Trunc (Finsup
 def support_eq_simple_supprt [DecidableEq ι] [Zero α] (f: Finsupp ι α) :
   f.support = f.simple_support := Subsingleton.allEq _ _
 
-variable [DecidableEq ι] [LEM]
+variable [DecidableEq ι]
+
+def fold_with [Zero α] (f: ι -> α -> β -> β) (acc: β)
+  (f₀: Finsupp ι α)
+  (hzero: ∀i b, f₀ i = 0 -> f i 0 b = b) (hcomm: ∀i j a₀ a₁ b, f i a₀ (f j a₁ b) = f j a₁ (f i a₀ b)) : β :=
+  f₀.support.lift (fun supp => supp.allowed_values.fold (fun i => f i (f₀ i)) acc) <| by
+    intro supp₀ supp₁
+    simp
+    obtain ⟨supp₀, nodup₀, h₀⟩ := supp₀
+    obtain ⟨supp₁, nodup₁, h₁⟩ := supp₁
+    simp
+    have h (i: ι) : f₀ i ≠ 0 -> (i ∈ supp₀ ↔ i ∈ supp₁) := by
+      intro h
+      simp [h₀ _ h, h₁ _ h]
+    clear h₀ h₁
+    induction supp₀ generalizing supp₁ with
+    | nil =>
+      simp
+      induction supp₁ with
+      | nil => simp
+      | cons b bs ih =>
+        simp
+        have : f₀ b = 0 := by
+          apply LEM.byContradiction
+          intro g
+          have := h _ g
+          simp at this
+        rw [this, hzero _ _ (by assumption)]
+        apply ih
+        exact LazyList.of_nodup_cons nodup₁
+        intro i hi
+        have := h i hi
+        simp at this
+        simp
+        exact this.right
+    | cons a as ih =>
+      simp
+      replace ih := ih (by
+        apply LazyList.of_nodup_cons
+        assumption)
+      rcases em (f₀ a = 0) with ha | ha
+      · rw [ha, hzero _ _ (by assumption)]
+        apply ih
+        · assumption
+        · intro i hi
+          rw [←h i hi]
+          simp
+          intro rfl
+          contradiction
+      · obtain ⟨supp₁, supp₂, rfl⟩ := (LazyList.mem_iff_append a supp₁).mp (by
+          apply (h _ ha).mp
+          simp)
+        rw [LazyList.fold_comm_append _ _ (by
+          intro i j b
+          rw [hcomm])]
+        simp
+        congr 1; apply ih
+        · have := nodup₁.append_comm
+          rw [LazyList.cons_append] at this
+          exact this.tail
+        · intro i hi
+          replace h := h i hi
+          simp at h
+          simp
+          apply Iff.intro
+          · intro g
+            rcases h.mp (.inr g) with h | rfl | h
+            · right; assumption
+            · have := nodup₀.head
+              contradiction
+            · left; assumption
+          · intro g
+            have := nodup₁.append_comm
+            rw [LazyList.cons_append] at this
+            replace this := this.head
+            simp at this
+            obtain ⟨_, _⟩ := this
+            rcases g with g | g
+            · rcases h.mpr (.inr (.inr g)) with rfl | h
+              · contradiction
+              · assumption
+            · rcases h.mpr (.inl g) with rfl | h
+              · contradiction
+              · assumption
 
 def fold [Zero α] (f: α -> β -> β) (acc: β) (hzero: ∀b, f 0 b = b) (hcomm: ∀a₀ a₁ b, f a₀ (f a₁ b) = f a₁ (f a₀ b)) (f₀: Finsupp ι α) : β :=
   f₀.support.lift (fun supp => supp.allowed_values.fold (f ∘ f₀) acc) <| by
@@ -468,7 +551,7 @@ def compute_basis_congr (f g: Finsupp ι α) (as: LazyList ι) :
     apply hi
     simp [h]
 
-private def exists_basis [LEM] (f: Finsupp ι α) :
+private def exists_basis (f: Finsupp ι α) :
   ∃as: LazyList ι, as.Nodup ∧ f = compute_basis f 0 as := by
   have supp := f.support
   induction supp with | mk supp =>
