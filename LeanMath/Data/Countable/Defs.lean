@@ -18,3 +18,9 @@ def cantor_diag (h: IsCountable (ℕ -> Bool)) : False := by
   dsimp
   simp [x]; symm
   rw [Encoding.mk_val]
+
+def IsCountable.axiomOfChoice {α: Type*} {β: Type*} [hc: IsCountable β] {P: α -> β -> Prop} [∀a, DecidablePred (P a)] (h: ∀a, ∃b: β, P a b) : ∃f: α -> β, ∀a, P a (f a) := by
+  obtain ⟨⟩ := hc
+  refine ⟨fun a => Encodable.choice (h a) ,?_⟩
+  intro a
+  apply Encodable.choice_spec
