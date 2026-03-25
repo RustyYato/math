@@ -12,6 +12,20 @@ attribute [instance] UnivLE.small
 
 namespace Small
 
+def of_embed (f: α ↪ β) [h: Small.{u} β] : Small.{u} α := by
+  obtain ⟨γ, h⟩ := h
+  replace f := f.trans h.toEmbedding
+  have ⟨g, hg⟩ := Classical.axiomOfChoice (fun g: { g: γ // ∃a, f a = g } => g.property)
+  exact .intro { g: γ // ∃a, f a = g } {
+    toFun a := {
+      val := f a
+      property := ⟨_, rfl⟩
+    }
+    invFun := g
+    leftInv x := by dsimp; congr; rw [hg]
+    rightInv x := by dsimp; apply inj f; rw [hg]
+  }
+
 def lift.{w, u, v} [h: Small.{u, v} α] : Small.{max u w, v} α :=
   have ⟨β, eqv⟩ := h
   .intro (ULift.{w} β) (eqv.trans (Equiv.ulift _))
