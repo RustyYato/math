@@ -13,7 +13,17 @@ def get (a: POption α) (h: a ≠ .none) : α :=
   | .some x => x
   | .none => nomatch h rfl
 
+def get_inj {a b: POption α} {ha: a ≠ .none} {hb: b ≠ .none} : a.get ha = b.get hb ↔ a = b := by
+  cases a; contradiction
+  cases b; contradiction
+  rename_i a b
+  show a = b ↔ _
+  apply Iff.intro _ POption.some.inj
+  apply congrArg
+
 @[simp] def get_some (a: α) {h} : get (.some a) h = a := rfl
+
+@[simp] def some_get (a: POption α) {h} : POption.some (get a h) = a := by cases a; contradiction; rfl
 
 def isSome : POption α -> Bool
 | .some _ => true
