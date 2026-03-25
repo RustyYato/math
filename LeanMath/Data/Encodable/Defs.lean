@@ -116,3 +116,8 @@ instance : Encodable Bool where
   | false => 0
   | true => 1
   spec x := by cases x <;> rfl
+
+def Encodable.axiomOfChoice {α: Type*} {β: α -> Type*} [∀a, Encodable (β a)] {P: ∀a, β a -> Prop} [∀a, DecidablePred (P a)] (h: ∀a, ∃b: β a, P a b) : ∃f: (∀a, β a), ∀a, P a (f a) := by
+  refine ⟨fun a => Encodable.choice (h a) ,?_⟩
+  intro a
+  apply Encodable.choice_spec
