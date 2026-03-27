@@ -541,6 +541,8 @@ protected def RestrictedBeta.star_arg_arg :
     apply RestrictedBeta.AppArg
     repeat assumption
 
+def Halts (term: Term) := ∃val: Term, Relation.ReflTransGen Term.RestrictedBeta term val ∧ val.IsValue
+
 end Term
 
 end TypeTheory

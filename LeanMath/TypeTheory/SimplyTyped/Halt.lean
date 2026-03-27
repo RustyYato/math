@@ -3,13 +3,11 @@ import LeanMath.Tactic.AxiomBlame
 
 namespace TypeTheory.SimplyTyped
 
-def Halts (term: Term) := ∃val: Term, Relation.ReflTransGen Term.RestrictedBeta term val ∧ val.IsValue
-
 def HeredHalts (term: Term) (wt: IsWellTyped ctx term ty) : Prop :=
   match ty with
   | .void => False
   | .func arg_ty _ret_ty =>
-    Halts term ∧
+    term.Halts ∧
     ∀(arg: Term) (arg_wt: IsWellTyped ctx arg arg_ty),
       HeredHalts arg arg_wt ->
       HeredHalts (.app term arg) (.app _ _ _ _ _ wt arg_wt)
@@ -29,17 +27,9 @@ inductive HeredHalts.SubstAll : List Ty -> List Term -> Prop where
   SubstAll ctx substs ->
   SubstAll (arg_ty::ctx) (arg::substs)
 
--- private def IsWellTyped.EmptyCtx (wt: IsWellTyped [] term ty) : IsWellTypedEmptyCtx term ty := by
---   cases wt
---   contradiction
---   apply IsWellTypedEmptyCtx.lam
---   apply IsWellTyped.lam; assumption
---   apply IsWellTypedEmptyCtx.app
---   apply IsWellTyped.app <;> assumption
-
 namespace Halts
 
-def beta {a b ty} (r: Term.RestrictedBeta a b) (wt: IsWellTyped ctx a ty) : Halts a ↔ Halts b := by
+def beta {a b ty} (r: Term.RestrictedBeta a b) (wt: IsWellTyped ctx a ty) : a.Halts ↔ b.Halts := by
   induction r with
   | Subst =>
     apply Iff.intro
@@ -104,7 +94,7 @@ end Halts
 
 namespace HeredHalts
 
-protected def Halts : HeredHalts a wt -> Halts a := by
+protected def Halts : HeredHalts a wt -> a.Halts := by
   intro h; rename_i ty
   cases ty
   contradiction
@@ -205,6 +195,6 @@ def closed_wt (term: Term) (h: IsWellTyped [] term ty) : HeredHalts term h := su
 
 end HeredHalts
 
-def halts (term: Term) (h: IsWellTyped [] term ty) : Halts term := (HeredHalts.closed_wt term h).Halts
+def halts (term: Term) (h: IsWellTyped [] term ty) : term.Halts := (HeredHalts.closed_wt term h).Halts
 
 end TypeTheory.SimplyTyped
