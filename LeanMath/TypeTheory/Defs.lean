@@ -63,8 +63,28 @@ inductive BetaEquiv : Term -> Term -> Prop where
 | symm (a b: Term) : BetaEquiv a b -> BetaEquiv b a
 | trans (a b c: Term) : BetaEquiv a b -> BetaEquiv b c -> BetaEquiv a c
 
+inductive IsValue : Term -> Prop where
+| lam (body: Term) : IsValue (.lam body)
+
+instance : ∀a, Decidable (IsValue a)
+| .lam _ => .isTrue (.lam _)
+| .var _ | .app _ _ => .isFalse nofun
+
+-- `IsClosed a pos` means that the term `a` only contains free variables
+-- strictly smaller than `pos`. In particular, `IsClosed a 0` means
+-- that the term `a` contains no free variables
+inductive IsClosed : Term -> Nat -> Prop where
+| var (pos index: Nat) : index < pos -> IsClosed (.var index) pos
+| lam (pos: Nat) (body: Term) : IsClosed body (pos + 1) -> IsClosed (.lam body) pos
+| app (pos: Nat) (func arg: Term) : IsClosed func pos -> IsClosed arg pos -> IsClosed (.app func arg) pos
+
 inductive Normalizing : Term -> Prop where
 | norm (a: Term) : (∀b, Beta a b -> Normalizing b) -> Normalizing a
+
+-- weak normalizing means that there exists at least one path to a value
+inductive WeakNormalizing : Term -> Prop where
+| val (a: Term) (h: a.IsValue) : WeakNormalizing a
+| norm (a: Term) (beta: Beta a b) : WeakNormalizing b -> WeakNormalizing a
 
 def Normalizing.acc : Normalizing a ↔ Acc (fun a b => Nonempty (Beta b a)) a := by
   apply Iff.intro
@@ -260,21 +280,6 @@ def subst_comm (body arg arg': Term) (h: n ≤ m) : subst n (subst (m + 1) body 
         rfl
         omega
 
-inductive IsValue : Term -> Prop where
-| lam (body: Term) : IsValue (.lam body)
-
-instance : ∀a, Decidable (IsValue a)
-| .lam _ => .isTrue (.lam _)
-| .var _ | .app _ _ => .isFalse nofun
-
--- `IsClosed a pos` means that the term `a` only contains free variables
--- strictly smaller than `pos`. In particular, `IsClosed a 0` means
--- that the term `a` contains no free variables
-inductive IsClosed : Term -> Nat -> Prop where
-| var (pos index: Nat) : index < pos -> IsClosed (.var index) pos
-| lam (pos: Nat) (body: Term) : IsClosed body (pos + 1) -> IsClosed (.lam body) pos
-| app (pos: Nat) (func arg: Term) : IsClosed func pos -> IsClosed arg pos -> IsClosed (.app func arg) pos
-
 def weaken_closed' (n m: Nat) (a: Term) (h: IsClosed a m) (g: m ≤ n) : weaken n a = a := by
   induction h generalizing n with
   | var _ index =>
@@ -423,11 +428,118 @@ def subst_all_app (args: List Term) (func arg: Term) :
   | nil => rfl
   | cons arg args ih => simp [ih]
 
+def subst_all_comm_subst (a b: Term) (args: List Term) (hb: IsClosed b 0) (h: ∀arg ∈ args, IsClosed arg 0) : (a.subst_all (n + 1) args).subst 0 b = (a.subst 0 b).subst_all n args := by
+  induction args generalizing a b with
+  | nil => rfl
+  | cons arg args ih =>
+    rw [subst_all_cons, ih, ←weaken_closed _ (h _ (List.Mem.head _)) (n := 0), ←subst_closed (a := b), subst_comm]
+    rw [weaken_closed, subst_closed (a := b)]; rfl
+    any_goals assumption
+    apply h _ (List.Mem.head _)
+    apply Nat.zero_le
+    intro a ha
+    apply h
+    apply List.Mem.tail
+    assumption
+
 -- a single step of beta reduction
 inductive RestrictedBeta : Term -> Term -> Prop where
 | Subst (body arg: Term) : arg.IsValue -> RestrictedBeta (.app body.lam arg) (body.subst 0 arg)
 | AppFunc (func func' arg: Term) : RestrictedBeta func func' -> RestrictedBeta (func.app arg) (func'.app arg)
 | AppArg (func arg arg': Term) : func.IsValue -> RestrictedBeta arg arg' -> RestrictedBeta (func.app arg) (func.app arg')
+
+protected def RestrictedBeta.NotValue : ∀{a b: Term}, RestrictedBeta a b -> ¬a.IsValue := by
+  intro a b h
+  cases h <;> nofun
+
+-- restricted beta is a subtype of beta
+protected def RestrictedBeta.Beta : ∀{a b: Term}, RestrictedBeta a b -> Beta a b
+| app f a₀, b, h =>
+  match f with
+  | .app f₀ a₁ =>
+    match b with
+    | .app f' a' =>
+      have : a₀ = a' := by
+        cases h; rfl
+        contradiction
+      this ▸ Beta.AppFunc _ _ _ (RestrictedBeta.Beta (by
+        cases h
+        assumption
+        contradiction))
+  | .lam body =>
+    if h₀:a₀.IsValue then
+      have : b = body.subst 0 a₀ := by
+        cases h; rfl
+        rename_i h; have := h.NotValue
+        contradiction
+        rename_i h; have := h.NotValue
+        contradiction
+      this ▸ Beta.Subst _ _
+    else
+      match hb:b with
+      | .lam _ | .var _ =>
+        False.elim <| by
+          rw [←hb] at h
+          cases h <;> contradiction
+      | .app f₁ a₁ =>
+        have : f₁ = body.lam := by
+          rw [←hb] at h
+          cases h; contradiction
+          rename_i h; have := h.NotValue
+          contradiction
+          cases hb; rfl
+        this ▸ Beta.AppArg _ _ _ (RestrictedBeta.Beta (by
+          rw [←hb] at h
+          cases h; contradiction
+          rename_i h; have := h.NotValue
+          contradiction
+          cases hb; assumption))
+
+protected def RestrictedBeta.unique : ∀{a b c: Term}, RestrictedBeta a b -> RestrictedBeta a c -> b = c := by
+  intro a b c h g
+  induction h generalizing c <;> cases g
+  rfl
+  any_goals
+    try
+      have := (RestrictedBeta.NotValue · (by assumption)) (by assumption)
+      contradiction
+    try
+      have := (RestrictedBeta.NotValue (by assumption) (by assumption))
+      contradiction
+    try
+      have := (RestrictedBeta.NotValue · (IsValue.lam _)) (by assumption)
+      contradiction
+  rename_i ih _ _
+  congr; apply ih
+  assumption
+  rename_i ih _ _ _
+  congr; apply ih
+  assumption
+
+protected def RestrictedBeta.star_arg_func :
+  ∀{func func' arg: Term},
+    Relation.ReflTransGen RestrictedBeta func func' ->
+    Relation.ReflTransGen RestrictedBeta (func.app arg) (func'.app arg) := by
+  intro func func' arg h
+  induction h with
+  | refl => apply Relation.ReflTransGen.refl
+  | cons =>
+    apply Relation.ReflTransGen.cons
+    apply RestrictedBeta.AppFunc
+    repeat assumption
+
+protected def RestrictedBeta.star_arg_arg :
+  ∀{func arg arg': Term},
+    func.IsValue ->
+    Relation.ReflTransGen RestrictedBeta arg arg' ->
+    Relation.ReflTransGen RestrictedBeta (func.app arg) (func.app arg') := by
+  intro func arg arg' funcval h
+  induction h with
+  | refl => apply Relation.ReflTransGen.refl
+  | cons =>
+    apply Relation.ReflTransGen.cons
+    apply RestrictedBeta.AppArg
+    repeat assumption
 
 end Term
 
