@@ -501,6 +501,26 @@ def finEquiv (ι: Sort*) [Fintype ι] [DecidableEq ι] : Trunc (Fin (card ι) �
         exact h.symm
     }
 
+def finBijOrEquiv (ι: Sort*) [Fintype ι] : Trunc ((Fin (card ι) ↭ ι) ⊕' (Fin (card ι) ≃ ι)) :=
+  Fintype.repr.map fun repr =>
+  match repr.try_decode with
+  | .some ⟨invFun, invFun_spec⟩ =>
+    .inr {
+      toFun := repr.bij
+      invFun := invFun
+      rightInv := invFun_spec
+      leftInv := by
+        intro x
+        obtain ⟨i, rfl⟩ := repr.bij.surj x
+        rw [invFun_spec i]
+    }
+  | .none =>
+    let card :=  Fintype.card ι
+    have spec (x: ι) : ∃(n: ℕ) (hn: n < card), x = repr.bij ⟨n, hn⟩ := by
+      have ⟨i, hi⟩ := repr.bij.surj x
+      refine ⟨_, i.isLt, hi.symm⟩
+    .inl repr.bij
+
 @[simp] def fold_zero (f: Fin 0 -> α -> α) : fold f nofun = id := rfl
 
 @[simp] def fold_succ (f: Fin (n + 1) -> α -> α) (fcomm) :
@@ -584,5 +604,21 @@ instance [Fintype ι] {P: ι -> Prop} [DecidablePred P] : Decidable (∃x, P x) 
 
 instance [Fintype ι] {P: ι -> Prop} [DecidablePred P] : Decidable (∀x, P x) :=
   decidable_of_iff _  Decidable.not_exists_not
+
+private def is_inr : α ⊕' β -> Bool
+| .inl _ => false
+| .inr _ => true
+
+def factorBijOrEquiv {ι: Sort*} {α: ι -> Sort*} [Fintype ι] [∀i, Fintype (α i)] (
+  f: ∀i, (Fin (card (α i)) ↭ α i) ⊕' Fin (card (α i)) ≃ α i
+) : (∀i, Fin (card (α i)) ↭ α i) ⊕' (∀i, Fin (card (α i)) ≃ α i) :=
+  if hf:∀i, is_inr (f i) then
+    .inr (fun i => match h:(f i) with
+      | .inr x => x
+      | .inl _ => nomatch h ▸ (hf i))
+  else
+    .inl (fun i => match f i with
+      | .inl x => x
+      | .inr x => x.toBij)
 
 end Fintype

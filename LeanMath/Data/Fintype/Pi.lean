@@ -5,44 +5,44 @@ import LeanMath.Data.Nat.Basic
 namespace Pi
 
 private def pi (n: ℕ) (card: Fin n -> ℕ) :
-  Fin (∏i, card i) ↭ (∀i, Fin (card i)) :=
+  Fin (∏i, card i) ≃ (∀i, Fin (card i)) :=
   match n with
   | 0 => {
     toFun := nofun
-    inj' := by
-      intro a b h
-      dsimp at h
-      apply Subsingleton.allEq (α := Fin 1)
-    surj' := by
-      intro f
-      exists ⟨0, Nat.zero_lt_succ _⟩
-      ext x; exact x.elim0
+    invFun f := {
+      val := 0
+      isLt := by
+        rw [prod_empty]
+        apply Nat.zero_lt_one
+    }
+    leftInv f := by ext i; exact i.elim0
+    rightInv f := by apply Subsingleton.allEq (α := Fin 1)
   }
   | n + 1 =>
     let card0 := card 0
     have cardsucc := pi n (card ∘ Fin.succ)
     have eqv := (Fin.prod (card 0) (∏i: Fin n, card i.succ)).comp
       (Equiv.fin_cast (n := ∏i, card i) (m := card 0 * ∏i: Fin n, card i.succ) (by rw [fin_prod_succ]))
-    eqv.toBij.trans {
+    eqv.trans {
       toFun
       | idx, ⟨0, _⟩ => idx.fst
       | idx, ⟨i + 1, hi⟩ => cardsucc idx.snd ⟨i, Nat.lt_of_succ_lt_succ hi⟩
-      inj' := by
-        intro i j h
-        dsimp at h
-        replace h := congrFun h
-        ext1; exact h ⟨0, Nat.zero_lt_succ _⟩
-        apply cardsucc.inj
-        funext x; apply h x.succ
-      surj' f := by
-        have ⟨b, hb⟩ := cardsucc.surj (fun i: Fin n => f i.succ)
-        refine ⟨⟨?_, ?_⟩, ?_⟩
-        exact f 0
-        exact b
-        ext1 i; cases i using Fin.cases
-        rfl
-        simp [Fin.succ]
-        apply congrFun hb
+      invFun f := {
+        fst := f 0
+        snd := cardsucc.symm (fun i => f i.succ)
+      }
+      leftInv f := by
+        ext1 i; dsimp
+        cases i using Fin.cases with
+        | zero => rfl
+        | succ i =>
+          show (cardsucc (cardsucc.symm _)) i = (fun i => f i.succ) i
+          rw [Equiv.symm_coe]
+      rightInv f := by
+        dsimp only [←Fin.zero_eta, Fin.succ]
+        congr
+        apply inj cardsucc
+        rw [Equiv.symm_coe]
     }
 
 private def func' {n m: ℕ} (idx i: ℕ) (hidx: idx < m ^ n) (hi: i < n) : Fin m where
@@ -105,48 +105,38 @@ private def func'_spec {n m: ℕ} (idx: ℕ) (hidx: idx < m ^ n) : ∑i: Fin n, 
     apply Nat.div_lt_of_lt_mul'
     assumption
 
-private def func (n m: ℕ) : Fin (m ^ n) ↭ (Fin n -> Fin m) where
+private def func (n m: ℕ) : Fin (m ^ n) ≃ (Fin n -> Fin m) where
   toFun idx i := func' idx i idx.isLt i.isLt
-  inj' := by
-    intro a b hi
-    replace hi : ∀x, _ := congrFun hi
-    simp at hi
-    ext; rw [←func'_spec (n := n) (m := m) a, ←func'_spec (n := n) (m := m) b]
-    congr; ext1 i; congr 2; apply hi i
-    exact b.isLt
-    exact a.isLt
-  surj' := by
-    intro f
+  invFun f := {
+    val := ∑i, ((f i).val * m ^ i.val)
+    isLt := by apply sum_lt
+  }
+  rightInv x := by
     dsimp
-    exists {
-      val := ∑i: Fin n, f i * m ^ i.val
-      isLt := sum_lt _
-    }
-    ext i; dsimp [func']
+    simp [func'_spec]
+  leftInv f := by
+    ext1 i
+    dsimp
+    unfold func'; ext; dsimp
     induction n with
     | zero => exact i.elim0
     | succ n ih =>
+      rw [fin_sum_succ]
+      simp [npow_succ, ←Nat.mul_assoc, Nat.mul_comm _ m]
+      simp [mul_assoc]
+      simp [←smul_eq_mul m]
+      rw [smul_sum, smul_eq_mul]
       cases i using Fin.cases with
       | zero =>
-        simp
-        simp [npow_succ, mul_comm _ m, ←mul_assoc]
-        simp [mul_assoc]
-        simp [←smul_eq_mul m]
-        rw [smul_sum, smul_eq_mul, Nat.add_mod, Nat.mul_mod_right,
-          Nat.add_zero, Nat.mod_mod, Nat.mod_eq_of_lt]
+        simp; rw [Nat.mod_eq_of_lt]
         apply Fin.isLt
-      | succ n =>
-        simp [npow_succ, mul_comm _ m, ←mul_assoc]
-        simp [mul_assoc]
-        simp [←smul_eq_mul m]
-        rw [smul_sum]
-        simp [smul_eq_mul]
-        rw [
-          ←Nat.div_div_eq_div_mul, Nat.add_mul_div_left,
-          Nat.div_eq_of_lt _ (b := m), zero_add]
+      | succ i =>
+        simp [npow_succ]
+        rw [mul_comm _ m, ←Nat.div_div_eq_div_mul]
+        rw [Nat.add_mul_div_left, Nat.div_eq_of_lt (b := m), Nat.zero_add]
         apply ih
         apply Fin.isLt
-        exact (f n.succ).pos
+        exact (f 0).pos
 
 private def card_all_eq' (card: ℕ) : ∀(n: ℕ), (∀x < n, ℕ) -> Bool
 | 0, _ => true
@@ -192,14 +182,24 @@ private def card_all_eq : ∀(n: ℕ) (f: ∀x < n, ℕ), Option (Σ'card: ℕ, 
 private def instPiFin (card: Fin n -> ℕ) : Fintype (∀i: Fin n, Fin (card i)) where
   card := ∏i, card i
   repr := Trunc.mk {
-    try_decode := .none
-    bij := pi _ _
+    bij := (pi _ _).toBij
+    try_decode := .some {
+       val := (pi _ _).symm
+       property f := by
+        dsimp
+        rw [Equiv.coe_symm]
+    }
   }
+
 private def instFuncFin : Fintype (Fin n -> Fin m) where
   card := m ^ n
   repr := Trunc.mk {
-    try_decode := .none
-    bij := func _ _
+    bij := (func _ _).toBij
+    try_decode := .some {
+      val := (func _ _).symm
+      property f := by
+        dsimp ; rw [Equiv.coe_symm]
+    }
   }
 
 end Pi
@@ -212,63 +212,106 @@ variable {ι: Sort*} {α: ι -> Sort*} [fι: Fintype ι] [DecidableEq ι] [fα: 
 
 instance (priority := 100) : Fintype (∀i, α i) :=
   (Fintype.finEquiv ι).recOnSubsingleton fun rι =>
-  (finTruncChoice (fun i => Fintype.finBij (α i))).recOnSubsingleton fun rα =>
+  (finTruncChoice (fun i => Fintype.finBijOrEquiv (α i))).recOnSubsingleton fun rα =>
+  have rα := factorBijOrEquiv rα
   match Pi.card_all_eq (Fintype.card ι) (fun i hi => Fintype.card (α (rι ⟨i, hi⟩))) with
-  | .some ⟨card, hcard⟩ => by
-    replace rα (i: ι) : Fin card ↭ α i :=
-      (Equiv.fin_cast ?_).toBij.trans (rα i)
-    · -- this is a function type, where all targets have the same cardinality
-      have := @Pi.instFuncFin
-      apply Fintype.ofBij (α := Fin (Fintype.card ι) -> Fin card)
+  | .some ⟨card, hcard⟩ =>
+    match rα with
+    | .inl rα => by
+      replace rα (i: ι) : Fin card ↭ α i :=
+        (Equiv.fin_cast ?_).toBij.trans (rα i)
+      · -- this is a function type, where all targets have the same cardinality
+        have := @Pi.instFuncFin
+        apply Fintype.ofBij (α := Fin (Fintype.card ι) -> Fin card)
+        exact {
+          toFun f i := rα i (f (rι.symm i))
+          inj' := by
+            intro f₀ f₁ h
+            replace h := congrFun h; dsimp at h
+            ext1 i
+            have := h (rι i)
+            simp at this
+            exact (rα _).inj this
+          surj' := by
+            intro f
+            have (i: ι) : ∃x: Fin card, (rα i) x = f i := by
+              apply (rα _).surj
+            replace := finChoice this
+            obtain ⟨g, hg⟩ := this
+            refine ⟨fun i => g (rι i), ?_⟩
+            ext i; simp; apply hg
+        }
+      · rw [←hcard (rι.symm i) (Fin.isLt _)]
+        congr <;> (show rι (rι.symm _) = _; simp)
+    | .inr rα => by
+      replace rα (i: ι) : Fin card ≃ α i := (Equiv.fin_cast ?_).trans (rα i)
+      · -- this is a function type, where all targets have the same cardinality
+        have := @Pi.instFuncFin
+        apply Fintype.ofEquiv (α := Fin (Fintype.card ι) -> Fin card)
+        exact {
+          toFun f i := rα i (f (rι.symm i))
+          invFun f i := (rα (rι i)).symm (f (rι i))
+          leftInv f := by
+            ext i; dsimp
+            rw[Equiv.symm_coe,  Equiv.symm_coe]
+          rightInv f := by
+            ext i; dsimp
+            rw[Equiv.coe_symm,  Equiv.coe_symm]
+        }
+      · rw [←hcard (rι.symm i) (Fin.isLt _)]
+        congr <;> (show rι (rι.symm _) = _; simp)
+  | .none =>
+    match rα with
+    | .inl rα => by
+      have := @Pi.instPiFin
+      apply Fintype.ofBij (α := ∀i: Fin (Fintype.card ι), Fin (Fintype.card (α (rι i))))
       exact {
-        toFun f i := rα i (f (rι.symm i))
+        toFun f i := rα i <| (f (rι.symm i)).cast <| by
+          congr <;> rw [Equiv.symm_coe]
         inj' := by
           intro f₀ f₁ h
           replace h := congrFun h; dsimp at h
           ext1 i
           have := h (rι i)
           simp at this
-          exact (rα _).inj this
+          replace := (rα _).inj this
+          rw [←Fin.val_inj] at this
+          dsimp at this
+          rwa [Fin.val_inj, rι.coe_symm] at this
         surj' := by
           intro f
-          have (i: ι) : ∃x: Fin card, (rα i) x = f i := by
+          have (i: ι) : ∃x: Fin (Fintype.card (α i)), (rα i) x = f i := by
             apply (rα _).surj
           replace := finChoice this
           obtain ⟨g, hg⟩ := this
           refine ⟨fun i => g (rι i), ?_⟩
-          ext i; simp; apply hg
+          ext i; simp
+          rw [show Fin.cast _ (g (rι (rι.symm i))) = g i from ?_]
+          rw [hg]
+          rw [←Fin.val_inj]; simp
+          rw [Equiv.symm_coe]
       }
-    · rw [←hcard (rι.symm i) (Fin.isLt _)]
-      congr <;> (show rι (rι.symm _) = _; simp)
-  | .none => by
-    have := @Pi.instPiFin
-    apply Fintype.ofBij (α := ∀i: Fin (Fintype.card ι), Fin (Fintype.card (α (rι i))))
-    exact {
-      toFun f i := rα i <| (f (rι.symm i)).cast <| by
-        congr <;> rw [Equiv.symm_coe]
-      inj' := by
-        intro f₀ f₁ h
-        replace h := congrFun h; dsimp at h
-        ext1 i
-        have := h (rι i)
-        simp at this
-        replace := (rα _).inj this
-        rw [←Fin.val_inj] at this
-        dsimp at this
-        rwa [Fin.val_inj, rι.coe_symm] at this
-      surj' := by
-        intro f
-        have (i: ι) : ∃x: Fin (Fintype.card (α i)), (rα i) x = f i := by
-          apply (rα _).surj
-        replace := finChoice this
-        obtain ⟨g, hg⟩ := this
-        refine ⟨fun i => g (rι i), ?_⟩
-        ext i; simp
-        rw [show Fin.cast _ (g (rι (rι.symm i))) = g i from ?_]
-        rw [hg]
-        rw [←Fin.val_inj]; simp
-        rw [Equiv.symm_coe]
-    }
+    | .inr rα => by
+      have := @Pi.instPiFin
+      apply Fintype.ofEquiv (α := ∀i: Fin (Fintype.card ι), Fin (Fintype.card (α (rι i))))
+      exact {
+        toFun f i := rα i <| (f (rι.symm i)).cast <| by
+          congr <;> rw [Equiv.symm_coe]
+        invFun f i := (rα (rι i)).symm (f (rι i))
+        leftInv f := by
+          ext i; dsimp
+          apply inj (rα i).symm
+          rw [Equiv.coe_symm]
+          ext; dsimp
+          generalize hx:rι (rι.symm i) = X
+          rw [Equiv.symm_coe] at hx
+          subst X
+          rfl
+        rightInv f := by
+          ext i
+          dsimp; rw [Equiv.coe_symm]
+          dsimp; rw [Equiv.coe_symm]
+      }
 
 end
 
@@ -278,28 +321,44 @@ variable {ι α: Sort*} [fι: Fintype ι] [DecidableEq ι] [fα: Fintype α]
 
 instance (priority := 10000) instFunc : Fintype (ι -> α) :=
   (Fintype.finEquiv ι).recOnSubsingleton fun rι =>
-  (Fintype.finBij α).recOnSubsingleton fun rα => by
-  have := @Pi.instFuncFin
-  let card := Fintype.card α
-  apply Fintype.ofBij (α := Fin (Fintype.card ι) -> Fin card)
-  exact {
-    toFun f i := rα (f (rι.symm i))
-    inj' := by
-      intro f₀ f₁ h
-      replace h := congrFun h; dsimp at h
-      ext1 i
-      have := h (rι i)
-      simp at this
-      exact rα.inj this
-    surj' := by
-      intro f
-      have (i: ι) : ∃x: Fin card, rα x = f i := by
-        apply rα.surj
-      replace := finChoice this
-      obtain ⟨g, hg⟩ := this
-      refine ⟨fun i => g (rι i), ?_⟩
-      ext i; simp; apply hg
-  }
+  (Fintype.finBijOrEquiv α).recOnSubsingleton fun rα => by
+  match rα with
+  | .inl rα =>
+    have := @Pi.instFuncFin
+    let card := Fintype.card α
+    apply Fintype.ofBij (α := Fin (Fintype.card ι) -> Fin card)
+    exact {
+      toFun f i := rα (f (rι.symm i))
+      inj' := by
+        intro f₀ f₁ h
+        replace h := congrFun h; dsimp at h
+        ext1 i
+        have := h (rι i)
+        simp at this
+        exact rα.inj this
+      surj' := by
+        intro f
+        have (i: ι) : ∃x: Fin card, rα x = f i := by
+          apply rα.surj
+        replace := finChoice this
+        obtain ⟨g, hg⟩ := this
+        refine ⟨fun i => g (rι i), ?_⟩
+        ext i; simp; apply hg
+    }
+  | .inr rα =>
+    have := @Pi.instFuncFin
+    let card := Fintype.card α
+    apply Fintype.ofEquiv (α := Fin (Fintype.card ι) -> Fin card)
+    exact {
+      toFun f i := rα (f (rι.symm i))
+      invFun f i := rα.symm (f (rι i))
+      leftInv f := by
+        ext i; dsimp
+        rw [Equiv.symm_coe, Equiv.symm_coe]
+      rightInv f := by
+        ext i; dsimp
+        rw [Equiv.coe_symm, Equiv.coe_symm]
+    }
 
 end
 
