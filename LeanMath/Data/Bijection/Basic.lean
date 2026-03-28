@@ -78,4 +78,24 @@ def prod_congr (f: α₀ ↭ α₁) (g: β₀ ↭ β₁) : α₀ × β₀ ↭ α
     dsimp
     rw [ha, hb]
 
+def psigma_congr
+  {α₀ α₁: Sort*} {β₀: α₀ -> Sort*} {β₁: α₁ -> Sort*} (ha: α₀ ↭ α₁) (hb: ∀a, β₀ a ↭ β₁ (ha a)): (Σ'a, β₀ a) ↭ (Σ'a, β₁ a) where
+  toFun a := ⟨ha a.fst, hb _ a.snd⟩
+  inj' := by
+    intro ⟨_, _⟩ ⟨_, _⟩ h
+    replace ⟨ga, gb⟩ := PSigma.mk.inj h
+    dsimp at ga gb
+    cases inj ha ga
+    have := inj (hb _) (eq_of_heq gb)
+    congr
+  surj' := by
+    intro ⟨a, b⟩
+    obtain ⟨a', rfl⟩ := ha.surj a
+    obtain ⟨b', rfl⟩ := (hb a').surj b
+    exists ⟨a', b'⟩
+
+def bij_congr
+  {α₀ α₁ β₀ β₁} (ha: α₁ ↭ α₀) (hb: β₀ ↭ β₁)
+  : (α₀ ↭ β₀) -> (α₁ ↭ β₁) := fun f => hb.comp (f.comp ha)
+
 end Bijection

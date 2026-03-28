@@ -93,3 +93,44 @@ instance {α: Type u} (x: α) [∀b: α, ExcludedMiddle (x = b)] (as: List α) :
     · left; apply List.Mem.tail; assumption
     · right; intro g
       cases g <;> contradiction
+
+def existsUnique (P: α -> Prop) := ∃a, P a ∧ ∀b, P b -> a = b
+
+-- noncomputable def Classical.unique_choice {α: Sort u} (h: Nonempty α) [Subsingleton α] : α := Classical.choice h
+axiom Classical.unique_choice {α: Sort u} (h: Nonempty α) [Subsingleton α] : α
+
+noncomputable instance (priority := 10) [Nonempty α] [Subsingleton α] : Inhabited α where
+  default := Classical.unique_choice inferInstance
+
+noncomputable instance (priority := 10) instDecidable [ExcludedMiddle P] : Decidable P := default
+
+private noncomputable def Classical.choose_unique_aux {P: α -> Prop} (h: existsUnique P) : Σ'a, P a :=
+    have : Subsingleton (Σ'a, P a) := {
+      allEq := by
+        intro ⟨a, ha⟩ ⟨b, hb⟩
+        obtain ⟨x, hx, g⟩ := h
+        cases g _ ha
+        cases g _ hb
+        rfl
+    }
+    Classical.unique_choice (by
+      obtain ⟨a, ha, _⟩ := h
+      exists a)
+noncomputable def Classical.choose_unique {P: α -> Prop} (h: existsUnique P) : α :=
+  (Classical.choose_unique_aux h).fst
+def Classical.choose_unique_spec {P: α -> Prop} (h: existsUnique P) : P (choose_unique h) :=
+  (Classical.choose_unique_aux h).snd
+def Classical.choose_unique_spec_unique {P: α -> Prop} (h: existsUnique P) : ∀x, P x -> choose_unique h = x := by
+  obtain ⟨x, hx, g⟩ := h; intro y hy
+  rw [←g _ hy]
+  symm; apply g
+  apply choose_unique_spec
+
+def Classical.axiomOfUniqueChoice {α: Sort u} {β: α -> Sort v} {P: ∀a: α, β a -> Prop} (h: ∀a, existsUnique (P a)) : ∃f: ∀a, β a, ∀a, P a (f a) ∧ ∀g: (∀a, β a), (∀a, P a (g a)) -> ∀a, f a = g a := by
+  exists fun a => Classical.choose_unique (h a)
+  intro a
+  apply And.intro
+  apply Classical.choose_unique_spec
+  intro g hg a
+  apply Classical.choose_unique_spec_unique
+  apply hg

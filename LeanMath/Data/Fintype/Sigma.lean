@@ -158,22 +158,8 @@ instance : Finite (Σ'i, α i) := by
   have ⟨fα, rα⟩ := finChoice (fun i => (fα (rι i)).finBij)
   replace ⟨rα⟩ := finChoose rα
   apply ofBij (α := Σi: Fin (Fintype.card ι), Fin (fα i))
-  exact {
-    toFun a := ⟨rι a.1,  rα _ a.2⟩
-    inj' := by
-      intro ⟨a₀, a₁⟩ ⟨b₀, b₁⟩ h
-      dsimp at h
-      have ⟨h₀, h₁⟩ := (PSigma.mk.inj h)
-      cases rι.inj h₀
-      have := (rα a₀).inj (eq_of_heq h₁)
-      congr
-    surj' := by
-      intro ⟨a, b⟩
-      obtain ⟨a, rfl⟩ := rι.surj a
-      obtain ⟨b, h⟩ := (rα _).surj b
-      exists ⟨a, b⟩
-      dsimp; congr
-  }
+  apply Bijection.bij_congr (Bijection.id _) (Bijection.psigma_congr rι rα) _
+  apply Equiv.sigma_equiv_psigma.toBij
 
 end
 
