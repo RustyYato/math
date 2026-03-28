@@ -330,6 +330,17 @@ def of_fin_eqv (h: Fin n ≃ Fin m) : n = m := by
     | zero => exact (h 0).elim0
     | succ m => rw [ih (of_fin_succ h)]
 
+def fin_succ_eqv_some_fin : Fin (n + 1) ≃ Option (Fin n) where
+  toFun
+  | ⟨0, _⟩ => .none
+  | ⟨i + 1, h⟩ => .some ⟨i, Nat.lt_of_succ_lt_succ h⟩
+  invFun
+  | .none => ⟨0, Nat.zero_lt_succ _⟩
+  | .some ⟨i, h⟩ => ⟨i + 1, Nat.succ_lt_succ h⟩
+  leftInv x := by cases x <;> rfl
+  rightInv x := by cases x using Fin.cases <;> rfl
+
+
 def fin_rev : Fin n ≃ Fin n where
   toFun := Fin.rev
   invFun := Fin.rev

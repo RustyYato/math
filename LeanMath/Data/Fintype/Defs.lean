@@ -1,5 +1,5 @@
 import LeanMath.Data.Bijection.Defs
-import LeanMath.Data.Equiv.Defs
+import LeanMath.Data.Equiv.Basic
 import LeanMath.Data.Trunc.Defs
 import LeanMath.Tactic.AxiomBlame
 import LeanMath.Logic.IsEmpty
@@ -576,6 +576,12 @@ def all_spec [Fintype ι] (f: ι -> Bool) : all f ↔ ∀i, f i := by
   apply Iff.trans _ Decidable.not_exists_not
   simp
 
+instance [Fintype α] : Fintype (ULift α) :=
+  ofEquiv (Equiv.ulift _)
+
+instance [Fintype α] : Fintype (PLift α) :=
+  ofEquiv (Equiv.plift _)
+
 end Fintype
 
 namespace Finite
@@ -594,6 +600,44 @@ def finBij (ι: Sort*) [ft: Finite ι] : ∃card: ℕ, Nonempty (Fin card ↭ ι
 instance [ft: Finite ι] : Finite (POption ι) := by
   obtain ⟨ ⟩ := ft
   infer_instance
+
+instance [Fintype α] : Finite (ULift α) :=
+  ofBij (Equiv.ulift α).toBij
+
+instance [Fintype α] : Finite (PLift α) :=
+  ofBij (Equiv.plift α).toBij
+
+def induction
+  {motive: ∀α: Type u, [Finite α] -> Prop}
+  (bij: ∀α β: Type u, [Finite α] -> [Finite β] -> (α ↭ β) -> motive α -> motive β)
+  (zero: motive PEmpty)
+  (succ: ∀α: Type u, [Finite α] -> motive α -> motive (POption α))
+  (α: Type u) [Finite α] : motive α := by
+  have ⟨card, ⟨hbij⟩⟩ := finBij α
+  apply bij (ULift (Fin card)) α _ _
+  exact (Equiv.ulift _).symm.toBij.trans hbij
+  clear hbij
+  induction card with
+  | zero =>
+    apply bij PEmpty
+    apply Equiv.empty.toBij
+    apply zero
+  | succ n ih =>
+    apply bij (POption (ULift (Fin n)))
+    apply Equiv.toBij
+    apply Equiv.trans _ (Equiv.ulift_congr.{_, _, u, u} (Equiv.fin_succ_eqv_some_fin.symm))
+    exact {
+      toFun
+      | .none => .up .none
+      | .some x => .up (.some x.down)
+      invFun
+      | .up .none => .none
+      | .up (.some x) => .some (.up x)
+      leftInv := by intro x; rcases x with x | x <;> rfl
+      rightInv := by intro x; rcases x with x | x <;> rfl
+    }
+    apply succ
+    apply ih
 
 end Finite
 
