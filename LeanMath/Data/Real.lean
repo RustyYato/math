@@ -36,6 +36,9 @@ instance : IsAlgebra ℤ ℝ := inferInstance
 instance : AlgebraMap ℕ ℝ := inferInstance
 instance : IsAlgebra ℕ ℝ := inferInstance
 
+instance : Norm ℝ ℝ := inferInstanceAs (Norm (CauchySeq.Completion ℚ ℚ) (CauchySeq.Completion ℚ ℚ))
+instance : IsLawfulAbs ℝ := inferInstanceAs (IsLawfulAbs (CauchySeq.Completion ℚ ℚ))
+
 end
 
 instance : HasChar ℝ 0 := HasChar.of_ring_emb ofRat
