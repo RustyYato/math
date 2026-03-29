@@ -1161,18 +1161,6 @@ instance : IsLawfulNorm (Completion α γ) (Completion γ γ) where
   norm_add_le_add_norm := Completion.norm_add_le_add_norm
   norm_eq_zero := Completion.norm_eq_zero
 
-instance : CheckedDiv? (Completion α γ) where
-  checked_div a b h := a * b⁻¹?
-instance : CheckedZPow? (Completion α γ) where
-  checked_pow a b h :=
-    match b with
-    | .ofNat b => a ^ b
-    | .negSucc b => a⁻¹? ^ (b + 1)
-
-instance : GroupWithZeroOps (Completion α γ) := inferInstance
-instance : AddGroupWithOneOps (Completion α γ) := inferInstance
-instance (priority := 100000) : FieldOps (Completion α γ) := instFieldOpsOfGroupWithZeroOpsOfAddGroupWithOneOps
-
 def eventually_ne_zero_of_ne_zero (a: CauchySeq α γ) (h: ¬a ≈ 0) : Eventually fun i => a i ≠ 0 := by
   have ⟨B, Bpos, k, h⟩ := norm_pos_of_ne_zero _ h
   exists k; intro i hi; replace h : B < ‖a i‖ := h i hi
@@ -1187,6 +1175,38 @@ def of_eventually_pointwise (a b: CauchySeq α γ) (h: Eventually fun i => a i =
   exists k; intro i j hi hj
   replace ⟨ha, h⟩ := h i j hi hj
   rwa [h]
+
+def Completion.of_eventually_pointwise (a b: CauchySeq α γ) (h: Eventually fun i => a i = b i) : ofSeq a = ofSeq b := by
+  apply sound
+  apply CauchySeq.of_eventually_pointwise
+  assumption
+
+instance : IsAbsMax (Completion γ γ) where
+  abs_eq_of_nonneg a ha := by
+    rcases lt_or_eq_of_le ha with ha | rfl
+    · induction a with | _ a =>
+      apply Completion.of_eventually_pointwise
+      have ⟨B, Bpos, k, ha⟩ := ha
+      exists k; intro i hi
+      show ‖a i‖ = a i
+      rw [abs_eq_of_nonneg]
+      apply le_of_lt; apply lt_trans Bpos
+      rw [←sub_zero (a i)]
+      apply ha
+      assumption
+    · rw [norm_zero]
+
+instance : CheckedDiv? (Completion α γ) where
+  checked_div a b h := a * b⁻¹?
+instance : CheckedZPow? (Completion α γ) where
+  checked_pow a b h :=
+    match b with
+    | .ofNat b => a ^ b
+    | .negSucc b => a⁻¹? ^ (b + 1)
+
+instance : GroupWithZeroOps (Completion α γ) := inferInstance
+instance : AddGroupWithOneOps (Completion α γ) := inferInstance
+instance (priority := 100000) : FieldOps (Completion α γ) := instFieldOpsOfGroupWithZeroOpsOfAddGroupWithOneOps
 
 instance : IsGroupWithZero (Completion α γ) where
   zero_ne_one := by
