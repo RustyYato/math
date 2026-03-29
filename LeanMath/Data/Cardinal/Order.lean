@@ -35,47 +35,79 @@ def IsInitial.to_lt [LEM] (a b: Ordinal) (ha: a.IsInitial) (hb: b.IsInitial) : a
   dsimp; apply Equiv.symm
   assumption
 
+def lt_of_card_lt [LEM] {a b: Ordinal} (h: a.card < b.card) : a < b := by
+  apply not_le.mp
+  induction a using Ordinal.ind with | @type α r =>
+  induction b using Ordinal.ind with | @type β s =>
+  replace h : Cardinal.type α < Cardinal.type β := h
+  rw [lt_iff_le_and_not_ge] at h
+  intro ⟨g⟩; dsimp at g
+  obtain ⟨⟨h⟩, h'⟩ := h
+  have := Equiv.antisymm h g.toEmbedding
+  clear h
+  apply h'
+  refine ⟨?_⟩
+  apply this.symm.toEmbedding
+
 end Ordinal
 
 namespace Cardinal
 
 open Classical
 
-private def exists_ord (c: Cardinal) : ∃o: Ordinal, c = o.card := by
+private def exists_ord (c: Cardinal) : ∃o: Ordinal, o.card = c := by
   cases c with | type α =>
   exists Ordinal.type (well_order α)
-private noncomputable def to_initial_ord' (c: Cardinal) := Relation.min (· < ·) c.exists_ord
-private def to_initial_ord'_spec (c: Cardinal) : c.to_initial_ord'.IsInitial := by
-  intro x hx
-  have h := Relation.min_spec (· < ·) c.exists_ord
-  replace h := h.trans hx
-  rw [h]; classical
-  apply le_of_not_lt
-  intro g
-  apply Relation.min_minimal (· < ·) x.card.exists_ord
-  assumption
-  rfl
-noncomputable def to_initial_ord : (· ≤ ·: Cardinal -> Cardinal -> Prop) ↪r (· ≤ ·: Ordinal -> Ordinal -> Prop) where
-  toFun := to_initial_ord'
-  inj := by
-    intro a b h
+
+-- the samllest ordinal which is has the cardinality of the input
+noncomputable def ord : Cardinal ↪ Ordinal where
+  toFun c := Relation.min (· < ·) c.exists_ord
+  inj {a b} h := by
+    dsimp at h
     have ha := Relation.min_spec (· < ·) a.exists_ord
     have hb := Relation.min_spec (· < ·) b.exists_ord
-    rw [ha, hb]
-    congr 1
+    rw [←ha, ←hb]
+    congr
+def ord_eq_sinf (c: Cardinal) : c.ord = sInf { Mem x := x.card = c } := by
+  apply le_antisymm
+  · apply le_csInf
+    have ⟨o, ho⟩ := c.exists_ord
+    exists o
+    intro o ho
+    apply not_lt.mp
+    intro h; apply Relation.min_minimal (· < ·) (exists_ord c)
+    assumption
+    assumption
+  · apply sInf_le
+    apply Relation.min_spec _ c.exists_ord
+
+def card_ord (c: Cardinal) : c.ord.card = c := Relation.min_spec (· < ·) (exists_ord c)
+def ord_card (o: Ordinal) : o.card.ord ≤ o := by
+  apply not_lt.mp
+  intro h
+  apply Relation.min_minimal (· < ·) (exists_ord o.card) _ _ rfl
+  assumption
+def to_ord_spec (c: Cardinal) : c.ord.IsInitial := by
+  intro x hx
+  rw [ord_eq_sinf]
+  apply sInf_le
+  show x.card = c
+  rw [←hx, card_ord]
+
+noncomputable def to_initial_ord : (· ≤ ·: Cardinal -> Cardinal -> Prop) ↪r (· ≤ ·: Ordinal -> Ordinal -> Prop) where
+  toEmbedding := ord
   map_rel := by
     intro a b
     apply flip Iff.intro
     · intro h
-      have ⟨α, r, hr, ha⟩ := a.to_initial_ord'.exists_eq_type
-      have ⟨β, s, hs, hb⟩ := b.to_initial_ord'.exists_eq_type
-      rw [ha, hb] at h
-      obtain ⟨h⟩ := h
-      dsimp at h
+      have ⟨α, r, hr, ha⟩ := a.ord.exists_eq_type
+      have ⟨β, s, hs, hb⟩ := b.ord.exists_eq_type
+      simp [ha, hb] at h
+      obtain ⟨h⟩ := h; dsimp at h
       have ga := Relation.min_spec (· < ·) a.exists_ord
       have gb := Relation.min_spec (· < ·) b.exists_ord
-      rw [ga, gb]
-      show a.to_initial_ord'.card ≤ b.to_initial_ord'.card
+      rw [←ga, ←gb]
+      show a.ord.card ≤ b.ord.card
       rw [ha, hb]
       refine ⟨?_⟩
       exact h.toEmbedding
@@ -84,13 +116,13 @@ noncomputable def to_initial_ord : (· ≤ ·: Cardinal -> Cardinal -> Prop) ↪
       apply le_of_not_lt
       intro g
       have := Ordinal.IsInitial.to_lt
-        b.to_initial_ord' a.to_initial_ord'
-        (to_initial_ord'_spec _)
-        (to_initial_ord'_spec _)
+        b.ord a.ord
+        (to_ord_spec _)
+        (to_ord_spec _)
         g
-      have ga : a = a.to_initial_ord'.card := Relation.min_spec (· < ·) a.exists_ord
-      have gb : b = b.to_initial_ord'.card := Relation.min_spec (· < ·) b.exists_ord
-      rw [←ga, ←gb] at this
+      have ga : a.ord.card = a := Relation.min_spec (· < ·) a.exists_ord
+      have gb : b.ord.card = b := Relation.min_spec (· < ·) b.exists_ord
+      rw [ga, gb] at this
       clear ga gb g
       have := not_le_of_lt this
       contradiction
@@ -116,6 +148,115 @@ instance : @Relation.IsWellOrder Cardinal (· < ·) where
     right; left; rfl
     right; right; assumption
     right; left; rfl
+
+def card_lt_of_lt_ord {o: Ordinal} {c: Cardinal} : o < c.ord -> o.card < c := by
+  intro h
+  apply map_rel_rev to_initial_ord_lt
+  show o.card.ord < c.ord
+  apply lt_of_le_of_lt _ h
+  apply ord_card
+
+def lt_ord_of_card_lt {o: Ordinal} {c: Cardinal} : o.card < c -> o < c.ord := by
+  intro h
+  rw [ord_eq_sinf]
+  have o_lt : ∀x: Ordinal, x.card = c -> o < x := by
+    intro x rfl
+    apply Ordinal.lt_of_card_lt
+    assumption
+  have := o_lt c.ord (card_ord _ ▸ rfl)
+  apply lt_of_lt_of_le
+  exact o_lt c.ord (card_ord _ ▸ rfl)
+  apply le_csInf
+  exists c.ord
+  apply card_ord
+  intro x hx
+  rw [ord_eq_sinf]
+  apply sInf_le
+  assumption
+
+def lt_ord {o: Ordinal} {c: Cardinal} : o < c.ord ↔ o.card < c := by
+  apply Iff.intro
+  apply card_lt_of_lt_ord
+  apply lt_ord_of_card_lt
+
+noncomputable instance : Min Cardinal := minOfLe
+noncomputable instance : Max Cardinal := maxOfLe
+
+noncomputable instance : InfSet Cardinal where
+  sInf S :=
+    open UniqueChoice in
+    if h:S.Nonempty then
+      Set.min (· < ·) h
+    else
+      0
+
+def sInf_mem (U: Set Cardinal) (hU: U.Nonempty) : ⨅ U ∈ U := by
+  simp [sInf]
+  rw [dif_pos hU]
+  apply Set.min_mem
+
+private protected def sInf_le (U: Set Cardinal) : ∀u ∈ U, ⨅ U ≤ u := by
+  intro u hu
+  simp [sInf]
+  rw [dif_pos ⟨_, hu⟩]
+  apply le_of_not_lt
+  intro h
+  exact Set.min_minimal (· < ·) (U := U) ⟨_, hu⟩ u hu h
+
+private protected def le_sInf (U: Set Cardinal) (hU: U.Nonempty) (x: Cardinal) (h: ∀u ∈ U, x ≤ u) : x ≤ ⨅ U := by
+  classical
+  apply le_of_not_lt
+  intro g
+  have (u: Cardinal) (hu: u ∈ U) : sInf U < u := by
+    apply lt_of_lt_of_le g
+    apply h
+    assumption
+  exact Relation.irrefl (this _ (sInf_mem  U hU))
+
+noncomputable instance : SupSet Cardinal where
+  sSup S := sInf S.upperBounds
+
+protected def sSup_eq_sInf_upperBounds (U: Set Cardinal) : ⨆ U = ⨅ U.upperBounds := rfl
+
+def min_eq (a b: Cardinal) : a ⊓ b = if a ≤ b then a else b := rfl
+def max_eq (a b: Cardinal) : a ⊔ b = if a ≤ b then b else a := rfl
+
+instance [LEM] : IsConditionallyCompleteLattice Cardinal where
+  left_le_max {a b} := by
+    rw [max_eq]; split
+    assumption; rfl
+  right_le_max {a b} := by
+    rw [max_eq]; split
+    rfl; apply le_of_lt
+    apply not_le.mp; assumption
+  max_le {x a b} ha hb := by
+    rw [max_eq]; split <;> assumption
+  min_le_left {a b} := by
+    rw [min_eq]; split
+    rfl; apply le_of_lt
+    apply not_le.mp; assumption
+  min_le_right {a b} := by
+    rw [min_eq]; split
+    assumption; rfl
+  le_min {x a b} ha hb := by
+    rw [min_eq]; split <;> assumption
+  csInf_le _ := Cardinal.sInf_le _ _
+  le_csInf h g := Cardinal.le_sInf _ h _ g
+  le_csSup := by
+    intro S a ha hs; rw [Cardinal.sSup_eq_sInf_upperBounds]
+    apply le_sInf
+    assumption
+    intro u hu
+    apply hu
+    assumption
+  csSup_le := by
+    intro U a hU ha
+    rw [Cardinal.sSup_eq_sInf_upperBounds]
+    apply sInf_le
+    assumption
+
+instance [LEM] : IsLawfulInf Cardinal where
+  sInf_le := Cardinal.sInf_le
 
 noncomputable def succ (c: Cardinal.{u}) : Cardinal.{u} :=
   Set.min (· < ·) (U := Set.Ioi c) <| by

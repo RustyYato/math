@@ -27,6 +27,21 @@ def Iio (a: α) : Set α where
 def Ioi (a: α) : Set α where
   Mem x := a < x
 
+def Iic (a: α) : Set α where
+  Mem x := x ≤ a
+def Ici (a: α) : Set α where
+  Mem x := a ≤ x
+
+def Icc (a: α) (b: α) : Set α where
+  Mem x := a ≤ x ∧ x ≤ b
+def Ioo (a: α) (b: α) : Set α where
+  Mem x := a < x ∧ x < b
+
+def Ico (a: α) (b: α) : Set α where
+  Mem x := a ≤ x ∧ x < b
+def Ioc (a: α) (b: α) : Set α where
+  Mem x := a < x ∧ x ≤ b
+
 def not_bddAbove_iff [LEM] [IsLinearOrder α] {s: Set α} : ¬s.BoundedAbove ↔ ∀x, ∃a ∈ s, x < a := by
   simp only [BoundedAbove, upperBounds, not_nonempty, eq_empty_iff, ofMem_mem, LEM.not_forall]
   apply Iff.intro

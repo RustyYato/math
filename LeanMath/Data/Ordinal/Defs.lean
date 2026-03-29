@@ -96,6 +96,11 @@ def sound {r: α -> α -> Prop} {s: β -> β -> Prop} [Relation.IsWellOrder r] [
   apply Quotient.sound
   exact ⟨h⟩
 
+noncomputable def exact {r: α -> α -> Prop} {s: β -> β -> Prop} [Relation.IsWellOrder r] [Relation.IsWellOrder s] : type r = type s -> r ≃r s := by
+  intro h
+  replace h := (Quotient.exact (Ordinal.ofQuot.inj h))
+  exact Classical.choice <| by cases h; refine ⟨?_⟩; assumption
+
 instance : LE Ordinal where
   le := lift₂ (fun r s => Nonempty (r ≼r s)) <| by
     intro α₀ β₀ α₁ β₁ r₀ r₁ s₀ s₁ _ _ _ _ h₀ h₁
@@ -1011,5 +1016,115 @@ instance [LEM] : IsConditionallyCompleteLattice Ordinal where
 
 instance [LEM] : IsLawfulInf Ordinal where
   sInf_le := Ordinal.sInf_le
+
+private noncomputable def out (o: Ordinal.{u}) : Pre.{u} :=
+  Classical.choose o.toQuot.exists_rep
+
+def ToType (o: Ordinal.{u}) : Type u := o.out.ty
+def ToType_rel (o: Ordinal.{u}) : o.ToType -> o.ToType -> Prop := o.out.rel
+
+instance (o: Ordinal) : Relation.IsWellOrder o.ToType_rel := o.out.wo
+
+instance (o: Ordinal) : LT o.ToType where
+  lt := o.ToType_rel
+instance (o: Ordinal) : LE o.ToType where
+  le a b := ¬b < a
+
+instance (o: Ordinal) : @Relation.IsWellOrder o.ToType (· < ·) := o.out.wo
+
+instance (o: Ordinal) : IsLinearOrder o.ToType where
+  lt_iff_le_and_not_ge {a b} := by
+    apply Iff.intro
+    · intro h
+      apply And.intro
+      intro g
+      exact Relation.asymm h g
+      intro g; exact g h
+    · intro ⟨g₀, g₁⟩
+      rcases lt_trichotomy a b with h' | h' | h'
+      assumption
+      subst b
+      contradiction
+      contradiction
+  refl _ := Relation.irrefl (R := (· < ·))
+  trans := by
+    intro a b c h g x
+    rcases lt_trichotomy a b with h' | h' | h'
+    have := Relation.trans x h'
+    contradiction
+    subst a; contradiction
+    contradiction
+  antisymm {a b} h g := by
+    rcases lt_trichotomy a b with h' | h' | h'
+    contradiction
+    assumption
+    contradiction
+
+@[simp] def type_toType (o: Ordinal) : type (· < ·: o.ToType -> o.ToType -> Prop) = o := by
+   have := (Classical.choose_spec o.toQuot.exists_rep)
+   show Ordinal.ofQuot _ = Ordinal.ofQuot _
+   congr
+
+def enum_bij [LEM] (r : α → α → Prop) [Relation.IsWellOrder r] : α ↭ Set.Iio (type r) where
+  toFun x := {
+    val := rank r x
+    property := by apply rank_lt_type
+  }
+  inj' := by
+    intro a b h
+    exact rank_inj (Subtype.mk.inj h)
+  surj' := by
+    intro ⟨x, hx⟩
+    obtain ⟨a, rfl⟩ := of_lt_type hx
+    exists a
+
+noncomputable def enum [LEM] (r : α → α → Prop) [Relation.IsWellOrder r] : (· < · : Set.Iio (type r) → Set.Iio (type r) → Prop) ≃r r := RelEquiv.symm {
+  toEquiv := Equiv.ofBij (enum_bij r)
+  map_rel {a b} := by
+    dsimp
+    rw [Equiv.apply_ofBij, Equiv.apply_ofBij]
+    show r a b ↔ rank r a < rank r b
+    rw [←rank_lt_rank_iff]
+}
+
+def enum_symm_eq_rank [LEM] (r : α → α → Prop) [Relation.IsWellOrder r] : (enum r).symm x = rank r x := by
+  unfold enum
+  show ((Equiv.ofBij (enum_bij r)).symm.symm x).val = _
+  rw [Equiv.symm_symm, Equiv.apply_ofBij]
+  rfl
+
+noncomputable def ToType.mk [LEM] {o: Ordinal} : Set.Iio o ≃o o.ToType where
+  toFun x := enum (· < ·) {
+    val := x.val
+    property := type_toType _ ▸ x.property
+  }
+  invFun x := {
+    val := (enum (· < ·)).symm x
+    property := by
+      show _ < o
+      rw [enum_symm_eq_rank]
+      conv => { rhs; rw [←type_toType o] }
+      apply rank_lt_type
+  }
+  leftInv := by
+    intro x
+    dsimp
+    show (enum _ ((enum _).symm x)) = x
+    rw [RelEquiv.symm_coe]
+  rightInv := by
+    intro x
+    dsimp
+    ext; dsimp
+    show ((enum _).symm (enum _ _)) = x.val
+    rw [RelEquiv.coe_symm]
+  map_rel {a b} := by
+    rw [←not_lt (α := o.ToType)]
+    rw [←map_rel (enum (· < ·: o.ToType -> o.ToType -> Prop))]
+    show a.val ≤ b.val ↔ _
+    rw [←not_lt]
+    rfl
+
+instance small_Iio [LEM] (o : Ordinal.{u}) : Small.{u} (Set.Iio o) :=
+  ⟨_, ToType.mk.toEquiv⟩
 
 end Ordinal

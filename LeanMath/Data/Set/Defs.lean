@@ -1,5 +1,6 @@
 import LeanMath.Tactic.TypeStar
 import LeanMath.Logic.LEM
+import LeanMath.Logic.Small.Defs
 import LeanMath.Data.TopBot.Defs
 import LeanMath.Data.Equiv.Defs
 
@@ -434,13 +435,25 @@ def nonempty_iff (a: Set α) : a.Nonempty ↔ ¬∀x, x ∉ a := by
   rintro ⟨_, ⟨u, _, rfl⟩, _⟩
   exists u
 
+def image_eq_range (f: α -> β) (s: Set α): s.image f = Set.range (fun x: s => f x.val) := by
+  ext b
+  simp
+
+  sorry
+
 end Set
 
-class IsLawfulSup (α: Type*) [LE α] [LT α] [SupSet α] where
+class IsLawfulSup (α: Type*) [LE α] [SupSet α] where
   protected le_sSup (U: Set α) (u: α) (hu: u ∈ U) : u ≤ ⨆ U
 
-class IsLawfulInf (α: Type*) [LE α] [LT α] [InfSet α] where
+class IsLawfulInf (α: Type*) [LE α]  [InfSet α] where
   protected sInf_le (U: Set α) (u: α) (hu: u ∈ U) : ⨅ U ≤ u
+
+def le_sSup [LE α] [SupSet α] [IsLawfulSup α] (U: Set α) (u: α) (hu: u ∈ U) : u ≤ ⨆ U :=
+  IsLawfulSup.le_sSup _ _ hu
+
+def sInf_le [LE α] [InfSet α] [IsLawfulInf α] (U: Set α) (u: α) (hu: u ∈ U) : ⨅ U ≤ u :=
+  IsLawfulInf.sInf_le _ _ hu
 
 def Subtype.val_inj {P: α -> Prop} : Function.Injective (Subtype.val (p := P)) := by
   intro a b h
@@ -458,3 +471,30 @@ def Bijection.embed_eqv_range [EmbeddingLike F α β] (f: F) : α ↭ Set.range 
   surj' := by
     intro ⟨_, _, rfl⟩
     refine ⟨_, rfl⟩
+
+instance {α: Type u} {β: Type v} (f: α -> β) [Small.{w} α] : Small.{w} (Set.range f) :=
+  Small.of_embed (α := Set.range f) (β := α) {
+    toFun h := Classical.choose h.property
+    inj {x y} h := by
+      dsimp at h
+      replace h := congrArg f h
+      rw [Classical.choose_spec x.property, Classical.choose_spec y.property] at h
+      ext; assumption
+  }
+
+def Small.subset {a b: Set α} [Small.{u} b] (h: a ⊆ b) : Small.{u} a := by
+  apply Small.of_embed (β := b)
+  exact {
+    toFun x := {
+      val := x.val
+      property := h _ x.property
+    }
+    inj := by
+      intro ⟨x, hx⟩ ⟨y, hy⟩ h
+      cases h; rfl
+  }
+
+instance {α: Type u} {β: Type v} (s: Set α) (f: α -> β) [Small.{w} s] : Small.{w} (Set.image f s) := by
+  have : Small (Set.range (fun x: s => f x.val)) := inferInstance
+  rw [←Set.image_eq_range] at this
+  assumption

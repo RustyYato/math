@@ -3,6 +3,7 @@ import LeanMath.Tactic.AxiomBlame
 import LeanMath.Data.Equiv.Antisymm
 import LeanMath.Data.Equiv.Basic
 import LeanMath.Order.Defs
+import LeanMath.Data.Set.Relation
 import LeanMath.Data.Fintype.Order
 
 instance Type.instSetoid : Setoid (Type u) where

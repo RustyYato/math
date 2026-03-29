@@ -15,15 +15,21 @@ namespace Small
 def of_embed (f: α ↪ β) [h: Small.{u} β] : Small.{u} α := by
   obtain ⟨γ, h⟩ := h
   replace f := f.trans h.toEmbedding
-  have ⟨g, hg⟩ := Classical.axiomOfChoice (fun g: { g: γ // ∃a, f a = g } => g.property)
+  have ⟨g, hg⟩ := Classical.axiomOfUniqueChoice (P := fun (g: { g: γ // ∃a, f a = g }) (a) => f a = g.val) (fun g: { g: γ // ∃a, f a = g } => by
+    have ⟨x, hx⟩ := g.property
+    exists x
+    apply And.intro hx
+    intro y hy
+    apply inj f
+    rw [hx, hy])
   exact .intro { g: γ // ∃a, f a = g } {
     toFun a := {
       val := f a
       property := ⟨_, rfl⟩
     }
     invFun := g
-    leftInv x := by dsimp; congr; rw [hg]
-    rightInv x := by dsimp; apply inj f; rw [hg]
+    leftInv x := by dsimp; congr; rw [(hg _).left]
+    rightInv x := by dsimp; apply inj f; rw [(hg _).left]
   }
 
 def lift.{w, u, v} [h: Small.{u, v} α] : Small.{max u w, v} α :=
@@ -57,6 +63,22 @@ instance small_plift (α : Type u) [Small.{v} α] : Small.{v} (PLift α) :=
   map (Equiv.plift _)
 
 instance small_type : Small.{max (u + 1) v} (Type u) := lift
+
+def of_surj (f: β -> α) (hf: Function.Surjective f) [h: Small.{u} β] : Small.{u} α := by
+  obtain ⟨γ, hy⟩ := h
+  apply of_embed.{u} (β := γ -> Prop) {
+    toFun := ?_
+    inj := ?_
+  }
+  exact fun a g => f (hy.symm g) = a
+  intro a b h
+  replace h := fun y => congrFun h y
+  dsimp at h
+  obtain ⟨a, rfl⟩ := hf a
+  obtain ⟨b, rfl⟩ := hf b
+  have := h (hy a)
+  rw [Equiv.coe_symm] at this
+  rw [←this]
 
 end Small
 

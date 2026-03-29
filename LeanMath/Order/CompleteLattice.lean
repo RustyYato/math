@@ -13,12 +13,6 @@ section
 
 variable [LE α] [LT α] [Max α] [Min α] [SupSet α] [InfSet α] [Top α] [Bot α]
 
-def le_sSup [IsLawfulSup α] (U: Set α) (u: α) (hu: u ∈ U) : u ≤ ⨆ U :=
-  IsLawfulSup.le_sSup _ _ hu
-
-def sInf_le [IsLawfulInf α] (U: Set α) (u: α) (hu: u ∈ U) : ⨅ U ≤ u :=
-  IsLawfulInf.sInf_le _ _ hu
-
 def sSup_le [IsCompleteSemilatticeSup α] (U: Set α) (x: α) : (∀u ∈ U, u ≤ x) -> ⨆ U ≤ x :=
   IsCompleteSemilatticeSup.sSup_le _ _
 
