@@ -87,3 +87,8 @@ scoped instance : Topology α where
       assumption
 
 end IsLawfulMetric
+
+open IsLawfulMetric in
+instance : Topology ℝ := inferInstance
+open IsLawfulMetric in
+instance : Topology ℚ := inferInstance
