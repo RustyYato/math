@@ -105,16 +105,16 @@ instance : EmptyCollection (Set α) where
 instance : Inhabited (Set α) := ⟨⊥⟩
 instance : Nonempty (Set α) := inferInstance
 
-@[simp] def not_mem_empty (a: α) : a ∉ (∅: Set α) := nofun
+@[simp] def not_mem_empty (a: α) : a ∉ (⊥: Set α) := nofun
 @[simp] def not_mem_bot (a: α) : a ∉ (⊥: Set α) := nofun
 @[simp] def mem_top (a: α) : a ∈ (⊤: Set α) := True.intro
 
-@[simp] def empty_sub (a: Set α) : ∅ ⊆ a := nofun
+@[simp] def empty_sub (a: Set α) : ⊥ ⊆ a := nofun
 @[simp] def bot_sub (a: Set α) : ⊥ ⊆ a := nofun
 @[simp] def sub_top (a: Set α) : a ⊆ ⊤ := by intro _ _; trivial
 
 
-def ext_empty (a: Set α) : (∀x: α, ¬x ∈ a) -> a = ∅ := by
+def ext_empty (a: Set α) : (∀x: α, ¬x ∈ a) -> a = ⊥ := by
   intro h
   ext x
   simp [h]
@@ -243,7 +243,7 @@ def attach (s: Set α) : Set s := ⊤
 
 protected abbrev Nonempty (s: Set α) : Prop := Nonempty s
 
-@[simp] def not_nonempty {a: Set α} : ¬a.Nonempty ↔ a = ∅ := by
+@[simp] def not_nonempty {a: Set α} : ¬a.Nonempty ↔ a = ⊥ := by
   apply Iff.intro
   intro h; ext x; simp
   intro g; apply h; exists x
@@ -252,7 +252,7 @@ protected abbrev Nonempty (s: Set α) : Prop := Nonempty s
   obtain ⟨x, hx⟩ := h
   contradiction
 
-@[simp] def ne_empty [LEM] {a: Set α} : a ≠ ∅ ↔ a.Nonempty := by
+@[simp] def ne_empty [LEM] {a: Set α} : a ≠ ⊥ ↔ a.Nonempty := by
   apply LEM.not_iff_not.mp
   apply Iff.trans LEM.not_not
   exact not_nonempty.symm
@@ -292,7 +292,7 @@ instance (s: Set α) (f: α -> β) [s.Nonempty] : (s.image f).Nonempty := by
   exists f x
   exists x
 
-def empty_not_nonempty : ¬Set.Nonempty (∅: Set α) := nofun
+def empty_not_nonempty : ¬Set.Nonempty (⊥: Set α) := nofun
 
 macro_rules
 | `(tactic|contradiction) => `(tactic|exfalso; apply empty_not_nonempty; assumption)
@@ -327,7 +327,7 @@ def scompl_inj {a b: Set α} : aᶜ = bᶜ ↔ a = b := by
 
 @[simp] def sInter_univ : ⋂ (⊤: Set (Set _)) = (⊥: Set α) := by
   ext; simp
-  exists ∅
+  exists ⊥
   simp
 
 @[simp] def sUnion_univ : ⋃ (⊤: Set (Set _)) = (⊤: Set α) := by
