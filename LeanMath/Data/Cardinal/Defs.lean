@@ -163,7 +163,7 @@ private noncomputable def of_not_eq_fin_pre (α: Type*) (h: ∀x: ℕ, type α �
           rw [←mem_range] at this
           simp at this
           obtain ⟨a, ha⟩ := this
-          exact ⟨_, ha.symm⟩
+          exact ⟨_, ha⟩
       }
       replace this := Equiv.ofBij this
       refine h limit (sound ?_)
@@ -185,8 +185,8 @@ private noncomputable def of_not_eq_fin_pre (α: Type*) (h: ∀x: ℕ, type α �
         simp at top_mem
         cases i using Fin.lastCases <;>
         cases j using Fin.lastCases <;> simp
-        intro h; nomatch top_mem _ h
         intro h; nomatch top_mem _ h.symm
+        intro h; nomatch top_mem _ h
         intro h
         rw [f.inj h]
     }

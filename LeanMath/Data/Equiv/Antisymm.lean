@@ -9,7 +9,7 @@ private def preCset : Nat -> Set α
 
 private def Cset : Set α := Set.iSup (fun i: ℕ => preCset f g i)
 
-private def mem_range_g (h: a ∉ Cset f g) : existsUnique fun b => a = g b := by
+private def mem_range_g (h: a ∉ Cset f g) : existsUnique fun b => g b = a := by
   unfold Cset at h
   simp only [Set.mem_iSup, not_exists] at h
   replace h := h 0
@@ -18,8 +18,8 @@ private def mem_range_g (h: a ∉ Cset f g) : existsUnique fun b => a = g b := b
   exists i
   apply And.intro hi
   intro b hb
-  rw [hi] at hb
-  exact inj g hb
+  rw [←hb] at hi
+  exact inj g hi
 
 def mem_Cset_image (h: a ∈ Cset f g) : g (f a) ∈ Cset f g := by
   simp [Cset] at *
@@ -46,7 +46,7 @@ noncomputable def cantor_bernstein_schröder : α ↭ β := by
       have := Classical.choose_unique_spec (mem_range_g _ _ h₁)
       rw [←h] at this
       clear h
-      rw [this] at h₁
+      rw [←this] at h₁
       apply h₁
       apply mem_Cset_image
       assumption
@@ -54,13 +54,13 @@ noncomputable def cantor_bernstein_schröder : α ↭ β := by
       have := Classical.choose_unique_spec (mem_range_g _ _ h₀)
       rw [h] at this
       clear h
-      rw [this] at h₀
+      rw [←this] at h₀
       apply h₀
       apply mem_Cset_image
       assumption
     · have g₀ := Classical.choose_unique_spec (mem_range_g _ _ h₀)
       have g₁ := Classical.choose_unique_spec (mem_range_g _ _ h₁)
-      rwa [h, ←g₁] at g₀
+      rwa [←h, g₀] at g₁
   · intro b
     let a := g b
     rcases em (a ∈ Cset f g) with h | h
@@ -84,6 +84,6 @@ noncomputable def cantor_bernstein_schröder : α ↭ β := by
       unfold bij
       rw [dif_neg h]
       apply inj g
-      rw [←Classical.choose_unique_spec (mem_range_g _ _ h)]
+      rw [Classical.choose_unique_spec (mem_range_g _ _ h)]
 
 noncomputable def Equiv.antisymm : α ≃ β := Equiv.ofBij (cantor_bernstein_schröder f g)

@@ -104,16 +104,16 @@ instance [Relation.IsWelFounded s] [Relation.IsTrichotomous s (· = ·)] : Subsi
     induction x using (Relation.wf r).induction with
     | h x ih =>
     rcases Relation.trichotomous s (a x) (b x) with h | h | h
-    · have ⟨y, _, g⟩ := b.IsInitial x (a x) h
-      rw [g] at h
+    · have ⟨y, g⟩ := b.IsInitial x (a x) h
+      rw [←g] at h
       have := ih y (map_rel_rev _ h)
       rw [←ih y (map_rel_rev _ h)] at g
       cases a.inj g
       have := Relation.irrefl h
       contradiction
     · assumption
-    · have ⟨y, _, g⟩ := a.IsInitial _ _ h
-      rw [g] at h
+    · have ⟨y, g⟩ := a.IsInitial _ _ h
+      rw [←g] at h
       rw [ih _ (map_rel_rev _ h)] at g
       cases b.inj g
       have := Relation.irrefl h
@@ -153,43 +153,45 @@ def RelEquiv.toInitialSegment (f: r ≃r s) : r ≼r s where
 instance [Relation.IsTrans s] : IsInitialSegment (r ≃r s) r s where
   isInitial f := f.toInitialSegment.isInitial
 
-def InitialSegment.principal_or_eqv [Relation.IsWellOrder s] (f: r ≼r s) : Nonempty (r ≺r s) ∨ Nonempty (r ≃r s) := by
-  open Classical in
-  apply or_iff_not_imp_left.mpr
+def InitialSegment.principal_or_eqv [LEM] [Relation.IsWellOrder s] (f: r ≼r s) : Nonempty (r ≺r s) ∨ Nonempty (r ≃r s) := by
+  apply LEM.or_iff_not_imp_left.mpr
   intro h
   have hf : ¬∃top, Relation.IsPrincipal s f top := fun hf => h ⟨{
     toRelEmbedding := f.toRelEmbedding
     isPrincipal := hf
   }⟩
-  simp [Relation.IsPrincipal] at hf
-  have hb (b: β) : ∃a, b = f a := by
+  simp only [Relation.IsPrincipal, Set.mem_range, not_exists, LEM.not_forall] at hf
+  have hb (b: β) : b ∈ Set.range f := by
     induction b using (Relation.wf s).induction with
     | _ b ih =>
     have ⟨a, ha⟩ := hf b
-    by_cases sab:s a b
+    rcases em (s a b) with sab | sab
     · replace ha := fun h => ha ⟨fun _ => h, fun _ => sab⟩
-      simp at ha
+      simp only [imp_false, not_exists] at ha
       obtain ⟨_, rfl⟩ := ih a sab
       nomatch ha _ rfl
-    · simp [sab] at ha
+    · simp only [sab, false_iff, not_exists, LEM.not_forall, LEM.not_not] at ha
       obtain ⟨a, rfl⟩ := ha
       rcases Relation.trichotomous s (f a) b with g | g | g
       contradiction
-      exists a; symm; assumption
+      exists a
       have := f.IsInitial a b g
-      simpa using this
+      simpa only [Set.mem_range] using this
   clear hf
-  obtain ⟨g, hg⟩ := axiomOfChoice hb
+  let g := Equiv.ofBij (Bijection.embed_eqv_range f)
+  have hg (x) : f x = g x := by
+    unfold g
+    rw [Equiv.apply_ofBij]; rfl
   refine ⟨?_⟩
   exact {
     toFun := f
-    invFun := g
-    leftInv _ := (hg _).symm
+    invFun x := g.symm ⟨x, hb _⟩
+    leftInv _ := by
+      dsimp; rw [hg, Equiv.symm_coe]
     rightInv _ := by
       apply f.inj
-      show f _ = _
-      rw [←hg]
-      rfl
+      show f _ = _; dsimp
+      rw [hg, Equiv.symm_coe]; rfl
     map_rel := map_rel f
   }
 
@@ -198,7 +200,6 @@ def InitialSegment.trans_princ [LEM] [Relation.IsWellOrder t] (f: r ≼r s) (g: 
   isPrincipal := by
     have := g.toRelEmbedding.liftWellOrder
     have := f.toRelEmbedding.liftWellOrder
-    -- have ⟨top, htop⟩ := g.IsPrincipal
     have h : ∃x, ∀a, t (g (f a)) x := by
       have ⟨top, htop⟩ := g.IsPrincipal
       exists top
@@ -221,14 +222,14 @@ def InitialSegment.trans_princ [LEM] [Relation.IsWellOrder t] (f: r ≼r s) (g: 
       have a_min : ∀x, r x a -> _ := Relation.min_minimal r this
       simp only [LEM.not_not] at a_min
       exists a
-      rcases Relation.trichotomous t b (g (f a)) with h | h | h
-      · have := a_min
-        obtain ⟨b, _, rfl⟩ := g.toInitialSegment.IsInitial _ _ h
-        obtain ⟨b, _, rfl⟩ := f.IsInitial _ _ (map_rel_rev g h)
-        show g _ = g (f _); congr
-        nomatch Relation.irrefl (a_min b (map_rel_rev f (map_rel_rev g h)))
-      · assumption
+      rcases Relation.trichotomous t (g (f a)) b with h | h | h
       · nomatch ha h
+      · show g (f a) = b
+        assumption
+      · obtain ⟨b, _, rfl⟩ := g.toInitialSegment.IsInitial _ _ h
+        obtain ⟨b, _, rfl⟩ := f.IsInitial _ _ (map_rel_rev g h)
+        show g (f _) = g (f _); congr
+        nomatch Relation.irrefl (a_min b (map_rel_rev f (map_rel_rev g h)))
 
 def PrincipalSegment.trans_init [Relation.IsTrans t] (f: r ≺r s) (g: s ≼r t) : r ≺r t where
   toRelEmbedding := f.toRelEmbedding.trans g.toRelEmbedding
@@ -240,10 +241,10 @@ def PrincipalSegment.trans_init [Relation.IsTrans t] (f: r ≺r s) (g: s ≼r t)
     intro b
     apply Iff.intro
     · intro h
-      simp; show ∃i, b = g (f _)
+      simp; show ∃i, g (f _) = b
       obtain ⟨b, _, rfl⟩ := g.IsInitial _ _ h
       replace h := map_rel_rev g h
-      have ⟨i, _, hi⟩ := (htop _).mp h
+      have ⟨i, hi⟩ := (htop _).mp h
       exists i
       rw [hi]
     · rintro ⟨a, _, rfl⟩
@@ -308,7 +309,7 @@ namespace InitialSegment
 
 variable [Relation.IsWellOrder r] [Relation.IsWellOrder s]
 
-private noncomputable def collapse_helper [Relation.IsWellOrder r] (f: r ↪r s) (a: α) : { b: β // ¬ s (f a) b } :=
+private noncomputable def collapse_helper [LEM] [Relation.IsWellOrder r] (f: r ↪r s) (a: α) : { b: β // ¬ s (f a) b } :=
   let U: Set β := Set.ofMem fun b => ∀x (h: r x a), s (collapse_helper f x) b
   have : U.Nonempty := by
     exists f a
@@ -332,20 +333,20 @@ private noncomputable def collapse_helper [Relation.IsWellOrder r] (f: r ↪r s)
       contradiction⟩
 termination_by WellFounded.wrap r a
 
-private def collapse_helper_lt (f: r ↪r s) : ∀b a, r a b -> s (collapse_helper f a) (collapse_helper f b) := by
+private def collapse_helper_lt [LEM] (f: r ↪r s) : ∀b a, r a b -> s (collapse_helper f a) (collapse_helper f b) := by
   intro b
   show (collapse_helper f b).1 ∈ Set.ofMem fun a => ∀x (_ : r x b), s (collapse_helper f x).1 a
   conv => { rhs; unfold collapse_helper }
   dsimp; apply Set.min_mem
 
-private def collapse_helper_not_lt [Relation.IsWellOrder s] (f : r ↪r s) (a : α) {b}
+private def collapse_helper_not_lt [LEM] [Relation.IsWellOrder s] (f : r ↪r s) (a : α) {b}
   (h : ∀x (_: r x a), s (collapse_helper f x).1 b) : ¬s b (collapse_helper f a).1 := by
   let U := Set.ofMem fun b => ∀x (_ : r x a), s (collapse_helper f x).1 b
   unfold collapse_helper
   dsimp; apply Set.min_minimal s
   apply h
 
-noncomputable def collapse (f: r ↪r s) : r ≼r s where
+noncomputable def collapse [LEM] (f: r ↪r s) : r ≼r s where
   toFun a := (collapse_helper f a).val
   inj := by
     intro a b h
@@ -370,20 +371,20 @@ noncomputable def collapse (f: r ↪r s) : r ≼r s where
   isInitial := by
     intro a b h
     replace h : s b (collapse_helper f a).val := h
-    simp
-    show ∃i, b = (collapse_helper f i).val
+    simp only [Set.mem_range]
+    show ∃i, (collapse_helper f i).val = b
     let S := Set.ofMem fun a => ¬s (collapse_helper f a).val b
     have : S.Nonempty := ⟨_, Relation.asymm h⟩
     exists S.min r this
-    rcases Relation.trichotomous s b (collapse_helper f (Set.min r this)).val with g | g | g
-    · exfalso
-      refine collapse_helper_not_lt f _ ?_ g
-      intro x hx
-      apply Classical.byContradiction
-      apply (Set.min_minimal r this x · hx)
-    · assumption
+    rcases Relation.trichotomous s (collapse_helper f (Set.min r this)).val b with g | g | g
     · exfalso
       have := Set.min_mem r this
       contradiction
+    · assumption
+    · exfalso
+      refine collapse_helper_not_lt f _ ?_ g
+      intro x hx
+      apply LEM.byContradiction
+      apply (Set.min_minimal r this x · hx)
 
 end InitialSegment

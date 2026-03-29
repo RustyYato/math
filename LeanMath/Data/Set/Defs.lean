@@ -167,12 +167,12 @@ def mem_image' {s: Set ι} {f: ι -> α} : x ∈ s -> f x ∈ s.image f := by
   intro h
   simp; exists x
 
-def range (f: ι -> α) : Set α := image f ⊤
+def range (f: ι -> α) : Set α where
+  Mem a := ∃i, f i = a
 
-@[simp] def mem_range {f: ι -> α} : ∀{x}, x ∈ range f ↔ ∃i, x = f i := by simp [Set.range]
+@[simp] def mem_range {f: ι -> α} : ∀{x}, x ∈ range f ↔ ∃i, f i = x := Iff.rfl
 
-def mem_range' {f: ι -> α} : f x ∈ range f := by
-  simp; exists x
+def mem_range' {f: ι -> α} : f x ∈ range f := by simp
 
 def iSup [SupSet α] (s: ι -> α) : α := sSup (Set.range s)
 def iInf [InfSet α] (s: ι -> α) : α := sInf (Set.range s)
@@ -437,11 +437,11 @@ def Subtype.val_inj {P: α -> Prop} : Function.Injective (Subtype.val (p := P)) 
 def Bijection.embed_eqv_range [EmbeddingLike F α β] (f: F) : α ↭ Set.range f where
   toFun x := {
     val := f x
-    property := ⟨_, True.intro, rfl⟩
+    property := ⟨_, rfl⟩
   }
   inj' := by
     intro a b h
     exact inj f (Subtype.mk.inj h)
   surj' := by
-    intro ⟨_, _, _, rfl⟩
+    intro ⟨_, _, rfl⟩
     refine ⟨_, rfl⟩

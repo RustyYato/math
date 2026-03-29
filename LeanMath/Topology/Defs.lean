@@ -590,8 +590,7 @@ def prod_func_eq_func2 [Topology α] [Topology β] [Topology γ] : (α -> β -> 
         refine ⟨?_, ?_, ?_⟩
         · exact u.preimage (fun f' => f' b)
         · apply mem_generate_of
-          refine ⟨_, ⟨_, ⟨b, ?_, rfl⟩, rfl⟩, ?_⟩
-          trivial
+          refine ⟨_, ⟨_, ⟨b, rfl⟩, rfl⟩, ?_⟩
           dsimp
           apply IsContinuous.induced.isOpen_preimage
           assumption

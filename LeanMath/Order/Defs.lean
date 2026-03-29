@@ -75,9 +75,9 @@ class LemLE (α: Type*) [LE α] where
 
 def le_or_not_le [LE α] [LemLE α] (a b: α) : a ≤ b ∨ ¬a ≤ b := LemLE.le_or_not_le _ _
 
-instance [LE α] [DecidableLE α] : LemLE α where
+instance [LE α] [∀a b: α, ExcludedMiddle (a ≤ b)] : LemLE α where
   le_or_not_le a b := by
-    by_cases a ≤ b
+    rcases em (a ≤ b)
     left; assumption
     right; assumption
 

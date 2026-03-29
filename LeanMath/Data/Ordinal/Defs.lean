@@ -183,10 +183,10 @@ def rank_lt_rank_iff [LEM] {r: α -> α -> Prop} [Relation.IsWellOrder r] {a b: 
     intro x
     apply Iff.intro
     · intro rxa
-      simp; show ∃i, x = (h i).val
+      simp; show ∃i, (h i).val = x
       have := h ⟨_, rxa⟩
       exists ⟨x, rxa⟩
-      show rank_lt_type' r a ⟨x, rxa⟩ = (h.trans_init (rank_lt_type' r b).toInitialSegment) ⟨x, rxa⟩
+      show (h.trans_init (rank_lt_type' r b).toInitialSegment) ⟨x, rxa⟩ = rank_lt_type' r a ⟨x, rxa⟩
       congr
       apply Subsingleton.allEq
     · rintro ⟨x, _, rfl⟩
@@ -208,12 +208,12 @@ def of_lt_type [LEM] {r: α -> α -> Prop} [Relation.IsWellOrder r] : ∀{o}, o 
   cases o with | @type β s =>
   have ⟨f⟩ := hi; simp at f
   have ⟨top, htop⟩ := f.IsPrincipal
-  have (a: { a // r a top }) : existsUnique fun b => a = f b := by
-    obtain ⟨a , _, ha⟩ := (htop a.val).mp a.property
+  have (a: { a // r a top }) : existsUnique fun b => f b = a := by
+    obtain ⟨a, ha⟩ := (htop a.val).mp a.property
     refine ⟨a, ha, ?_⟩
     intro b hb
     apply inj f
-    rw [←ha, hb]
+    rw [ha, ←hb]
   replace this := Classical.axiomOfUniqueChoice this
   obtain ⟨g, hg⟩ := this
   exists top
@@ -229,12 +229,12 @@ def of_lt_type [LEM] {r: α -> α -> Prop} [Relation.IsWellOrder r] : ∀{o}, o 
     map_rel := map_rel f
     leftInv _ := by
       dsimp; congr; symm
-      apply (hg _).left
+      apply (hg _).left.symm
     rightInv _ := by
       symm; dsimp
       apply f.inj
       show f _ = f _
-      rw [←(hg _).left]
+      rw [(hg _).left]
   }
 
 private def ulift_rel (r: α -> α -> Prop) : ULift α -> ULift α -> Prop := fun a b => r a.down b.down
@@ -501,7 +501,6 @@ instance : Add Ordinal.{u} where
     }
 
 private def lt_trichotomy_of_le [LEM] (o: Ordinal) : ∀{a b: Ordinal}, a ≤ o -> b ≤ o -> a < b ∨ a = b ∨ b < a := by
-  classical
   intro a b ha hb
   replace ha := lt_or_eq_of_le ha
   replace hb := lt_or_eq_of_le hb
@@ -532,7 +531,7 @@ def le_add_left (a b: Ordinal.{u}) : a ≤ a + b := by
       apply Set.mem_range'
   }⟩
 
-def le_add_right (a b: Ordinal.{u}) : b ≤ a + b := by
+def le_add_right [LEM] (a b: Ordinal.{u}) : b ≤ a + b := by
   cases a with | @type α r =>
   cases b with | @type β s =>
   refine ⟨?_⟩
@@ -641,16 +640,16 @@ def rank_eq_of_init {F: Type*} [EmbeddingLike F α β] [IsInitialSegment F r s] 
       val := g x
       property := by
         apply map_rel_rev f
-        rw [←hg]
+        rw [hg]
         exact x.property
     }
     map_rel := map_rel f
-    leftInv := by intro ⟨x, hx⟩; dsimp; congr; rw [←hg]
+    leftInv := by intro ⟨x, hx⟩; dsimp; congr; rw [hg]
     rightInv := by
       intro ⟨x, hx⟩
       dsimp
       congr; apply inj f
-      rw [←hg]
+      rw [hg]
   }
 
 instance [LEM] : Min Ordinal.{u} where
@@ -716,8 +715,10 @@ instance [LEM] : IsSemiLatticeMin Ordinal where
         exists y
         obtain ⟨b₀, b₁, hb⟩ := b
         dsimp at h hy
-        congr
-        apply rank_inj (r := s)
+        rw [←hy] at h
+        replace h : t y x := map_rel_rev f h
+        show min_rel_ty.mk _ _ _ = _
+        congr; apply rank_inj (r := s)
         rw [←hb, ←rank_eq_of_init, rank_eq_of_init f]
         dsimp
         rw [hy]
@@ -807,13 +808,13 @@ private def max_rel_congr_init [LEM] (f: r₀ ≼r r₁) (g: s₀ ≼r s₁) : m
       exists Quotient.mk _ (Sum.inl x₁)
       apply Quotient.sound
       simp; show Ordinal.rank _ _ = Ordinal.rank _ _
-      rwa [←rank_eq_of_init]
+      symm; rwa [←rank_eq_of_init]
     · rw [←rank_eq_of_init] at h
       obtain ⟨x₁, g⟩ := of_lt_type (lt_trans h (rank_lt_type _ _))
       exists Quotient.mk _ (Sum.inr x₁)
       apply Quotient.sound
       simp; show Ordinal.rank _ _ = Ordinal.rank _ _
-      rwa [←rank_eq_of_init]
+      symm; rwa [←rank_eq_of_init]
     · obtain ⟨x₁, rfl⟩ := Set.mem_range.mp <| g.IsInitial x₀ x₁ h
       exists Quotient.mk _ (Sum.inr x₁)
 
@@ -830,6 +831,7 @@ private def emb_max_rel_left [LEM] : r ≼r max_rel r s where
     have ⟨b', h⟩ := of_lt_type (lt_trans h (rank_lt_type _ _))
     simp; exists b'
     apply Quotient.sound
+    apply Relation.symm
     assumption
 
 private def emb_max_rel_right [LEM] : s ≼r max_rel r s where
@@ -844,6 +846,7 @@ private def emb_max_rel_right [LEM] : s ≼r max_rel r s where
     have ⟨b', h⟩ := of_lt_type (lt_trans h (rank_lt_type _ _))
     simp; exists b'
     apply Quotient.sound
+    apply Relation.symm
     assumption
     exists b
 
@@ -926,21 +929,20 @@ instance [LEM] : IsLattice Ordinal where
         simp; exists Quotient.mk _ (.inr b)
     }
 
-noncomputable instance : InfSet Ordinal where
+noncomputable instance [LEM] : InfSet Ordinal where
   sInf S :=
-    open Classical in
+    open UniqueChoice in
     if h:S.Nonempty then
       Set.min (· < ·) h
     else
       0
 
-def sInf_mem (U: Set Ordinal) (hU: U.Nonempty) : sInf U ∈ U := by
+def sInf_mem [LEM] (U: Set Ordinal) (hU: U.Nonempty) : sInf U ∈ U := by
   simp [sInf]
   rw [dif_pos hU]
   apply Set.min_mem
 
-def sInf_le (U: Set Ordinal) : ∀u ∈ U, sInf U ≤ u := by
-  classical
+def sInf_le [LEM] (U: Set Ordinal) : ∀u ∈ U, sInf U ≤ u := by
   intro u hu
   simp [sInf]
   rw [dif_pos ⟨_, hu⟩]
@@ -948,7 +950,7 @@ def sInf_le (U: Set Ordinal) : ∀u ∈ U, sInf U ≤ u := by
   intro h
   exact Set.min_minimal (· < ·) (U := U) ⟨_, hu⟩ u hu h
 
-def le_sInf (U: Set Ordinal) (hU: U.Nonempty) (x: Ordinal) (h: ∀u ∈ U, x ≤ u) : x ≤ sInf U := by
+def le_sInf [LEM] (U: Set Ordinal) (hU: U.Nonempty) (x: Ordinal) (h: ∀u ∈ U, x ≤ u) : x ≤ sInf U := by
   classical
   apply le_of_not_lt
   intro g
