@@ -1009,4 +1009,7 @@ instance [LEM] : IsConditionallyCompleteLattice Ordinal where
     apply sInf_le
     assumption
 
+instance [LEM] : IsLawfulInf Ordinal where
+  sInf_le := Ordinal.sInf_le
+
 end Ordinal
