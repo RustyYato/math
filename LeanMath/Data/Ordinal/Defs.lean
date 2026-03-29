@@ -2,6 +2,7 @@ import LeanMath.Tactic.PPWithUniv
 import LeanMath.Tactic.AxiomBlame
 import LeanMath.Logic.Relation.Segments
 import LeanMath.Order.Set
+import LeanMath.Order.ConditionallyCompleteLattice
 import LeanMath.Logic.Small.Defs
 import LeanMath.Data.Equiv.Basic
 
@@ -937,12 +938,12 @@ noncomputable instance [LEM] : InfSet Ordinal where
     else
       0
 
-def sInf_mem [LEM] (U: Set Ordinal) (hU: U.Nonempty) : sInf U ∈ U := by
+def sInf_mem [LEM] (U: Set Ordinal) (hU: U.Nonempty) : ⨅ U ∈ U := by
   simp [sInf]
   rw [dif_pos hU]
   apply Set.min_mem
 
-def sInf_le [LEM] (U: Set Ordinal) : ∀u ∈ U, sInf U ≤ u := by
+private protected def sInf_le [LEM] (U: Set Ordinal) : ∀u ∈ U, ⨅ U ≤ u := by
   intro u hu
   simp [sInf]
   rw [dif_pos ⟨_, hu⟩]
@@ -950,7 +951,7 @@ def sInf_le [LEM] (U: Set Ordinal) : ∀u ∈ U, sInf U ≤ u := by
   intro h
   exact Set.min_minimal (· < ·) (U := U) ⟨_, hu⟩ u hu h
 
-def le_sInf [LEM] (U: Set Ordinal) (hU: U.Nonempty) (x: Ordinal) (h: ∀u ∈ U, x ≤ u) : x ≤ sInf U := by
+private protected def le_sInf [LEM] (U: Set Ordinal) (hU: U.Nonempty) (x: Ordinal) (h: ∀u ∈ U, x ≤ u) : x ≤ ⨅ U := by
   classical
   apply le_of_not_lt
   intro g
@@ -987,15 +988,25 @@ def ulift_le_ulift {a b: Ordinal.{u}} : ulift.{v} a ≤ ulift b ↔ a ≤ b := b
     apply ulift_rel_eqv_rel
     assumption
 
--- def boundedAbove_range {ι: Type u} (f: ι -> Ordinal.{max u v}) : Set.BoundedAbove (Set.range f) := by
---   sorry
+noncomputable instance [LEM] : SupSet Ordinal where
+  sSup S := sInf S.upperBounds
 
--- def boundedAbove_of_small (U: Set Ordinal.{u}) [Small.{u} U] : U.BoundedAbove := by
---   have eqv := Equiv.shrink (α := U)
---   have ⟨bound, hbound⟩ := boundedAbove_range fun x => (eqv.symm x).val
---   exists bound; intro u hu
---   apply hbound
---   simp; exists eqv ⟨u, hu⟩
---   simp
+protected def sSup_eq_sInf_upperBounds [LEM] (U: Set Ordinal) : ⨆ U = ⨅ U.upperBounds := rfl
+
+instance [LEM] : IsConditionallyCompleteLattice Ordinal where
+  csInf_le _ := Ordinal.sInf_le _ _
+  le_csInf h g := Ordinal.le_sInf _ h _ g
+  le_csSup := by
+    intro S a ha hs; rw [Ordinal.sSup_eq_sInf_upperBounds]
+    apply le_sInf
+    assumption
+    intro u hu
+    apply hu
+    assumption
+  csSup_le := by
+    intro U a hU ha
+    rw [Ordinal.sSup_eq_sInf_upperBounds]
+    apply sInf_le
+    assumption
 
 end Ordinal
