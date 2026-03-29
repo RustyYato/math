@@ -103,8 +103,8 @@ def filter_singleton {U: Set α} [DecidableEq α] (a: α) (ha: a ∈ U) (lc: Lin
   | ι a' r =>
     simp [filter_ι, get_ι]
     split <;> rename_i h
-    congr; rw [if_pos]
-    symm; apply Subtype.val_inj; assumption
+    symm; congr; rw [if_pos]
+    apply Subtype.val_inj; assumption
     rw [if_neg, map_zero]
     rintro rfl
     contradiction

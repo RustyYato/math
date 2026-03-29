@@ -100,6 +100,4 @@ def enumOrd_nonempty.{u} (U: Set Ordinal.{u}) (hU: ¬U.BoundedAbove) (x: Ordinal
   apply Set.mem_image'
   assumption
 
-#print axioms enumOrd_nonempty
-
 end Ordinal

@@ -63,7 +63,7 @@ protected def Subset.insert (U: Subset F V) (v: V) (hv: v ∉ Submodule.span F U
     classical
     apply LinearCombo.iff_eval_zero.mp
     intro lc hlc
-    have := LinearCombo.filter_add_union F (α := V) (insert v U) {v} U (by ext; simp) ?_ lc
+    have := LinearCombo.filter_add_union F (α := V) (insert v U) {v} U (by ext; simp; rw [Eq.comm]) ?_ lc
     · rw [this] at hlc
       rw [map_add] at hlc
       replace hlc := eq_neg_of_add _ _ hlc

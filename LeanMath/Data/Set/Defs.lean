@@ -125,9 +125,9 @@ def ext_univ (a: Set α) : (∀x: α, x ∈ a) -> a = ⊤ := by
   simp [h]
 
 instance : Singleton α (Set α) where
-  singleton a := { Mem := (· = a) }
+  singleton a := { Mem := (a = ·) }
 
-@[simp] def mem_singleton {a: α} : ∀{x}, x ∈ ({a}: Set α) ↔ x = a := Iff.rfl
+@[simp] def mem_singleton {a: α} : ∀{x}, x ∈ ({a}: Set α) ↔ a = x := Iff.rfl
 
 instance : Union (Set α) where
   union a b := { Mem x := x ∈ a ∨ x ∈ b }
@@ -152,7 +152,12 @@ instance : SDiff (Set α) where
 instance : Insert α (Set α) where
   insert a x := {a} ∪ x
 
-@[simp] def mem_insert {a: α} {s: Set α} : ∀{x}, x ∈ insert a s ↔ x = a ∨ x ∈ s := Iff.rfl
+def mem_insert {a: α} {s: Set α} : ∀{x}, x ∈ insert a s ↔ a = x ∨ x ∈ s := Iff.rfl
+@[simp] def mem_insert' {a: α} {s: Set α} : ∀{x}, x ∈ insert a s ↔ x = a ∨ x ∈ s := by
+  intro x; apply Iff.intro
+  iterate 2
+  intro h; rcases h with rfl | h
+  left; rfl; right; assumption
 
 def preimage (f: α -> β) (s: Set β) : Set α where
   Mem x := f x ∈ s
@@ -160,9 +165,9 @@ def preimage (f: α -> β) (s: Set β) : Set α where
 @[simp] def mem_preimage {s: Set β} {f: α -> β} : ∀{x}, x ∈ s.preimage f ↔ f x ∈ s := Iff.rfl
 
 def image (f: ι -> α) (s: Set ι) : Set α where
-  Mem a := ∃i ∈ s, a = f i
+  Mem a := ∃i ∈ s, f i = a
 
-@[simp] def mem_image {s: Set ι} {f: ι -> α} : ∀{x}, x ∈ s.image f ↔ ∃i ∈ s, x = f i := Iff.rfl
+@[simp] def mem_image {s: Set ι} {f: ι -> α} : ∀{x}, x ∈ s.image f ↔ ∃i ∈ s, f i = x := Iff.rfl
 
 def mem_image' {s: Set ι} {f: ι -> α} : x ∈ s -> f x ∈ s.image f := by
   intro h
@@ -357,7 +362,7 @@ def scompl_inj {a b: Set α} : aᶜ = bᶜ ↔ a = b := by
 @[simp] def top_union (a: Set α) : ⊤ ∪ a = ⊤ := by ext; simp
 @[simp] def bot_union (a: Set α) : ⊥ ∪ a = a := by ext; simp
 
-def singleton_eq_insert (a: α) : ({a}: Set α) = insert a ⊥ := by ext; simp
+def singleton_eq_insert (a: α) : ({a}: Set α) = insert a ⊥ := by ext; simp [Set.mem_insert, -Set.mem_insert']
 
 @[simp] def sInter_singleton (a: Set α) : ⋂ ({a}: Set (Set _)) = a := by
   simp [singleton_eq_insert]
@@ -402,8 +407,8 @@ def preimage_compl_eq_image_compl (U: Set (Set α)) : U.preimage (·ᶜ) = U.ima
   intro h; refine ⟨_, h, ?_⟩; simp
   rintro ⟨_, _, rfl⟩; simpa
 
-@[simp] def image_insert (a: α) (U: Set α) (f: α -> β) : (insert a U).image f = insert (f a) (U.image f) := by
-  ext; simp
+@[simp] def image_insert {α β} (a: α) (U: Set α) (f: α -> β) : (insert a U).image f = insert (f a) (U.image f) := by
+  ext b; simp; rw [Eq.comm]
 
 @[simp] def image_empty (f: α -> β) : Set.image f ⊥ = ⊥ := by
   ext; simp
@@ -436,10 +441,7 @@ def nonempty_iff (a: Set α) : a.Nonempty ↔ ¬∀x, x ∉ a := by
   exists u
 
 def image_eq_range (f: α -> β) (s: Set α): s.image f = Set.range (fun x: s => f x.val) := by
-  ext b
-  simp
-
-  sorry
+  ext b; simp
 
 end Set
 
