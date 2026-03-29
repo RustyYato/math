@@ -17,7 +17,8 @@ def card_surj : Function.Surjective card := by
 
 def IsInitial (o: Ordinal) : Prop := ∀x: Ordinal, o.card = x.card -> o ≤ x
 
-def IsInitial.to_lt (a b: Ordinal) (ha: a.IsInitial) (hb: b.IsInitial) : a < b -> a.card < b.card := by
+def IsInitial.to_lt [LEM] (a b: Ordinal) (ha: a.IsInitial) (hb: b.IsInitial) : a < b -> a.card < b.card := by
+  open Classical in
   intro h
   cases a with | @type α r =>
   cases b with | @type β s =>
@@ -37,6 +38,8 @@ def IsInitial.to_lt (a b: Ordinal) (ha: a.IsInitial) (hb: b.IsInitial) : a < b -
 end Ordinal
 
 namespace Cardinal
+
+variable [LEM]
 
 private def exists_ord (c: Cardinal) : ∃o: Ordinal, c = o.card := by
   cases c with | type α =>
@@ -95,6 +98,7 @@ noncomputable def to_initial_ord : (· ≤ ·: Cardinal -> Cardinal -> Prop) ↪
 noncomputable def to_initial_ord_lt : (· < ·: Cardinal -> Cardinal -> Prop) ↪r (· < ·: Ordinal -> Ordinal -> Prop) where
   toEmbedding := to_initial_ord.toEmbedding
   map_rel := by
+    open Classical in
     intro a b
     rw [lt_iff_le_and_not_ge, lt_iff_le_and_not_ge, map_rel to_initial_ord, map_rel to_initial_ord]
     rfl
@@ -103,6 +107,7 @@ instance : @Relation.IsTotal Cardinal (· ≤ ·) := to_initial_ord.liftTotal
 open Classical in
 instance : @Relation.IsTrichotomous Cardinal (· < ·) (· = ·) := inferInstance
 instance : @Relation.IsWelFounded Cardinal (· < ·) := to_initial_ord_lt.liftWellfounded
+open Classical in
 instance : IsLinearOrder Cardinal where
 
 instance : @Relation.IsWellOrder Cardinal (· < ·) where
@@ -138,6 +143,7 @@ def succ_le (c: Cardinal) : ∀{x}, c < x -> c.succ ≤ x := by
   contradiction
 
 def succ_finite (n: ℕ) : succ n = (n + 1: ℕ) := by
+  open Classical in
   apply le_antisymm
   · apply succ_le
     rw [natCast_lt_natCast]

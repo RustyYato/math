@@ -3,6 +3,8 @@ import LeanMath.Order.Set
 
 namespace Ordinal
 
+variable [LEM]
+
 noncomputable def enumOrd (U: Set Ordinal.{u}) (o: Ordinal.{u}) : Ordinal.{u} :=
   sInf (U ∩ Set.ofMem fun x => ∀(o': Ordinal), o' < o -> enumOrd U o' < x)
 termination_by o

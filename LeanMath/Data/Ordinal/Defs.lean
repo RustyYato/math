@@ -105,7 +105,7 @@ instance : LE Ordinal where
     · intro ⟨f⟩
       exact ⟨h₀.toInitialSegment.trans (f.trans h₁.symm.toInitialSegment)⟩
 
-instance : LT Ordinal where
+instance [LEM] : LT Ordinal where
   lt := lift₂ (fun r s => Nonempty (r ≺r s)) <| by
     intro α₀ β₀ α₁ β₁ r₀ r₁ s₀ s₁ _ _ _ _ h₀ h₁
     simp
@@ -142,9 +142,9 @@ def rank_lt_type' (r: α -> α -> Prop) [Relation.IsWellOrder r] (a: α) : rank_
 
 @[simp] def apply_rank_lt_type' (r: α -> α -> Prop) [Relation.IsWellOrder r] (a: α) {x} : rank_lt_type' r a x = x.val := rfl
 
-def rank_lt_type (r: α -> α -> Prop) [Relation.IsWellOrder r] (a: α) : rank r a < type r := ⟨rank_lt_type' r a⟩
+def rank_lt_type [LEM] (r: α -> α -> Prop) [Relation.IsWellOrder r] (a: α) : rank r a < type r := ⟨rank_lt_type' r a⟩
 
-def rank_lt_rank_iff {r: α -> α -> Prop} [Relation.IsWellOrder r] {a b: α} : r a b ↔ rank r a < rank r b := by
+def rank_lt_rank_iff [LEM] {r: α -> α -> Prop} [Relation.IsWellOrder r] {a b: α} : r a b ↔ rank r a < rank r b := by
   apply Iff.intro
   · intro h
     refine ⟨{
@@ -194,7 +194,7 @@ def rank_lt_rank_iff {r: α -> α -> Prop} [Relation.IsWellOrder r] {a b: α} : 
         rw [this]; exact x.property
       apply Subsingleton.allEq
 
-def rank_inj {r: α -> α -> Prop} [Relation.IsWellOrder r] {a b: α} : rank r a = rank r b -> a = b := by
+def rank_inj [LEM] {r: α -> α -> Prop} [Relation.IsWellOrder r] {a b: α} : rank r a = rank r b -> a = b := by
   intro eq
   rcases Relation.trichotomous r a b with h | h | h
   · rw [rank_lt_rank_iff (r := r), eq, ←rank_lt_rank_iff] at h
@@ -203,13 +203,18 @@ def rank_inj {r: α -> α -> Prop} [Relation.IsWellOrder r] {a b: α} : rank r a
   · rw [rank_lt_rank_iff (r := r), eq, ←rank_lt_rank_iff] at h
     nomatch Relation.irrefl h
 
-def of_lt_type {r: α -> α -> Prop} [Relation.IsWellOrder r] : ∀{o}, o < type r -> ∃a, o = rank r a := by
+def of_lt_type [LEM] {r: α -> α -> Prop} [Relation.IsWellOrder r] : ∀{o}, o < type r -> ∃a, o = rank r a := by
   intro o hi
   cases o with | @type β s =>
   have ⟨f⟩ := hi; simp at f
   have ⟨top, htop⟩ := f.IsPrincipal
-  have (a: { a // r a top }) : ∃b, a = f b := by simpa using (htop a.val).mp a.property
-  replace this := Classical.axiomOfChoice this
+  have (a: { a // r a top }) : existsUnique fun b => a = f b := by
+    obtain ⟨a , _, ha⟩ := (htop a.val).mp a.property
+    refine ⟨a, ha, ?_⟩
+    intro b hb
+    apply inj f
+    rw [←ha, hb]
+  replace this := Classical.axiomOfUniqueChoice this
   obtain ⟨g, hg⟩ := this
   exists top
   apply sound
@@ -224,12 +229,12 @@ def of_lt_type {r: α -> α -> Prop} [Relation.IsWellOrder r] : ∀{o}, o < type
     map_rel := map_rel f
     leftInv _ := by
       dsimp; congr; symm
-      apply hg
+      apply (hg _).left
     rightInv _ := by
       symm; dsimp
       apply f.inj
       show f _ = f _
-      rw [←hg]
+      rw [←(hg _).left]
   }
 
 private def ulift_rel (r: α -> α -> Prop) : ULift α -> ULift α -> Prop := fun a b => r a.down b.down
@@ -264,20 +269,20 @@ instance : NatCast Ordinal where
 instance : OfNat Ordinal n where
   ofNat := n
 
-def lt_omega_iff : ∀{o: Ordinal.{u}}, o < omega ↔ ∃n: ℕ, o = n := by
+def lt_omega_iff [LEM] : ∀{o: Ordinal.{u}}, o < omega ↔ ∃n: ℕ, o = n := by
   intro o
   apply Iff.intro
   · cases o with | type r =>
     intro ⟨g⟩
     dsimp at g
     replace g := g.trans_init (ulift_rel_eqv_rel _).toInitialSegment
-    have ⟨n, hn⟩ := g.IsPrincipal
+    have ⟨n, hn, nunique⟩ := g.IsUniquePrincipal
     have  hg (x): g x < n := by
       apply (hn _).mpr
       apply Set.mem_range'
     replace hn (x: Fin n) := (hn x).mp x.isLt
-    simp at hn; replace hn := Classical.axiomOfChoice hn
-    obtain ⟨f, hf⟩ := hn
+    let f := (Equiv.ofBij (Bijection.embed_eqv_range g))
+    have hf (x): g x = f x := by unfold f; rw [Equiv.apply_ofBij]; rfl
     exists n
     apply sound
     apply RelEquiv.trans _ (ulift_rel_eqv_rel _).symm
@@ -287,14 +292,16 @@ def lt_omega_iff : ∀{o: Ordinal.{u}}, o < omega ↔ ∃n: ℕ, o = n := by
           val := g x
           isLt := hg _
       }
-      invFun := f
+      invFun x := f.symm ⟨x, hn _⟩
       map_rel := map_rel g
-      leftInv x := by simp; congr; symm; apply hf
+      leftInv x := by
+        dsimp; congr
+        rw [hf, Equiv.symm_coe]
       rightInv := by
         intro x
         simp; apply g.inj
         show g _ = g _
-        rw [←hf]
+        rw [hf, Equiv.symm_coe]
     }
   · rintro ⟨n, rfl⟩
     refine ⟨?_⟩
@@ -374,7 +381,7 @@ def succ : Ordinal -> Ordinal :=
         assumption
     }
 
-def lt_succ_self (o: Ordinal) : o < o.succ := by
+def lt_succ_self [LEM] (o: Ordinal) : o < o.succ := by
   cases o with | @type α r =>
   exact ⟨{
       toFun := .some
@@ -394,7 +401,7 @@ def lt_succ_self (o: Ordinal) : o < o.succ := by
         apply succ_rel.some_lt_none
   }⟩
 
-instance : IsPartialOrder Ordinal where
+instance [LEM] : IsPartialOrder Ordinal where
   lt_iff_le_and_not_ge := by
     intro a b
     cases a with | @type α r =>
@@ -493,7 +500,7 @@ instance : Add Ordinal.{u} where
         apply map_rel h₁
     }
 
-private def lt_trichotomy_of_le (o: Ordinal) : ∀{a b: Ordinal}, a ≤ o -> b ≤ o -> a < b ∨ a = b ∨ b < a := by
+private def lt_trichotomy_of_le [LEM] (o: Ordinal) : ∀{a b: Ordinal}, a ≤ o -> b ≤ o -> a < b ∨ a = b ∨ b < a := by
   classical
   intro a b ha hb
   replace ha := lt_or_eq_of_le ha
@@ -537,16 +544,16 @@ def le_add_right (a b: Ordinal.{u}) : b ≤ a + b := by
     map_rel := by simp
   }
 
-instance : @Relation.IsTrichotomous Ordinal (· < ·) (· = ·) where
+instance [LEM] : @Relation.IsTrichotomous Ordinal (· < ·) (· = ·) where
   trichotomous := by
     intro a b
     apply lt_trichotomy_of_le (a + b)
     apply le_add_left
     apply le_add_right
 
-instance : IsLinearOrder Ordinal where
+instance [LEM] : IsLinearOrder Ordinal where
 
-instance : @Relation.IsWelFounded Ordinal (· < ·) where
+instance [LEM] : @Relation.IsWelFounded Ordinal (· < ·) where
   wf := by
     apply WellFounded.intro
     intro o
@@ -563,7 +570,7 @@ instance : @Relation.IsWelFounded Ordinal (· < ·) where
     apply ih
     rwa [←rank_lt_rank_iff] at h
 
-instance : WellFoundedRelation Ordinal where
+instance [LEM] : WellFoundedRelation Ordinal where
   rel a b := a < b
   wf := Relation.wf _
 
@@ -581,7 +588,7 @@ variable {r: α -> α -> Prop} {s: β -> β -> Prop} {t: γ -> γ -> Prop}
    [Relation.IsWellOrder r₀] [Relation.IsWellOrder r₁]
    [Relation.IsWellOrder s₀] [Relation.IsWellOrder s₁]
 
-private def min_rel_emb_left : min_rel r s ≼r r where
+private def min_rel_emb_left [LEM] : min_rel r s ≼r r where
   toFun := min_rel_ty.left
   inj := by
     intro ⟨a, b₀, h₀⟩ ⟨a₁, b₀, h₁⟩ h
@@ -597,7 +604,7 @@ private def min_rel_emb_left : min_rel r s ≼r r where
     have ⟨b, rank_eq⟩ := of_lt_type (lt_trans this (rank_lt_type _ _))
     exists ⟨a, b, rank_eq⟩
 
-private def min_rel_emb_right : min_rel r s ≼r s where
+private def min_rel_emb_right [LEM] : min_rel r s ≼r s where
   toFun := min_rel_ty.right
   inj := by
     intro ⟨a, b₀, h₀⟩ ⟨a₁, b₀, h₁⟩ h
@@ -617,7 +624,7 @@ private def min_rel_emb_right : min_rel r s ≼r s where
     have ⟨a, rank_eq⟩ := of_lt_type (lt_trans this (rank_lt_type _ _))
     exists ⟨a, b, rank_eq.symm⟩
 
-private instance : Relation.IsWellOrder (min_rel r s) := min_rel_emb_left.liftWellOrder
+private instance [LEM] : Relation.IsWellOrder (min_rel r s) := min_rel_emb_left.liftWellOrder
 
 def rank_eq_of_init {F: Type*} [EmbeddingLike F α β] [IsInitialSegment F r s] (f: F)
   : rank r a = rank s (f a) := by
@@ -646,7 +653,7 @@ def rank_eq_of_init {F: Type*} [EmbeddingLike F α β] [IsInitialSegment F r s] 
       rw [←hg]
   }
 
-instance : Min Ordinal.{u} where
+instance [LEM] : Min Ordinal.{u} where
   min := lift₂ (fun r s => type (min_rel r s)) <| by
     intro α₀ β₀ α₁ β₁ r₀ r₁ s₀ s₁ _ _ _ _ h g
     dsimp; apply sound
@@ -672,7 +679,7 @@ instance : Min Ordinal.{u} where
         apply map_rel h
     }
 
-instance : IsSemiLatticeMin Ordinal where
+instance [LEM] : IsSemiLatticeMin Ordinal where
   min_le_left {a b} := by
     cases a with | _ r =>
     cases b with | _ s =>
@@ -735,9 +742,9 @@ private def max_rel_ty.rank : max_rel_ty r s -> Ordinal :=
     | .inl x => Ordinal.rank r x
     | .inr x => Ordinal.rank s x) fun _ _ => id
 
-private def max_rel (a b: max_rel_ty r s) := a.rank < b.rank
+private def max_rel [LEM] (a b: max_rel_ty r s) := a.rank < b.rank
 
-private def max_rel_init_ord : max_rel r s ↪r ((· < ·): Ordinal -> Ordinal -> Prop) where
+private def max_rel_init_ord [LEM] : max_rel r s ↪r ((· < ·): Ordinal -> Ordinal -> Prop) where
   toFun a := a.rank
   inj := by
     intro a b h
@@ -748,7 +755,7 @@ private def max_rel_init_ord : max_rel r s ↪r ((· < ·): Ordinal -> Ordinal -
     assumption
   map_rel := Iff.rfl
 
-instance : Relation.IsWellOrder (max_rel r s) := (max_rel_init_ord r s).liftWellOrder
+instance [LEM] : Relation.IsWellOrder (max_rel r s) := (max_rel_init_ord r s).liftWellOrder
 
 end
 
@@ -756,7 +763,7 @@ end
 private def quot_lift_mk {s: Setoid α} {x: α} {f: α -> β} {h} :
   Quotient.lift f h (Quotient.mk s x) = f x := rfl
 
-private def max_rel_congr_init (f: r₀ ≼r r₁) (g: s₀ ≼r s₁) : max_rel r₀ s₀ ≼r max_rel r₁ s₁ where
+private def max_rel_congr_init [LEM] (f: r₀ ≼r r₁) (g: s₀ ≼r s₁) : max_rel r₀ s₀ ≼r max_rel r₁ s₁ where
   toFun := Quotient.lift (fun x => Quotient.mk _ (x.map f g)) <| by
     intro a b h
     dsimp
@@ -810,7 +817,7 @@ private def max_rel_congr_init (f: r₀ ≼r r₁) (g: s₀ ≼r s₁) : max_rel
     · obtain ⟨x₁, rfl⟩ := Set.mem_range.mp <| g.IsInitial x₀ x₁ h
       exists Quotient.mk _ (Sum.inr x₁)
 
-private def emb_max_rel_left : r ≼r max_rel r s where
+private def emb_max_rel_left [LEM] : r ≼r max_rel r s where
   toFun x := Quotient.mk _ (.inl x)
   inj _ _ h := rank_inj (Quotient.exact h)
   map_rel := rank_lt_rank_iff
@@ -825,7 +832,7 @@ private def emb_max_rel_left : r ≼r max_rel r s where
     apply Quotient.sound
     assumption
 
-private def emb_max_rel_right : s ≼r max_rel r s where
+private def emb_max_rel_right [LEM] : s ≼r max_rel r s where
   toFun x := Quotient.mk _ (.inr x)
   inj _ _ h := rank_inj (Quotient.exact h)
   map_rel := rank_lt_rank_iff
@@ -840,7 +847,7 @@ private def emb_max_rel_right : s ≼r max_rel r s where
     assumption
     exists b
 
-instance : Max Ordinal where
+instance [LEM] : Max Ordinal where
   max := lift₂ (fun r s => type (max_rel r s)) <| by
     intro α₀ β₀ α₁ β₁ r₀ r₁ s₀ s₁ _ _ _ _ f g
     apply sound
@@ -852,7 +859,7 @@ instance : Max Ordinal where
     exact f.symm.toInitialSegment
     exact g.symm.toInitialSegment
 
-instance : IsLattice Ordinal where
+instance [LEM] : IsLattice Ordinal where
   left_le_max {a b} := by
     cases a with | type r =>
     cases b with | type s =>

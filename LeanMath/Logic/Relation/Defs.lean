@@ -345,13 +345,36 @@ def exists_min [LEM] : ∃a, P a ∧ ∀b, R b a -> ¬P b := by
     apply g
     refine ⟨_, px, hx⟩
 
+section
+
 open Classical
 
-noncomputable def min : α := choose (exists_min R h)
-def min_spec : P (min R h) := (choose_spec (exists_min R h)).left
-def min_minimal : ∀a, R a (min R h) -> ¬P a := (choose_spec (exists_min R h)).right
+noncomputable def arb_min : α := choose (exists_min R h)
+def arb_min_spec : P (arb_min R h) := (choose_spec (exists_min R h)).left
+def arb_min_minimal : ∀a, R a (arb_min R h) -> ¬P a := (choose_spec (exists_min R h)).right
 
-attribute [irreducible] min
+attribute [irreducible] arb_min
+end
+
+variable [Relation.IsTrichotomous R (· = ·)]
+
+variable [LEM]
+
+def exists_unique_min : existsUnique (fun a => P a ∧ ∀b, R b a -> ¬P b) := by
+  obtain ⟨x, Px, hx⟩ := exists_min R h
+  refine ⟨x, ⟨Px, hx⟩, ?_⟩
+  intro y ⟨Py, hy⟩
+  rcases Relation.trichotomous R x y with h | h | h
+  · have := hy _ h
+    contradiction
+  · assumption
+  · have := hx _ h
+    contradiction
+
+noncomputable def min : α := Classical.choose_unique (exists_unique_min R h)
+def min_spec : P (min R h) := (Classical.choose_unique_spec (exists_unique_min R h)).left
+def min_minimal : ∀a, R a (min R h) -> ¬P a := (Classical.choose_unique_spec (exists_unique_min R h)).right
+def min_unique : ∀x, P x -> (∀a, R a x -> ¬P a) -> min R h = x := fun x Px hx => (Classical.choose_unique_spec_unique (exists_unique_min R h)) x ⟨Px, hx⟩
 
 end WellFounded
 

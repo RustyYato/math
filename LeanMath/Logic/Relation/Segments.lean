@@ -32,6 +32,16 @@ instance : IsRelHom (r ≺r s) r s where
 
 def InitialSegment.IsInitial (f: r ≼r s) : Relation.IsInitial s f := f.isInitial
 def PrincipalSegment.IsPrincipal (f: r ≺r s) : ∃top, Relation.IsPrincipal s f top := f.isPrincipal
+def PrincipalSegment.IsUniquePrincipal [Relation.IsIrrefl s] [Relation.IsTrichotomous s (· = ·)] (f: r ≺r s) : existsUnique fun top => Relation.IsPrincipal s f top := by
+  have ⟨top, htop⟩ := f.IsPrincipal
+  refine ⟨top, htop, ?_⟩
+  intro b hb
+  rcases Relation.trichotomous s top b with h | h | h
+  · have := Relation.irrefl ((htop top).mpr ((hb top).mp h))
+    contradiction
+  · assumption
+  · have := Relation.irrefl ((hb b).mpr ((htop b).mp h))
+    contradiction
 
 instance : IsInitialSegment (r ≼r s) r s where
   isInitial := InitialSegment.isInitial
@@ -183,7 +193,7 @@ def InitialSegment.principal_or_eqv [Relation.IsWellOrder s] (f: r ≼r s) : Non
     map_rel := map_rel f
   }
 
-def InitialSegment.trans_princ [Relation.IsWellOrder t] (f: r ≼r s) (g: s ≺r t) : r ≺r t where
+def InitialSegment.trans_princ [LEM] [Relation.IsWellOrder t] (f: r ≼r s) (g: s ≺r t) : r ≺r t where
   toRelEmbedding := f.toRelEmbedding.trans g.toRelEmbedding
   isPrincipal := by
     have := g.toRelEmbedding.liftWellOrder
@@ -201,15 +211,15 @@ def InitialSegment.trans_princ [Relation.IsWellOrder t] (f: r ≼r s) (g: s ≺r
     exists top
     intro b
     symm; apply Iff.intro
-    · simp; intro _ rfl
+    · simp only [Set.mem_range, forall_exists_index]; intro _ rfl
       apply htop
-    · simp; intro hb
+    · simp only [Set.mem_range]; intro hb
       have := top_min _ hb
-      simp at this
+      simp only [LEM.not_forall] at this
       let a := Relation.min r this
       have ha := Relation.min_spec r this
       have a_min : ∀x, r x a -> _ := Relation.min_minimal r this
-      simp at a_min
+      simp only [LEM.not_not] at a_min
       exists a
       rcases Relation.trichotomous t b (g (f a)) with h | h | h
       · have := a_min

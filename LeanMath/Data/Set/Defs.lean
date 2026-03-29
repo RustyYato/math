@@ -1,6 +1,7 @@
 import LeanMath.Tactic.TypeStar
 import LeanMath.Logic.LEM
 import LeanMath.Data.TopBot.Defs
+import LeanMath.Data.Equiv.Defs
 
 structure Set (α: Type*) where
   ofMem :: Mem: α -> Prop
@@ -432,3 +433,15 @@ def Subtype.val_inj {P: α -> Prop} : Function.Injective (Subtype.val (p := P)) 
   intro a b h
   cases a; cases b; cases h
   rfl
+
+def Bijection.embed_eqv_range [EmbeddingLike F α β] (f: F) : α ↭ Set.range f where
+  toFun x := {
+    val := f x
+    property := ⟨_, True.intro, rfl⟩
+  }
+  inj' := by
+    intro a b h
+    exact inj f (Subtype.mk.inj h)
+  surj' := by
+    intro ⟨_, _, _, rfl⟩
+    refine ⟨_, rfl⟩

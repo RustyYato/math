@@ -11,8 +11,8 @@ namespace Bijection
 
 instance : FunLike (α ↭ β) α β where
 
-def inj (f: α ↭ β) : Function.Injective f := f.inj'
-def surj (f: α ↭ β) : Function.Surjective f := f.surj'
+protected def inj (f: α ↭ β) : Function.Injective f := f.inj'
+protected def surj (f: α ↭ β) : Function.Surjective f := f.surj'
 
 protected def id (α: Sort*) : α ↭ α where
   toFun := id

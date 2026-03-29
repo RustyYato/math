@@ -1,4 +1,11 @@
 import LeanMath.Data.Bijection.Defs
+import LeanMath.Data.Embedding.Defs
+
+instance : EmbeddingLike (α ↭ β) α β where
+  coeEmbedding f := {
+    toFun := f
+    inj := f.inj
+  }
 
 namespace Bijection
 
