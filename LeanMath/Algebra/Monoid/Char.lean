@@ -62,10 +62,16 @@ def char_exists [LEM] (α: Type*) [AddMonoidOps α] [IsAddMonoid α] : ∃n, Has
       have ⟨a, ha⟩ := h (n + 1) (Nat.zero_lt_succ _)
       exact ha (hk _)
 
-open Classical in
-noncomputable def char (α: Type*) [AddMonoidOps α] [IsAddMonoid α]: ℕ := Classical.choose (char_exists α)
-open Classical in
-def char_spec (α: Type*) [AddMonoidOps α] [IsAddMonoid α]: HasChar α (char α) := Classical.choose_spec (char_exists α)
+private def char_exists_unqiue [LEM] (α: Type*) [AddMonoidOps α] [IsAddMonoid α] : existsUnique (HasChar α) := by
+  obtain ⟨n, h⟩ := char_exists α
+  refine ⟨n, h, ?_⟩
+  intro m hm
+  apply unique h hm
+
+open UniqueChoice in
+noncomputable def char [LEM] (α: Type*) [AddMonoidOps α] [IsAddMonoid α]: ℕ := Classical.choose_unique (char_exists_unqiue α)
+open UniqueChoice in
+def char_spec [LEM] (α: Type*) [AddMonoidOps α] [IsAddMonoid α]: HasChar α (char α) := Classical.choose_unique_spec (char_exists_unqiue α)
 
 def of_eqv [HasChar α n] (eqv: α ≃+ β) : HasChar β n where
   dvd_iff_nsmul_eq_zero x := by
