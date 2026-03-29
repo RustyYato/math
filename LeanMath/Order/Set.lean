@@ -27,4 +27,22 @@ def Iio (a: α) : Set α where
 def Ioi (a: α) : Set α where
   Mem x := a < x
 
+def not_bddAbove_iff [LEM] [IsLinearOrder α] {s: Set α} : ¬s.BoundedAbove ↔ ∀x, ∃a ∈ s, x < a := by
+  simp only [BoundedAbove, upperBounds, not_nonempty, eq_empty_iff, ofMem_mem, LEM.not_forall]
+  apply Iff.intro
+  · intro h x
+    have ⟨a, ha, h⟩ := h x
+    have := not_le.mp h
+    exists a
+  · intro h x
+    have ⟨a, ha, h⟩ := h x
+    have := not_le.mpr h
+    exists a
+    exists ha
+
 end Set
+
+instance [SupSet α] : InfSet αᵒᵖ where
+  sInf := sSup (α := α)
+instance [InfSet α] : SupSet αᵒᵖ where
+  sSup := sInf (α := α)

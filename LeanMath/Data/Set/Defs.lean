@@ -252,6 +252,13 @@ protected abbrev Nonempty (s: Set α) : Prop := Nonempty s
   obtain ⟨x, hx⟩ := h
   contradiction
 
+@[simp] def eq_empty_iff {a: Set α} : a = ⊥ ↔ ∀x, x ∉ a := by
+  apply Iff.intro
+  intro rfl; nofun
+  intro h
+  ext a
+  simp [h]
+
 @[simp] def ne_empty [LEM] {a: Set α} : a ≠ ⊥ ↔ a.Nonempty := by
   apply LEM.not_iff_not.mp
   apply Iff.trans LEM.not_not
@@ -428,6 +435,12 @@ def nonempty_iff (a: Set α) : a.Nonempty ↔ ¬∀x, x ∉ a := by
   exists u
 
 end Set
+
+class IsLawfulSup (α: Type*) [LE α] [LT α] [SupSet α] where
+  protected le_sSup (U: Set α) (u: α) (hu: u ∈ U) : u ≤ ⨆ U
+
+class IsLawfulInf (α: Type*) [LE α] [LT α] [InfSet α] where
+  protected sInf_le (U: Set α) (u: α) (hu: u ∈ U) : ⨅ U ≤ u
 
 def Subtype.val_inj {P: α -> Prop} : Function.Injective (Subtype.val (p := P)) := by
   intro a b h

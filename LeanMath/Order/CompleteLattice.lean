@@ -1,12 +1,6 @@
 import LeanMath.Order.Defs
 import LeanMath.Data.Set.Defs
 
-class IsLawfulSup (α: Type*) [LE α] [LT α] [SupSet α] where
-  protected le_sSup (U: Set α) (u: α) (hu: u ∈ U) : u ≤ ⨆ U
-
-class IsLawfulInf (α: Type*) [LE α] [LT α] [InfSet α] where
-  protected sInf_le (U: Set α) (u: α) (hu: u ∈ U) : ⨅ U ≤ u
-
 class IsCompleteSemilatticeSup (α: Type*) [LE α] [LT α] [Max α] [SupSet α] [Top α] [Bot α] : Prop extends IsSemiLatticeMax α, IsLawfulSup α, IsLawfulTop α, IsLawfulBot α where
   protected sSup_le (U: Set α) (x: α) : (∀u ∈ U, u ≤ x) -> ⨆ U ≤ x
 

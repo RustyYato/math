@@ -151,7 +151,7 @@ private noncomputable def of_not_eq_fin_pre (α: Type*) (h: ∀x: ℕ, type α �
     have : U.Nonempty := by
       simp [U]
       apply Classical.byContradiction
-      intro hf; simp at hf
+      intro hf; rw [Set.not_nonempty] at hf
       have mem_range : (Set.range f)ᶜ = ⊤ᶜ := by rw [hf, Set.compl_top]
       replace mem_range := Set.scompl_inj.mp mem_range
       have : Fin limit ↭ α := {
