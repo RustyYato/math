@@ -1,7 +1,7 @@
 import LeanMath.Data.Set.Defs
 import LeanMath.Data.Equiv.Defs
 
-variable {α: Type u} {β: Type v} (f: α ↪ β) (g: β ↪ α)
+variable [LEM] {α: Type u} {β: Type v} (f: α ↪ β) (g: β ↪ α)
 
 private def preCset : Nat -> Set α
 | 0 => (Set.range g)ᶜ
@@ -9,12 +9,17 @@ private def preCset : Nat -> Set α
 
 private def Cset : Set α := Set.iSup (fun i: ℕ => preCset f g i)
 
-private def mem_range_g (h: a ∉ Cset f g) : ∃b, a = g b := by
+private def mem_range_g (h: a ∉ Cset f g) : existsUnique fun b => a = g b := by
   unfold Cset at h
-  simp at h
+  simp only [Set.mem_iSup, not_exists] at h
   replace h := h 0
-  simp [preCset] at h
-  assumption
+  simp [LEM.not_forall, -Classical.not_not, LEM.not_not, preCset] at h
+  obtain ⟨i, hi⟩ := h
+  exists i
+  apply And.intro hi
+  intro b hb
+  rw [hi] at hb
+  exact inj g hb
 
 def mem_Cset_image (h: a ∈ Cset f g) : g (f a) ∈ Cset f g := by
   simp [Cset] at *
@@ -24,13 +29,13 @@ def mem_Cset_image (h: a ∈ Cset f g) : g (f a) ∈ Cset f g := by
   assumption
 
 private noncomputable def bij (f: α ↪ β) (g: β ↪ α) (a: α) : β :=
-  open Classical in
+  open UniqueChoice in
   if h:a ∈ Cset f g then
     f a
   else
-    Classical.choose (mem_range_g f g h)
+    Classical.choose_unique (mem_range_g f g h)
 
-def cantor_bernstein_schröder : Nonempty (α ↭ β) := by
+noncomputable def cantor_bernstein_schröder : α ↭ β := by
   let C := Set.iSup (fun i: ℕ => preCset f g i)
   refine ⟨bij f g, ?_, ?_⟩
   · intro a₀ a₁ h
@@ -38,7 +43,7 @@ def cantor_bernstein_schröder : Nonempty (α ↭ β) := by
     split at h <;> split at h <;> rename_i h₀ h₁
     · exact f.inj h
     · exfalso
-      have := Classical.choose_spec (mem_range_g _ _ h₁)
+      have := Classical.choose_unique_spec (mem_range_g _ _ h₁)
       rw [←h] at this
       clear h
       rw [this] at h₁
@@ -46,19 +51,19 @@ def cantor_bernstein_schröder : Nonempty (α ↭ β) := by
       apply mem_Cset_image
       assumption
     · exfalso
-      have := Classical.choose_spec (mem_range_g _ _ h₀)
+      have := Classical.choose_unique_spec (mem_range_g _ _ h₀)
       rw [h] at this
       clear h
       rw [this] at h₀
       apply h₀
       apply mem_Cset_image
       assumption
-    · have g₀ := Classical.choose_spec (mem_range_g _ _ h₀)
-      have g₁ := Classical.choose_spec (mem_range_g _ _ h₁)
+    · have g₀ := Classical.choose_unique_spec (mem_range_g _ _ h₀)
+      have g₁ := Classical.choose_unique_spec (mem_range_g _ _ h₁)
       rwa [h, ←g₁] at g₀
   · intro b
     let a := g b
-    by_cases h:a ∈ Cset f g
+    rcases em (a ∈ Cset f g) with h | h
     · simp [Cset] at h
       obtain ⟨i, hi⟩ := h
       cases i with
@@ -79,6 +84,6 @@ def cantor_bernstein_schröder : Nonempty (α ↭ β) := by
       unfold bij
       rw [dif_neg h]
       apply inj g
-      rw [←Classical.choose_spec (mem_range_g _ _ h)]
+      rw [←Classical.choose_unique_spec (mem_range_g _ _ h)]
 
-noncomputable def Equiv.antisymm : α ≃ β := Equiv.ofBij (Classical.choice (cantor_bernstein_schröder f g))
+noncomputable def Equiv.antisymm : α ≃ β := Equiv.ofBij (cantor_bernstein_schröder f g)

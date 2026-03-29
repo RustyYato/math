@@ -157,13 +157,19 @@ instance : IsSemiring ℕ∞ where
   natCast_one := rfl
   natCast_succ _ := rfl
 
-noncomputable def card (α: Sort*) : ℕ∞ :=
-  open Classical in
-  if h:∃n, Nonempty (Fin n ≃ α) then (Classical.choose h: ℕ) else ∞
+private def card_unique (h: ∃n, Nonempty (Fin n ≃ α)) : existsUnique fun n => Nonempty (Fin n ≃ α) := by
+    obtain ⟨n, ⟨h⟩⟩ := h
+    refine ⟨n, ⟨h⟩, ?_⟩
+    intro m ⟨g⟩
+    exact Equiv.of_fin_eqv (h.trans g.symm)
 
-def card_spec (h: Fin n ≃ α) : ENat.card α = n := by
+noncomputable def card [LEM] (α: Sort*) : ℕ∞ :=
+  open UniqueChoice in
+  if h:∃n, Nonempty (Fin n ≃ α) then (Classical.choose_unique (P := fun n: ℕ => Nonempty (Fin n ≃ α)) (card_unique h): ℕ) else ∞
+
+def card_spec [LEM] (h: Fin n ≃ α) : ENat.card α = n := by
   have spec : ∃n, Nonempty (Fin n ≃ α) := ⟨n, ⟨h⟩⟩
-  have ⟨spec⟩  := Classical.choose_spec spec
+  have ⟨spec⟩  := Classical.choose_unique_spec (card_unique spec)
   unfold card; rw [dif_pos ⟨_, ⟨h⟩⟩]
   congr;
   apply Equiv.of_fin_eqv

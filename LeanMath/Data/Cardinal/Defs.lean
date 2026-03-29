@@ -58,7 +58,7 @@ instance : LE Cardinal.{u} where
 instance : LT Cardinal.{u} where
   lt a b := a ≤ b ∧ ¬b ≤ a
 
-instance : IsPartialOrder Cardinal.{u} where
+instance [LEM] : IsPartialOrder Cardinal.{u} where
   lt_iff_le_and_not_ge := Iff.rfl
   refl x := by
     cases x
@@ -77,9 +77,7 @@ instance : IsPartialOrder Cardinal.{u} where
     cases b with | _ β =>
     intro ⟨f⟩ ⟨g⟩
     apply sound
-    apply Equiv.antisymm
-    assumption
-    assumption
+    exact Equiv.antisymm f g
 
 instance : Add Cardinal.{u} where
   add := lift₂ (type <|· ⊕ ·) <| by
@@ -256,6 +254,7 @@ private noncomputable def of_not_eq_fin (α: Type*) (h: ∀x: ℕ, type α ≠ x
     simpa using eq
 
 def lt_omega_iff_natCast : ∀{x}, x < ω ↔ ∃n: ℕ, x = n := by
+  open Classical in
   intro x; apply Iff.intro
   · cases x with | _ α =>
     intro ⟨⟨f⟩, g⟩
@@ -336,7 +335,7 @@ def natCast_le_natCast {n m: ℕ} : (n: Cardinal) ≤ m ↔ n ≤ m := by
     apply Embedding.fin_of_le
     assumption
 
-def natCast_lt_natCast {n m: ℕ} : (n: Cardinal) < m ↔ n < m := by
+def natCast_lt_natCast [LEM] {n m: ℕ} : (n: Cardinal) < m ↔ n < m := by
   rw [lt_iff_le_and_not_ge, lt_iff_le_and_not_ge,
     natCast_le_natCast, natCast_le_natCast]
 
