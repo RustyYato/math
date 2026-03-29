@@ -384,6 +384,12 @@ def of_lt_max [IsLinearOrder α] [IsSemiLatticeMax α] {x a b: α} : x < a ⊔ b
     apply not_le.mp
     assumption
 
+def lt_min [IsLinearOrder α] [IsSemiLatticeMin α] {x a b: α} : x < a -> x < b -> x < a ⊓ b := by
+  intro ha hb
+  rcases le_total a b with h | h
+  rwa [min_eq_left h]
+  rwa [min_eq_right h]
+
 end
 
 instance [DecidableLE α] [FunLike F α β] [IsOrderHom F α β] [IsPartialOrder α] [IsPreorder β] : EmbeddingLike F α β where
