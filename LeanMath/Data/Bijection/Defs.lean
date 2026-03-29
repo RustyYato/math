@@ -30,27 +30,27 @@ abbrev trans (f: α ↭ β) (g: β ↭ γ) : α ↭ γ := g.comp f
 @[simp] def apply_comp (f: β ↭ γ) (g: α ↭ β) (x: α) : (f.comp g) x = f (g x) := rfl
 @[simp] def apply_trans (f: β ↭ γ) (g: α ↭ β) (x: α) : (g.trans f) x = f (g x) := rfl
 
-noncomputable def invFun (e: α ↭ β) : β -> α :=
-  fun b => Classical.choose (e.surj b)
-noncomputable def invFun_spec (e: α ↭ β) : ∀b, e (e.invFun b) = b :=
-  fun b => Classical.choose_spec (e.surj b)
+-- noncomputable def invFun (e: α ↭ β) : β -> α :=
+--   fun b => Classical.choose (e.surj b)
+-- noncomputable def invFun_spec (e: α ↭ β) : ∀b, e (e.invFun b) = b :=
+--   fun b => Classical.choose_spec (e.surj b)
 
-noncomputable def symm (f: α ↭ β) : β ↭ α where
-  toFun := f.invFun
-  inj' := by
-    intro a b h
-    obtain ⟨a, rfl⟩ := f.surj a
-    obtain ⟨b, rfl⟩ := f.surj b
-    have : f (f.invFun (f a)) = f (f.invFun (f b)) := by rw [h]
-    rwa [invFun_spec, invFun_spec] at this
-  surj' a := by
-    exists f a
-    apply f.inj
-    rw [invFun_spec]
+-- noncomputable def symm (f: α ↭ β) : β ↭ α where
+--   toFun := f.invFun
+--   inj' := by
+--     intro a b h
+--     obtain ⟨a, rfl⟩ := f.surj a
+--     obtain ⟨b, rfl⟩ := f.surj b
+--     have : f (f.invFun (f a)) = f (f.invFun (f b)) := by rw [h]
+--     rwa [invFun_spec, invFun_spec] at this
+--   surj' a := by
+--     exists f a
+--     apply f.inj
+--     rw [invFun_spec]
 
-def symm_coe (f: α ↭ β) (x: β) : f (f.symm x) = x := by apply invFun_spec
-def coe_symm (f: α ↭ β) (x: α) : f.symm (f x) = x := by
-  apply f.inj
-  apply invFun_spec
+-- def symm_coe (f: α ↭ β) (x: β) : f (f.symm x) = x := by apply invFun_spec
+-- def coe_symm (f: α ↭ β) (x: α) : f.symm (f x) = x := by
+--   apply f.inj
+--   apply invFun_spec
 
 end Bijection

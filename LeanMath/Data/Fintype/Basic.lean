@@ -22,13 +22,14 @@ private def ofEmbed' [LEM] (emb: α ↪ Fin n) : Finite α := by
         surj' := hf
       }
       apply ofBij (α := Fin _)
-      exact bij.symm
-    · simp [Function.Surjective] at hf
-      obtain ⟨x, hx⟩ := hf
+      exact (Equiv.ofBij bij).symm.toBij
+    · obtain ⟨x, hx⟩ := LEM.not_forall.mp hf
+      rw [not_exists] at hx
       exact ih (emb.erase_fin _ hx)
 
-def ofEmbed [Finite β] (emb: α ↪ β) : Finite α := by
-  open Classical in -- FIXME[classical]: use multisets/finsets to redo this proof
+def ofEmbed [LEM] [hf: Finite β] (emb: α ↪ β) : Finite α := by
+  obtain ⟨hf⟩ := hf
+  open UniqueChoice in
   induction Fintype.finEquiv β with | _ f =>
   apply ofEmbed'
   exact emb.trans f.symm.toEmbedding
