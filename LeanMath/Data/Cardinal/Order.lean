@@ -39,7 +39,7 @@ end Ordinal
 
 namespace Cardinal
 
-variable [LEM]
+open Classical
 
 private def exists_ord (c: Cardinal) : ∃o: Ordinal, c = o.card := by
   cases c with | type α =>
@@ -98,16 +98,13 @@ noncomputable def to_initial_ord : (· ≤ ·: Cardinal -> Cardinal -> Prop) ↪
 noncomputable def to_initial_ord_lt : (· < ·: Cardinal -> Cardinal -> Prop) ↪r (· < ·: Ordinal -> Ordinal -> Prop) where
   toEmbedding := to_initial_ord.toEmbedding
   map_rel := by
-    open Classical in
     intro a b
     rw [lt_iff_le_and_not_ge, lt_iff_le_and_not_ge, map_rel to_initial_ord, map_rel to_initial_ord]
     rfl
 
 instance : @Relation.IsTotal Cardinal (· ≤ ·) := to_initial_ord.liftTotal
-open Classical in
 instance : @Relation.IsTrichotomous Cardinal (· < ·) (· = ·) := inferInstance
 instance : @Relation.IsWelFounded Cardinal (· < ·) := to_initial_ord_lt.liftWellfounded
-open Classical in
 instance : IsLinearOrder Cardinal where
 
 instance : @Relation.IsWellOrder Cardinal (· < ·) where
