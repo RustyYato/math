@@ -1,5 +1,6 @@
 import LeanMath.Logic.Funlike
 import LeanMath.Logic.Nontrivial
+import LeanMath.Logic.LEM
 import LeanMath.Logic.IsEmpty
 
 structure Embedding (α β: Sort*) where

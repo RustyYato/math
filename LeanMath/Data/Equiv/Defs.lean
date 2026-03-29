@@ -1,4 +1,5 @@
 import LeanMath.Logic.Funlike
+import LeanMath.Tactic.AxiomBlame
 import LeanMath.Data.Bijection.Defs
 import LeanMath.Data.Embedding.Defs
 
@@ -133,16 +134,34 @@ def plift (α: Sort u) : α ≃ PLift α where
   leftInv _ := rfl
   rightInv _ := rfl
 
-noncomputable def ofBij (f: α ↭ β) : α ≃ β :=
-  Classical.choice <|
-  have ⟨g, hg⟩ := Classical.axiomOfChoice f.surj
+private noncomputable def existsOfBij (f: α ↭ β) : ∃g: α ≃ β, ∀x, g x = f x :=
+  have ⟨g, hg⟩ := Classical.axiomOfUniqueChoice (P := fun b a => f a = b) <| by
+    intro b
+    obtain ⟨a, rfl⟩ := f.surj b
+    exists a
+    apply And.intro
+    rfl
+    intro a' h
+    exact f.inj h.symm
   ⟨{
     toFun := f
     invFun := g
-    leftInv := hg
-    rightInv b := by apply f.inj; rw [hg]
-  }⟩
+    leftInv _ := (hg _).left
+    rightInv b := by apply f.inj; rw [(hg _).left]
+  }, fun _ => rfl⟩
 
+noncomputable def ofBij (f: α ↭ β) : α ≃ β :=
+  Classical.choose_unique (P := fun g: α ≃ β => ∀x, g x = f x) (by
+    obtain ⟨g, hg⟩ := existsOfBij f
+    exists g
+    apply And.intro hg
+    intro g'
+    dsimp; intro hg'
+    apply DFunLike.ext; intro x
+    rw [hg, hg'])
+
+@[simp] def apply_ofBij (f: α ↭ β) : ∀x, ofBij f x = f x :=
+  Classical.choose_unique_spec (P := fun g: α ≃ β => ∀x, g x = f x) _
 
 end Equiv
 
