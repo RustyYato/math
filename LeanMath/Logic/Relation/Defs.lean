@@ -83,6 +83,8 @@ def RelEquiv.toRelEmbedding (f: r ≃r s) : r ↪r s where
   toEmbedding := f.toEmbedding
   map_rel := map_rel f
 
+@[simp] def RelEquiv.apply_toEquiv (f: r ≃r s) (x: α) : f.toEquiv x = f x := rfl
+
 @[simp] def RelEquiv.symm_coe (f: r ≃r s) (x: β) : f (f.symm x) = x := f.leftInv _
 @[simp] def RelEquiv.coe_symm (f: r ≃r s) (x: α) : f.symm (f x) = x := f.rightInv _
 
@@ -479,14 +481,34 @@ instance (r: β -> β -> Prop) [Relation.IsWelFounded r] (f: α -> β) : Relatio
       exact ih _ hb _ rfl
 
 
-def Embedding.pullback_rel (r: β -> β -> Prop) (h: α ↪ β) (a b: α) : Prop := r (h a) (h b)
-instance (r: β -> β -> Prop) [Relation.IsTrans r] (h: α ↪ β) : Relation.IsTrans (h.pullback_rel r) :=
-  inferInstanceAs (Relation.IsTrans (fun a b => r (h a) (h b)))
-instance (r: β -> β -> Prop) [Relation.IsWelFounded r] (f: α ↪ β) : Relation.IsWelFounded (f.pullback_rel r) :=
+def pullback_rel [EmbeddingLike F α β] (r: β -> β -> Prop) (f: F) (a b: α) : Prop := r (f a) (f b)
+instance [EmbeddingLike F α β] (r: β -> β -> Prop) [Relation.IsTrans r] (f: F) : Relation.IsTrans (pullback_rel r f) :=
+  inferInstanceAs (Relation.IsTrans (fun a b => r (f a) (f b)))
+instance [EmbeddingLike F α β] (r: β -> β -> Prop) [Relation.IsWelFounded r] (f: F) : Relation.IsWelFounded (pullback_rel r f) :=
   inferInstanceAs (Relation.IsWelFounded (fun a b => r (f a) (f b)))
-instance (r: β -> β -> Prop) [Relation.IsTrichotomous r (· = ·)] (f: α ↪ β) : Relation.IsTrichotomous (f.pullback_rel r) (· = ·) where
+instance [EmbeddingLike F α β] (r: β -> β -> Prop) [Relation.IsTrichotomous r (· = ·)] (f: F) : Relation.IsTrichotomous (pullback_rel r f) (· = ·) where
   trichotomous a b := by
     rcases Relation.trichotomous r (f a) (f b) with h | h | h
     · left; assumption
-    · right; left; exact f.inj h
+    · right; left; exact inj f h
     · right; right; assumption
+
+def pullback_rel_eqv (r: β -> β -> Prop) [EquivLike F α β] (f: F) : pullback_rel r f ≃r r where
+  toEquiv := EquivLike.coeEquiv f
+  map_rel := Iff.rfl
+
+instance [Relation.IsTrans r] : Relation.IsTrans (flip r) where
+  trans h g := Relation.trans (R := r) g h
+
+instance [Relation.IsAsymm r] : Relation.IsAsymm (flip r) where
+  asymm h g := Relation.asymm (R := r) g h
+
+instance [Relation.IsIrrefl r] : Relation.IsIrrefl (flip r) where
+  irrefl h := Relation.irrefl (R := r) h
+
+instance [Relation.IsTrichotomous r r'] : Relation.IsTrichotomous (flip r) r' where
+  trichotomous a b := by
+    rcases Relation.trichotomous r a b with h | h | h
+    · right; right; assumption
+    · right; left; assumption
+    · left; assumption
