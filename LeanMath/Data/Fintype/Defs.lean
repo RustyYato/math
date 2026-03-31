@@ -173,6 +173,10 @@ instance : Fintype (Fin n) where
     }
   }
 
+def card_fin {f: Fintype (Fin n)} : f.card = n := by
+  rw [Fintype.card_eq f instFin]
+  rfl
+
 private def cases_fin2 (motive: Fin 2 -> Sort u)
   (zero: motive ⟨0, by decide⟩)
   (one: motive ⟨1, by decide⟩) (x: Fin 2) : motive x :=
@@ -582,6 +586,9 @@ instance [Fintype α] : Fintype (ULift α) :=
 instance [Fintype α] : Fintype (PLift α) :=
   ofEquiv (Equiv.plift _)
 
+instance [Fintype α] : Fintype (Option α) :=
+  ofEquiv Equiv.poption_eq_option
+
 end Fintype
 
 namespace Finite
@@ -601,10 +608,14 @@ instance [ft: Finite ι] : Finite (POption ι) := by
   obtain ⟨ ⟩ := ft
   infer_instance
 
-instance [Fintype α] : Finite (ULift α) :=
+instance [ft: Finite ι] : Finite (Option ι) := by
+  obtain ⟨ ⟩ := ft
+  infer_instance
+
+instance [Finite α] : Finite (ULift α) :=
   ofBij (Equiv.ulift α).toBij
 
-instance [Fintype α] : Finite (PLift α) :=
+instance [Finite α] : Finite (PLift α) :=
   ofBij (Equiv.plift α).toBij
 
 def induction
@@ -612,7 +623,7 @@ def induction
   (bij: ∀α β: Type u, [Finite α] -> [Finite β] -> (α ↭ β) -> motive α -> motive β)
   (zero: motive PEmpty)
   (succ: ∀α: Type u, [Finite α] -> motive α -> motive (POption α))
-  (α: Type u) [Finite α] : motive α := by
+  (α: Type u) (hf: Finite α) : motive α := by
   have ⟨card, ⟨hbij⟩⟩ := finBij α
   apply bij (ULift (Fin card)) α _ _
   exact (Equiv.ulift _).symm.toBij.trans hbij
@@ -638,6 +649,40 @@ def induction
     }
     apply succ
     apply ih
+
+def ofEmbed [LEM] {β: Type u} [ft: Finite β] (f: α ↪ β) : Finite α := by
+  induction β, ft using induction with
+  | bij β₀ β₁ bij ih => exact ih (f.trans (Equiv.ofBij bij).symm.toEmbedding)
+  | zero =>
+    have : IsEmpty α := { elim x := elim_empty (f x) }
+    infer_instance
+  | succ β ih =>
+    rcases em (Function.Surjective f) with hf | hf
+    · have : α ↭ POption β := {
+        toFun := f
+        inj' := f.inj
+        surj' := hf
+      }
+      apply ofBij ((Equiv.ofBij this).symm.toBij)
+    · replace hf := LEM.not_forall.mp hf
+      simp at hf
+      obtain ⟨x, hx⟩ := hf
+      open UniqueChoice in
+      let f' := f.trans (Equiv.swap .none x (Equiv.id _)).toEmbedding
+      have hf' (a: α) : (f' a) ≠ .none := by
+        intro h
+        replace h : (Equiv.swap _ _ (Equiv.id _)) (f a) = _ := h
+        rw [←Equiv.symm_eq_iff] at h
+        simp [Equiv.symm_swap, Equiv.apply_swap] at h
+        nomatch hx _ h.symm
+      apply ih
+      exact {
+        toFun x := POption.get (f' x) (hf' _)
+        inj := by
+          intro x y h
+          dsimp at h
+          exact f'.inj (POption.get_inj.mp h)
+      }
 
 end Finite
 

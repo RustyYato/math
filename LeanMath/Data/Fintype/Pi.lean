@@ -377,3 +377,13 @@ instance : Finite (∀i, α i) := by
   exact ⟨inferInstance⟩
 
 end Finite
+
+namespace Finite
+
+variable
+  {α: Sort*}
+  [fι: Finite ι] [DecidableEq ι] [fα: Finite α]
+
+instance : Finite (ι -> α) := inferInstance
+
+end Finite
