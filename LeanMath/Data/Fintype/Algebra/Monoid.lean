@@ -273,3 +273,82 @@ def smul_sum
   show ∑i, smulHom R (α := α) r (f i) = _
   rw [map_sum]
   rfl
+
+private def count_spec (f: Fin n -> Bool) : (∑i, bif (f i) then 1 else 0) ≤ n := by
+  induction n with
+  | zero => apply Nat.zero_le
+  | succ n ih =>
+    rw [fin_sum_succ, add_comm]
+    apply Nat.add_le_add
+    apply ih
+    unfold cond
+    split <;> decide
+
+def count (f: ι -> Bool) : Fin (Fintype.card ι + 1) where
+  val := ∑i, bif (f i) then 1 else 0
+  isLt := by
+    induction Fintype.finBij ι with | _ bij =>
+    rw [sum_reindex bij]
+    apply Nat.lt_succ_of_le
+    apply count_spec
+
+def fin_count_zero (f: Fin 0 -> Bool) : count f = 0 := rfl
+def fin_count_succ_true (f: Fin (n + 1) -> Bool) (h: f 0) : count f = (count (f ∘ Fin.succ)).succ := by
+  unfold count
+  simp; rw [add_comm]
+  congr; rw [h]
+  rfl
+def fin_count_succ_false (f: Fin (n + 1) -> Bool) (h: f 0 = false) : count f = (count (f ∘ Fin.succ)).castSucc := by
+  unfold count
+  simp; rw [h]
+  rfl
+
+def count_reindex (bij: ι' ↭ ι) (f: ι -> Bool) : count f = (count (f ∘ bij)).cast (by
+  congr
+  rw [Fintype.card_eq (α := ι)]
+  show _ = (Fintype.ofBij bij).card
+  rfl) := by
+  unfold count; ext; dsimp
+  rw [sum_reindex bij]
+
+private def count_eq_last_iff' {f: Fin n -> Bool} : count f = Fin.last n ↔ ∀x, f x := by
+  induction n with
+  | zero => simp; rfl
+  | succ n ih =>
+    cases h:f 0
+    · rw [fin_count_succ_false _ h]
+      apply Iff.intro
+      · intro h
+        have : _ < Fin.last (n + 1) := Fin.castSucc_lt_last (count (f ∘ Fin.succ))
+        rw [h] at this
+        nomatch Fin.lt_irrefl _ this
+      · intro g
+        have := g 0
+        rw [h] at this; contradiction
+    · rw [fin_count_succ_true _ h]
+      show _ = (Fin.last n).succ ↔ _
+      rw [Fin.succ_inj, ih]
+      apply Iff.intro
+      · intro g x; cases x using Fin.cases
+        assumption
+        apply g
+      · intro h x
+        apply h
+
+private def fin_cast_inj (h: n = m) (x y: Fin n) : x.cast h = y.cast h ↔ x = y := by
+  simp [Fin.cast, Fin.val_inj]
+
+def count_eq_last_iff {f: ι -> Bool} : count f = Fin.last _ ↔ ∀x, f x := by
+  induction Fintype.finBij ι with | _ bij =>
+  rw [count_reindex bij]
+  rw [show Fin.last (Fintype.card ι) = (Fin.last (Fintype.card ι)).cast ?_ from ?_]
+  rw [fin_cast_inj, count_eq_last_iff' (f := f ∘ bij)]
+  apply Iff.intro
+  · intro h x
+    have ⟨y, hy⟩ := bij.surj x
+    have : f (bij y) := h y
+    rwa [hy] at this
+  · intro h x
+    apply h
+  · rfl
+  · rfl
