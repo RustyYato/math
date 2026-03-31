@@ -7,8 +7,6 @@ section
 
 variable (r: α -> α -> Prop)
 
-def Induced(U: Set α) : U -> U -> Prop := fun x y => r x y
-
 def Induced.embed (s: Set α) : s.Induced r ↪r r where
   toFun x := x.val
   inj := Subtype.val_inj

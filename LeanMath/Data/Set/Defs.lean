@@ -114,7 +114,6 @@ instance : Nonempty (Set α) := inferInstance
 @[simp] def bot_sub (a: Set α) : ⊥ ⊆ a := nofun
 @[simp] def sub_top (a: Set α) : a ⊆ ⊤ := by intro _ _; trivial
 
-
 def ext_empty (a: Set α) : (∀x: α, ¬x ∈ a) -> a = ⊥ := by
   intro h
   ext x
@@ -134,8 +133,13 @@ instance : Union (Set α) where
 
 @[simp] def mem_union {a b: Set α} : ∀{x}, x ∈ a ∪ b ↔ x ∈ a ∨ x ∈ b := Iff.rfl
 
+def sep (P: α -> Prop) (s: Set α) : Set α where
+  Mem x := x ∈ s ∧ P x
+
+@[simp] def mem_sep {P: α -> Prop} {a: Set α} : ∀{x}, x ∈ a.sep P ↔ x ∈ a ∧ P x := Iff.rfl
+
 instance : Inter (Set α) where
-  inter a b := { Mem x := x ∈ a ∧ x ∈ b }
+  inter a b := a.sep (· ∈ b)
 
 @[simp] def mem_inter {a b: Set α} : ∀{x}, x ∈ a ∩ b ↔ x ∈ a ∧ x ∈ b := Iff.rfl
 
@@ -145,7 +149,7 @@ instance : SetComplement (Set α) where
 @[simp] def mem_scompl {a: Set α} : ∀{x}, x ∈ aᶜ ↔ x ∉ a := Iff.rfl
 
 instance : SDiff (Set α) where
-  sdiff a b := a ∩ bᶜ
+  sdiff a b := a.sep (· ∉ b)
 
 @[simp] def mem_sdiff {a b: Set α} : ∀{x}, x ∈ a \ b ↔ x ∈ a ∧ x ∉ b := Iff.rfl
 
@@ -442,6 +446,8 @@ def nonempty_iff (a: Set α) : a.Nonempty ↔ ¬∀x, x ∉ a := by
 
 def image_eq_range (f: α -> β) (s: Set α): s.image f = Set.range (fun x: s => f x.val) := by
   ext b; simp
+
+def Induced (r: α -> α -> Prop) (U: Set α) : U -> U -> Prop := fun x y => r x y
 
 end Set
 
