@@ -44,3 +44,19 @@ def Set.min_mem : min r h ∈ U := (Classical.choose_unique_spec (Set.exists_uni
 def Set.min_minimal : ∀x ∈ U, ¬r x (min r h) := (Classical.choose_unique_spec (Set.exists_unique_min r h)).right
 
 end
+
+instance (s: Set α) [Relation.IsTrichotomous r r']  : Relation.IsTrichotomous (s.Induced r) (s.Induced r') where
+  trichotomous := by
+    intro a b
+    rcases Relation.trichotomous r a.val b.val with h | h | h
+    · left; assumption
+    · right; left; assumption
+    · right; right; assumption
+
+instance (s: Set α) [Relation.IsTrichotomous r (· = ·)]  : Relation.IsTrichotomous (s.Induced r) (· = ·) where
+  trichotomous := by
+    intro a b
+    rcases Relation.trichotomous r a.val b.val with h | h | h
+    · left; assumption
+    · right; left; ext; assumption
+    · right; right; assumption
