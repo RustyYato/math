@@ -245,7 +245,7 @@ def of_lt_type [LEM] {r: α -> α -> Prop} [Relation.IsWellOrder r] : ∀{o}, o 
 
 private def ulift_rel (r: α -> α -> Prop) : ULift α -> ULift α -> Prop := fun a b => r a.down b.down
 
-private def ulift_rel_eqv_rel (r: α -> α -> Prop) : ulift_rel r ≃r r where
+def ulift_rel_eqv_rel (r: α -> α -> Prop) : ulift_rel r ≃r r where
   toFun x := x.down
   invFun x := ⟨x⟩
   leftInv _ := rfl
@@ -1126,5 +1126,28 @@ noncomputable def ToType.mk [LEM] {o: Ordinal} : Set.Iio o ≃o o.ToType where
 
 instance small_Iio [LEM] (o : Ordinal.{u}) : Small.{u} (Set.Iio o) :=
   ⟨_, ToType.mk.toEquiv⟩
+
+instance [LEM] : WellFoundedRelation Ordinal where
+  rel a b := a < b
+  wf := Relation.wf _
+
+@[induction_eliminator]
+def strongRecOn [LEM] {motive: Ordinal -> Sort u} (ind: ∀o, (∀x < o, motive x) -> motive o) (o: Ordinal) : motive o :=
+  ind _ (fun x _ => strongRecOn ind x)
+termination_by o
+
+def zero_le (o: Ordinal) : 0 ≤ o := by
+  induction o using ind with | @type α r =>
+  refine ⟨?_⟩; dsimp
+  exact {
+    toEmbedding := Embedding.empty (α := (ULift (Fin 0)))
+    isInitial := rec_elim_empty
+    map_rel {a} := a.down.elim0
+  }
+
+def boundedBelow (U: Set Ordinal) : U.BoundedBelow := by
+  exists 0
+  intro x hx
+  apply zero_le
 
 end Ordinal
