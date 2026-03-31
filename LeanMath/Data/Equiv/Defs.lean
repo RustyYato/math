@@ -163,6 +163,13 @@ noncomputable def ofBij (f: α ↭ β) : α ≃ β :=
 @[simp] def apply_ofBij (f: α ↭ β) : ∀x, ofBij f x = f x :=
   Classical.choose_unique_spec (P := fun g: α ≃ β => ∀x, g x = f x) _
 
+def symm_eq_iff {f: α ≃ β} : f.symm x = y ↔ f y = x := by
+  apply Iff.intro
+  intro h
+  rw [←h, symm_coe]
+  intro h
+  rw [←h, coe_symm]
+
 end Equiv
 
 instance [EquivLike F α β] : EmbeddingLike F α β where

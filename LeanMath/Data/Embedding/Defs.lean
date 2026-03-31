@@ -2,6 +2,7 @@ import LeanMath.Logic.Funlike
 import LeanMath.Logic.Nontrivial
 import LeanMath.Logic.LEM
 import LeanMath.Logic.IsEmpty
+import LeanMath.Data.POption.Defs
 
 structure Embedding (α β: Sort*) where
   toFun: α -> β
@@ -103,6 +104,10 @@ def apply_swap [DecidableEq α] (i j a: α) (f: α ↪ β) : f.swap i j a = if a
 def fin_val : Fin n ↪ ℕ where
   toFun := Fin.val
   inj _ _ := Fin.val_inj.mp
+
+def fin_succ : Fin n ↪ Fin (n + 1) where
+  toFun := Fin.succ
+  inj _ _ := Fin.succ_inj.mp
 
 def fin_of_le (h: n ≤ m) : Fin n ↪ Fin m where
   toFun := Fin.castLE h
@@ -213,6 +218,10 @@ def cantor [h: Nontrivial β] (f: (α -> β) ↪ α) : False := by
     apply Classical.choose_spec spec
   contradiction
 
+-- def erase_fin' (i: Fin n) (f: Fin n ↪ α) : Fin (n - 1) ↪ α where
+--   toFun := sorry
+--   inj := sorry
+
 def erase_fin (i: Fin m) (f: α ↪ Fin m) (hi: ∀x, f x ≠ i) : α ↪ Fin (m - 1) where
   toFun x :=
     let v := f x
@@ -250,5 +259,15 @@ def erase_fin (i: Fin m) (f: α ↪ Fin m) (hi: ∀x, f x ≠ i) : α ↪ Fin (m
       have : (f a).val = (f b).val := by omega
       rw [Fin.val_inj] at this
       exact f.inj this
+
+def option_some : α ↪ Option α where
+  toFun := .some
+  inj _ _ := Option.some.inj
+
+@[simp] def apply_option_some (a: α) : Embedding.option_some a = .some a := rfl
+
+def poption_some : α ↪ POption α where
+  toFun := .some
+  inj _ _ := POption.some.inj
 
 end Embedding

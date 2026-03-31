@@ -1,5 +1,6 @@
 import LeanMath.Data.Equiv.Defs
 import LeanMath.Data.Bijection.Basic
+import LeanMath.Data.POption.Defs
 import LeanMath.Tactic.AxiomBlame
 import LeanMath.Logic.IsEmpty
 
@@ -226,6 +227,45 @@ def fin_eqv_suptype (n: ℕ) : Fin n ≃ { x // x < n } where
   invFun x := ⟨x.1, x.2⟩
   leftInv _ := rfl
   rightInv _ := rfl
+
+def fin_erase (i: Fin (n + 1)) : Fin (n + 1) ≃ Option (Fin n) where
+  toFun x := if hx₀:x = i then .none else if hx₁:x < i then .some ⟨x.val, by omega⟩ else .some ⟨x.val - 1, by omega⟩
+  invFun
+  | .none => i
+  | .some x => if x.val < i.val then x.castSucc else x.succ
+  leftInv x := by
+    cases x <;> dsimp
+    rw [dif_pos rfl]
+    split <;> rename_i h
+    rw [dif_neg, dif_pos]
+    rfl
+    assumption
+    intro g; rw [←g] at h
+    exact Nat.lt_irrefl _ h
+    rw [dif_neg, dif_neg]
+    rfl
+    intro g
+    rw [Nat.not_lt] at h
+    exact Nat.lt_asymm (Nat.lt_of_lt_of_le g h) (Nat.lt_succ_self _)
+    intro g; rw [←g] at h
+    exact h (Nat.lt_succ_self _)
+  rightInv x := by
+    dsimp
+    by_cases h₀:x = i
+    rw [dif_pos h₀]; symm; assumption
+    rw [dif_neg h₀]
+    by_cases h₁:x < i
+    rw [dif_pos h₁]
+    dsimp; rwa [if_pos]
+    rw [dif_neg h₁]; dsimp
+    rw [if_neg]
+    congr; omega
+    omega
+
+@[simp] def symm_fin_erase_none (i: Fin (n + 1)) : (fin_erase i).symm .none = i := rfl
+@[simp] def symm_fin_erase_some (i: Fin (n + 1)) (x: Fin n) : (fin_erase i).symm (.some x) = if x.val < i.val then x.castSucc else x.succ := rfl
+
+#print axioms fin_erase
 
 def swap [DecidableEq α] (a b: α) (f: α ≃ β) : α ≃ β where
   toFun x := if x = a then f b else if x = b then f a else f x
@@ -459,6 +499,20 @@ def bool_eqv_fin2 : Bool ≃ Fin 2 where
     | ⟨1, _⟩ => rfl
     | ⟨n + 2, h⟩ => nomatch Nat.not_le_of_lt h (Nat.le_add_left _ _)
   rightInv x := by cases x <;> rfl
+
+def poption_eq_option : POption α ≃ Option α where
+  toFun
+  | .none => .none
+  | .some x => .some x
+  invFun
+  | .none => .none
+  | .some x => .some x
+  leftInv
+  | .none => rfl
+  | .some _ => rfl
+  rightInv
+  | .none => rfl
+  | .some _ => rfl
 
 end
 
