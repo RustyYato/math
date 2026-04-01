@@ -207,42 +207,68 @@ def is_reduced_spec {as: Bits} : as.is_reduced ↔ as.IsReduced := by
 
 instance {as: Bits} : Decidable (IsReduced as) := decidable_of_bool (is_reduced as) is_reduced_spec
 
+def push_bit (b: Bool) : Bits -> Bits
+| nil a => bif a == b then nil a else cons (nil a) b
+| cons as a => cons (cons as a) b
+
+def push_bit_spec (b: Bool) (as: Bits) : as.push_bit b ≈ as.cons b := by
+  cases as with
+  | nil a => decide +revert
+  | cons as a => rfl
+
+def push_bit_reduced (b: Bool) (as: Bits) (h: as.IsReduced) : (as.push_bit b).IsReduced := by
+  cases as with
+  | nil a => decide +revert
+  | cons as a =>
+    apply IsReduced.cons
+    apply IsReducedPartition.cons
+    assumption
+
+def eqv_push_bit_cons {as bs: Bits} {x: Bool} : as.push_bit x ≈ bs.cons x ↔ as ≈ bs := by
+  apply Iff.intro
+  intro h
+  exact eqv_cons.mp <| trans (symm (push_bit_spec x as)) h
+  intro h
+  apply trans (push_bit_spec _ _)
+  apply eqv_cons.mpr
+  assumption
+
+def eqv_cons_push_bit {as bs: Bits} {x: Bool} : as.cons x ≈ bs.push_bit x ↔ as ≈ bs := by
+  apply Iff.trans symm_iff
+  apply Iff.trans _ symm_iff
+  apply eqv_push_bit_cons
+
+def eqv_push_bit_nil {as: Bits} {x: Bool} : as.push_bit x ≈ nil x ↔ as ≈ nil x := by
+  apply Iff.intro
+  intro h
+  exact eqv_cons_nil.mp <| trans (symm (push_bit_spec _ _)) h
+  intro h
+  apply trans (push_bit_spec _ _)
+  apply eqv_cons_nil.mpr
+  assumption
+
+def eqv_nil_push_bit {as: Bits} {x: Bool} : nil x ≈ as.push_bit x ↔ nil x ≈ as := by
+  apply Iff.trans symm_iff
+  apply Iff.trans _ symm_iff
+  apply eqv_push_bit_nil
+
 def reduce : Bits -> Bits
 | nil a => nil a
-| cons as a =>
-  let as := as.reduce
-  bif is_reduced_part as a then
-    .cons as a
-  else
-    as
+| cons as a => as.reduce.push_bit a
 
 def reduce_eqv (as: Bits) : as.reduce ≈ as := by
   induction as with
   | nil => rfl
   | cons as a ih =>
     unfold reduce
-    dsimp; unfold cond; split <;> rename_i h
-    apply eqv_cons.mpr
+    apply eqv_push_bit_cons.mpr
     assumption
-    replace h : ¬as.reduce.IsReducedPartition a := is_red_part_eq_false_spec.mp h
-    revert ih h
-    cases as.reduce with
-    | cons _ _ => intro h g; exfalso; exact g (.cons _ _ _)
-    | nil b =>
-      intro h g
-      have : a = b := by clear h as; decide +revert
-      subst b
-      apply eqv_nil_cons.mpr
-      assumption
 
 def reduce_reduced (as: Bits) :as.reduce.IsReduced := by
   induction as with
   | nil a => apply IsReduced.nil
   | cons a as ih =>
-    unfold reduce cond; dsimp
-    split; apply IsReduced.cons
-    apply is_red_part_spec.mp; assumption
-    assumption
+    apply push_bit_reduced
     assumption
 
 end Integer.Bits
