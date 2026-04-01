@@ -60,3 +60,8 @@ instance (s: Set α) [Relation.IsTrichotomous r (· = ·)]  : Relation.IsTrichot
     · left; assumption
     · right; left; ext; assumption
     · right; right; assumption
+
+instance (s: Set α) [Relation.IsTrans r]  : Relation.IsTrans (s.Induced r) where
+  trans := Relation.trans (α := α)
+-- instance (s: Set α) [Relation.IsWelFounded r]  : Relation.IsWelFounded (s.Induced r) where
+--   trans := Relation.trans (α := α)

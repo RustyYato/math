@@ -24,6 +24,10 @@ def StrictMonotone.le_iff_le [LE α] [LT α] [LE β] [LT β] [IsLinearOrder α] 
     apply le_of_lt; apply hf; assumption
     rfl
 
+def StrictMonotone.lt_iff_lt [LE α] [LT α] [LE β] [LT β] [IsLinearOrder α] [IsPreorder β] {f: α -> β} (hf : StrictMonotone f) {a b : α} : f a < f b ↔ a < b := by
+  rw [lt_iff_le_and_not_ge, lt_iff_le_and_not_ge,
+    hf.le_iff_le, hf.le_iff_le]
+
 def StrictMonotone.inj [LT α] [LT β] [LE β] [IsPreorder β] [IsLTTrichotomous α] (f: α -> β) (hf: StrictMonotone f) : Function.Injective f := by
   intro a b h
   rcases lt_trichotomy a b with g | g | g

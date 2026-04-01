@@ -492,6 +492,8 @@ instance [EmbeddingLike F α β] (r: β -> β -> Prop) [Relation.IsTrichotomous 
     · left; assumption
     · right; left; exact inj f h
     · right; right; assumption
+instance [EmbeddingLike F α β] (r: β -> β -> Prop) [Relation.IsWellOrder r] (f: F) : Relation.IsWellOrder (pullback_rel r f) := inferInstance
+
 
 def pullback_rel_eqv (r: β -> β -> Prop) [EquivLike F α β] (f: F) : pullback_rel r f ≃r r where
   toEquiv := EquivLike.coeEquiv f

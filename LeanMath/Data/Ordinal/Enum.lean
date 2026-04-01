@@ -1,6 +1,7 @@
 import LeanMath.Data.Ordinal.Defs
 import LeanMath.Data.Cardinal.Order
 import LeanMath.Order.Set
+import LeanMath.Order.Monotone
 
 namespace Cardinal
 
@@ -90,7 +91,7 @@ def enumOrd_le_of_forall_lt (ha : a ∈ s) (H : ∀ b < o, enumOrd s b < a) : en
   apply sInf_le
   exact ⟨ha, H⟩
 
-def enumOrd_nonempty.{u} (U: Set Ordinal.{u}) (hU: ¬U.BoundedAbove) (x: Ordinal.{u}) :
+def enumOrd_nonempty.{u} {U: Set Ordinal.{u}} (hU: ¬U.BoundedAbove) (x: Ordinal.{u}) :
   (U ∩ Set.ofMem fun y => ∀(o': Ordinal), o' < x -> enumOrd U o' < y).Nonempty := by
   rw [Set.not_bddAbove_iff] at hU
   have ⟨a, ha⟩ := boundedAbove_of_small <| (Set.Iio x).image (enumOrd U)
@@ -99,5 +100,69 @@ def enumOrd_nonempty.{u} (U: Set Ordinal.{u}) (hU: ¬U.BoundedAbove) (x: Ordinal
   apply ha
   apply Set.mem_image'
   assumption
+
+private theorem enumOrd_mem_aux (hs : ¬s.BoundedAbove) (o : Ordinal) :
+    enumOrd s o ∈ s ∩ Set.ofMem fun b => ∀ c, c < o → enumOrd s c < b := by
+  rw [enumOrd]
+  exact csInf_mem (enumOrd_nonempty hs o)
+
+variable {s: Set Ordinal}
+
+def enumOrd_mem (hs : ¬s.BoundedAbove) (o : Ordinal) : enumOrd s o ∈ s :=
+  (enumOrd_mem_aux hs o).1
+
+def enumOrd_strictMono (hs : ¬s.BoundedAbove) : StrictMonotone (enumOrd s) :=
+  fun a b ↦ (enumOrd_mem_aux hs b).2 a
+
+def enumOrd_injective (hs : ¬s.BoundedAbove) : Function.Injective (enumOrd s) :=
+  (enumOrd_strictMono hs).inj
+
+def enumOrd_inj (hs : ¬s.BoundedAbove) {a b : Ordinal} : enumOrd s a = enumOrd s b ↔ a = b :=
+  (enumOrd_injective hs).eq_iff
+
+def enumOrd_le_enumOrd (hs : ¬s.BoundedAbove) {a b : Ordinal} :
+    enumOrd s a ≤ enumOrd s b ↔ a ≤ b :=
+  (enumOrd_strictMono hs).le_iff_le
+
+def enumOrd_lt_enumOrd (hs : ¬s.BoundedAbove) {a b : Ordinal} :
+    enumOrd s a < enumOrd s b ↔ a < b :=
+  (enumOrd_strictMono hs).lt_iff_lt
+
+def le_enumOrd_self (hs : ¬s.BoundedAbove) (o: Ordinal) : o ≤ enumOrd s o := by
+  induction o with
+  | ind o ih =>
+  apply not_lt.mp
+  intro h
+  have := not_lt.mpr ((enumOrd_strictMono hs).le_iff_le.mp (ih _ h))
+  contradiction
+
+def range_enumOrd (hs : ¬s.BoundedAbove) : Set.range (enumOrd s) = s := by
+  ext o
+  let t := Set.ofMem fun x => o ≤ enumOrd s x
+  apply Iff.intro
+  · rintro ⟨b, rfl⟩
+    exact enumOrd_mem hs b
+  · intro ha
+    refine ⟨sInf t, ?_⟩
+    apply le_antisymm (enumOrd_le_of_forall_lt ha ?_) ?_
+    · intro b hb
+      apply not_le.mp
+      intro hb'
+      exact not_le.mpr hb (sInf_le _ _ hb')
+    · apply csInf_mem (U := t)
+      exists o
+      apply le_enumOrd_self
+      assumption
+
+def enumOrd_surj (hs : ¬s.BoundedAbove) (hx: x ∈ s) : x ∈ Set.range (enumOrd s) := by
+  rwa [range_enumOrd hs]
+
+-- def IsInitial
+
+def initialOrd : Ordinal.{u} ≃o { o: Ordinal.{u} // IsInitial o } where
+  toFun := {
+    val := enumOrd (Set.ofMem IsInitial)
+  }
+  invFun := sorry
 
 end Ordinal

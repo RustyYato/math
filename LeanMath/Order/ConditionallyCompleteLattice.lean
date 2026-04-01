@@ -1,5 +1,5 @@
 import LeanMath.Order.Set
-import LeanMath.Data.Set.Defs
+import LeanMath.Data.Set.Relation
 
 class IsConditionallyCompleteLattice (α: Type*) [LE α] [LT α] [Min α] [Max α] [InfSet α] [SupSet α] : Prop extends IsLattice α where
   protected le_csSup : ∀{s} {a: α}, s.BoundedAbove → a ∈ s → a ≤ (⨆ s)
@@ -28,3 +28,18 @@ def sSup_univ [Top α] [IsLawfulTop α] : ⨆ ⊤ = (⊤: α) := by
 
 def sInf_univ [Bot α] [IsLawfulBot α] : ⨅ ⊤ = (⊥: α) :=
   sSup_univ (α := αᵒᵖ)
+
+def csInf_mem [LEM] [IsLinearOrder α] [@Relation.IsWelFounded α (· < ·)]
+  {U: Set α} (hU: U.Nonempty) : ⨅ U ∈ U := by
+  have : U.BoundedBelow := by
+    obtain ⟨x, _⟩ := hU
+    have ⟨bot, bot_spec, _⟩ := Relation.exists_unique_min (α := α) (· < ·) (P := fun _ => True) ⟨x, True.intro⟩
+    exists bot
+    intro x hx
+    exact not_lt.mp (bot_spec.right x · True.intro)
+  have ⟨u, ⟨umem, hu⟩, _⟩  := Set.exists_unique_min (· < ·) hU
+  rwa [show ⨅U = u from ?_]
+  apply le_antisymm (csInf_le this umem)
+  apply le_csInf
+  exists u
+  simpa [not_lt] using hu
