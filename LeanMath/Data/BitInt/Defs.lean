@@ -253,6 +253,14 @@ def eqv_cons_push_bit {as bs: Bits} {x: Bool} : as.cons x ≈ bs.push_bit x ↔ 
   apply Iff.trans _ symm_iff
   apply eqv_push_bit_cons
 
+def eqv_push_bit {as bs: Bits} {x: Bool} : as.push_bit x ≈ bs.push_bit x ↔ as ≈ bs := by
+  apply Iff.intro
+  intro h
+  exact eqv_cons.mp <| trans (trans (symm (push_bit_spec _ _)) h) (push_bit_spec _ _)
+  intro h
+  apply trans <| trans (push_bit_spec x _) (eqv_cons.mpr h)
+  symm; apply push_bit_spec
+
 def eqv_push_bit_nil {as: Bits} {x: Bool} : as.push_bit x ≈ nil x ↔ as ≈ nil x := by
   apply Iff.intro
   intro h
@@ -295,6 +303,8 @@ structure Integer where
 
 namespace Integer
 
+section Defs
+
 def mk (as: Bits) : Integer where
   bits := as.reduce
   reduced := as.reduced_reduce
@@ -310,12 +320,30 @@ def mk (as: Bits) : Integer where
 @[simp] def mk_bits (as: Integer) : mk as.bits = as := by
   ext; apply Bits.reduce_eqv
 
+def sound {as bs: Bits} : as ≈ bs -> mk as = mk bs := by
+  intro h; ext
+  apply Bits.trans (Bits.reduce_eqv _)
+  apply Bits.trans h; symm
+  exact Bits.reduce_eqv _
+
+def exact {as bs: Bits} : mk as = mk bs -> as ≈ bs := by
+  intro h
+  apply Bits.trans _ (Bits.reduce_eqv _)
+  rw [show bs.reduce = as.reduce from congrArg Integer.bits h.symm]
+  symm; exact Bits.reduce_eqv _
+
 @[irreducible]
 def quot_rec {motive: Integer -> Sort u}
   (mk: ∀x, motive (mk x))
   (_: ∀x y: Bits, x ≈ y -> mk x ≍ mk y)
   (a: Integer) : motive a :=
   cast (by rw [mk_bits]) (mk a.bits)
+
+@[irreducible]
+def cases {motive: Integer -> Prop}
+  (mk: ∀x, motive (mk x))
+  (a: Integer) : motive a :=
+  quot_rec mk (fun _ _ h => Subsingleton.helim (by rw [sound h]) _ _) a
 
 def lift (f: Bits -> α) (h: ∀x y, x ≈ y -> f x = f y) := quot_rec (motive := fun _ => α) f (by
   intro x y eqv; apply heq_of_eq
@@ -336,18 +364,6 @@ def lift₂ (f: Bits -> Bits -> α) (_: ∀as bs cs ds, as ≈ cs -> bs ≈ ds -
   unfold lift₂; apply h
   apply Bits.reduce_eqv
   apply Bits.reduce_eqv
-
-def sound {as bs: Bits} : as ≈ bs -> mk as = mk bs := by
-  intro h; ext
-  apply Bits.trans (Bits.reduce_eqv _)
-  apply Bits.trans h; symm
-  exact Bits.reduce_eqv _
-
-def exact {as bs: Bits} : mk as = mk bs -> as ≈ bs := by
-  intro h
-  apply Bits.trans _ (Bits.reduce_eqv _)
-  rw [show bs.reduce = as.reduce from congrArg Integer.bits h.symm]
-  symm; exact Bits.reduce_eqv _
 
 @[irreducible]
 def map_reduced (f: Bits -> Bits) (_: ∀x y, x ≈ y -> f x ≈ f y) (hf: ∀x: Bits, x.IsReduced -> (f x).IsReduced) (x: Integer) : Integer where
@@ -387,6 +403,44 @@ def map_reduced_mk {f: Bits -> Bits} {h hf} {x: Bits} : map_reduced f h hf (mk x
 
 def map₂_reduced_mk {f: Bits -> Bits -> Bits} {h} {hf} {x y: Bits} : map₂_reduced f h hf (mk x) (mk y) = mk (f x y) := by
   rw [map₂_reduced_eq_lift₂, lift₂_mk]
+
+def nil (a: Bool) : Integer where
+  bits := .nil a
+  reduced := .nil _
+
+def cons (as: Integer) (a: Bool) : Integer :=
+  as.map_reduced (.push_bit a) (by
+    intro as bs h
+    apply Bits.eqv_push_bit.mpr
+    assumption) (by
+    intro as has
+    apply Bits.reduced_push_bit
+    assumption)
+
+@[simp] def mk_nil (a: Bool) : nil a = mk (.nil a) := rfl
+
+@[simp] def mk_cons (as: Bits) (a: Bool) : cons (mk as) a = mk (.cons as a) := by
+  apply Eq.trans map_reduced_mk
+  apply sound
+  apply Bits.eqv_push_bit_cons.mpr
+  rfl
+
+def bits_induction
+  {motive: Integer -> Prop}
+  (nil: ∀x, motive (nil x))
+  (cons: ∀as a, motive as -> motive (cons as a))
+  (x: Integer) : motive x := by
+  cases x using cases with | mk as =>
+  induction as with
+  | nil a => rw [←mk_nil]; apply nil
+  | cons as a ih =>
+    rw [←mk_cons]
+    apply cons
+    assumption
+
+end Defs
+
+section BitOps
 
 def Bits.not : Bits -> Bits
 | .nil a => .nil (!a)
@@ -522,5 +576,7 @@ def bitwise₂ (f: Bool -> Bool -> Bool) : Integer -> Integer -> Integer :=
 def and := bitwise₂ Bool.and
 def or := bitwise₂ Bool.or
 def xor := bitwise₂ Bool.xor
+
+end BitOps
 
 end Integer
