@@ -439,6 +439,82 @@ def bits_induction
     apply cons
     assumption
 
+def Bits.eqv_msb {as bs: Bits} : as ≈ bs -> as.msb ≈ bs.msb := by
+  intro h
+  intro i; rw [←get_succ_eq_get_msb, ←get_succ_eq_get_msb]
+  apply h (i + 1)
+
+def Bits.eqv_of_step
+  (f: α -> Bits -> Bits)
+  (g: α -> Bits -> Bool -> Bits)
+  (step: ∀x (as: Bits), f x as ≈ g x as.msb as.lsb)
+  (cong: ∀as bs: Bits, as ≈ bs -> (∀x, f x as.msb ≈ f x bs.msb) -> ∀x, g x as.msb as.lsb ≈ g x bs.msb bs.lsb)
+  : ∀x as bs, as ≈ bs -> f x as ≈ f x bs := by
+  intro x as bs h
+  induction as generalizing bs x with
+  | nil a =>
+    induction bs generalizing x with
+    | nil b => cases h 0; rfl
+    | cons bs b ih =>
+      cases h 0
+      apply trans _ (symm (step _ _))
+      apply trans (step _ _)
+      apply cong
+      assumption
+      dsimp; intro x; apply ih
+      apply eqv_nil_cons.mp
+      assumption
+  | cons as a ih =>
+    apply trans _ (symm (step _ _))
+    apply trans (step _ _)
+    apply cong
+    assumption
+    dsimp; intro x; apply ih
+    apply eqv_cons.mp
+    apply trans h; symm
+    rw [show a = bs.lsb from ?_]
+    apply msb_cons_lsb
+    apply h 0
+
+def Bits.eqv_of_step₂
+  (f: α -> Bits -> Bits -> Bits)
+  (g: α -> Bits -> Bool -> Bits -> Bool -> Bits)
+  (step: ∀(x: α) (as bs: Bits), f x as bs ≈ g x as.msb as.lsb bs.msb bs.lsb)
+  (cong: ∀as bs cs ds: Bits, as ≈ cs -> bs ≈ ds -> (∀x, f x as.msb bs.msb ≈ f x cs.msb ds.msb) -> ∀x, g x as.msb as.lsb bs.msb bs.lsb ≈ g x cs.msb cs.lsb ds.msb ds.lsb)
+  : ∀x as bs cs ds, as ≈ cs -> bs ≈ ds -> f x as bs ≈ f x cs ds := by
+  intro x as bs cs ds ac bd
+  induction as generalizing bs cs ds x with
+  | nil a =>
+    induction cs generalizing bs ds x with
+    | nil c =>
+      cases ac 0
+      apply eqv_of_step (fun x bs => f x (nil a) bs) (fun x bs b => g x (nil a) a bs b)
+      intro bs; apply step
+      intro bs₀ bs₁ h₀ h₁
+      apply cong (nil a) _ (nil a)
+      rfl; assumption
+      assumption
+      assumption
+    | cons cs c ih =>
+      apply trans (step _ (nil _) bs)
+      apply trans _ (symm (step _ _ ds))
+      apply cong; assumption
+      assumption
+      intro x
+      apply ih
+      apply eqv_nil_cons.mp
+      cases ac 0; assumption
+      apply Bits.eqv_msb
+      assumption
+  | cons as a ih =>
+    apply trans (step _ _ bs)
+    apply trans _ (symm (step _ _ ds))
+    apply cong
+    assumption; assumption
+    dsimp; intro x; apply ih
+    apply Bits.eqv_msb ac
+    apply Bits.eqv_msb bd
+
 end Defs
 
 section BitOps
