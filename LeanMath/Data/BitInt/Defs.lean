@@ -1035,6 +1035,126 @@ def dec_inj {as bs: Integer} : as.dec = bs.dec ↔ as = bs := by
   rw [←dec_inc as, ←dec_inc bs, h]
   apply congrArg dec
 
+def Bits.any_two_bits : Bool -> Bool -> Bool -> Bool
+| false, a, b => a && b
+| true, a, b => a || b
+
+@[simp] def Bits.any_two_bits₀ (a b: Bool) : any_two_bits false a b = (a && b) := rfl
+@[simp] def Bits.any_two_bits₁ (a b: Bool) : any_two_bits true a b = (a || b) := rfl
+@[simp] def Bits.any_two_bits₂ (a b: Bool) : any_two_bits a false b = (a && b) := by decide +revert
+@[simp] def Bits.any_two_bits₃ (a b: Bool) : any_two_bits a true b = (a || b) := by decide +revert
+@[simp] def Bits.any_two_bits₄ (a b: Bool) : any_two_bits a b false = (a && b) := by decide +revert
+@[simp] def Bits.any_two_bits₅ (a b: Bool) : any_two_bits a b true = (a || b) := by decide +revert
+
+def Bits.nil_add (as: Bits) : Bool -> Bool -> Bits
+-- carry = 0, and nil = 0
+| false, false => as
+-- carry = 1, and nil = 0
+| true, false => as.inc
+-- carry = 0, and nil = -1
+| false, true => as.dec
+-- carry = 1, and nil = -1
+| true, true => as
+
+@[simp] def Bits.nil_add_ff (as: Bits) : nil_add as false false = as := rfl
+@[simp] def Bits.nil_add_tf (as: Bits) : nil_add as true false = as.inc := rfl
+@[simp] def Bits.nil_add_ft (as: Bits) : nil_add as false true = as.dec := rfl
+@[simp] def Bits.nil_add_tt (as: Bits) : nil_add as true true = as := rfl
+
+def Bits.add_with_carry (carry: Bool) (as bs: Bits) : Bits :=
+  match as with
+  | .nil a => nil_add bs carry a
+  | .cons as a =>
+    match bs with
+    | .nil b => nil_add (cons as a) carry b
+    | .cons bs b => push_bit (carry ^^ a ^^ b) (add_with_carry (any_two_bits carry a b) as bs)
+
+def Bits.step_nil_add (bs: Bits) (carry a: Bool) : nil_add bs carry a ≈ (bs.msb.nil_add (any_two_bits carry a bs.lsb) a).cons (carry ^^ a ^^ bs.lsb) := by
+  cases bs with
+  | nil b => decide +revert
+  | cons bs b =>
+    cases carry <;> cases a
+    all_goals dsimp [Bool.and, Bool.or]
+    all_goals repeat first|rw [Bool.false_xor]|rw [Bool.true_xor]|rw [Bool.not_true]|rw [Bool.not_false]
+    cases b <;> dsimp
+    apply step_dec
+    apply step_dec
+    cases b <;> dsimp
+    apply step_inc
+    apply step_inc
+
+def Bits.step_add_with_carry (carry: Bool) (as bs: Bits) : add_with_carry carry as bs ≈ cons (add_with_carry (any_two_bits carry as.lsb bs.lsb) as.msb bs.msb) (carry ^^ as.lsb ^^ bs.lsb) := by
+  cases as with
+  | nil a => apply step_nil_add
+  | cons as a =>
+    cases bs with
+    | cons bs b =>
+      apply eqv_push_bit_cons.mpr
+      rfl
+    | nil b =>
+      apply trans
+      apply step_nil_add
+      dsimp
+      cases as with
+      | nil =>
+        unfold add_with_carry
+        decide +revert
+      | cons as a' =>
+        unfold add_with_carry
+        dsimp
+        rw [Bool.xor_assoc, Bool.xor_comm b, Bool.xor_assoc]
+        rw [show any_two_bits carry b a = any_two_bits carry a b from ?_]
+        decide +revert
+
+def Bits.eqv_add_with_carry (carry: Bool) (as bs cs ds: Bits) :
+  as ≈ cs -> bs ≈ ds ->
+  add_with_carry carry as bs ≈ add_with_carry carry cs ds := by
+  revert carry as bs cs ds
+  apply eqv_of_step₂ _ (fun carry as a bs b => cons (add_with_carry (any_two_bits carry a b) as bs) (carry ^^ a ^^ b))
+  apply step_add_with_carry
+  intro as bs cs ds ac bd h
+  iterate 4 rw [←get_zero_eq_lsb]
+  rw [ac 0, bd 0]
+  intro carry
+  apply eqv_cons.mpr
+  apply h
+
+def Bits.reduced_nil_add (carry: Bool) (a: Bool) (bs: Bits) (hb: bs.IsReduced) : (nil_add bs carry a).IsReduced := by
+  unfold nil_add
+  split
+  assumption
+  apply reduced_inc
+  assumption
+  apply reduced_dec
+  assumption
+  assumption
+
+def Bits.reduced_add_with_carry (carry: Bool) (as bs: Bits) (ha: as.IsReduced) (hb: bs.IsReduced) : (add_with_carry carry as bs).IsReduced := by
+  induction ha generalizing carry bs with
+  | nil =>
+    apply Bits.reduced_nil_add
+    assumption
+  | cons as a hpart ha ih =>
+    cases hb with
+    | nil =>
+      apply Bits.reduced_nil_add
+      apply IsReduced.cons <;> assumption
+    | cons =>
+      apply reduced_push_bit
+      apply ih
+      assumption
+
+def add_with_carry (carry: Bool) : Integer -> Integer -> Integer := map₂_reduced (Bits.add_with_carry carry) (Bits.eqv_add_with_carry _) (Bits.reduced_add_with_carry _)
+
+instance : Add Bits := ⟨Bits.add_with_carry false⟩
+instance : Add Integer := ⟨add_with_carry false⟩
+
+def mk_add_with_carry (carry: Bool) (as bs: Bits) : add_with_carry carry (mk as) (mk bs) = mk (.add_with_carry carry as bs) := map₂_reduced_mk
+def mk_add (as bs: Bits) : (mk as) + (mk bs) = mk (as + bs) := mk_add_with_carry false _ _
+
+instance : Sub Integer where
+  sub as bs := as + -bs
+
 end Arith
 
 end Integer
