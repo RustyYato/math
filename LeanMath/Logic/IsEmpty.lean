@@ -29,7 +29,7 @@ instance [IsEmpty α] [IsEmpty β] : IsEmpty (α ⊕ β) where
   | .inr x => elim_empty x
 instance {β: α -> Sort _} [Nonempty α] [∀x, IsEmpty (β x)] : IsEmpty (∀x, β x) where
   elim f := by
-    have ⟨x⟩ := inferInstanceAs (Nonempty α)
+    have ⟨x⟩ : Nonempty α := inferInstance
     exact elim_empty (f x)
 instance [Nonempty α] [IsEmpty β] : IsEmpty (α -> β) := inferInstance
 instance [IsEmpty α] : Subsingleton α where

@@ -157,6 +157,9 @@ def size_cons : (cons a as).size = as.size + 1 := rfl
 def getElem_cons_zero : (cons a as)[0] = a := rfl
 
 @[simp]
+def getElem_cons_succ' (n: ℕ) (h: n + 1 < as.size + 1): (cons a as)[n + 1] = as[n]'(Nat.lt_of_succ_lt_succ h) := rfl
+
+@[simp]
 def getElem_cons_succ (n: ℕ) (h: n < as.size): (cons a as)[n + 1]'(by simp [h]) = as[n] := rfl
 
 def append (as bs: LazyList α) : LazyList α where
@@ -258,10 +261,10 @@ instance : Membership α (LazyList α) where
   | succ i =>
     simp
     by_cases h:i.val < as.size
-    rw [getElem_append_of_lt ,getElem_append_of_lt]
+    rw [getElem_append_of_lt, getElem_append_of_lt]
     rfl
     simp; omega
-    rw [getElem_append_of_ge ,getElem_append_of_ge]
+    rw [getElem_append_of_ge, getElem_append_of_ge]
     simp
     simp; omega
     omega
@@ -273,6 +276,7 @@ def cons_eq_singleton_append (a: α) (as: LazyList α) : cons a as = singleton a
   | zero => rfl
   | succ i =>
     by_cases h:i.val < as.size
+    simp
     rw [getElem_append_of_ge]
     rfl
     apply Nat.le_add_left

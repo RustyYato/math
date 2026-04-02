@@ -15,7 +15,7 @@ instance [Decidable P] : ExcludedMiddle P where
 
 def em (P: Prop) [ExcludedMiddle P] : P ∨ ¬P := ExcludedMiddle.em
 
-instance (priority := 10000) [ExcludedMiddle P] : Nonempty (Decidable P) := by
+instance (priority := 10000) instNonemptyDecidableOfEM (P: Prop) [ExcludedMiddle P] : Nonempty (Decidable P) := by
   rcases em P with h | h
   exact .intro (.isTrue h)
   exact .intro (.isFalse h)
@@ -33,12 +33,12 @@ def byCases
 
 def or_iff_not_imp_left : ∀ {a b : Prop} [ExcludedMiddle a], a ∨ b ↔ ¬a → b := by
   intro P Q _
-  have ⟨_⟩ := inferInstanceAs (Nonempty (Decidable P))
+  have ⟨h⟩ : Nonempty (Decidable P) := inferInstance
   apply Decidable.or_iff_not_imp_left
 
 def or_iff_not_imp_right : ∀ {a b : Prop} [ExcludedMiddle b], a ∨ b ↔ ¬b → a := by
   intro P Q _
-  have ⟨_⟩ := inferInstanceAs (Nonempty (Decidable Q))
+  have ⟨h⟩ : Nonempty (Decidable Q) := inferInstance
   apply Decidable.or_iff_not_imp_right
 
 def byContradiction {P: Prop} [ExcludedMiddle P] : (¬P -> False) -> P := by

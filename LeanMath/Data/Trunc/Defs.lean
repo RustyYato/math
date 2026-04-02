@@ -1,4 +1,4 @@
-private def Setoid.trivial (α: Sort u) : Setoid α where
+private def Setoid.trivial' (α: Sort u) : Setoid α where
   r _ _ := True
   iseqv := {
     refl _ := True.intro
@@ -6,7 +6,7 @@ private def Setoid.trivial (α: Sort u) : Setoid α where
     trans _ _ := True.intro
   }
 
-def Trunc (α: Sort u) := Quotient (Setoid.trivial α)
+def Trunc (α: Sort u) := Quotient (Setoid.trivial' α)
 
 namespace Trunc
 

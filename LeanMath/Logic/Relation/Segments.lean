@@ -331,7 +331,7 @@ private noncomputable def collapse_helper [LEM] [Relation.IsWellOrder r] (f: r �
       assumption
     · have:= (collapse_helper f x).property
       contradiction⟩
-termination_by WellFounded.wrap r a
+termination_by WellFounded.wrap' r a
 
 private def collapse_helper_lt [LEM] (f: r ↪r s) : ∀b a, r a b -> s (collapse_helper f a) (collapse_helper f b) := by
   intro b
