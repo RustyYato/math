@@ -365,14 +365,12 @@ def lift₂ (f: Bits -> Bits -> α) (_: ∀as bs cs ds, as ≈ cs -> bs ≈ ds -
   apply Bits.reduce_eqv
   apply Bits.reduce_eqv
 
-@[irreducible]
 def map_reduced (f: Bits -> Bits) (_: ∀x y, x ≈ y -> f x ≈ f y) (hf: ∀x: Bits, x.IsReduced -> (f x).IsReduced) (x: Integer) : Integer where
   bits := f x.bits
   reduced := by
     apply hf
     exact x.reduced
 
-@[irreducible]
 def map₂_reduced (f: Bits -> Bits -> Bits) (_: ∀as bs cs ds, as ≈ cs -> bs ≈ ds -> f as bs ≈ f cs ds) (hf: ∀as bs: Bits, as.IsReduced -> bs.IsReduced -> (f as bs).IsReduced) (as bs: Integer) : Integer where
   bits := f as.bits bs.bits
   reduced := by
@@ -477,6 +475,12 @@ def not : Integer -> Integer :=
 
 @[simp] def mk_not (a: Bits) : (mk a).not = mk a.not := map_reduced_mk
 
+@[simp] def not_step (as: Integer) (a: Bool) : not (cons as a) = cons (not as) (!a) := by
+  cases as using cases
+  rw [mk_cons, mk_not, mk_not, mk_cons]
+  apply sound
+  apply Bits.not_step
+
 def Bits.bitwise (f: Bool -> Bool) : Bits -> Bits :=
   fun as =>
   match f false, f true with
@@ -491,6 +495,12 @@ def Bits.get_bitwise (f: Bool -> Bool) (as: Bits) (n: ℕ) : (as.bitwise f)[n] =
   any_goals cases as[n] <;> assumption
   rw [get_not]
   cases as[n] <;> assumption
+
+def Bits.bitwise_step (f: Bool -> Bool) (as: Bits) : as.bitwise f ≈ (as.msb.bitwise f).cons (f as.lsb) := by
+  intro i; rw [get_bitwise]
+  cases i; rfl
+  iterate 2 rw [get_succ_eq_get_msb]
+  dsimp; rw [get_bitwise]
 
 def Bits.eqv_bitwise {f: Bool -> Bool} (as bs: Bits) (h: as ≈ bs) : as.bitwise f ≈ bs.bitwise f := by
   unfold bitwise
@@ -518,6 +528,12 @@ def bitwise (f: Bool -> Bool) : Integer -> Integer :=
 
 @[simp] def mk_bitwise (f: Bool -> Bool) (x: Bits) : (mk x).bitwise f = mk (x.bitwise f) := map_reduced_mk
 
+@[simp] def bitwise_step (f: Bool -> Bool) (as: Integer) (a: Bool) : bitwise f (cons as a) = cons (bitwise f as) (f a) := by
+  cases as using cases with | _ as =>
+  rw [mk_cons, mk_bitwise, mk_bitwise, mk_cons]
+  apply sound
+  apply Bits.bitwise_step
+
 def Bits.bitwise₂ (f: Bool -> Bool -> Bool) : Bits -> Bits -> Bits
 | .nil a => bitwise (f a)
 | .cons as a => fun
@@ -537,6 +553,12 @@ def Bits.get_bitwise₂ {f: Bool -> Bool -> Bool} (as bs: Bits) (n: ℕ) : (bitw
     rw [get_push_bit_zero]; rfl
     rw [get_push_bit_succ, get_succ_eq_get_msb, get_succ_eq_get_msb]
     apply ih
+
+def Bits.bitwise₂_step (f: Bool -> Bool -> Bool) (as bs: Bits) : bitwise₂ f as bs ≈ (bitwise₂ f as.msb bs.msb).cons (f as.lsb bs.lsb) := by
+  intro i; rw [get_bitwise₂]
+  cases i; rfl
+  iterate 3 rw [get_succ_eq_get_msb]
+  dsimp; rw [get_bitwise₂]
 
 def Bits.eqv_bitwise₂ {f: Bool -> Bool -> Bool} (as bs cs ds: Bits) (h: as ≈ cs) (g: bs ≈ ds) : bitwise₂ f as bs ≈ bitwise₂ f cs ds := by
   intro i
@@ -572,6 +594,23 @@ def bitwise₂ (f: Bool -> Bool -> Bool) : Integer -> Integer -> Integer :=
     assumption)
 
 @[simp] def mk_bitwise₂ (f: Bool -> Bool -> Bool) (as bs: Bits) : bitwise₂ f (mk as) (mk bs) = mk (Bits.bitwise₂ f as bs) := map₂_reduced_mk
+
+@[simp] def bitwise₂_nil_left (f: Bool -> Bool -> Bool) (as: Integer) (x: Bool) : bitwise₂ f (nil x) as = bitwise (f x) as := rfl
+
+@[simp] def bitwise₂_nil_right (f: Bool -> Bool -> Bool) (as: Integer) (x: Bool) : bitwise₂ f as (nil x) = bitwise (f · x) as := by
+  cases as using cases with | mk as =>
+  rw [mk_nil, mk_bitwise₂, mk_bitwise]
+  apply sound
+  intro i
+  rw [Bits.get_bitwise₂, Bits.get_bitwise]
+  rfl
+
+@[simp] def bitwise₂_step (f: Bool -> Bool -> Bool) (as bs: Integer) (a b: Bool) : bitwise₂ f (cons as a) (cons bs b) = cons (bitwise₂ f as bs) (f a b) := by
+  cases as using cases with | _ as =>
+  cases bs using cases with | _ bs =>
+  rw [mk_cons, mk_cons, mk_bitwise₂, mk_bitwise₂, mk_cons]
+  apply sound
+  apply Bits.bitwise₂_step
 
 def and := bitwise₂ Bool.and
 def or := bitwise₂ Bool.or
