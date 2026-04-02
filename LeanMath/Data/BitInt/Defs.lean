@@ -408,4 +408,38 @@ def not : Integer -> Integer :=
 
 def mk_not (a: Bits) : (mk a).not = mk a.not := map_reduced_mk
 
+def Bits.bitwise (f: Bool -> Bool) : Bits -> Bits :=
+  fun as =>
+  match f false, f true with
+  | false, true => as
+  | false, false => .nil false
+  | true, true => .nil true
+  | true, false => as.not
+
+def Bits.eqv_bitwise {f: Bool -> Bool} (as bs: Bits) (h: as ≈ bs) : as.bitwise f ≈ bs.bitwise f := by
+  unfold bitwise
+  split; assumption; rfl; rfl
+  apply eqv_not
+  assumption
+
+def Bits.reduced_bitwise {f: Bool -> Bool} (as: Bits) (h: as.IsReduced) : (as.bitwise f).IsReduced := by
+  unfold bitwise
+  split
+  assumption
+  apply IsReduced.nil
+  apply IsReduced.nil
+  apply reduced_not
+  assumption
+
+def bitwise (f: Bool -> Bool) : Integer -> Integer :=
+  map_reduced (Bits.bitwise f) (by
+    intro x y h
+    apply Bits.eqv_bitwise
+    assumption) (by
+    intro x hx
+    apply Bits.reduced_bitwise
+    assumption)
+
+def mk_bitwise (f: Bool -> Bool) (x: Bits) : (mk x).bitwise f = mk (x.bitwise f) := map_reduced_mk
+
 end Integer
