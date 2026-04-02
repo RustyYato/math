@@ -29,7 +29,7 @@ def msb : Bits -> Bits
 def get_succ_eq_get_msb (as: Bits) (i: ℕ) : as[i + 1] = as.msb[i] := by cases as <;> rfl
 
 instance setoid : Setoid Bits where
-  r a b := ∀i, a.get i = b.get i
+  r a b := ∀i: ℕ, a[i] = b[i]
   iseqv := {
     refl _ _ := rfl
     symm h i := (h i).symm
@@ -216,7 +216,7 @@ def push_bit_spec (b: Bool) (as: Bits) : as.push_bit b ≈ as.cons b := by
   | nil a => decide +revert
   | cons as a => rfl
 
-def push_bit_reduced (b: Bool) (as: Bits) (h: as.IsReduced) : (as.push_bit b).IsReduced := by
+def reduced_push_bit (b: Bool) (as: Bits) (h: as.IsReduced) : (as.push_bit b).IsReduced := by
   cases as with
   | nil a => decide +revert
   | cons as a =>
@@ -264,11 +264,11 @@ def reduce_eqv (as: Bits) : as.reduce ≈ as := by
     apply eqv_push_bit_cons.mpr
     assumption
 
-def reduce_reduced (as: Bits) :as.reduce.IsReduced := by
+def reduced_reduce (as: Bits) :as.reduce.IsReduced := by
   induction as with
   | nil a => apply IsReduced.nil
   | cons a as ih =>
-    apply push_bit_reduced
+    apply reduced_push_bit
     assumption
 
 end Integer.Bits
@@ -282,7 +282,7 @@ namespace Integer
 
 def mk (as: Bits) : Integer where
   bits := as.reduce
-  reduced := as.reduce_reduced
+  reduced := as.reduced_reduce
 
 @[ext] def ext (as bs: Integer) (h: as.bits ≈ bs.bits) : as = bs := by
   obtain ⟨as, ha⟩ := as
@@ -333,5 +333,44 @@ def exact {as bs: Bits} : mk as = mk bs -> as ≈ bs := by
   apply Bits.trans _ (Bits.reduce_eqv _)
   rw [show bs.reduce = as.reduce from congrArg Integer.bits h.symm]
   symm; exact Bits.reduce_eqv _
+
+@[irreducible]
+def map_reduced (f: Bits -> Bits) (_: ∀x y, x ≈ y -> f x ≈ f y) (hf: ∀x: Bits, x.IsReduced -> (f x).IsReduced) (x: Integer) : Integer where
+  bits := f x.bits
+  reduced := by
+    apply hf
+    exact x.reduced
+
+@[irreducible]
+def map₂_reduced (f: Bits -> Bits -> Bits) (_: ∀as bs cs ds, as ≈ cs -> bs ≈ ds -> f as bs ≈ f cs ds) (hf: ∀as bs: Bits, as.IsReduced -> bs.IsReduced -> (f as bs).IsReduced) (as bs: Integer) : Integer where
+  bits := f as.bits bs.bits
+  reduced := by
+    apply hf
+    exact as.reduced
+    exact bs.reduced
+
+def map_reduced_eq_lift (f: Bits -> Bits) (h) (hf) (x: Integer) : map_reduced f h hf x = lift (mk ∘ f) (by
+  intro x y _; apply sound
+  apply h; assumption) x := by
+  unfold map_reduced lift quot_rec
+  symm; apply mk_bits {
+    bits := _
+    reduced := _
+  }
+
+def map₂_reduced_eq_lift₂ (f: Bits -> Bits -> Bits) (h) (hf) (x y: Integer) : map₂_reduced f h hf x y = lift₂ (fun a b => mk (f a b)) (by
+  intro _ _ _ _ _ _; apply sound
+  apply h; assumption; assumption) x y := by
+  unfold map₂_reduced lift₂
+  symm; apply mk_bits {
+    bits := _
+    reduced := _
+  }
+
+def mk_map_reduced (f: Bits -> Bits) (h) (hf) (x: Bits) : map_reduced f h hf (mk x) = mk (f x) := by
+  rw [map_reduced_eq_lift, lift_mk]; rfl
+
+def mk_map₂_reduced (f: Bits -> Bits -> Bits) (h) (hf) (x y: Bits) : map₂_reduced f h hf (mk x) (mk y) = mk (f x y) := by
+  rw [map₂_reduced_eq_lift₂, lift₂_mk]
 
 end Integer
