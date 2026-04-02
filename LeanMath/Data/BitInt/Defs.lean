@@ -332,14 +332,12 @@ def exact {as bs: Bits} : mk as = mk bs -> as ≈ bs := by
   rw [show bs.reduce = as.reduce from congrArg Integer.bits h.symm]
   symm; exact Bits.reduce_eqv _
 
-@[irreducible]
 def quot_rec {motive: Integer -> Sort u}
   (mk: ∀x, motive (mk x))
   (_: ∀x y: Bits, x ≈ y -> mk x ≍ mk y)
   (a: Integer) : motive a :=
   cast (by rw [mk_bits]) (mk a.bits)
 
-@[irreducible]
 def cases {motive: Integer -> Prop}
   (mk: ∀x, motive (mk x))
   (a: Integer) : motive a :=
@@ -349,7 +347,6 @@ def lift (f: Bits -> α) (h: ∀x y, x ≈ y -> f x = f y) := quot_rec (motive :
   intro x y eqv; apply heq_of_eq
   apply h x y eqv)
 
-@[irreducible]
 def lift₂ (f: Bits -> Bits -> α) (_: ∀as bs cs ds, as ≈ cs -> bs ≈ ds -> f as bs = f cs ds) (as bs: Integer) := f as.bits bs.bits
 
 @[simp] def quot_rec_mk {motive: Integer -> Sort u} {f: ∀x, motive (mk x)} {h} {as: Bits} : quot_rec f h (mk as) = f as := by
@@ -619,6 +616,51 @@ def xor := bitwise₂ Bool.xor
 end BitOps
 
 section Arith
+
+def Bits.toInt : Bits -> ℤ
+| .nil a => bif a then -1 else 0
+| cons as a => as.toInt * 2 + bif a then 1 else 0
+
+-- #eval Bits.toInt (.cons (.cons (.cons (.cons (.nil false) true) false) true) true)
+
+def Bits.toInt_step (as: Bits) : as.toInt = as.msb.toInt * 2 + bif as.lsb then 1 else 0 := by
+  cases as with
+  | nil a => decide +revert
+  | cons as as => rfl
+
+def Bits.eqv_toInt {as bs: Bits} (h: as ≈ bs) : as.toInt = bs.toInt := by
+  induction as generalizing bs with
+  | nil a =>
+    induction bs with
+    | nil b => decide +revert
+    | cons bs b ih =>
+      rw [Bits.toInt_step (bs.cons b)]
+      dsimp; cases h 0
+      replace ih := ih (eqv_nil_cons.mp h)
+      cases a
+      replace ih : 0 = bs.toInt := ih
+      dsimp; rw [←ih]; rfl
+      replace ih : -1 = bs.toInt := ih
+      dsimp; rw [←ih]; rfl
+  | cons as a ih =>
+    rw [toInt_step, toInt_step bs]; dsimp
+    congr 2
+    apply ih
+    intro i
+    have := h (i + 1)
+    rwa [get_succ_eq_get_msb, get_succ_eq_get_msb] at this
+    exact h 0
+
+def toInt : Integer -> ℤ := lift Bits.toInt (fun _ _ => Bits.eqv_toInt)
+
+@[simp] def mk_toInt (as: Bits) : (mk as).toInt = as.toInt := lift_mk
+
+@[simp] def toInt_nil_false : toInt (nil false) = 0 := rfl
+@[simp] def toInt_nil_true : toInt (nil true) = -1 := rfl
+@[simp] def toInt_cons : toInt (cons as a) = toInt as * 2 + bif a then 1 else 0 := by
+  cases as using cases with | _ as =>
+  rw [mk_cons, mk_toInt, mk_toInt]
+  rfl
 
 def Bits.neg : Bits -> Bits
 | .nil a =>
