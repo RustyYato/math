@@ -904,10 +904,24 @@ def neg : Integer -> Integer :=
     apply Bits.reduced_neg
     assumption)
 
-@[simp] def mk_neg (as: Bits) : (mk as).neg = mk as.neg := map_reduced_mk
-
 instance : Neg Bits := ⟨.neg⟩
 instance : Neg Integer := ⟨neg⟩
+
+@[simp] def mk_neg (as: Bits) : -(mk as) = mk as.neg := by
+  show neg _ = _
+  exact map_reduced_mk
+
+def step_neg (as: Integer) (a: Bool) : -(cons as a) = cons (bif a then as.not else -as) a := by
+  cases as using cases with | mk as =>
+  rw [mk_neg, mk_cons, mk_neg, mk_not]
+  cases a
+  all_goals
+  dsimp; rw [mk_cons]; apply sound
+  cases as with
+  | nil a => decide +revert
+  | cons as a =>
+    apply Bits.eqv_push_bit_cons.mpr
+    rfl
 
 def Bits.inc : Bits -> Bits
 | .nil a =>
@@ -1269,6 +1283,50 @@ def dec_eq_sub_one (as: Integer) : as.dec = as - 1 := by
     · apply ih
     · show _ = add_with_carry _ _ (-1)
       rw [add_with_carry_true, ←ih, dec_inc]
+
+def Bits.not_not (as: Bits) : as.not.not ≈ as := by
+  intro i; rw [get_not, get_not, Bool.not_not]
+
+def not_not (as: Integer) : as.not.not = as := by
+  cases as using cases with | mk as =>
+  rw [mk_not, mk_not]; apply sound
+  apply Bits.not_not
+
+def neg_neg (as: Integer) : - -as = as := by
+  induction as using bits_induction with
+  | nil => decide +revert
+  | cons as a ih =>
+    rw [step_neg]; cases a <;> dsimp
+    rw [step_neg]; dsimp; rw [ih]
+    rw [step_neg]; dsimp; rw [not_not]
+
+def neg_inj {as bs: Integer} : -as = -bs ↔ as = bs := by
+  apply Iff.intro
+  intro h; rw [←neg_neg as, ←neg_neg bs, h]
+  apply congrArg
+
+def neg_inc_eq_not (as: Integer) : -as.inc = as.not := by
+  induction as using bits_induction with
+  | nil => decide +revert
+  | cons as a ih =>
+    rw [step_inc]; cases a <;> dsimp
+    all_goals
+      rw [step_neg]; dsimp [Bool.not]
+      rw [step_not]; dsimp [Bool.not]
+    rw [ih]
+
+def dec_neg_eq_not (as: Integer) : (-as).dec = as.not := by
+  induction as using bits_induction with
+  | nil => decide +revert
+  | cons as a ih =>
+    rw [step_neg]; cases a <;> dsimp
+    all_goals
+      rw [step_dec]; dsimp [Bool.not]
+      rw [step_not]; dsimp [Bool.not]
+    rw [ih]
+
+def neg_inc_eq_dec_neg (as: Integer) : -as.inc = (-as).dec := by
+  rw [neg_inc_eq_not, dec_neg_eq_not]
 
 end Arith
 
