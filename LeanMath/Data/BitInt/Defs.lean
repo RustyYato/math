@@ -1637,4 +1637,32 @@ def induction {motive: Integer -> Prop}
 
 end Order
 
+section Arith
+
+def Bits.mul_inner (c: Bool) : Bool -> Bits -> Bool -> Bits -> Bits
+| false, _, false, _ =>
+  match c with
+  | false => 0
+  | true => 1
+| false, _, true, b => push_bit c b
+| true, a, false, _ => push_bit c a
+| true, a, true, b => push_bit c (a + b)
+
+-- fma a b c = a * b + c
+def Bits.mul : Bits -> Bits -> Bits
+| .nil a, b =>
+  match a with
+  | false => 0
+  | true => -b
+| a, .nil b =>
+  match b with
+  | false => 0
+  | true => -a
+| .cons as a, .cons bs b =>
+  -- (2 * as + a) * (2 * bs + b)
+  -- 4 * as * bs + (2 * (a * bs + as * b) + a * b)
+  mul_inner (a && b) b as a bs + push_bit false (push_bit false (mul as bs))
+
+end Arith
+
 end Integer
