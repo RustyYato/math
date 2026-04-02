@@ -441,7 +441,7 @@ def Bits.not : Bits -> Bits
 | .nil a => .nil (!a)
 | .cons as a => .cons as.not (!a)
 
-def Bits.not_step (as: Bits) : as.not ≈ as.msb.not.cons (!as.lsb) := by
+def Bits.step_not (as: Bits) : as.not ≈ as.msb.not.cons (!as.lsb) := by
   cases as with
   | nil a => decide +revert
   | cons as a => rfl
@@ -472,11 +472,11 @@ def not : Integer -> Integer :=
 
 @[simp] def mk_not (a: Bits) : (mk a).not = mk a.not := map_reduced_mk
 
-@[simp] def not_step (as: Integer) (a: Bool) : not (cons as a) = cons (not as) (!a) := by
+@[simp] def step_not (as: Integer) (a: Bool) : not (cons as a) = cons (not as) (!a) := by
   cases as using cases
   rw [mk_cons, mk_not, mk_not, mk_cons]
   apply sound
-  apply Bits.not_step
+  apply Bits.step_not
 
 def Bits.bitwise (f: Bool -> Bool) : Bits -> Bits :=
   fun as =>
@@ -493,7 +493,7 @@ def Bits.get_bitwise (f: Bool -> Bool) (as: Bits) (n: ℕ) : (as.bitwise f)[n] =
   rw [get_not]
   cases as[n] <;> assumption
 
-def Bits.bitwise_step (f: Bool -> Bool) (as: Bits) : as.bitwise f ≈ (as.msb.bitwise f).cons (f as.lsb) := by
+def Bits.step_bitwise (f: Bool -> Bool) (as: Bits) : as.bitwise f ≈ (as.msb.bitwise f).cons (f as.lsb) := by
   intro i; rw [get_bitwise]
   cases i; rfl
   iterate 2 rw [get_succ_eq_get_msb]
@@ -525,11 +525,11 @@ def bitwise (f: Bool -> Bool) : Integer -> Integer :=
 
 @[simp] def mk_bitwise (f: Bool -> Bool) (x: Bits) : (mk x).bitwise f = mk (x.bitwise f) := map_reduced_mk
 
-@[simp] def bitwise_step (f: Bool -> Bool) (as: Integer) (a: Bool) : bitwise f (cons as a) = cons (bitwise f as) (f a) := by
+@[simp] def step_bitwise (f: Bool -> Bool) (as: Integer) (a: Bool) : bitwise f (cons as a) = cons (bitwise f as) (f a) := by
   cases as using cases with | _ as =>
   rw [mk_cons, mk_bitwise, mk_bitwise, mk_cons]
   apply sound
-  apply Bits.bitwise_step
+  apply Bits.step_bitwise
 
 def Bits.bitwise₂ (f: Bool -> Bool -> Bool) : Bits -> Bits -> Bits
 | .nil a => bitwise (f a)
@@ -623,7 +623,7 @@ def Bits.toInt : Bits -> ℤ
 
 -- #eval Bits.toInt (.cons (.cons (.cons (.cons (.nil false) true) false) true) true)
 
-def Bits.toInt_step (as: Bits) : as.toInt = as.msb.toInt * 2 + bif as.lsb then 1 else 0 := by
+def Bits.step_toInt (as: Bits) : as.toInt = as.msb.toInt * 2 + bif as.lsb then 1 else 0 := by
   cases as with
   | nil a => decide +revert
   | cons as as => rfl
@@ -634,7 +634,7 @@ def Bits.eqv_toInt {as bs: Bits} (h: as ≈ bs) : as.toInt = bs.toInt := by
     induction bs with
     | nil b => decide +revert
     | cons bs b ih =>
-      rw [Bits.toInt_step (bs.cons b)]
+      rw [Bits.step_toInt (bs.cons b)]
       dsimp; cases h 0
       replace ih := ih (eqv_nil_cons.mp h)
       cases a
@@ -643,7 +643,7 @@ def Bits.eqv_toInt {as bs: Bits} (h: as ≈ bs) : as.toInt = bs.toInt := by
       replace ih : -1 = bs.toInt := ih
       dsimp; rw [←ih]; rfl
   | cons as a ih =>
-    rw [toInt_step, toInt_step bs]; dsimp
+    rw [step_toInt, step_toInt bs]; dsimp
     congr 2
     apply ih
     intro i
@@ -674,18 +674,18 @@ def Bits.ofNat : ℕ -> Bits :=
     apply nat_div2_rec_lemma
     nofun)) (n % 2 != 0))
 
-def Bits.ofNat_step_ne_zero (n: ℕ) (hn: n ≠ 0) : Bits.ofNat n = cons (Bits.ofNat (n / 2)) (n % 2 != 0) := by
+def Bits.step_ofNat_ne_zero (n: ℕ) (hn: n ≠ 0) : Bits.ofNat n = cons (Bits.ofNat (n / 2)) (n % 2 != 0) := by
   cases n; contradiction
-  apply Nat.strongRec_step
+  apply Nat.step_strongRec
   rename_i n; clear n hn
   intro x f g h
   cases x <;> dsimp
   congr
   apply h
 
-def Bits.ofNat_step (n: ℕ) : Bits.ofNat n ≈ cons (Bits.ofNat (n / 2)) (n % 2 != 0) := by
+def Bits.step_ofNat (n: ℕ) : Bits.ofNat n ≈ cons (Bits.ofNat (n / 2)) (n % 2 != 0) := by
   cases n; decide
-  rw [Bits.ofNat_step_ne_zero]
+  rw [Bits.step_ofNat_ne_zero]
   nofun
 
 def Bits.of_ofNat_eq_nil (n: ℕ) : Bits.ofNat n = nil x -> n = 0 ∧ x = false := by
@@ -693,7 +693,7 @@ def Bits.of_ofNat_eq_nil (n: ℕ) : Bits.ofNat n = nil x -> n = 0 ∧ x = false 
   cases h; rfl
   rename_i n; intro h
   exfalso
-  rw [ofNat_step_ne_zero (n + 1) nofun] at h
+  rw [step_ofNat_ne_zero (n + 1) nofun] at h
   contradiction
 
 def Bits.reduced_ofNat (n: ℕ) : (Bits.ofNat n).IsReduced := by
@@ -703,7 +703,7 @@ def Bits.reduced_ofNat (n: ℕ) : (Bits.ofNat n).IsReduced := by
     | zero => apply IsReduced.nil
     | succ n =>
     -- | succ n ih =>
-    rw [Bits.ofNat_step_ne_zero (n + 1) nofun]
+    rw [Bits.step_ofNat_ne_zero (n + 1) nofun]
     apply IsReduced.cons _ _ _ (ih _ (by
       apply nat_div2_rec_lemma
       nofun))
@@ -741,7 +741,7 @@ def Bits.neg : Bits -> Bits
 | .cons as a =>
   .push_bit a <| bif a then as.not else as.neg
 
-def Bits.neg_step (as: Bits) : as.neg ≈ cons (bif as.lsb then as.msb.not else as.msb.neg) as.lsb := by
+def Bits.step_neg (as: Bits) : as.neg ≈ cons (bif as.lsb then as.msb.not else as.msb.neg) as.lsb := by
   cases as with
   | nil a => decide +revert
   | cons as a => apply push_bit_spec
@@ -753,7 +753,7 @@ def Bits.eqv_neg {as bs: Bits} (h: as ≈ bs) : neg as ≈ neg bs := by
     | nil b => decide +revert
     | cons bs b ih =>
       cases h 0;
-      symm; apply trans (neg_step _); symm
+      symm; apply trans (step_neg _); symm
       dsimp
       cases a <;> dsimp [neg]
       apply eqv_nil_cons.mpr

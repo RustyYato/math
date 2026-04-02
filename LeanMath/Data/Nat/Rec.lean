@@ -32,7 +32,7 @@ def strongRec.go_fuel_irr
 def strongRec (x: ℕ) : motive x :=
   strongRec.go ind x (x + 1) (Nat.lt_succ_self _)
 
-def strongRec_step (x: ℕ) : strongRec ind x = ind x (fun y _ => strongRec ind y) := by
+def step_strongRec (x: ℕ) : strongRec ind x = ind x (fun y _ => strongRec ind y) := by
   rw [strongRec]; unfold strongRec.go
   apply funext'
   intro y hy
