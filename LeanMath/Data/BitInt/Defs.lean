@@ -25,6 +25,11 @@ def msb : Bits -> Bits
 | nil a => nil a
 | cons as _ => as
 
+@[simp] def lsb_nil (a: Bool) : lsb (nil a) = a := rfl
+@[simp] def lsb_cons (as: Bits) (a: Bool) : lsb (cons as a) = a := rfl
+@[simp] def msb_nil (a: Bool) : msb (nil a) = nil a := rfl
+@[simp] def msb_cons (as: Bits) (a: Bool) : msb (cons as a) = as := rfl
+
 @[simp] def get_zero_eq_lsb (as: Bits) : as[0] = as.lsb := rfl
 def get_succ_eq_get_msb (as: Bits) (i: ℕ) : as[i + 1] = as.msb[i] := by cases as <;> rfl
 
@@ -211,6 +216,16 @@ def push_bit (b: Bool) : Bits -> Bits
 | nil a => bif a == b then nil a else cons (nil a) b
 | cons as a => cons (cons as a) b
 
+def get_push_bit_zero (b: Bool) (as: Bits) : (as.push_bit b)[0] = b := by
+  cases as with
+  | nil a => decide +revert
+  | cons as a => rfl
+
+def get_push_bit_succ (b: Bool) (as: Bits) (n: ℕ) : (as.push_bit b)[n + 1] = as[n] := by
+  cases as with
+  | nil a => cases a <;> cases b <;> rfl
+  | cons as a => rfl
+
 def push_bit_spec (b: Bool) (as: Bits) : as.push_bit b ≈ as.cons b := by
   cases as with
   | nil a => decide +revert
@@ -292,7 +307,7 @@ def mk (as: Bits) : Integer where
   assumption
   assumption
 
-def mk_bits (as: Integer) : mk as.bits = as := by
+@[simp] def mk_bits (as: Integer) : mk as.bits = as := by
   ext; apply Bits.reduce_eqv
 
 @[irreducible]
@@ -406,7 +421,7 @@ def not : Integer -> Integer :=
     intro x y h; apply Bits.eqv_not
     assumption) (fun _ => Bits.reduced_not)
 
-def mk_not (a: Bits) : (mk a).not = mk a.not := map_reduced_mk
+@[simp] def mk_not (a: Bits) : (mk a).not = mk a.not := map_reduced_mk
 
 def Bits.bitwise (f: Bool -> Bool) : Bits -> Bits :=
   fun as =>
@@ -415,6 +430,13 @@ def Bits.bitwise (f: Bool -> Bool) : Bits -> Bits :=
   | false, false => .nil false
   | true, true => .nil true
   | true, false => as.not
+
+def Bits.get_bitwise (f: Bool -> Bool) (as: Bits) (n: ℕ) : (as.bitwise f)[n] = f as[n] := by
+  unfold bitwise
+  symm; split;
+  any_goals cases as[n] <;> assumption
+  rw [get_not]
+  cases as[n] <;> assumption
 
 def Bits.eqv_bitwise {f: Bool -> Bool} (as bs: Bits) (h: as ≈ bs) : as.bitwise f ≈ bs.bitwise f := by
   unfold bitwise
@@ -440,6 +462,65 @@ def bitwise (f: Bool -> Bool) : Integer -> Integer :=
     apply Bits.reduced_bitwise
     assumption)
 
-def mk_bitwise (f: Bool -> Bool) (x: Bits) : (mk x).bitwise f = mk (x.bitwise f) := map_reduced_mk
+@[simp] def mk_bitwise (f: Bool -> Bool) (x: Bits) : (mk x).bitwise f = mk (x.bitwise f) := map_reduced_mk
+
+def Bits.bitwise₂ (f: Bool -> Bool -> Bool) : Bits -> Bits -> Bits
+| .nil a => bitwise (f a)
+| .cons as a => fun
+  | nil b => bitwise (f · b) (cons as a)
+  | cons bs b => push_bit (f a b) (bitwise₂ f as bs)
+
+def Bits.get_bitwise₂ {f: Bool -> Bool -> Bool} (as bs: Bits) (n: ℕ) : (bitwise₂ f as bs)[n] = f as[n] bs[n] := by
+  induction as generalizing bs n with
+  | nil a =>
+    dsimp [bitwise₂]
+    rw [get_bitwise]; rfl
+  | cons as a ih =>
+    dsimp [bitwise₂]
+    cases bs <;> dsimp
+    rw [get_bitwise]; rfl
+    cases n
+    rw [get_push_bit_zero]; rfl
+    rw [get_push_bit_succ, get_succ_eq_get_msb, get_succ_eq_get_msb]
+    apply ih
+
+def Bits.eqv_bitwise₂ {f: Bool -> Bool -> Bool} (as bs cs ds: Bits) (h: as ≈ cs) (g: bs ≈ ds) : bitwise₂ f as bs ≈ bitwise₂ f cs ds := by
+  intro i
+  rw [get_bitwise₂, get_bitwise₂, h, g]
+
+def Bits.reduced_bitwise₂ {f: Bool -> Bool -> Bool} (as bs: Bits) (ha: as.IsReduced) (hb: bs.IsReduced) : (bitwise₂ f as bs).IsReduced := by
+  induction ha generalizing bs with
+  | nil a =>
+    apply reduced_bitwise
+    assumption
+  | cons as a hpart ha ih =>
+    cases bs with
+    | nil b =>
+      unfold bitwise₂
+      apply reduced_bitwise
+      apply IsReduced.cons <;>
+      assumption
+    | cons bs b =>
+      apply reduced_push_bit
+      apply ih
+      cases hb
+      assumption
+
+def bitwise₂ (f: Bool -> Bool -> Bool) : Integer -> Integer -> Integer :=
+  map₂_reduced (Bits.bitwise₂ f) (by
+    intro as bs cs ds h g
+    apply Bits.eqv_bitwise₂
+    assumption
+    assumption) (by
+    intro as bs ha hb
+    apply Bits.reduced_bitwise₂
+    assumption
+    assumption)
+
+@[simp] def mk_bitwise₂ (f: Bool -> Bool -> Bool) (as bs: Bits) : bitwise₂ f (mk as) (mk bs) = mk (Bits.bitwise₂ f as bs) := map₂_reduced_mk
+
+def and := bitwise₂ Bool.and
+def or := bitwise₂ Bool.or
+def xor := bitwise₂ Bool.xor
 
 end Integer
