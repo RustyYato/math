@@ -159,10 +159,10 @@ def enumOrd_surj (hs : ¬s.BoundedAbove) (hx: x ∈ s) : x ∈ Set.range (enumOr
 
 -- def IsInitial
 
-def initialOrd : Ordinal.{u} ≃o { o: Ordinal.{u} // IsInitial o } where
-  toFun := {
-    val := enumOrd (Set.ofMem IsInitial)
-  }
-  invFun := sorry
+-- def initialOrd : Ordinal.{u} ≃o { o: Ordinal.{u} // IsInitial o } where
+--   toFun := {
+--     val := enumOrd (Set.ofMem IsInitial)
+--   }
+--   invFun := sorry
 
 end Ordinal
