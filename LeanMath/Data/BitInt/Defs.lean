@@ -842,6 +842,16 @@ instance : OfNat Bits n := ⟨n⟩
 instance : NatCast Integer := ⟨ofNat⟩
 instance : OfNat Integer n := ⟨n⟩
 
+def mk_natCast (n: ℕ) : n = mk n := by
+  ext; symm; apply Bits.reduce_eqv
+
+def mk_OfNat (n: ℕ) : OfNat.ofNat n = mk (OfNat.ofNat n) := by
+  ext; symm; apply Bits.reduce_eqv
+
+def step_natCast (n: ℕ) : n = cons (n / 2: ℕ) (n % 2 != 0) := by
+  rw [mk_natCast, mk_natCast, mk_cons]
+  apply sound; apply Bits.step_ofNat n
+
 def Bits.neg : Bits -> Bits
 | .nil a =>
   match a with
@@ -1328,6 +1338,303 @@ def dec_neg_eq_not (as: Integer) : (-as).dec = as.not := by
 def neg_inc_eq_dec_neg (as: Integer) : -as.inc = (-as).dec := by
   rw [neg_inc_eq_not, dec_neg_eq_not]
 
+def inc_cons_false (a: Integer) : (cons a false).inc = cons a true := by
+  apply step_inc
+def inc_cons_true (a: Integer) : (cons a true).inc = cons a.inc false := by
+  apply step_inc
+
+def natCast_succ (n: ℕ) : (n + 1: ℕ) = (n + 1: Integer) := by
+  induction n using nat_div2_rec with
+  | base => rfl
+  | ind n h ih =>
+    rw [step_natCast, step_natCast n, ←inc_eq_add_one]
+    rcases nat_mod2_eq_zero_or_one n with h | h
+    · rw [h, nat_add_mod, h]; dsimp
+      rw [inc_cons_false]; congr 2
+      obtain ⟨k, rfl⟩ : 2 ∣ n := by rw [←nat_div_add_mod n 2, h, Nat.add_zero]; apply Nat.dvd_mul_right
+      rw [nat_mul_add_div (by decide), Nat.mul_comm, nat_mul_div_left]; rfl
+      decide
+    · rw [h, nat_add_mod, h]; dsimp
+      rw [inc_cons_true, inc_eq_add_one, ←ih]; congr
+      rw [Nat.add_comm (n / 2) 1, ←nat_mul_add_div,
+        Nat.two_mul, Nat.add_comm _ n, ←Nat.add_assoc]
+      obtain ⟨k, hk⟩ : 2 ∣ n + 1 := by rw [←nat_div_add_mod n 2, h,
+        Nat.add_assoc, ←Nat.two_mul, ←Nat.mul_add]; apply Nat.dvd_mul_right
+      rw [hk, nat_mul_add_div (by decide), Nat.mul_comm, nat_mul_div_left]; rfl
+      decide
+      decide
+
+instance : IsLawfulNegZero Integer where
+  neg_zero := rfl
+
 end Arith
+
+section Order
+
+inductive Bits.IsNonneg : Bits -> Prop where
+| nil : IsNonneg (nil false)
+| cons (as a) : IsNonneg as -> IsNonneg (cons as a)
+
+inductive Bits.IsNeg : Bits -> Prop where
+| nil : IsNeg (nil true)
+| cons (as a) : IsNeg as -> IsNeg (cons as a)
+
+def Bits.is_nonneg : Bits -> Bool
+| nil a => a == false
+| cons as _ => as.is_nonneg
+
+def Bits.is_neg : Bits -> Bool
+| nil a => a == true
+| cons as _ => as.is_neg
+
+def Bits.is_nonneg_spec {as: Bits} : as.is_nonneg ↔ as.IsNonneg := by
+  induction as with
+  | nil a =>
+    cases a <;> apply Iff.intro
+    intro h; apply IsNonneg.nil
+    intro; rfl
+    nofun; nofun
+  | cons as a ih =>
+    apply Iff.trans ih
+    apply Iff.intro
+    apply IsNonneg.cons
+    intro h; cases h
+    assumption
+
+def Bits.is_neg_spec {as: Bits} : as.is_neg ↔ as.IsNeg := by
+  induction as with
+  | nil a =>
+    cases a <;> apply Iff.intro
+    nofun; nofun
+    intro h; apply IsNeg.nil
+    intro; rfl
+  | cons as a ih =>
+    apply Iff.trans ih
+    apply Iff.intro
+    apply IsNeg.cons
+    intro h; cases h
+    assumption
+
+def IsNonneg (x: Integer) := x.bits.IsNonneg
+def IsNeg (x: Integer) := x.bits.IsNeg
+
+instance : Decidable (Bits.IsNonneg a) :=
+  decidable_of_bool a.is_nonneg Bits.is_nonneg_spec
+instance : Decidable (Bits.IsNeg a) :=
+  decidable_of_bool a.is_neg Bits.is_neg_spec
+
+instance : Decidable (IsNonneg a) :=
+  inferInstanceAs (Decidable (Bits.IsNonneg _))
+instance : Decidable (IsNeg a) :=
+  inferInstanceAs (Decidable (Bits.IsNeg _))
+
+private def Bits.eqv_IsNonneg' {as bs: Bits} (h: as ≈ bs) : as.IsNonneg -> bs.IsNonneg := by
+  intro g
+  induction g generalizing bs with
+  | nil =>
+    induction bs with
+    | nil => cases h 0; apply IsNonneg.nil
+    | cons bs b ih =>
+      apply IsNonneg.cons
+      apply ih
+      cases h 0
+      apply eqv_nil_cons.mp; assumption
+  | cons as a _ ih =>
+    cases bs with
+    | nil b =>
+      cases h 0
+      exact ih (eqv_cons_nil.mp h)
+    | cons bs b =>
+      apply IsNonneg.cons
+      apply ih
+      cases h 0
+      apply eqv_cons.mp; assumption
+private def Bits.eqv_IsNeg' {as bs: Bits} (h: as ≈ bs) : as.IsNeg -> bs.IsNeg := by
+  intro g
+  induction g generalizing bs with
+  | nil =>
+    induction bs with
+    | nil => cases h 0; apply IsNeg.nil
+    | cons bs b ih =>
+      apply IsNeg.cons
+      apply ih
+      cases h 0
+      apply eqv_nil_cons.mp; assumption
+  | cons as a _ ih =>
+    cases bs with
+    | nil b =>
+      cases h 0
+      exact ih (eqv_cons_nil.mp h)
+    | cons bs b =>
+      apply IsNeg.cons
+      apply ih
+      cases h 0
+      apply eqv_cons.mp; assumption
+def Bits.eqv_IsNonneg {as bs: Bits} (h: as ≈ bs) : as.IsNonneg ↔ bs.IsNonneg := by
+  apply Iff.intro
+  apply Bits.eqv_IsNonneg'; assumption
+  apply Bits.eqv_IsNonneg'; symm; assumption
+def Bits.eqv_IsNeg {as bs: Bits} (h: as ≈ bs) : as.IsNeg ↔ bs.IsNeg := by
+  apply Iff.intro
+  apply Bits.eqv_IsNeg'; assumption
+  apply Bits.eqv_IsNeg'; symm; assumption
+def mk_isnonneg (a: Bits) : (mk a).IsNonneg ↔ a.IsNonneg := by
+  apply Bits.eqv_IsNonneg
+  apply Bits.reduce_eqv
+def mk_isneg (a: Bits) : (mk a).IsNeg ↔ a.IsNeg := by
+  apply Bits.eqv_IsNeg
+  apply Bits.reduce_eqv
+
+def Bits.not_nonneg_and_neg (a: Bits) : a.IsNonneg -> a.IsNeg -> False := by
+  intro h g
+  induction h with
+  | nil => nomatch g
+  | cons as a h ih =>
+    cases g; apply ih; assumption
+
+def Bits.nonneg_or_neg (a: Bits) : a.IsNonneg ∨ a.IsNeg := by
+  induction a with
+  | nil a =>
+    cases a
+    left; apply IsNonneg.nil
+    right; apply IsNeg.nil
+  | cons as a ih =>
+    rcases ih with h | h
+    left; apply IsNonneg.cons; assumption
+    right; apply IsNeg.cons; assumption
+
+def Bits.nonneg_cons {as: Bits} {a: Bool} : (as.cons a).IsNonneg ↔ as.IsNonneg := by
+  apply Iff.intro
+  intro h; cases h; assumption
+  apply IsNonneg.cons
+
+def Bits.neg_cons {as: Bits} {a: Bool} : (as.cons a).IsNeg ↔ as.IsNeg := by
+  apply Iff.intro
+  intro h; cases h; assumption
+  apply IsNeg.cons
+
+def Bits.not_nonneg_iff_neg {a: Bits} : a.not.IsNonneg ↔ a.IsNeg := by
+  induction a with
+  | nil a => decide +revert
+  | cons as a ih =>
+    apply Iff.trans (Bits.eqv_IsNonneg (step_not _))
+    dsimp; apply Iff.trans Bits.nonneg_cons
+    apply Iff.trans _ Bits.neg_cons.symm
+    assumption
+
+def Bits.not_neg_iff_nonneg {a: Bits} : a.not.IsNeg ↔ a.IsNonneg := by
+  apply Iff.trans Bits.not_nonneg_iff_neg.symm
+  apply Bits.eqv_IsNonneg
+  apply Bits.not_not
+
+def Bits.nonpos_of_neg (a: Bits) : a.IsNeg -> (-a).IsNonneg := by
+  induction a with
+  | nil a => decide +revert
+  | cons as a ih =>
+    intro h
+    apply Bits.eqv_IsNonneg'
+    symm; apply step_neg
+    cases a <;> dsimp
+    apply IsNonneg.cons
+    apply ih; cases h; assumption
+    apply IsNonneg.cons
+    apply not_nonneg_iff_neg.mpr
+    cases h; assumption
+
+def nonneg_nil : IsNonneg (nil a) ↔ a = false := by decide +revert
+def nonneg_cons : IsNonneg (cons as a) ↔ IsNonneg as := by
+  cases as using cases with | mk as =>
+  rw [mk_cons]
+  apply Iff.trans (mk_isnonneg _)
+  apply Iff.trans _ (mk_isnonneg _).symm
+  exact Bits.nonneg_cons
+
+instance : LE Integer where
+  le a b := IsNonneg (b - a)
+instance : LT Integer where
+  lt a b := IsNeg (b - a)
+
+def nonneg_or_nonpos (as: Integer) : as.IsNonneg ∨ (-as).IsNonneg := by
+  cases as using cases with | mk as =>
+  rcases Bits.nonneg_or_neg as with h | h
+  left; apply (mk_isnonneg _).mpr; assumption
+  right; rw [mk_neg]; apply (mk_isnonneg _).mpr
+  apply Bits.nonpos_of_neg
+  assumption
+
+def exists_ofNat_of_nonneg (x: Integer) (hx: x.IsNonneg) : ∃n: ℕ, x = n := by
+  induction x using bits_induction with
+  | nil =>
+    cases nonneg_nil.mp hx
+    exists 0
+  | cons as a ih =>
+    obtain ⟨n, rfl⟩ := ih (nonneg_cons.mp hx)
+    cases a
+    exists n * 2
+    rw [step_natCast (n * 2)]
+    rw [nat_mul_mod_left, nat_mul_div_left n]
+    rfl; decide
+    exists n * 2 + 1
+    rw [step_natCast (n * 2 + 1)]
+    rw [nat_add_mod, nat_mul_mod_left, Nat.zero_add, Nat.mul_comm, nat_mul_add_div]
+    rfl; decide
+
+def Bits.nonneg_inc (as: Bits) : as.IsNonneg -> as.inc.IsNonneg := by
+  intro h
+  induction h with
+  | nil =>
+    apply IsNonneg.cons
+    apply IsNonneg.nil
+  | cons as a ih =>
+    apply (eqv_IsNonneg (push_bit_spec _ _)).mpr
+    apply IsNonneg.cons
+    cases a <;> dsimp
+    assumption
+    assumption
+def nonneg_inc (as: Integer) : as.IsNonneg -> as.inc.IsNonneg := Bits.nonneg_inc _
+
+def natCast_nonneg (n: ℕ) : IsNonneg n := by
+  induction n using nat_div2_rec with
+  | base => apply Bits.IsNonneg.nil
+  | ind =>
+    rw [step_natCast]
+    rw [mk_natCast, mk_cons]
+    apply (mk_isnonneg _).mpr
+    apply Bits.IsNonneg.cons
+    assumption
+
+private def nonneg_induction {motive: ∀as: Integer, as.IsNonneg -> Prop}
+  (zero: motive 0 (by decide))
+  (inc: ∀(as: Integer) (ha: as.IsNonneg), motive as ha -> motive as.inc (nonneg_inc _ ha))
+  (as: Integer) (ha: as.IsNonneg) : motive as ha := by
+  obtain ⟨n, rfl⟩ := exists_ofNat_of_nonneg _ ha
+  show motive _ (natCast_nonneg _)
+  clear ha
+  induction n with
+  | zero => apply zero
+  | succ n ih =>
+    conv => { lhs; rw [natCast_succ, ←inc_eq_add_one] }
+    apply inc
+    assumption
+
+def induction {motive: Integer -> Prop}
+  (zero: motive 0)
+  (inc: ∀(as: Integer), motive as -> motive as.inc)
+  (dec: ∀(as: Integer), motive as -> motive as.dec)
+  (x: Integer) : motive x := by
+  rcases nonneg_or_nonpos x with h | h
+  apply nonneg_induction (motive := fun n _ => motive n)
+  apply zero
+  intro as h; apply inc
+  assumption
+  have := nonneg_induction (motive := fun n _ => motive (-n)) (as := -x) ?_ ?_ h
+  rwa [neg_neg] at this
+  dsimp; rwa [neg_zero]
+  intro as ha dsimp
+  rw [neg_inc_eq_dec_neg]
+  apply dec
+  assumption
+
+end Order
 
 end Integer

@@ -211,3 +211,104 @@ def nat_mod2_eq_zero_or_one (n: Nat) : n % 2 = 0 ∨ n % 2 = 1 := by
     replace : k + 2 < 0 + 2 := this
     replace := Nat.lt_of_add_lt_add_right this
     contradiction
+
+def nat_zero_div (n: ℕ) : 0 / n = 0 := by
+  rw [nat_div_eq, if_neg]
+  intro ⟨h, g⟩
+  exact Nat.not_le_of_lt h g
+
+def nat_add_sub_cancel (n m: ℕ) : n + m - m = n := by
+  induction m with
+  | zero => rfl
+  | succ m ih => rw [Nat.add_succ, Nat.succ_sub_succ, ih]
+
+def nat_add_sub_assoc : ∀ {m k : ℕ}, k ≤ m → ∀ (n : ℕ), n + m - k = n + (m - k) := by
+  intro m k hm n
+  obtain ⟨m, rfl⟩ := Nat.le.dest hm
+  rw [Nat.add_comm k, ←Nat.add_assoc, nat_add_sub_cancel, nat_add_sub_cancel]
+
+def nat_mul_add_div : ∀ {m : ℕ}, m > 0 → ∀ (x y : ℕ), (m * x + y) / m = x + y / m := by
+  intro m mpos x y
+  induction x with
+  | zero => rw [Nat.mul_zero, Nat.zero_add, Nat.zero_add]
+  | succ n ih =>
+    rw [Nat.mul_succ, nat_div_eq, if_pos, Nat.add_right_comm, nat_add_sub_cancel,
+      ih, Nat.add_one, ←Nat.succ_add]
+    apply And.intro
+    assumption
+    rw [Nat.add_right_comm]
+    apply Nat.le_add_left
+
+def nat_add_right_cancel {n m k: ℕ} : n + k = m + k ↔ n = m := by
+  apply Iff.intro
+  intro h
+  have := congrArg (· - k) h; dsimp at this
+  rwa [nat_add_sub_cancel, nat_add_sub_cancel] at this
+  apply congrArg (· + k)
+
+def nat_add_left_cancel {n m k: ℕ} : k + n = k + m ↔ n = m := by
+  rw [Nat.add_comm k, Nat.add_comm k]
+  exact nat_add_right_cancel
+
+def nat_mul_mod_left : ∀ (m : ℕ) (n : ℕ), m * n % n = 0 := by
+  intro m n
+  by_cases h:n = 0
+  subst n; rfl
+  have := nat_div_add_mod (n * m + 0) n
+  rw [nat_mul_add_div, nat_zero_div,
+    Nat.add_zero, Nat.add_zero] at this
+  rw [Nat.mul_comm]
+  exact (nat_add_left_cancel (m := 0)).mp this
+  exact Nat.pos_of_ne_zero h
+
+def nat_mul_div_left : ∀ (m : ℕ) {n : ℕ}, 0 < n → m * n / n = m := by
+  intro m n hn
+  have := nat_div_add_mod (m * n) n
+  rw [nat_mul_mod_left, Nat.add_zero, Nat.mul_comm] at this
+  apply Nat.eq_of_mul_eq_mul_right
+  assumption
+  assumption
+
+def nat_add_mod (n m k: ℕ) : (n + m) % k = (n % k + m % k) % k := by
+  by_cases hk:k = 0
+  subst k
+  iterate 4 rw [nat_mod_eq _ 0, if_neg nofun]
+  induction hx:n + m, k using Nat.div.inductionOn generalizing n m with
+  | base x k h =>
+    subst x
+    rw [nat_mod_eq (n + m), if_neg,
+      nat_mod_eq n, if_neg,
+      nat_mod_eq m, if_neg,
+      nat_mod_eq (n + m), if_neg]
+    · assumption
+    · intro ⟨hk', g⟩
+      apply h; refine ⟨hk', ?_⟩
+      apply Nat.le_trans g
+      apply Nat.le_add_left
+    · intro ⟨hk', g⟩
+      apply h; refine ⟨hk', ?_⟩
+      apply Nat.le_trans g
+      apply Nat.le_add_right
+    · assumption
+  | ind x k h ih=>
+    subst x; replace ih := fun n' m' => ih n' m' hk
+    rw [nat_mod_eq n]
+    split <;> rename_i g
+    · rw [nat_mod_eq, if_pos]
+      rw [ih]
+      rw [Nat.add_comm n, nat_add_sub_assoc, Nat.add_comm]
+      exact g.right
+      apply And.intro g.left
+      apply Nat.le_trans g.right
+      apply Nat.le_add_right
+    rw [nat_mod_eq m]
+    split <;> rename_i g'
+    · rw [nat_mod_eq, if_pos]
+      rw [ih n (m - k), nat_mod_eq n, if_neg]
+      assumption
+      rw [Nat.add_comm n, nat_add_sub_assoc, Nat.add_comm]
+      exact g'.right
+      apply And.intro g'.left
+      apply Nat.le_trans g'.right
+      apply Nat.le_add_left
+    · rfl
