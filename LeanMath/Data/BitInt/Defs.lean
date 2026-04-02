@@ -662,6 +662,77 @@ def toInt : Integer -> ℤ := lift Bits.toInt (fun _ _ => Bits.eqv_toInt)
   rw [mk_cons, mk_toInt, mk_toInt]
   rfl
 
+def Bits.eqv_of_eq (a b: Bits) (h: a = b) : a ≈ b := by subst h; rfl
+
+def Bits.ofNat : ℕ -> Bits :=
+  Nat.strongRec (fun n ih =>
+    match h:n with
+  | 0 => .nil false
+  | _ + 1 =>
+    .cons (ih (n / 2) (by
+    subst h
+    apply nat_div2_rec_lemma
+    nofun)) (n % 2 != 0))
+
+def Bits.ofNat_step_ne_zero (n: ℕ) (hn: n ≠ 0) : Bits.ofNat n = cons (Bits.ofNat (n / 2)) (n % 2 != 0) := by
+  cases n; contradiction
+  apply Nat.strongRec_step
+  rename_i n; clear n hn
+  intro x f g h
+  cases x <;> dsimp
+  congr
+  apply h
+
+def Bits.ofNat_step (n: ℕ) : Bits.ofNat n ≈ cons (Bits.ofNat (n / 2)) (n % 2 != 0) := by
+  cases n; decide
+  rw [Bits.ofNat_step_ne_zero]
+  nofun
+
+def Bits.of_ofNat_eq_nil (n: ℕ) : Bits.ofNat n = nil x -> n = 0 ∧ x = false := by
+  cases n; intro h; apply And.intro rfl
+  cases h; rfl
+  rename_i n; intro h
+  exfalso
+  rw [ofNat_step_ne_zero (n + 1) nofun] at h
+  contradiction
+
+def Bits.reduced_ofNat (n: ℕ) : (Bits.ofNat n).IsReduced := by
+  induction n using Nat.strongRec with
+  | ind n ih =>
+    cases n with
+    | zero => apply IsReduced.nil
+    | succ n =>
+    -- | succ n ih =>
+    rw [Bits.ofNat_step_ne_zero (n + 1) nofun]
+    apply IsReduced.cons _ _ _ (ih _ (by
+      apply nat_div2_rec_lemma
+      nofun))
+    generalize hm₀:(n + 1) / 2 = m₀
+    generalize hm₁:((n + 1) % 2) = m₁
+    cases h:ofNat m₀
+    · obtain ⟨rfl, rfl⟩ := Bits.of_ofNat_eq_nil _ h
+      clear h
+      match m₁ with
+      | 0 =>
+        dsimp
+        have := nat_div_add_mod (n + 1) 2
+        rw [hm₀, hm₁] at this
+        nomatch this
+      | 1 =>
+        apply IsReducedPartition.nil
+      | _ + 2 =>
+        have := Nat.mod_lt (n + 1) (y := 2) (by decide)
+        rw [hm₁] at this
+        nomatch Nat.not_le_of_lt this (Nat.le_add_left _ _)
+    · apply IsReducedPartition.cons
+
+def ofNat (n: ℕ) : Integer where
+  bits := Bits.ofNat n
+  reduced := Bits.reduced_ofNat n
+
+instance : NatCast Integer := ⟨ofNat⟩
+instance : OfNat Integer n := ⟨n⟩
+
 def Bits.neg : Bits -> Bits
 | .nil a =>
   match a with
@@ -725,6 +796,8 @@ def neg : Integer -> Integer :=
     assumption)
 
 @[simp] def mk_neg (as: Bits) : (mk as).neg = mk as.neg := map_reduced_mk
+
+instance : Neg Integer := ⟨neg⟩
 
 end Arith
 

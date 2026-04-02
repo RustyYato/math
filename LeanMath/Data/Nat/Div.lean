@@ -1,4 +1,5 @@
 import LeanMath.Tactic.AxiomBlame
+import LeanMath.Data.Nat.Rec
 
 private theorem div.go.fuel_congr (x y fuel1 fuel2 : Nat) (hy : 0 < y) (h1 : x < fuel1) (h2 : x < fuel2) :
     Nat.div.go y hy fuel1 x h1 = Nat.div.go y hy fuel2 x h2 := by
