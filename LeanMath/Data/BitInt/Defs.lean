@@ -63,6 +63,11 @@ def eqv_nil_cons {as: Bits} {x: Bool} : nil x ≈ as.cons x ↔ nil x ≈ as := 
   apply Iff.trans _ symm_iff
   apply eqv_cons_nil
 
+def msb_cons_lsb (as: Bits) : as.msb.cons as.lsb ≈ as := by
+  intro i; cases i
+  rw [get_zero_eq_lsb, get_zero_eq_lsb, lsb_cons]
+  rw [get_succ_eq_get_msb, get_succ_eq_get_msb, msb_cons]
+
 -- as == nil b
 private def beq_nil (b: Bool) : Bits -> Bool
 | nil a => a == b
@@ -300,6 +305,7 @@ structure Integer where
   ofBits ::
   bits : Integer.Bits
   reduced: bits.IsReduced
+deriving DecidableEq
 
 namespace Integer
 
@@ -730,6 +736,9 @@ def ofNat (n: ℕ) : Integer where
   bits := Bits.ofNat n
   reduced := Bits.reduced_ofNat n
 
+instance : NatCast Bits := ⟨.ofNat⟩
+instance : OfNat Bits n := ⟨n⟩
+
 instance : NatCast Integer := ⟨ofNat⟩
 instance : OfNat Integer n := ⟨n⟩
 
@@ -797,7 +806,158 @@ def neg : Integer -> Integer :=
 
 @[simp] def mk_neg (as: Bits) : (mk as).neg = mk as.neg := map_reduced_mk
 
+instance : Neg Bits := ⟨.neg⟩
 instance : Neg Integer := ⟨neg⟩
+
+def Bits.inc : Bits -> Bits
+| .nil a =>
+  match a with
+  | false => 1
+  | true => 0
+| .cons as a => .push_bit (!a) (bif a then as.inc else as)
+
+def Bits.dec : Bits -> Bits
+| .nil a =>
+  match a with
+  | false => -1
+  | true => -2
+| .cons as a => .push_bit (!a) (bif a then as else as.dec)
+
+def Bits.step_inc (as: Bits) : as.inc ≈ .cons (bif as.lsb then as.msb.inc else as.msb) !as.lsb := by
+  cases as with
+  | nil a => decide +revert
+  | cons as a =>
+    apply eqv_push_bit_cons.mpr
+    rfl
+
+def Bits.step_dec (as: Bits) : as.dec ≈ .cons (bif as.lsb then as.msb else as.msb.dec) !as.lsb := by
+  cases as with
+  | nil a => decide +revert
+  | cons as a =>
+    apply eqv_push_bit_cons.mpr
+    rfl
+
+def Bits.eqv_inc {as bs: Bits} (h: as ≈ bs) : as.inc ≈ bs.inc := by
+  induction as generalizing bs with
+  | nil a =>
+    induction bs with
+    | nil b => decide +revert
+    | cons bs b ih =>
+      apply trans (Bits.step_inc _)
+      apply trans _ (symm (Bits.step_inc _))
+      cases h 0; cases a <;> dsimp
+      apply eqv_cons.mpr; apply eqv_nil_cons.mp; assumption
+      apply eqv_cons.mpr; apply ih; apply eqv_nil_cons.mp; assumption
+  | cons as a ih =>
+    apply trans (Bits.step_inc _)
+    apply trans _ (symm (Bits.step_inc _))
+    replace h := trans h (symm (msb_cons_lsb bs))
+    revert h; generalize bs.msb = msb; generalize bs.lsb = lsb
+    intro h; cases h 0
+    cases a <;> dsimp
+    apply eqv_cons.mpr
+    apply eqv_cons.mp
+    assumption
+    apply eqv_cons.mpr
+    apply ih
+    apply eqv_cons.mp
+    assumption
+
+def Bits.eqv_dec {as bs: Bits} (h: as ≈ bs) : as.dec ≈ bs.dec := by
+  induction as generalizing bs with
+  | nil a =>
+    induction bs with
+    | nil b => decide +revert
+    | cons bs b ih =>
+      apply trans (Bits.step_dec _)
+      apply trans _ (symm (Bits.step_dec _))
+      cases h 0; cases a <;> dsimp
+      apply eqv_cons.mpr; apply ih; apply eqv_nil_cons.mp; assumption
+      apply eqv_cons.mpr; apply eqv_nil_cons.mp; assumption
+  | cons as a ih =>
+    apply trans (Bits.step_dec _)
+    apply trans _ (symm (Bits.step_dec _))
+    replace h := trans h (symm (msb_cons_lsb bs))
+    revert h; generalize bs.msb = msb; generalize bs.lsb = lsb
+    intro h; cases h 0
+    cases a <;> dsimp
+    apply eqv_cons.mpr
+    apply ih
+    apply eqv_cons.mp
+    assumption
+    apply eqv_cons.mpr
+    apply eqv_cons.mp
+    assumption
+
+def Bits.reduced_inc (as: Bits) (h: as.IsReduced) : as.inc.IsReduced := by
+  induction h with
+  | nil a => decide +revert
+  | cons as a hpart h ih =>
+    apply reduced_push_bit
+    cases a <;> assumption
+
+def Bits.reduced_dec (as: Bits) (h: as.IsReduced) : as.dec.IsReduced := by
+  induction h with
+  | nil a => decide +revert
+  | cons as a hpart h ih =>
+    apply reduced_push_bit
+    cases a <;> assumption
+
+def inc : Integer -> Integer := map_reduced Bits.inc (fun _ _ => Bits.eqv_inc) Bits.reduced_inc
+def dec : Integer -> Integer := map_reduced Bits.dec (fun _ _ => Bits.eqv_dec) Bits.reduced_dec
+
+@[simp] def mk_inc (as: Bits) : (mk as).inc = mk as.inc := map_reduced_mk
+@[simp] def mk_dec (as: Bits) : (mk as).dec = mk as.dec := map_reduced_mk
+
+@[simp] def inc_nil_false : inc (nil false) = 1 := rfl
+@[simp] def inc_nil_true : inc (nil true) = 0 := rfl
+@[simp] def dec_nil_false : dec (nil false) = -1 := rfl
+@[simp] def dec_nil_true : dec (nil true) = -2 := rfl
+@[simp] def step_inc (as: Integer) (a: Bool) : inc (cons as a) = cons (bif a then as.inc else as) (!a) := by
+  cases as using cases with | mk as =>
+  rw [mk_cons, mk_inc]
+  apply Eq.trans; apply sound
+  apply Bits.step_inc
+  dsimp
+  cases a <;> dsimp
+  rw [mk_cons]
+  rw [mk_inc, mk_cons]
+@[simp] def step_dec (as: Integer) (a: Bool) : dec (cons as a) = cons (bif a then as else as.dec) (!a) := by
+  cases as using cases with | mk as =>
+  rw [mk_cons, mk_dec]
+  apply Eq.trans; apply sound
+  apply Bits.step_dec
+  dsimp
+  cases a <;> dsimp
+  rw [mk_dec, mk_cons]
+  rw [mk_cons]
+
+def inc_dec (as: Integer) : as.inc.dec = as := by
+  induction as using bits_induction with
+  | nil a => decide +revert
+  | cons a as ih =>
+    rw [step_inc, step_dec]
+    rw [Bool.not_not]; congr
+    cases as <;> dsimp [Bool.not]
+    rw [ih]
+
+def dec_inc (as: Integer) : as.dec.inc = as := by
+  induction as using bits_induction with
+  | nil a => decide +revert
+  | cons a as ih =>
+    rw [step_dec, step_inc]
+    rw [Bool.not_not]; congr
+    cases as <;> dsimp [Bool.not]
+    rw [ih]
+
+def inc_inj {as bs: Integer} : as.inc = bs.inc ↔ as = bs := by
+  apply Iff.intro; intro h
+  rw [←inc_dec as, ←inc_dec bs, h]
+  apply congrArg inc
+def dec_inj {as bs: Integer} : as.dec = bs.dec ↔ as = bs := by
+  apply Iff.intro; intro h
+  rw [←dec_inc as, ←dec_inc bs, h]
+  apply congrArg dec
 
 end Arith
 
