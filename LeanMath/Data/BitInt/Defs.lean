@@ -367,10 +367,45 @@ def map₂_reduced_eq_lift₂ (f: Bits -> Bits -> Bits) (h) (hf) (x y: Integer) 
     reduced := _
   }
 
-def mk_map_reduced (f: Bits -> Bits) (h) (hf) (x: Bits) : map_reduced f h hf (mk x) = mk (f x) := by
+def map_reduced_mk {f: Bits -> Bits} {h hf} {x: Bits} : map_reduced f h hf (mk x) = mk (f x) := by
   rw [map_reduced_eq_lift, lift_mk]; rfl
 
-def mk_map₂_reduced (f: Bits -> Bits -> Bits) (h) (hf) (x y: Bits) : map₂_reduced f h hf (mk x) (mk y) = mk (f x y) := by
+def map₂_reduced_mk {f: Bits -> Bits -> Bits} {h} {hf} {x y: Bits} : map₂_reduced f h hf (mk x) (mk y) = mk (f x y) := by
   rw [map₂_reduced_eq_lift₂, lift₂_mk]
+
+def Bits.not : Bits -> Bits
+| .nil a => .nil (!a)
+| .cons as a => .cons as.not (!a)
+
+def Bits.not_step (as: Bits) : as.not ≈ as.msb.not.cons (!as.lsb) := by
+  cases as with
+  | nil a => decide +revert
+  | cons as a => rfl
+
+def Bits.get_not (as: Bits) (n: ℕ) : (as.not)[n] = !as[n] := by
+  induction as generalizing n with
+  | nil => rfl
+  | cons as a hn =>
+    cases n; rfl
+    apply hn
+
+def Bits.eqv_not {as bs: Bits} (h: as ≈ bs) : as.not ≈ bs.not := by
+  intro i; rw [get_not, get_not, h]
+
+def Bits.reduced_not {as: Bits} (h: as.IsReduced) : as.not.IsReduced := by
+  induction h with
+  | nil a => apply IsReduced.nil
+  | cons as a hpart ha ih =>
+    apply IsReduced.cons _ _ _ ih
+    cases hpart
+    apply IsReducedPartition.nil
+    apply IsReducedPartition.cons
+
+def not : Integer -> Integer :=
+  map_reduced Bits.not (by
+    intro x y h; apply Bits.eqv_not
+    assumption) (fun _ => Bits.reduced_not)
+
+def mk_not (a: Bits) : (mk a).not = mk a.not := map_reduced_mk
 
 end Integer
