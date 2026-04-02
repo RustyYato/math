@@ -618,4 +618,72 @@ def xor := bitwise₂ Bool.xor
 
 end BitOps
 
+section Arith
+
+def Bits.neg : Bits -> Bits
+| .nil a =>
+  match a with
+  | false => .nil false
+  | true => .cons (.nil false) true
+| .cons as a =>
+  .push_bit a <| bif a then as.not else as.neg
+
+def Bits.neg_step (as: Bits) : as.neg ≈ cons (bif as.lsb then as.msb.not else as.msb.neg) as.lsb := by
+  cases as with
+  | nil a => decide +revert
+  | cons as a => apply push_bit_spec
+
+def Bits.eqv_neg {as bs: Bits} (h: as ≈ bs) : neg as ≈ neg bs := by
+  induction as generalizing bs with
+  | nil a =>
+    induction bs with
+    | nil b => decide +revert
+    | cons bs b ih =>
+      cases h 0;
+      symm; apply trans (neg_step _); symm
+      dsimp
+      cases a <;> dsimp [neg]
+      apply eqv_nil_cons.mpr
+      apply ih; apply eqv_nil_cons.mp
+      assumption; apply eqv_cons.mpr
+      apply eqv_not (eqv_nil_cons.mp h)
+  | cons as a ih =>
+    cases bs with
+    | nil b =>
+      cases b <;> dsimp [neg]
+      cases h 0; apply eqv_push_bit_nil.mpr
+      dsimp; apply trans (ih (eqv_cons_nil.mp h))
+      rfl; cases h 0; apply eqv_push_bit_cons.mpr
+      dsimp; apply trans (eqv_not (eqv_cons_nil.mp h))
+      rfl
+    | cons bs b =>
+      dsimp [neg]; cases h 0
+      apply eqv_push_bit.mpr
+      cases a <;> dsimp
+      apply ih; exact eqv_cons.mp h
+      apply eqv_not; exact eqv_cons.mp h
+
+def Bits.reduced_neg (as: Bits) (ha: as.IsReduced) : IsReduced (neg as) := by
+  induction ha with
+  | nil a => decide +revert
+  | cons as a hpart ha ih =>
+    apply reduced_push_bit
+    cases a <;> dsimp
+    apply ih
+    apply reduced_not
+    assumption
+
+def neg : Integer -> Integer :=
+  map_reduced Bits.neg (by
+    intro a b h
+    apply Bits.eqv_neg
+    assumption) (by
+    intro a ha
+    apply Bits.reduced_neg
+    assumption)
+
+@[simp] def mk_neg (as: Bits) : (mk as).neg = mk as.neg := map_reduced_mk
+
+end Arith
+
 end Integer
