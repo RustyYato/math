@@ -23,7 +23,7 @@ local instance : LatticeBuilder (Ideal α) where
   }
 
 open LatticeBuilder
-instance : LatticeBuilder.CompleteLattice (Ideal α) :=
+instance : LatticeBuilder.BundledCompleteLattice (Ideal α) :=
   inferInstance
 
 instance : IsCompleteLattice (Ideal α) := inferInstance

@@ -15,7 +15,7 @@ local instance : LatticeBuilder (SubSemigroup α) where
       apply mem_mul u
   }
 
-instance : LatticeBuilder.CompleteLattice (SubSemigroup α) :=
+instance : LatticeBuilder.BundledCompleteLattice (SubSemigroup α) :=
   inferInstance
 
 instance : IsCompleteLattice (SubSemigroup α) := inferInstance
@@ -34,7 +34,7 @@ local instance : LatticeBuilder (AddSubSemigroup α) where
       apply mem_add u
   }
 
-instance : LatticeBuilder.CompleteLattice (AddSubSemigroup α) :=
+instance : LatticeBuilder.BundledCompleteLattice (AddSubSemigroup α) :=
   inferInstance
 
 instance : IsCompleteLattice (AddSubSemigroup α) := inferInstance

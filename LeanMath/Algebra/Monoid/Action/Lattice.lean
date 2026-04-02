@@ -25,7 +25,7 @@ local instance : LatticeBuilder (Submodule R α) where
       apply mem_smul u
   }
 
-instance : LatticeBuilder.CompleteLattice (Submodule R α) :=
+instance : LatticeBuilder.BundledCompleteLattice (Submodule R α) :=
   inferInstance
 
 instance : IsCompleteLattice (Submodule R α) := inferInstance

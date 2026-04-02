@@ -27,7 +27,7 @@ local instance : LatticeBuilder (Subring α) where
       apply mem_mul u
   }
 
-instance : LatticeBuilder.CompleteLattice (Subring α) :=
+instance : LatticeBuilder.BundledCompleteLattice (Subring α) :=
   inferInstance
 
 instance : IsCompleteLattice (Subring α) := inferInstance

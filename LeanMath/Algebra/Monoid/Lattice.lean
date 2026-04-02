@@ -18,7 +18,7 @@ local instance : LatticeBuilder (SubMonoid α) where
       apply mem_mul u
   }
 
-instance : LatticeBuilder.CompleteLattice (SubMonoid α) :=
+instance : LatticeBuilder.BundledCompleteLattice (SubMonoid α) :=
   inferInstance
 
 instance : IsCompleteLattice (SubMonoid α) := inferInstance
@@ -40,7 +40,7 @@ local instance : LatticeBuilder (AddSubMonoid α) where
       apply mem_add u
   }
 
-instance : LatticeBuilder.CompleteLattice (AddSubMonoid α) :=
+instance : LatticeBuilder.BundledCompleteLattice (AddSubMonoid α) :=
   inferInstance
 
 instance : IsCompleteLattice (AddSubMonoid α) := inferInstance

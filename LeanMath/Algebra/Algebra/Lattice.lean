@@ -26,7 +26,7 @@ local instance : LatticeBuilder (Subalgebra R α) where
       apply mem_mul u
   }
 
-instance : LatticeBuilder.CompleteLattice (Subalgebra R α) :=
+instance : LatticeBuilder.BundledCompleteLattice (Subalgebra R α) :=
   inferInstance
 
 instance : IsCompleteLattice (Subalgebra R α) := inferInstance
@@ -60,7 +60,7 @@ local instance : LatticeBuilder (NonUnitalSubalgebra R α) where
       apply mem_smul u
   }
 
-instance : LatticeBuilder.CompleteLattice (NonUnitalSubalgebra R α) :=
+instance : LatticeBuilder.BundledCompleteLattice (NonUnitalSubalgebra R α) :=
   inferInstance
 
 instance : IsCompleteLattice (NonUnitalSubalgebra R α) := inferInstance

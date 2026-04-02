@@ -21,7 +21,7 @@ local instance : LatticeBuilder (AddSubMonoidWithOne α) where
       apply mem_add u
   }
 
-instance : LatticeBuilder.CompleteLattice (AddSubMonoidWithOne α) :=
+instance : LatticeBuilder.BundledCompleteLattice (AddSubMonoidWithOne α) :=
   inferInstance
 
 instance : IsCompleteLattice (AddSubMonoidWithOne α) := inferInstance

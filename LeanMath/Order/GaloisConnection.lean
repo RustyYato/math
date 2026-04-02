@@ -487,11 +487,12 @@ def giGenerate : @GaloisInsertion (Set α) S _ _ LatticeBuilder.closure (fun x =
     apply SetLike.coeInj; simp
     rwa [LatticeBuilder.create_spec s ⟨_, this⟩]
 
-protected class CompleteLattice (α: Type*) extends
+protected class BundledCompleteLattice (α: Type*) extends
   LE α, LT α, IsPartialOrder α,
-  GaloisConnection.CompleteLattice α where
+  GaloisConnection.CompleteLattice α,
+  IsCompleteLattice α where
 
-scoped instance toCompleteLattice : LatticeBuilder.CompleteLattice S where
+scoped instance toCompleteLattice : LatticeBuilder.BundledCompleteLattice S where
   toCompleteLattice := {
     giGenerate.liftCompleteLattice with
     bot := LatticeBuilder.bot.val
