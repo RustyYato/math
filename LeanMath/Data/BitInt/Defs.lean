@@ -1,6 +1,7 @@
 import LeanMath.Tactic.AxiomBlame
 import LeanMath.Tactic.TypeStar
 import LeanMath.Data.Nat.Div
+import LeanMath.Algebra.Ring.Defs
 
 inductive Integer.Bits where
 | nil (rep: Bool)
@@ -418,7 +419,7 @@ def cons (as: Integer) (a: Bool) : Integer :=
     apply Bits.reduced_push_bit
     assumption)
 
-@[simp] def mk_nil (a: Bool) : nil a = mk (.nil a) := rfl
+def mk_nil (a: Bool) : nil a = mk (.nil a) := rfl
 
 @[simp] def mk_cons (as: Bits) (a: Bool) : cons (mk as) a = mk (.cons as a) := by
   apply Eq.trans map_reduced_mk
@@ -522,14 +523,21 @@ def msb : Integer -> Integer := map_reduced Bits.msb (fun _ _ => Bits.eqv_msb) <
   cases h; apply Bits.IsReduced.nil
   assumption
 
-def mk_lsb (as: Bits) : (mk as).lsb = as.lsb := lift_mk
-def mk_msb (as: Bits) : (mk as).msb = mk as.msb := map_reduced_mk
+@[simp] def mk_lsb (as: Bits) : (mk as).lsb = as.lsb := lift_mk
+@[simp] def mk_msb (as: Bits) : (mk as).msb = mk as.msb := map_reduced_mk
 
 def msb_cons_lsb (as: Integer) : cons as.msb as.lsb = as := by
   cases as using cases with | mk as =>
   rw [mk_msb, mk_lsb, mk_cons]
   apply sound
   apply Bits.msb_cons_lsb
+
+@[simp] def lsb_nil (a: Bool) : lsb (nil a) = a := rfl
+@[simp] def lsb_cons (as: Integer) (a: Bool) : lsb (cons as a) = a := by
+  cases as using cases; rw [mk_cons, mk_lsb, Bits.lsb_cons]
+@[simp] def msb_nil (a: Bool) : msb (nil a) = nil a := rfl
+@[simp] def msb_cons (as: Integer) (a: Bool) : msb (cons as a) = as := by
+  cases as using cases; rw [mk_cons, mk_msb, Bits.msb_cons]
 
 end Defs
 
@@ -1168,8 +1176,99 @@ instance : Add Integer := ⟨add_with_carry false⟩
 def mk_add_with_carry (carry: Bool) (as bs: Bits) : add_with_carry carry (mk as) (mk bs) = mk (.add_with_carry carry as bs) := map₂_reduced_mk
 def mk_add (as bs: Bits) : (mk as) + (mk bs) = mk (as + bs) := mk_add_with_carry false _ _
 
+def step_add_with_carry (carry: Bool) (as bs: Integer) (a b: Bool) : add_with_carry carry (cons as a) (cons bs b) = cons (add_with_carry (Bits.any_two_bits carry a b) as bs) (carry ^^ a ^^ b) := by
+  cases as using cases with | _ as =>
+  cases bs using cases with | _ bs =>
+  rw [mk_cons, mk_add_with_carry, mk_cons, mk_add_with_carry]
+  rw [sound (Bits.step_add_with_carry _ _ _)]
+  rfl
+
+def add_eq_add_with_carry (as bs: Integer) : as + bs = add_with_carry false as bs := rfl
+
 instance : Sub Integer where
   sub as bs := as + -bs
+
+def add_with_carry_comm (as bs: Integer) : add_with_carry carry as bs = add_with_carry carry bs as := by
+  induction as using bits_induction generalizing bs carry with
+  | nil a =>
+    induction bs using bits_induction with
+    | nil b => decide +revert
+    | cons bs b ih =>
+      cases bs using cases with | mk bs =>
+      rw [mk_cons, mk_nil, mk_add_with_carry, mk_add_with_carry]
+      apply sound
+      rfl
+  | cons as a ih =>
+    induction bs using bits_induction with
+    | nil b =>
+      cases as using cases with | mk as =>
+      rw [mk_cons, mk_nil, mk_add_with_carry, mk_add_with_carry]
+      apply sound
+      rfl
+    | cons bs b ih =>
+      clear ih; rw [step_add_with_carry, step_add_with_carry]
+      congr 1
+      rw [show Bits.any_two_bits _ _ _ = Bits.any_two_bits _ _ _ from ?_]
+      apply ih
+      decide +revert
+      decide +revert
+
+instance : IsAddComm Integer where
+  add_comm := add_with_carry_comm
+
+instance : IsLawfulZeroAdd Integer where
+  zero_add _ := rfl
+  add_zero a := by rw [add_comm]; rfl
+
+def add_with_carry_true (as bs: Integer) : add_with_carry true as bs = (as + bs).inc := by
+  show _ = inc (add_with_carry _ _ _)
+  induction as using bits_induction generalizing bs with
+  | nil a =>
+    induction bs using bits_induction with
+    | nil => decide +revert
+    | cons bs b ih =>
+      rw [←msb_cons_lsb (nil a)]; dsimp
+      rw [step_add_with_carry, step_add_with_carry]
+      dsimp
+      rw [Bool.true_xor, Bool.false_xor, step_inc]
+      cases a <;> cases b <;> dsimp [Bool.and, Bool.or, Bool.not]
+      all_goals repeat first|rw [Bool.false_xor]|rw [Bool.true_xor]|dsimp [Bool.not]
+      congr
+      congr
+  | cons as a ih =>
+    rw [←msb_cons_lsb bs, step_add_with_carry, step_add_with_carry]
+    dsimp
+    rw [Bool.true_xor, Bool.false_xor, step_inc]
+    cases a <;> cases bs.lsb <;> dsimp [Bool.and, Bool.or, Bool.not]
+    all_goals repeat first|rw [Bool.false_xor]|rw [Bool.true_xor]|dsimp [Bool.not]
+    congr; apply ih
+    congr; apply ih
+
+def inc_eq_add_one (as: Integer) : as.inc = as + 1 := by
+  induction as using bits_induction with
+  | nil a => decide +revert
+  | cons as a ih =>
+    show _ = _ + cons (nil false) true
+    rw [add_eq_add_with_carry, step_add_with_carry, step_inc]
+    rw [Bool.false_xor, Bool.xor_true]
+    congr; cases a <;> dsimp [Bool.and]
+    · show _ = as + 0
+      rw [add_zero]
+    · show _ = add_with_carry true as 0
+      rw [add_with_carry_true, add_zero]
+
+def dec_eq_sub_one (as: Integer) : as.dec = as - 1 := by
+  show _ = _ + -1
+  induction as using bits_induction with
+  | nil a => decide +revert
+  | cons as a ih =>
+    show _ = _ + nil true
+    rw [←msb_cons_lsb (nil true), add_eq_add_with_carry, step_add_with_carry, step_dec]
+    dsimp; rw [Bool.false_xor, Bool.xor_true]
+    congr; cases a <;> dsimp [Bool.and]
+    · apply ih
+    · show _ = add_with_carry _ _ (-1)
+      rw [add_with_carry_true, ←ih, dec_inc]
 
 end Arith
 
