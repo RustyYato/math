@@ -515,6 +515,22 @@ def Bits.eqv_of_step₂
     apply Bits.eqv_msb ac
     apply Bits.eqv_msb bd
 
+def lsb : Integer -> Bool := lift Bits.lsb (fun _ _ h => h 0)
+
+def msb : Integer -> Integer := map_reduced Bits.msb (fun _ _ => Bits.eqv_msb) <| by
+  intro a h
+  cases h; apply Bits.IsReduced.nil
+  assumption
+
+def mk_lsb (as: Bits) : (mk as).lsb = as.lsb := lift_mk
+def mk_msb (as: Bits) : (mk as).msb = mk as.msb := map_reduced_mk
+
+def msb_cons_lsb (as: Integer) : cons as.msb as.lsb = as := by
+  cases as using cases with | mk as =>
+  rw [mk_msb, mk_lsb, mk_cons]
+  apply sound
+  apply Bits.msb_cons_lsb
+
 end Defs
 
 section BitOps
