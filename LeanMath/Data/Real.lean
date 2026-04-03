@@ -127,6 +127,11 @@ instance : IsLattice ℝ where
       intro x a b ha hb
       rcases min_eq a b with h | h <;> rwa [h]
 
+unsafe instance : Repr ℝ where
+  reprPrec r n :=
+    let f := (CauchySeq.Completion.toQuot r).lift (fun x => x) lcProof
+    repr (Array.ofFn (n := bif n == 0 then 5 else n) fun i => (f i))
+
 end
 
 instance : HasChar ℝ 0 := HasChar.of_ring_emb ofRat
