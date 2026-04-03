@@ -47,9 +47,11 @@ variable {r: α -> α -> Prop}
 
 namespace IsChain
 
+@[implicit_reducible]
 def empty : IsChain R ∅ where
   trichotomous := nofun
 
+@[implicit_reducible]
 def univ [Relation.IsTrichotomous R (· = ·)] : IsChain R ⊤ where
   trichotomous x y := by
     rcases Relation.trichotomous R x.val y.val with h | h | h
@@ -57,9 +59,11 @@ def univ [Relation.IsTrichotomous R (· = ·)] : IsChain R ⊤ where
     right; left; apply Subtype.val_inj; assumption
     right; right; assumption
 
+@[implicit_reducible]
 def ofSubset (h: s ⊆ t) (c: IsChain r t) : IsChain r s :=
   (Induced.embedSub r h).liftTrichotomous
 
+@[implicit_reducible]
 def insert (c: IsChain r s) (x: α) (h: ∀y ∈ s, r x y ∨ x = y ∨ r y x) : IsChain r (insert x s) where
   trichotomous := by
     intro ⟨a, ha⟩ ⟨b, hb⟩
@@ -78,11 +82,13 @@ def insert (c: IsChain r s) (x: α) (h: ∀y ∈ s, r x y ∨ x = y ∨ r y x) :
     right; left; exact Subtype.mk.inj h
     right; right; assumption
 
+@[implicit_reducible]
 def sInter {t: Set (Set α)} (h: t.Nonempty) (c: ∀s ∈ t, IsChain r s) : IsChain r (⋂ t) :=
   have ⟨s, mem⟩ := h
   have := c s mem
   (Induced.embedSInter r mem).liftTrichotomous
 
+@[implicit_reducible]
 def inter (cs: IsChain r s) (ct: IsChain r t) : IsChain r (s ∩ t) := by
   rw [←Set.sInter_pair_eq_inter]
   apply sInter
@@ -110,8 +116,10 @@ def succChain.sub (s: Set α) :
   have := Classical.choose_spec h
   exact this.left.left
   rfl
+@[implicit_reducible]
 def succChain.isChain' {s: Set α} (h: ∃t, IsStrictSuperChain r s t) :
   IsChain r s := (isStrictSuperChain h).right.ofSubset (sub _)
+@[implicit_reducible]
 def succChain.isChain {s: Set α} (h: ∃t, IsStrictSuperChain r s t) :
   IsChain r (succChain r s) := (isStrictSuperChain h).right
 
@@ -154,6 +162,7 @@ def exists_succChain_of_not_max_chain (c: IsChain r s) (h: ¬IsMaxChain r s) : �
   apply h
   apply Set.sub_antisymm <;> assumption
 
+@[implicit_reducible]
 def succ (c: IsChain r s) : IsChain r (succChain r s) := by
   by_cases h:IsMaxChain r s
   rw [succChain.ofIsMaxChain h]
@@ -257,6 +266,7 @@ def total (cs: ChainClosure r s) (ct: ChainClosure r t) : s ⊆ t ∨ t ⊆ s :=
   apply Set.sub_trans _ h
   apply succChain.sub
 
+@[implicit_reducible]
 def IsChain (c: ChainClosure r s) : IsChain r s := by
   induction c with
   | succ c ih => exact ih.succ

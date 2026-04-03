@@ -6,6 +6,7 @@ variable [SemiringOps α] [IsSemiring α] [SemiringOps β] [IsSemiring β]
 
 namespace HasChar
 
+@[implicit_reducible]
 def of_natCast_eq_zero (n: ℕ) (h: n = (0: α)) (g: ∀m: ℕ, m = (0: α) -> n ∣ m) : HasChar α n where
   dvd_iff_nsmul_eq_zero c := by
     apply Iff.intro
@@ -33,6 +34,7 @@ def dvd_of_ring_hom
   rw [←one_mul b, nsmul_eq_natCast_mul, ←mul_assoc, ←nsmul_eq_natCast_mul,
   ←map_one h, ←map_nsmul, ←natCast_eq_nsmul_one, natCast_eq_zero, map_zero, zero_mul]
 
+@[implicit_reducible]
 def of_ring_emb [HasChar α n] (f: α ↪+* β) : HasChar β n := by
   apply of_natCast_eq_zero
   rw [←map_natCast f, natCast_eq_zero, map_zero]
@@ -41,6 +43,7 @@ def of_ring_emb [HasChar α n] (f: α ↪+* β) : HasChar β n := by
   apply inj f
   rwa [map_natCast f, map_zero]
 
+@[implicit_reducible]
 def of_ring_equiv [HasChar β n] (eqv: α ≃+* β) : HasChar α n := by
   apply of_ring_emb (α := β)
   exact { eqv.symm with inj := inj eqv.symm }

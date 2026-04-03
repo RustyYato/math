@@ -10,11 +10,13 @@ instance (priority := 1100)
   [MonoidOps α] [Zero α] [CheckedInv? α] [CheckedDiv? α] [CheckedZPow? α]
   : GroupWithZeroOps α where
 
+@[implicit_reducible]
 def defaultPowZ? [Zero α] [Pow α ℕ] [CheckedInv? α] : CheckedZPow? α where
   checked_pow
   | a, .ofNat n, _ => a ^ n
   | a, .negSucc n, h => a⁻¹? ^ (n + 1)
 
+@[implicit_reducible]
 def defaultDiv? [Zero α] [Mul α] [CheckedInv? α] : CheckedDiv? α where
   checked_div a b h := a * b⁻¹?
 
@@ -335,7 +337,7 @@ def inv?_zpow? (a: α) (n: ℤ) (h: a ≠ 0) : a⁻¹? ^? n = a ^? (-n) := by
   erw [←Int.negSucc_eq]
   rw [zpow?_negSucc]
   cases n; simp
-  rw [zpow?_neg_one, inv?_inv?, zpow?_one]
+  erw [zpow?_neg_one, inv?_inv?, zpow?_one]
   invert_tactic; simp
   rw [zpow?_negSucc, inv?_inv?]
   show _ = a ^? (Nat.cast (_ + 1 + 1))
@@ -347,7 +349,7 @@ def zpow?_succ (a: α) (n: ℤ) (h: a ≠ 0) : a ^? (n + 1) = a ^? n * a := by
   erw [Int.ofNat_add_ofNat]; rw [zpow?_ofNat, zpow?_ofNat, npow_succ]
   rename_i n
   cases n
-  simp; rw [zpow?_zero, zpow?_neg_one]
+  simp; erw [zpow?_zero, zpow?_neg_one]
   rw [inv?_mul_cancel]
   assumption
   erw [Int.negSucc_add_ofNat, zpow?_negSucc, zpow?_negSucc]

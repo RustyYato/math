@@ -468,19 +468,23 @@ instance [RelLike R α] [Add α] [IsAddCon R] [IsAddComm α] (r: R) : IsAddComm 
     iterate 2 rw [←map_add]
     rw [add_comm]
 
+@[implicit_reducible]
 def IsSemigroup.lift [Mul α] [Mul β] [IsSemigroup β] [EmbeddingLike F α β] [IsMulHom F α β] (f: F) : IsSemigroup α where
   mul_assoc a b c := by
     apply inj f
     simp [map_mul, mul_assoc]
+@[implicit_reducible]
 def IsComm.lift [Mul α] [Mul β] [IsComm β] [EmbeddingLike F α β] [IsMulHom F α β] (f: F) : IsComm α where
   mul_comm a b := by
     apply inj f
     simp [map_mul, mul_comm]
 
+@[implicit_reducible]
 def IsAddSemigroup.lift [Add α] [Add β] [IsAddSemigroup β] [EmbeddingLike F α β] [IsAddHom F α β] (f: F) : IsAddSemigroup α where
   add_assoc a b c := by
     apply inj f
     simp [map_add, add_assoc]
+@[implicit_reducible]
 def IsAddComm.lift [Add α] [Add β] [IsAddComm β] [EmbeddingLike F α β] [IsAddHom F α β] (f: F) : IsAddComm α where
   add_comm a b := by
     apply inj f

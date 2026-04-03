@@ -44,8 +44,8 @@ instance : Relation.IsTrans Ordinal.Rel where
 instance Ordinal.setoid : Setoid Ordinal.Pre := Relation.setoid Ordinal.Rel
 
 @[pp_with_univ]
-structure Ordinal where
-  ofQuot :: toQuot : Quotient Ordinal.setoid
+structure Ordinal.{u} where
+  ofQuot :: toQuot : Quotient Ordinal.setoid.{u}
 
 namespace Ordinal
 

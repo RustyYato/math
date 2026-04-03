@@ -1,6 +1,7 @@
 import LeanMath.Algebra.Group.Defs
 import LeanMath.Algebra.AddMonoidWithOne.Defs
 
+@[implicit_reducible]
 def defaultIntCast (α: Type*) [Neg α] [NatCast α] : IntCast α where
   intCast
   | .ofNat x => (x: α)

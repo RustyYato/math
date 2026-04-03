@@ -96,9 +96,11 @@ instance IsContinuous.comp [Topology α] [Topology β] [Topology γ]  (f: β -> 
     apply OpenSets.preimage f
     assumption
 
+@[implicit_reducible]
 def IsContinuous.comp' [Topology α] [Topology β] [Topology γ]  (f: β -> γ) (g: α -> β) (hf: IsContinuous f) (hg: IsContinuous g) : IsContinuous (f ∘ g) :=
   inferInstance
 
+@[implicit_reducible]
 def instDiscrete : Topology α where
   IsOpen _ := True
   open_univ := True.intro
@@ -144,6 +146,7 @@ inductive Generate (U: Set (Set α)) : Set α -> Prop where
 | inter {a b: Set α} : Generate U a -> Generate U b -> Generate U (a ∩ b)
 | sUnion {V: Set (Set α)} : (∀v ∈ V, Generate U v) -> Generate U (⋃ V)
 
+@[implicit_reducible]
 def generate (U: Set (Set α)) : Topology α where
   IsOpen := Generate U
   open_univ := Generate.univ
@@ -332,6 +335,7 @@ instance : IsCompleteLattice (Topology α) where
     intro _ _ _
     trivial
 
+@[implicit_reducible]
 def induced (f: α -> β) (tβ: Topology β) : Topology α where
   IsOpen s := ∃t ∈ tβ.OpenSets, t.preimage f = s
   open_univ := by
@@ -366,6 +370,7 @@ def induced (f: α -> β) (tβ: Topology β) : Topology α where
       exists t.preimage f
       assumption
 
+@[implicit_reducible]
 def coinduced (f: α -> β) (tα: Topology α) : Topology β where
   IsOpen s := s.preimage f ∈ tα.OpenSets
   open_univ := OpenSets.univ
@@ -462,6 +467,7 @@ instance topo_prod [Topology α] [Topology β] : Topology (α × β) :=
 instance topo_sum [Topology α] [Topology β] : Topology (α ⊕ β) :=
   coinduced Sum.inl inferInstance ⊔ coinduced Sum.inr inferInstance
 
+@[implicit_reducible]
 def IsContinuous.min_left [Topology α] [Topology β] (t₀ t₁: Topology α) (f: α -> β) (_: IsContinuousAt f t₀ inferInstance) : IsContinuousAt f (t₀ ⊓ t₁) inferInstance where
   isOpen_preimage s := by
     intro h
@@ -470,6 +476,7 @@ def IsContinuous.min_left [Topology α] [Topology β] (t₀ t₁: Topology α) (
     apply OpenSets.preimage_at (tβ := inferInstance)
     assumption
 
+@[implicit_reducible]
 def IsContinuous.min_right [Topology α] [Topology β] (t₀ t₁: Topology α) (f: α -> β) (_: IsContinuousAt f t₁ inferInstance) : IsContinuousAt f (t₀ ⊓ t₁) inferInstance where
   isOpen_preimage s := by
     intro h
@@ -478,11 +485,13 @@ def IsContinuous.min_right [Topology α] [Topology β] (t₀ t₁: Topology α) 
     apply OpenSets.preimage_at (tβ := inferInstance)
     assumption
 
+@[implicit_reducible]
 def IsContinuous.max_left [Topology α] [Topology β] (t₀ t₁: Topology β) (f: α -> β) (_: IsContinuousAt f inferInstance t₀) : IsContinuousAt f inferInstance (t₀ ⊔ t₁) where
   isOpen_preimage s := by
     intro h
     apply OpenSets.preimage_at f _ h.left
 
+@[implicit_reducible]
 def IsContinuous.max_right [Topology α] [Topology β] (t₀ t₁: Topology β) (f: α -> β) (_: IsContinuousAt f inferInstance t₁) : IsContinuousAt f inferInstance (t₀ ⊔ t₁) where
   isOpen_preimage s := by
     intro h
@@ -493,8 +502,10 @@ protected instance IsContinuous.induced [Topology α] [Topology β] {f: α -> β
 protected instance IsContinuous.coinduced [Topology α] [Topology β] {f: α -> β} : IsContinuousAt f inferInstance (coinduced f inferInstance) where
   isOpen_preimage s hs := by assumption
 
+@[implicit_reducible]
 protected def IsContinuous.induced' {_: Topology α} {_: Topology β} {f: α -> β} : IsContinuousAt f (induced f inferInstance) inferInstance where
   isOpen_preimage s hs := by exists s
+@[implicit_reducible]
 protected def IsContinuous.coinduced' {_: Topology α} {_: Topology β} {f: α -> β} : IsContinuousAt f inferInstance (coinduced f inferInstance) where
   isOpen_preimage s hs := by assumption
 
@@ -516,6 +527,7 @@ instance IsContinuous.apply [Topology α] [Topology β] : IsContinuous (fun (f: 
     simp
     exact ⟨_, ⟨_, ⟨_, rfl⟩, rfl⟩, _, hu, rfl⟩
 
+@[implicit_reducible]
 def IsContinuous.apply' {_: Topology α} {_: Topology β} : IsContinuous (fun (f: α -> β) (a: α) => f a) where
   isOpen_preimage s hs := by
     apply of_mem_generate hs

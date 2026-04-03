@@ -5,8 +5,10 @@ class MonoidOps (α: Type*) extends One α, Mul α where
 class AddMonoidOps (α: Type*) extends Zero α, Add α where
   toNSMul : SMul ℕ α := by infer_instance
 
+@[implicit_reducible]
 def defaultPowN [One α] [Mul α] : Pow α ℕ where
   pow a n := n.rec 1 (fun _ acc => acc * a)
+@[implicit_reducible]
 def defaultSMulN [o: Zero α] [Add α] : SMul ℕ α where
   smul n a := n.rec 0 (fun _ acc => acc + a)
 
@@ -96,6 +98,7 @@ class IsZeroNeOne (α: Type*) [Zero α] [One α] : Prop where
 
 def zero_ne_one (α: Type*) [Zero α] [One α] [IsZeroNeOne α] : (0: α) ≠ (1: α) := IsZeroNeOne.zero_ne_one
 
+@[implicit_reducible]
 def subingleton_of_zero_eq_one (α: Type*) [Zero α] [One α] [Mul α] [IsLawfulZeroMul α] [IsLawfulOneMul α] (h: (0: α) = (1: α)) : Subsingleton α where
   allEq a b := by
     rw [←one_mul a, ←one_mul b, ←h, zero_mul, zero_mul]
@@ -492,6 +495,17 @@ def compLogExp (f: β ≃ₘ+ γ) (g: α ≃ₐ* β) : α ≃+ γ where
   toEquiv := f.toEquiv.comp g.toEquiv
   map_zero := map_zero (compLogOneExpZero f.toLogOneEquiv g.toExpZeroEquiv)
   map_add := map_add (eqvCompPreLogExp f.toPreLogEquiv g.toPreExpEquiv)
+
+def AddGroupEquiv.toAddGroupEmbedding (f: α ≃+ β) : α ↪+ β := {
+  f.toEmbedding, f with
+}
+def GroupEquiv.toGroupEmbedding (f: α ≃* β) : α ↪* β := {
+  f.toEmbedding, f with
+}
+
+
+@[simp] def AddGroupEquiv.apply_toAddGroupEmbedding (f: α ≃+ β) (x: α) : f.toAddGroupEmbedding x = f x := rfl
+@[simp] def GroupEquiv.apply_toGroupEmbedding (f: α ≃* β) (x: α) : f.toGroupEmbedding x = f x := rfl
 
 @[simp] def ZeroEmbedding.apply_comp (f: β ↪₀ γ) (g: α ↪₀ β) : (comp f g) x = f (g x) := rfl
 @[simp] def OneEmbedding.apply_comp (f: β ↪₁ γ) (g: α ↪₁ β) : (comp f g) x = f (g x) := rfl
@@ -1100,6 +1114,7 @@ def MulCon.map
   | trans =>
     apply Relation.trans <;> assumption
 
+@[implicit_reducible]
 def IsLawfulOneMul.lift [Mul α] [Mul β] [One α] [One β] [IsLawfulOneMul β] [EmbeddingLike F α β] [IsOneHom F α β] [IsMulHom F α β] (f: F) : IsLawfulOneMul α where
   mul_one a := by
     apply inj f
@@ -1108,11 +1123,13 @@ def IsLawfulOneMul.lift [Mul α] [Mul β] [One α] [One β] [IsLawfulOneMul β] 
     apply inj f
     simp [map_mul, map_one, one_mul]
 
+@[reducible]
 def IsMonoid.lift [MonoidOps α] [MonoidOps β]
   [IsLawfulPowN α] [IsMonoid β] [EmbeddingLike F α β] [IsOneHom F α β] [IsMulHom F α β] (f: F) : IsMonoid α := {
     IsSemigroup.lift f, IsLawfulOneMul.lift f with
   }
 
+@[reducible]
 def IsLawfulPowN.lift
   [One α] [Mul α] [Pow α ℕ]
   [One β] [Mul β] [Pow β ℕ] [IsLawfulPowN β]
@@ -1126,6 +1143,7 @@ def IsLawfulPowN.lift
       apply inj f
       rw [map_mul, hnpow, hnpow, npow_succ]
 
+@[implicit_reducible]
 def IsLawfulZeroAdd.lift [Add α] [Add β] [Zero α] [Zero β] [IsLawfulZeroAdd β] [EmbeddingLike F α β] [IsZeroHom F α β] [IsAddHom F α β] (f: F) : IsLawfulZeroAdd α where
   add_zero a := by
     apply inj f
@@ -1134,11 +1152,13 @@ def IsLawfulZeroAdd.lift [Add α] [Add β] [Zero α] [Zero β] [IsLawfulZeroAdd 
     apply inj f
     simp [map_add, map_zero, zero_add]
 
+@[implicit_reducible]
 def IsAddMonoid.lift [AddMonoidOps α] [AddMonoidOps β]
   [IsLawfulNSMul α] [IsAddMonoid β] [EmbeddingLike F α β] [IsZeroHom F α β] [IsAddHom F α β] (f: F) : IsAddMonoid α := {
     IsAddSemigroup.lift f, IsLawfulZeroAdd.lift f with
   }
 
+@[implicit_reducible]
 def IsLawfulNSMul.lift
   [Zero α] [Add α] [SMul ℕ α]
   [Zero β] [Add β] [SMul ℕ β] [IsLawfulNSMul β]

@@ -137,6 +137,7 @@ def of_defined_sSup {U: Set (α -> α -> Prop)} (h: a ∈ defined (⨆ U)) : ∃
   exact ⟨u, hu, ⟨_, .inl hy⟩⟩
   exact ⟨u, hu, ⟨_, .inr hy⟩⟩
 
+@[implicit_reducible]
 protected def IsSubwellorder.small (a b: α) (h: a ≠ b) : IsSubwellorder (small a b) where
   trans := by
     intro x y z h g
@@ -157,6 +158,7 @@ protected def IsSubwellorder.small (a b: α) (h: a ≠ b) : IsSubwellorder (smal
     rcases hx with rfl | rfl <;> rcases hy with rfl | rfl
     all_goals simp [Set.Induced, small.intro]
 
+@[implicit_reducible]
 protected def IsSubwellorder.insert [IsSubwellorder r] (hx: x ∉ defined r) : IsSubwellorder (insert r x) where
   trans {a b c} h g := by
     rcases g with g | g
@@ -208,6 +210,7 @@ protected def IsSubwellorder.insert [IsSubwellorder r] (hx: x ∉ defined r) : I
     right; left; exact Subtype.mk.inj h
     right; right; apply insert.of; assumption
 
+@[implicit_reducible]
 protected def IsSubwellorder.sSup (U: Set (α -> α -> Prop)) [U.IsChain (· ≤ ·)] (hU: ∀r ∈ U, IsSubwellorder r) : IsSubwellorder (⨆ U) where
   trans {a b c} h g := by
     obtain ⟨r, hr, h⟩ := h

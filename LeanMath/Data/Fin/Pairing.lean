@@ -2,11 +2,6 @@ import LeanMath.Data.Equiv.Defs
 import LeanMath.Data.Nat.Div
 import LeanMath.Tactic.AxiomBlame
 
-private def nat_add_sub_cancel (a b: Nat) : a + b - b = a := by
-  induction b with
-  | zero => rfl
-  | succ b ih => rw [Nat.add_succ, Nat.succ_sub_succ, ih]
-
 private def nat_exists_eq_add_of_le {a b: Nat} : a ≤ b -> ∃k, b = a + k := by
   intro h
   induction b with

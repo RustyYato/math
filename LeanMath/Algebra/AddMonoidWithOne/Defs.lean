@@ -45,6 +45,7 @@ private def defaultNatCastFun_eq_fast : defaultNatCastFun = fast_defaultNatCastF
   rw [defaultNatCastFun_eq_smul_one]
   rw [fast_defaultNatCastFun_eq_smul_one]
 
+@[implicit_reducible]
 def defaultNatCast (α: Type*) [AddMonoidOps α] [IsAddMonoid α] [One α] : NatCast α := ⟨defaultNatCastFun α⟩
 
 class AddMonoidWithOneOps (α: Type*) extends AddMonoidOps α, One α, NatCast α where

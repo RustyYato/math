@@ -22,6 +22,8 @@ class EquivLike (F: Sort*) (α β: outParam Sort*) where
       apply EquivLike.coeInj
       assumption
 
+@[coe] def Equiv.coe [EquivLike F α β] : F -> (α ≃ β) := EquivLike.coeEquiv
+
 --- This is not the interface for ops, just ensures that
 --- all ops are implemented
 set_option checkBinderAnnotations false in
@@ -33,7 +35,10 @@ class EquivOpsCheck (C: Sort u -> Sort u) (F: ∀α β, C α -> C β -> Sort v)
   protected symm {α β: Sort u} [cα: C α] [cβ: C β] : F α β cα cβ -> F β α cβ cα
   protected refl (α: Sort u) [cα: C α] : F α α cα cα
 
-instance {F α β: Sort*} [EquivLike F α β] : FunLike F α β where
+section
+
+@[reducible]
+private def funlike {F α β: Sort*} [EquivLike F α β] : FunLike F α β where
   coeFun f := (EquivLike.coeEquiv (F := F) f).toFun
   coeInj := by
     intro a b h
@@ -50,11 +55,26 @@ instance {F α β: Sort*} [EquivLike F α β] : FunLike F α β where
     ext x
     rw [←a.leftInv x, a.rightInv, h, b.rightInv]
 
+instance [EquivLike F α β] : EmbeddingLike F α β where
+  coeEmbedding f := {
+    toFun := (Equiv.coe f).toFun
+    inj := (Equiv.coe f).rightInv.injective
+  }
+  coeInj := by
+    intro f g h
+    dsimp at h
+    exact funlike.coeInj (Embedding.mk.inj h)
+instance [EquivLike F α β] : FunLike F α β := inferInstance
+
+end
+
 namespace Equiv
 
 instance : EquivLike (α ≃ β) α β where
   coeEquiv := id
   coeInj _ _ := id
+
+@[simp] def Equiv.coe_id (f: α ≃ β) : Equiv.coe f = f := rfl
 
 protected def id (α: Sort*) : α ≃ α where
   toFun := id
@@ -171,17 +191,3 @@ def symm_eq_iff {f: α ≃ β} : f.symm x = y ↔ f y = x := by
   rw [←h, coe_symm]
 
 end Equiv
-
-instance [EquivLike F α β] : EmbeddingLike F α β where
-  coeEmbedding := Equiv.toEmbedding ∘ EquivLike.coeEquiv
-  coeInj := by
-    apply Function.Injective.comp
-    · intro f g h
-      suffices f.toFun = g.toFun by
-        apply DFunLike.coeInj
-        assumption
-      obtain ⟨f, _, _, _⟩ := f
-      obtain ⟨g, _, _, _⟩ := g
-      cases h
-      rfl
-    · apply EquivLike.coeInj

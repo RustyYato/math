@@ -94,7 +94,7 @@ instance : Bot (AddSubMonoidWithOne α) where
     mem_one := by simp; exists 1; rw [natCast_one]
     mem_add := by
       rintro _ _ ha hb
-      simp at ha hb
+      simp [Set.coe_mem] at ha hb
       obtain ⟨a, rfl⟩ := ha
       obtain ⟨b, rfl⟩ := hb
       rw [←natCast_add]

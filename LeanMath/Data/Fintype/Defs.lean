@@ -264,6 +264,7 @@ instance (priority := 100) [IsEmpty α] : Fintype α where
     }
   }
 
+@[implicit_reducible]
 def ofBij [ft: Fintype α] (f: α ↭ β) : Fintype β where
   card := card α
   repr :=
@@ -272,6 +273,7 @@ def ofBij [ft: Fintype α] (f: α ↭ β) : Fintype β where
       try_decode := .none
     }
 
+@[implicit_reducible]
 def ofEquiv [ft: Fintype α] (f: α ≃ β) : Fintype β where
   card := card α
   repr :=
@@ -593,6 +595,7 @@ end Fintype
 
 namespace Finite
 
+@[implicit_reducible]
 def ofBij [ft: Finite α] (f: α ↭ β) : Finite β :=
   have ⟨_⟩ := ft
   have := Fintype.ofBij f
@@ -650,6 +653,7 @@ def induction
     apply succ
     apply ih
 
+@[implicit_reducible]
 def ofEmbed [LEM] {β: Type u} [ft: Finite β] (f: α ↪ β) : Finite α := by
   induction β, ft using induction with
   | bij β₀ β₁ bij ih => exact ih (f.trans (Equiv.ofBij bij).symm.toEmbedding)

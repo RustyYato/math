@@ -24,7 +24,7 @@ def Set.coe_inj [SetLike S α] : Function.Injective (Set.coe (S := S)) := SetLik
 @[simp] def SetLike.coeSet_eq_Set_coe [SetLike S α] : SetLike.coeSet = Set.coe (S := S) (α := α) := rfl
 
 instance : SetLike (Set α) α where
-  coeSet := id
+  coeSet x := x
 
 instance [SetLike S α] : CoeOut S (Set α) where
   coe := Set.coe
@@ -67,11 +67,15 @@ instance : HasSubset (Set α) where
 instance : HasSSubset (Set α) where
   SSubset a b := a ⊆ b ∧ ∃x ∈ b, ¬x ∈ a
 
-instance [SetLike S α] : Membership α S where
+instance (priority := 700) [SetLike S α] : Membership α S where
   mem S a := a ∈ (S: Set α)
 
-instance [SetLike S α] : HasSubset S where
+instance (priority := 700) [SetLike S α] : HasSubset S where
   Subset a b := (a: Set α) ⊆ b
+
+def coe_mem [SetLike S α] (s: S) (a: α) : (a ∈ s) = (a ∈ (Set.coe s)) := rfl
+
+@[simp] def coe_id (x: Set α) : Set.coe x = x := rfl
 
 @[simp] def ofMem_mem (P: α -> Prop) : ∀{x}, x ∈ ofMem P ↔ P x := by rfl
 
@@ -490,6 +494,7 @@ instance {α: Type u} {β: Type v} (f: α -> β) [Small.{w} α] : Small.{w} (Set
       ext; assumption
   }
 
+@[implicit_reducible]
 def Small.subset {a b: Set α} [Small.{u} b] (h: a ⊆ b) : Small.{u} a := by
   apply Small.of_embed (β := b)
   exact {

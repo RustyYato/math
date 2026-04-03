@@ -71,8 +71,10 @@ private def char_exists_unqiue [LEM] (α: Type*) [AddMonoidOps α] [IsAddMonoid 
 open UniqueChoice in
 noncomputable def char [LEM] (α: Type*) [AddMonoidOps α] [IsAddMonoid α]: ℕ := Classical.choose_unique (char_exists_unqiue α)
 open UniqueChoice in
+@[implicit_reducible]
 def char_spec [LEM] (α: Type*) [AddMonoidOps α] [IsAddMonoid α]: HasChar α (char α) := Classical.choose_unique_spec (char_exists_unqiue α)
 
+@[implicit_reducible]
 def of_eqv [HasChar α n] (eqv: α ≃+ β) : HasChar β n where
   dvd_iff_nsmul_eq_zero x := by
     apply Iff.intro

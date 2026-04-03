@@ -33,15 +33,14 @@ private def all (n: ℕ) (card: Fin n -> ℕ) :
         | succ i =>
           dsimp [Fin.succ]
           show Sigma.mk (Fin.mk (Fin.val (allsucc (allsucc.symm ⟨i, x⟩)).fst + 1) _) _ = _
-          congr
-          rw [Equiv.symm_coe]
+          congr; rw [Equiv.symm_coe]
           show HEq (allsucc (allsucc.symm ⟨i, x⟩)).snd _
-          rw [Equiv.symm_coe]
+          rw [Equiv.symm_coe]; rfl
       rightInv x := by
         rcases x with x | x
         dsimp; rfl
         show Sum.inr (allsucc.symm (allsucc x)) = _
-        simp
+        rw [Equiv.coe_symm]; rfl
     }
 
 end Sigma
@@ -50,6 +49,7 @@ namespace Fintype
 
 section
 
+@[implicit_reducible]
 private def instSigma' (card: Fin n -> ℕ) : Fintype (Σi, Fin (card i)) where
   card := ∑i, card i
   repr := Trunc.mk {

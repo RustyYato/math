@@ -49,6 +49,7 @@ def of_dvd_one (a: ℤ) : a ∣ 1 -> a = 1 ∨ a = -1 := by
   rw [←this, neg_neg]
   left; apply Int.eq_one_of_dvd_one <;> assumption
 
+@[implicit_reducible]
 def unit_of_dvd_one (a: ℤ) : a ∣ 1 -> IsUnit a := by
   rw [is_unit_iff]
   apply of_dvd_one

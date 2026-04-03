@@ -12,6 +12,7 @@ attribute [instance] UnivLE.small
 
 namespace Small
 
+@[implicit_reducible]
 def of_embed (f: α ↪ β) [h: Small.{u} β] : Small.{u} α := by
   obtain ⟨γ, h⟩ := h
   replace f := f.trans h.toEmbedding
@@ -32,6 +33,7 @@ def of_embed (f: α ↪ β) [h: Small.{u} β] : Small.{u} α := by
     rightInv x := by dsimp; apply inj f; rw [(hg _).left]
   }
 
+@[implicit_reducible]
 def lift.{w, u, v} [h: Small.{u, v} α] : Small.{max u w, v} α :=
   have ⟨β, eqv⟩ := h
   .intro (ULift.{w} β) (eqv.trans (Equiv.ulift _))
@@ -47,11 +49,13 @@ def exists_equiv.{v, u} (α: Type u) [Small.{v, u} α] : ∃β: Type v, Nonempty
 
 instance [UnivLE.{u, v}] : Small.{v, u} α := UnivLE.small _
 
+@[implicit_reducible]
 def trans_univ_le.{v, u, w} (α: Type v) [UnivLE.{u, w}] [h: Small.{u} α] : Small.{w} α :=
   have ⟨β, eqv⟩ := h
   have ⟨γ, eqv'⟩ : Small.{w, u} β := inferInstance
   .intro γ (eqv.trans eqv')
 
+@[implicit_reducible]
 def map [hs: Small.{u} α] (h: α ≃ β) : Small.{u} β :=
   have ⟨γ, hs⟩ := hs
   .intro γ (h.symm.trans hs)
@@ -64,6 +68,7 @@ instance small_plift (α : Type u) [Small.{v} α] : Small.{v} (PLift α) :=
 
 instance small_type : Small.{max (u + 1) v} (Type u) := lift
 
+@[implicit_reducible]
 def of_surj (f: β -> α) (hf: Function.Surjective f) [h: Small.{u} β] : Small.{u} α := by
   obtain ⟨γ, hy⟩ := h
   apply of_embed.{u} (β := γ -> Prop) {
@@ -86,15 +91,18 @@ namespace UnivLE
 
 instance refl.{u} : UnivLE.{u, u} where
   small _ := inferInstance
+@[implicit_reducible]
 def max.{u, v} : UnivLE.{u, max u v} where
   small _ := Small.lift
 
+@[implicit_reducible]
 def trans.{u, v, w} [UnivLE.{u, v}] [UnivLE.{v, w}] : UnivLE.{u, w} where
   small α := Small.trans_univ_le α
 
 instance : UnivLE.{0, u} := max
 instance univLE_of_max [UnivLE.{max u v, v}] : UnivLE.{u, v} :=
   have := max.{u, v}; trans.{u, max u v, v}
+@[implicit_reducible]
 def univLE_succ [UnivLE.{u, v}] : UnivLE.{u, v + 1} :=
   trans.{u, v, v + 1}
 

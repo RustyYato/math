@@ -7,10 +7,12 @@ class GroupOps (α: Type*) extends MonoidOps α, Inv α, Div α where
 class AddGroupOps (α: Type*) extends AddMonoidOps α, Neg α, Sub α where
   toZSMul : SMul ℤ α := by infer_instance
 
+@[implicit_reducible]
 def defaultPowZ [Pow α ℕ] [Inv α] : Pow α ℤ where
   pow
   | a, .ofNat n => a ^ n
   | a, .negSucc n => (a ^ (n + 1))⁻¹
+@[implicit_reducible]
 def defaultSMulZ [SMul ℕ α] [Neg α] : SMul ℤ α where
   smul
   | .ofNat n, a => n • a
@@ -650,24 +652,24 @@ def negHom [IsAddComm α] : α →+ α where
 @[simp] def apply_negHom [IsAddComm α] (a: α) : negHom a = -a := rfl
 
 end
-
+@[implicit_reducible]
 def IsGroup.lift
   [GroupOps α] [IsLawfulPowN α] [IsLawfulPowZ α] [IsLawfulDiv α]
   [GroupOps β] [IsGroup β]
   [EmbeddingLike F α β] [IsMulHom F α β] [IsOneHom F α β]
   (f: F) (hinv: ∀a, f (a⁻¹) = (f a)⁻¹) : IsGroup α := {
-    IsMonoid.lift f, inferInstanceAs (IsLawfulPowZ α) with
+    IsMonoid.lift f, (inferInstance: (IsLawfulPowZ α)) with
     mul_inv_cancel a := by
       apply inj f
       rw [map_mul, hinv, mul_inv_cancel, map_one]
   }
-
+@[implicit_reducible]
 def IsAddGroup.lift
   [AddGroupOps α] [IsLawfulNSMul α] [IsLawfulZSMul α] [IsLawfulSub α]
   [AddGroupOps β] [IsAddGroup β]
   [EmbeddingLike F α β] [IsZeroHom F α β] [IsAddHom F α β]
   (f: F) (hneg: ∀a, f (-a) = -f a) : IsAddGroup α := {
-    IsAddMonoid.lift f, inferInstanceAs (IsLawfulZSMul α) with
+    IsAddMonoid.lift f, (inferInstance: (IsLawfulZSMul α)) with
     add_neg_cancel a := by
       apply inj f
       rw [map_add, hneg, add_neg_cancel, map_zero]

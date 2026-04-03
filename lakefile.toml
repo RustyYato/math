@@ -21,3 +21,5 @@ globs = [
     # "Math.Game.+",
     # "Math.AxiomBlame",
 ]
+[leanOptions]
+# backward.isDefEq.respectTransparency = false

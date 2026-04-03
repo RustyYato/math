@@ -73,6 +73,8 @@ instance : FinsuppSupportLike NatRange ℕ where
     cases b.is_empty <;> simp
     · refine ⟨⟨i.val + a.lo - (a.lo ⊓ b.lo), ?_⟩, ?_⟩
       simp [this]
+      split
+      omega
       omega
       dsimp
       omega
@@ -88,6 +90,8 @@ instance : FinsuppSupportLike NatRange ℕ where
     cases a.is_empty <;> simp
     · refine ⟨⟨i.val + b.lo - (a.lo ⊓ b.lo), ?_⟩, ?_⟩
       simp [this]
+      split
+      omega
       omega
       dsimp
       omega

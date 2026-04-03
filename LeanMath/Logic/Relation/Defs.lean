@@ -165,8 +165,10 @@ def irrefl {R: α -> α -> Prop} [IsIrrefl R] {a: α} : ¬R a a := IsIrrefl.irre
 def asymm {R: α -> α -> Prop} [IsAsymm R] {a b: α} : R a b -> R b a -> False := IsAsymm.asymm
 def wf (R: α -> α -> Prop) [IsWelFounded R] : WellFounded R := IsWelFounded.wf
 
+@[implicit_reducible]
 def IsAntisymm.ofAsymm [IsAsymm R] : IsAntisymm R E where
   antisymm r s := nomatch asymm r s
+@[implicit_reducible]
 def IsTrichotomous.ofTotal [IsTotal R] : IsTrichotomous R E where
   trichotomous a b :=
     match total R a b with
@@ -386,10 +388,12 @@ open Relation
 
 variable {α β γ: Type*} {r: α -> α -> Prop} {s: β -> β -> Prop} {t: γ -> γ -> Prop}
 
+@[implicit_reducible]
 def RelHom.liftTrans (f: r →r s) [Relation.IsTrans s] : Relation.IsTrans r where
   trans := by
     intro a b c h g
     exact map_rel_rev f <| trans (map_rel_fwd f h) (map_rel_fwd f g)
+@[implicit_reducible]
 def RelHom.liftWellfounded (f: r →r s) [Relation.IsWelFounded s] : Relation.IsWelFounded r where
   wf := by
     apply WellFounded.intro
@@ -401,15 +405,18 @@ def RelHom.liftWellfounded (f: r →r s) [Relation.IsWelFounded s] : Relation.Is
     apply Acc.intro
     intro b h
     exact ih _ (map_rel_fwd f h) _ rfl
+@[implicit_reducible]
 def RelEmbedding.liftTrichotomous (f: r ↪r s) [Relation.IsTrichotomous s (· = ·)] : Relation.IsTrichotomous r (· = ·) where
   trichotomous a b := by
     rcases trichotomous s (f a) (f b) with h | h | h
     · exact .inl <| map_rel_rev f h
     · exact .inr <| .inl <| f.inj h
     · exact .inr <| .inr <| map_rel_rev f h
+@[implicit_reducible]
 def RelEmbedding.liftWellOrder (f: r ↪r s) [Relation.IsWellOrder s] : Relation.IsWellOrder r := {
   f.toRelHom.liftTrans, f.toRelHom.liftWellfounded, f.liftTrichotomous with
 }
+@[implicit_reducible]
 def RelEmbedding.liftTotal (f: r ↪r s) [Relation.IsTotal s] : Relation.IsTotal r where
   total a b := by
     rcases total s (f a) (f b) with h | h

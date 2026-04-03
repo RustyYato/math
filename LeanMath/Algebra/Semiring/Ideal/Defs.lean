@@ -40,12 +40,12 @@ instance : IsMemRightMul (SubRightMul α) α where
 
 def MemLeftMul.preimage [SetLike S β] [IsMemLeftMul S β] [FunLike F α β] [IsMulHom F α β] (f: F) (s: S) : MemLeftMul (Set.preimage f s) := by
   intro a k ha
-  simp; rw [map_mul]
+  simp [Set.coe_mem]; rw [map_mul]
   apply mem_left_mul s
   assumption
 
 def MemRightMul.preimage [SetLike S β] [IsMemRightMul S β] [FunLike F α β] [IsMulHom F α β] (f: F) (s: S) : MemRightMul (Set.preimage f s) := by
   intro a k ha
-  simp; rw [map_mul]
+  simp [Set.coe_mem]; rw [map_mul]
   apply mem_right_mul s
   assumption

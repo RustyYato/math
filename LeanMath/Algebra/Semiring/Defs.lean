@@ -82,12 +82,12 @@ instance (priority := 10000) : IsZeroHom (α →+*₀ β) α β where
 instance (priority := 10000) : IsAddHom (α →+*₀ β) α β where
 instance (priority := 10000) : IsMulHom (α →+*₀ β) α β where
 
-instance (priority := 10000) : FunLike (α ↪+*₀ β) α β where
+instance (priority := 10000) : EmbeddingLike (α ↪+*₀ β) α β where
 instance (priority := 10000) : IsZeroHom (α ↪+*₀ β) α β where
 instance (priority := 10000) : IsAddHom (α ↪+*₀ β) α β where
 instance (priority := 10000) : IsMulHom (α ↪+*₀ β) α β where
 
-instance (priority := 10000) : FunLike (α ≃+*₀ β) α β where
+instance (priority := 10000) : EquivLike (α ≃+*₀ β) α β where
 instance (priority := 10000) : IsZeroHom (α ≃+*₀ β) α β where
 instance (priority := 10000) : IsAddHom (α ≃+*₀ β) α β where
 instance (priority := 10000) : IsMulHom (α ≃+*₀ β) α β where

@@ -16,6 +16,7 @@ def finTruncChoice [DecidableEq ι] [ft: Fintype ι] {α: ι -> Sort*} (h: ∀i,
   (finTruncChoice' (n := Fintype.card ι) (α := α ∘ eqv) (h := fun i => h _)).map fun f i =>
   cast (by simp) (f (eqv.symm i))
 
+@[implicit_reducible]
 private def finChoose' {α: Fin n -> Sort*} (h: ∀i, Nonempty (α i)) : Nonempty (∀i, α i) := by
   induction n with
   | zero => exact ⟨nofun⟩
@@ -26,6 +27,7 @@ private def finChoose' {α: Fin n -> Sort*} (h: ∀i, Nonempty (α i)) : Nonempt
       | ⟨0, _⟩ => f₀
       | ⟨i + 1, hi⟩ => f₁ ⟨i, Nat.lt_of_succ_lt_succ hi⟩⟩
 
+@[implicit_reducible]
 def finChoose [DecidableEq ι] [ft: Finite ι] {α: ι -> Sort*} (h: ∀i, Nonempty (α i)) : Nonempty (∀i, α i) := by
   have ⟨ft⟩ := ft
   induction (Fintype.finEquiv ι) with | mk eqv =>

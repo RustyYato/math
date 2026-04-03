@@ -66,7 +66,7 @@ def weaken_at
       omega
     · rw [Term.weaken_var_ge _ _ g]
       rw [show ctx[index] = ctx[index + 1 - 1] from rfl]
-      rw [←List.getElem_insertIdx_of_gt]
+      erw [←List.getElem_insertIdx_of_gt]
       apply IsWellTyped.var
       omega
       rw [List.length_insertIdx_of_le_length h]
