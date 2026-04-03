@@ -14,7 +14,7 @@ private def all (n: ℕ) (card: Fin n -> ℕ) :
     rightInv := nofun
   }
   | n + 1 =>
-    have allsucc := all n (card ∘ Fin.succ)
+    have allsucc := all n (fun x => card x.succ)
     have eqv := (Fin.sum (card 0) (∑i: Fin n, card i.succ)).comp
       <| Equiv.fin_cast (n := ∑i, card i) <| by rw [fin_sum_succ]
     eqv.trans <| {
@@ -37,10 +37,9 @@ private def all (n: ℕ) (card: Fin n -> ℕ) :
           show HEq (allsucc (allsucc.symm ⟨i, x⟩)).snd _
           rw [Equiv.symm_coe]; rfl
       rightInv x := by
-        rcases x with x | x
-        dsimp; rfl
+        rcases x with x | x; dsimp; rfl
         show Sum.inr (allsucc.symm (allsucc x)) = _
-        rw [Equiv.coe_symm]; rfl
+        simp
     }
 
 end Sigma
