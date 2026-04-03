@@ -25,6 +25,8 @@ class EmbeddingLike (F: Sort*) (α β: outParam Sort*) where
       apply EmbeddingLike.coeInj
       assumption)
 
+@[coe] abbrev Embedding.coe [EmbeddingLike F α β] : F -> (α ↪ β) := EmbeddingLike.coeEmbedding
+
 --- This is not the interface for ops, just ensures that
 --- all ops are implemented
 set_option checkBinderAnnotations false in
@@ -36,15 +38,15 @@ class EmbeddingOpsCheck (C: Sort u -> Sort u) (F: ∀α β, C α -> C β -> Sort
   protected refl (α: Sort u) [cα: C α] : F α α cα cα
 
 instance {F α β: Sort*} [EmbeddingLike F α β] : FunLike F α β where
-  coeFun f := (EmbeddingLike.coeEmbedding (F := F) f).toFun
+  coeFun f := (Embedding.coe (F := F) f).toFun
   coeInj := by
     intro a b h
-    suffices EmbeddingLike.coeEmbedding a = EmbeddingLike.coeEmbedding b by
+    suffices Embedding.coe a = Embedding.coe b by
       exact EmbeddingLike.coeInj this
     dsimp at h
     revert h;
-    generalize EmbeddingLike.coeEmbedding a = a
-    generalize EmbeddingLike.coeEmbedding b = b
+    generalize Embedding.coe a = a
+    generalize Embedding.coe b = b
     intro h
     cases a; cases b; congr
 
@@ -53,7 +55,7 @@ instance : EmbeddingLike (α ↪ β) α β where
 
 def inj [EmbeddingLike F α β] (f: F) : Function.Injective f := by
   intro a b h
-  have : EmbeddingLike.coeEmbedding f a = EmbeddingLike.coeEmbedding f b := h
+  have : Embedding.coe f a = Embedding.coe f b := h
   exact Embedding.inj _ this
 
 namespace Embedding

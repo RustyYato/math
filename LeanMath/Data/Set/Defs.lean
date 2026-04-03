@@ -73,8 +73,6 @@ instance (priority := 700) [SetLike S α] : Membership α S where
 instance (priority := 700) [SetLike S α] : HasSubset S where
   Subset a b := (a: Set α) ⊆ b
 
-def coe_mem [SetLike S α] (s: S) (a: α) : (a ∈ s) = (a ∈ (Set.coe s)) := rfl
-
 @[simp] def coe_id (x: Set α) : Set.coe x = x := rfl
 
 @[simp] def ofMem_mem (P: α -> Prop) : ∀{x}, x ∈ ofMem P ↔ P x := by rfl

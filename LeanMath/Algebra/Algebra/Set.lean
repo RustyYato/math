@@ -174,19 +174,19 @@ instance [IsLawfulZeroAdd α] [IsLawfulZeroMul α] [IsLawfulSMulZero R α] : Bot
     mem_zero := rfl
     mem_add := by
       rintro _ _ ha hb
-      simp [Set.coe_mem] at ha hb
+      simp at ha hb
       obtain ⟨a, rfl⟩ := ha
       obtain ⟨b, rfl⟩ := hb
       rw [add_zero]; rfl
     mem_mul := by
       rintro _ _ ha hb
-      simp [Set.coe_mem] at ha hb
+      simp at ha hb
       obtain ⟨a, rfl⟩ := ha
       obtain ⟨b, rfl⟩ := hb
       rw [mul_zero]; rfl
     mem_smul := by
       rintro _ _ ha
-      simp [Set.coe_mem] at ha
+      simp at ha
       obtain ⟨a, rfl⟩ := ha
       rw [smul_zero]; rfl
   }
@@ -276,14 +276,14 @@ instance : Bot (Subalgebra R α) where
     mem_algebraMap _ := Set.mem_range'
     mem_add := by
       rintro _ _ ha hb
-      simp [Set.coe_mem] at ha hb
+      simp at ha hb
       obtain ⟨a, rfl⟩ := ha
       obtain ⟨b, rfl⟩ := hb
       rw [←map_add]
       apply Set.mem_range'
     mem_mul := by
       rintro _ _ ha hb
-      simp [Set.coe_mem] at ha hb
+      simp at ha hb
       obtain ⟨a, rfl⟩ := ha
       obtain ⟨b, rfl⟩ := hb
       rw [←map_mul]

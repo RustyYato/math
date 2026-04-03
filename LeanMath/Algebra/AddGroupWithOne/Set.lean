@@ -98,13 +98,13 @@ instance : Bot (AddSubgroupWithOne α) where
     mem_one := by simp; exists 1; rw [intCast_one]
     mem_neg := by
       rintro _ ha
-      simp [Set.coe_mem] at ha
+      simp at ha
       obtain ⟨a, rfl⟩ := ha
       rw [←intCast_neg]
       apply Set.mem_range'
     mem_add := by
       rintro _ _ ha hb
-      simp [Set.coe_mem] at ha hb
+      simp at ha hb
       obtain ⟨a, rfl⟩ := ha
       obtain ⟨b, rfl⟩ := hb
       rw [←intCast_add]

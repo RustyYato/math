@@ -22,7 +22,7 @@ class EquivLike (F: Sort*) (α β: outParam Sort*) where
       apply EquivLike.coeInj
       assumption
 
-@[coe] def Equiv.coe [EquivLike F α β] : F -> (α ≃ β) := EquivLike.coeEquiv
+@[coe] abbrev Equiv.coe [EquivLike F α β] : F -> (α ≃ β) := EquivLike.coeEquiv
 
 --- This is not the interface for ops, just ensures that
 --- all ops are implemented
@@ -39,15 +39,15 @@ section
 
 @[reducible]
 private def funlike {F α β: Sort*} [EquivLike F α β] : FunLike F α β where
-  coeFun f := (EquivLike.coeEquiv (F := F) f).toFun
+  coeFun f := (Equiv.coe (F := F) f).toFun
   coeInj := by
     intro a b h
-    suffices EquivLike.coeEquiv a = EquivLike.coeEquiv b by
+    suffices Equiv.coe a = Equiv.coe b by
       exact EquivLike.coeInj this
     dsimp at h
     revert h;
-    generalize EquivLike.coeEquiv a = a
-    generalize EquivLike.coeEquiv b = b
+    generalize Equiv.coe a = a
+    generalize Equiv.coe b = b
     intro h
     suffices a.invFun = b.invFun by
       cases a; cases b
