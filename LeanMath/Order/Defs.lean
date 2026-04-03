@@ -112,6 +112,10 @@ def map_le [FunLike F α β] [IsOrderHom F α β] (f: F) (a b: α) : a ≤ b ↔
 def map_lt [FunLike F α β] [IsOrderHom F α β] [IsLawfulLT α] [IsLawfulLT β] (f: F) (a b: α) : a < b ↔ f a < f b := by
   rw [lt_iff_le_and_not_ge, lt_iff_le_and_not_ge, map_le f, map_le f]
 
+def toLtHom [FunLike F α β] [IsOrderHom F α β] [IsLawfulLT β] (f: F) : (· < ·: α -> α -> Prop) →r (· < ·: β -> β -> Prop) where
+  toFun := f
+  map_rel := map_lt f _ _
+
 instance : IsLawfulLT (αᵒᵖ) where
   lt_iff_le_and_not_ge := lt_iff_le_and_not_ge (α := α)
 

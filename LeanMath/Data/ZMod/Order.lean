@@ -13,6 +13,35 @@ def orderEmb : ZMod n ↪o ℤ where
   inj := by intro a b h; ext; assumption
   map_rel := Iff.rfl
 
+def embNat [NeZero n] : ZMod n ↪ ℕ where
+  toFun x := x.val.toNat
+  inj := by
+    intro a b h; ext;
+    dsimp at h
+    replace h := congrArg (Nat.cast (R := ℤ)) h
+    rwa [Int.ofNat_toNat, Int.ofNat_toNat, max_eq_left, max_eq_left] at h
+    rw [←b.mod_eq_self]
+    apply Int.emod_nonneg
+    apply NeZero.ne
+    rw [←a.mod_eq_self]
+    apply Int.emod_nonneg
+    apply NeZero.ne
+
+def natCast_embNat [NeZero n] (a: ZMod n) : embNat a = a.val := by
+  show (Int.toNat _: ℤ) = _
+  rw [Int.ofNat_toNat, max_eq_left]
+  rw [←a.mod_eq_self]
+  apply Int.emod_nonneg
+  apply NeZero.ne
+
+def orderEmbNat [NeZero n] : ZMod n ↪o ℕ where
+  toEmbedding := embNat
+  map_rel {a b} := by
+    show a ≤ b ↔ embNat a ≤ embNat b
+    apply Iff.trans _ Int.ofNat_le
+    rw [natCast_embNat, natCast_embNat]
+    rfl
+
 instance (a b: ZMod n) : Decidable (a ≤ b) :=
   (inferInstance: Decidable (a.val ≤ b.val))
 instance (a b: ZMod n) : Decidable (a < b) :=
@@ -29,5 +58,10 @@ instance : @Relation.IsAntisymm (ZMod n) (· ≤ ·) (· = ·) where
 
 instance : IsLinearOrder (ZMod n) where
   refl a := le_refl a.val
+
+instance : IsLinearOrder (ZMod n) where
+  refl a := le_refl a.val
+
+instance [NeZero n] : @Relation.IsWelFounded (ZMod n) (· < ·) := (toLtHom orderEmbNat).liftWellfounded
 
 end ZMod
