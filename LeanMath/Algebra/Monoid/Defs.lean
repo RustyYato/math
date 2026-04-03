@@ -77,9 +77,9 @@ class IsAddMonoid (α: Type*) [AddMonoidOps α] : Prop extends IsAddSemigroup α
 class NoZeroDivisors (α: Type*) [Mul α] [Zero α] where
   of_mul_eq_zero {a b: α} (h: a * b = 0) : a = 0 ∨ b = 0
 
-instance (priority := 100) NoZeroDivisors.ofLeftCancel₀ [Mul α] [Zero α] [IsLawfulZeroMul α] [IsLeftCancel₀ α] [DecidableEq α] : NoZeroDivisors α where
+instance (priority := 100) NoZeroDivisors.ofLeftCancel₀ [Mul α] [Zero α] [IsLawfulZeroMul α] [IsLeftCancel₀ α] [ExcludedMiddleEq α] : NoZeroDivisors α where
   of_mul_eq_zero {a b} h := by
-    apply Decidable.or_iff_not_imp_left.mpr
+    apply LEM.or_iff_not_imp_left.mpr
     intro ha
     rw [←mul_zero a] at h
     exact of_mul_left₀ ha h
