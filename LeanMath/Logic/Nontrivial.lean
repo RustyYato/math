@@ -1,6 +1,7 @@
 import LeanMath.Tactic.TypeStar
+import LeanMath.Logic.LEM
 
-class inductive Nontrivial (α: Sort*) where
+class inductive Nontrivial (α: Sort*) : Prop where
 | intro (a b: α) (h: a ≠ b)
 
 instance : Nontrivial Bool :=
@@ -14,9 +15,9 @@ namespace Nontrivial
 
 variable [h: Nontrivial α]
 
-def exists_ne [DecidableEq α] (a: α) : ∃b, a ≠ b := by
+def exists_ne (a: α) [∀x, ExcludedMiddle (a = x)] : ∃b, a ≠ b := by
   rcases h with ⟨x, y, h⟩
-  by_cases a = x
+  rcases em (a = x)
   exists y; subst a; assumption
   exists x
 

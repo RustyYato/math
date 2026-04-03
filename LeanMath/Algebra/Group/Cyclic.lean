@@ -1,5 +1,7 @@
 import LeanMath.Algebra.Group.Free
+import LeanMath.Algebra.Group.Set
 import LeanMath.Data.ZMod.Ring
+import LeanMath.Data.Set.Relation
 
 inductive Rel (n: ℕ) : FreeGroup Unit -> FreeGroup Unit -> Prop where
 | intro (g: FreeGroup Unit) : Rel n (g ^ n) 1
@@ -159,6 +161,38 @@ def pow : CyclicGroup n ≃* MulOfAdd (ZMod n) where
 def pow_ι : pow (n := n) ι = MulOfAdd.mkHom 1 := by
   apply pow'_ι
 
+def pow_symm (x: CyclicGroup n) : ι ^ (pow x).get.val = x := by
+  show (pow.symm (pow x)) = x
+  rw [GroupEquiv.coe_symm]
+
+def cast_pown (m: ℕ) : CyclicGroup n →* CyclicGroup (n * m) :=
+  (GroupQuot.lift (Rel n) {
+    val := CyclicGroup.ofFree.comp (zpowHom m)
+    property x y h := by
+      cases h
+      dsimp
+      rw [one_zpow, map_one, zpow_ofNat, ←npow_mul, map_npow, pown_eq_one]
+  }).comp equiv_quot.toGroupHom
+
+def cast_pown_ι : cast_pown (m := m) (n := n) ι = ι ^ m := by
+  apply GroupQuot.lift_mk
+
+def cast (h: n = m) : CyclicGroup n ≃* CyclicGroup m where
+  toFun := lift (α := CyclicGroup m) (n := n) (fun x => h ▸ pown_eq_one x) ι
+  invFun := lift (α := CyclicGroup n) (n := m) (fun x => h ▸ pown_eq_one x) ι
+  leftInv := by
+    intro x
+    obtain ⟨k, rfl⟩ := generated_by_ι x
+    rw [map_zpow, map_zpow, lift_ι, lift_ι]
+  rightInv := by
+    intro x
+    obtain ⟨k, rfl⟩ := generated_by_ι x
+    rw [map_zpow, map_zpow, lift_ι, lift_ι]
+  map_one := map_one _
+  map_mul := map_mul _
+
+def cast_ι (h: n = m) : cast h ι = ι := lift_ι (fun x => h ▸ pown_eq_one x)
+
 def of_powz_eq_one (m: ℤ) : ι (n := n) ^ m = 1 -> (n: ℤ) ∣ m := by
   intro h; rw [zpow_eq_zpow_emod] at h
   cases n with
@@ -189,7 +223,85 @@ def ofCyclicEmbed (f: CyclicGroup m ↪* CyclicGroup n) : m ∣ n := by
   rw [←zpow_ofNat] at h
   apply Int.natCast_dvd_natCast'.mp (of_powz_eq_one _ h)
 
--- def ofEmbed [GroupOps α] [IsGroup α] (f: α ↪ CyclicGroup n) :
---   ∃m, Nonempty (α ≃* CyclicGroup m) := sorry
+def ofSubgroup [LEM] (s: Subgroup (CyclicGroup n)) : ∃m, Nonempty (s ≃* CyclicGroup m) := by
+  rcases em (Set.coe s = {1}) with h | h
+  · exists 1
+    exact ⟨{
+      toFun _ := 1
+      invFun _ := 1
+      leftInv x := by dsimp; rw [←npow_one x, pown_eq_one]
+      rightInv x := by
+        dsimp
+        have := x.property
+        conv at this => { lhs; rw [h] }
+        ext; exact this
+      map_one := rfl
+      map_mul _ _ := (mul_one _).symm
+    }⟩
+  · let U := ((s.toSet \ {1}).image (Int.natAbs ∘ ZMod.val ∘ MulOfAdd.get ∘ pow))
+    have Unonempty : U.Nonempty := by
+      have : Nontrivial s := by
+        apply LEM.byContradiction
+        intro g
+        apply h
+        ext x; apply Iff.intro
+        intro hx
+        apply LEM.byContradiction
+        intro hne
+        refine g ⟨⟨x, hx⟩, ⟨_, mem_one s⟩, ?_⟩
+        intro h; cases h; contradiction
+        intro rfl
+        apply mem_one s
+      let one : Set.coe s := 1
+      have ⟨b, ne_one⟩ := Nontrivial.exists_ne (1: Set.coe s)
+      apply Set.image_nonempty_iff.mpr
+      exists b
+      apply And.intro
+      exact b.property
+      dsimp; intro g; apply ne_one
+      ext; exact g
+    have ⟨minpow, ⟨mem_minpow, hmin_pow⟩, u⟩ := Set.exists_unique_min (· < ·) Unonempty
+    clear u
+    have mem : ι ^ minpow ∈ s := by
+      obtain ⟨i, hi, rfl⟩ := Set.mem_image.mp mem_minpow
+      dsimp
+      rw [←zpow_ofNat, ←Int.mul_sign_self]
+      rw [zpow_mul, pow_symm]
+      rcases (pow i).get.val.sign_trichotomy with h | h | h
+      rw [h, zpow_one]; exact hi.left
+      rw [h, zpow_zero]; exact mem_one _
+      rw [h, zpow_neg_one]; apply mem_inv; exact hi.left
+    have minpow_dvd : minpow ∣ n := by
+      sorry
+    have : ∀x ∈ s, ∃m: ℤ, x = (ι ^ minpow) ^ m := by
+      sorry
+    replace : ∀x: Set.coe s, existsUnique fun m: CyclicGroup (n / minpow) => x.val = (cast (by
+      rw [Nat.div_mul_cancel minpow_dvd]) (cast_pown (n := n / minpow) minpow ι)) := by
+      sorry
+    have ⟨f, hf⟩ := Classical.axiomOfUniqueChoice this
+    clear this
+    exists n / minpow
+    exact ⟨GroupEquiv.symm {
+      toFun := lift (by
+        intro x; ext
+        have := (hf x).left
+        show x.val ^ _ = _
+        rw [this]
+        rw [cast_pown_ι, map_npow, cast_ι, ←npow_mul,
+          Nat.mul_div_cancel' minpow_dvd, pown_eq_one]
+        rfl) ⟨_,  mem⟩
+      invFun := f
+      leftInv := by
+        sorry
+      rightInv := by
+        sorry
+      map_one := map_one _
+      map_mul := map_mul _
+    }⟩
+
+def ofEmbed [LEM] [GroupOps α] [IsGroup α] (f: α ↪* CyclicGroup n) : ∃m, Nonempty (α ≃* CyclicGroup m) := by
+  have ⟨m, ⟨hm⟩⟩ := ofSubgroup (Subgroup.range f.toGroupHom)
+  exists m
+  exact ⟨(Subgroup.equivRange f).trans hm⟩
 
 end CyclicGroup

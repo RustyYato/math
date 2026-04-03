@@ -48,6 +48,13 @@ namespace Subgroup
 
 variable [Mul α] [Mul β] [Inv α] [Inv β] [One α] [One β]
 
+def copy (S: Subgroup α) (U: Set α) (h: ∀x, x ∈ S ↔ x ∈ U) : Subgroup α where
+  toSet := U
+  mem_one := (h _).mp (mem_one S)
+  mem_mul _ _ ha hb := (h _).mp (mem_mul S ((h _).mpr ha) ((h _).mpr hb))
+  mem_inv _ ha := (h _).mp (mem_inv S ((h _).mpr ha))
+
+
 inductive Closure (U: Set α) : α -> Prop where
 | of (a: α) (h: a ∈ U) : Closure U a
 | one : Closure U 1
@@ -135,19 +142,51 @@ def MemInv.image [SetLike S α] [IsMemInv S α] [IsMemOne S α] [FunLike F α β
 
 namespace Subgroup
 
-def preimage (f: α →* β) (U: Subgroup β) : Subgroup α where
+section
+
+variable [FunLike F α β] [IsOneHom F α β] [IsMulHom F α β]
+
+def preimage (f: F) (U: Subgroup β) : Subgroup α where
   toSet := Set.preimage f U
   mem_one := MemOne.preimage f _
   mem_inv := MemInv.preimage f _
   mem_mul := MemMul.preimage f _
 
-def image (f: α →* β) (U: Subgroup α) : Subgroup β where
+def image (f: F) (U: Subgroup α) : Subgroup β where
   toSet := Set.image f U
   mem_one := MemOne.image f _
   mem_inv := MemInv.image f _
   mem_mul := MemMul.image f _
 
-def kernel (f: α →* β) : Subgroup α := preimage f ⊥
+def range (f: F) : Subgroup β :=
+  (Subgroup.image f ⊤).copy (Set.range f) (by
+    show ∀_, _ ∈ Set.image _ ⊤ ↔ _
+    rw [Set.image_univ_eq_range]
+    intro x; apply Iff.rfl)
+
+def kernel (f: F) : Subgroup α := preimage f ⊥
+
+end
+
+noncomputable def equivRange [EmbeddingLike F α β] [IsOneHom F α β] [IsMulHom F α β] (f: F) : α ≃* range f where
+  toEquiv := Equiv.ofBij {
+    toFun x := {
+      val := f x
+      property := by apply Set.mem_range'
+    }
+    inj' := by
+      intro a b h
+      exact inj f (Subtype.mk.inj h)
+    surj' := by
+      rintro ⟨b, a, rfl⟩
+      exists a
+  }
+  map_one := by
+    dsimp; rw [Equiv.apply_ofBij]
+    ext; apply map_one f
+  map_mul x y := by
+    dsimp; iterate 3 rw [Equiv.apply_ofBij]
+    ext; apply map_mul f
 
 end Subgroup
 

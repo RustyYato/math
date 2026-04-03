@@ -445,6 +445,8 @@ def zpowHom [IsComm α] (z: ℤ) : α →* α where
   map_one := by rw [one_zpow]
   map_mul a b := by rw [mul_zpow]
 
+@[simp] def apply_zpowHom [IsComm α] (z: ℤ) (a: α) : zpowHom z a = a ^ z := rfl
+
 def zpow_zero (a: α) : a ^ (0: ℤ) = 1 := by
   rw [←npow_zero a, ←zpow_ofNat a 0]
   rfl

@@ -449,7 +449,19 @@ def nonempty_iff (a: Set α) : a.Nonempty ↔ ¬∀x, x ∉ a := by
 def image_eq_range (f: α -> β) (s: Set α): s.image f = Set.range (fun x: s => f x.val) := by
   ext b; simp
 
+def image_univ_eq_range (f: α -> β): image f ⊤  = Set.range f := by
+  ext b; simp
+
 def Induced (r: α -> α -> Prop) (U: Set α) : U -> U -> Prop := fun x y => r x y
+
+def image_nonempty_iff {f: α -> β} {s: Set α} : (s.image f).Nonempty ↔ s.Nonempty := by
+  apply Iff.intro
+  intro ⟨_, a, _, h⟩
+  exists a
+  intro ⟨a, ha⟩
+  exists f a
+  apply Set.mem_image'
+  assumption
 
 end Set
 
