@@ -8,6 +8,9 @@ instance : LE (ZMod n) where
 instance : LT (ZMod n) where
   lt a b := a.val < b.val
 
+instance (n: ℕ) [NeZero n] : NeZero (Nat.cast n: ℤ) where
+  out h := NeZero.ne _ (Int.ofNat.inj h)
+
 def orderEmb : ZMod n ↪o ℤ where
   toFun := ZMod.val
   inj := by intro a b h; ext; assumption
