@@ -214,7 +214,7 @@ structure AddGroupEmbedding (α β: Type*) [Zero α] [Zero β] [Add α] [Add β]
 structure LogEmbedding (α β: Type*) [One α] [Zero β] [Mul α] [Add β] extends α ↪ β, α ↪₁₀ β, α ↪ₘ+ₙ β where
 structure ExpEmbedding (α β: Type*) [Zero α] [One β] [Add α] [Mul β] extends α ↪ β, α ↪₀₁ β, α ↪ₐ*ₙ β where
 
-structure GroupEquiv (α β: Type*) [One α] [One β] [Mul α] [Mul β] extends α ≃ β, α ≃₁ β, α ≃*ₙ β where
+structure GroupEquiv (α β: Type*) [One α] [One β] [Mul α] [Mul β] extends α ≃ β, α ≃₁ β, α ≃*ₙ β, GroupHom α β where
 structure AddGroupEquiv (α β: Type*) [Zero α] [Zero β] [Add α] [Add β] extends α ≃ β, α ≃₀ β, α ≃+ₙ β, AddGroupHom α β where
 structure LogEquiv (α β: Type*) [One α] [Zero β] [Mul α] [Add β] extends α ≃ β, α ≃₁₀ β, α ≃ₘ+ₙ β where
 structure ExpEquiv (α β: Type*) [Zero α] [One β] [Add α] [Mul β] extends α ≃ β, α ≃₀₁ β, α ≃ₐ*ₙ β where

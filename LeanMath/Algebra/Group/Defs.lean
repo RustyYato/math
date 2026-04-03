@@ -652,6 +652,34 @@ def negHom [IsAddComm α] : α →+ α where
 @[simp] def apply_negHom [IsAddComm α] (a: α) : negHom a = -a := rfl
 
 end
+
+@[implicit_reducible]
+def IsLawfulDiv.lift
+  [GroupOps α]
+  [GroupOps β] [IsLawfulDiv β]
+  [EmbeddingLike F α β] [IsMulHom F α β] [IsOneHom F α β]
+  (f: F)
+  (hinv: ∀a, f (a⁻¹) = (f a)⁻¹)
+  (hdiv: ∀a b, f (a / b) = f a / f b) : IsLawfulDiv α where
+  div_eq_mul_inv a b := by
+    apply inj f
+    rw [hdiv, div_eq_mul_inv, map_mul, hinv]
+
+@[implicit_reducible]
+def IsLawfulPowZ.lift
+  [GroupOps α] [IsLawfulPowN α]
+  [GroupOps β] [IsLawfulPowZ β]
+  [EmbeddingLike F α β] [IsMulHom F α β] [IsOneHom F α β]
+  (f: F)
+  (hinv: ∀a, f (a⁻¹) = (f a)⁻¹)
+  (hpow: ∀a (n: ℤ), f (a ^ n) = (f a) ^ n) : IsLawfulPowZ α where
+  zpow_ofNat a n := by
+    apply inj f
+    rw [hpow, zpow_ofNat, map_npow]
+  zpow_negSucc a n := by
+    apply inj f
+    rw [hinv, hpow, zpow_negSucc, map_npow]
+
 @[implicit_reducible]
 def IsGroup.lift
   [GroupOps α] [IsLawfulPowN α] [IsLawfulPowZ α] [IsLawfulDiv α]
