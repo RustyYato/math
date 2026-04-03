@@ -7,6 +7,7 @@ namespace Set
 
 variable [LEM] (s t: Set α)
 
+@[implicit_reducible]
 def finite_of_sub {s t: Set α} (h: t ⊆ s) [Finite s] : Finite t := by
   apply Finite.ofEmbed (β := s)
   exact {

@@ -98,6 +98,7 @@ instance : EncodableZero ℕ where
   spec _ := rfl
   encode_zero := rfl
 
+@[implicit_reducible]
 def Encodable.ofEquiv (f: α ≃ β) : Encodable β where
   decode n := match Encodable.decode n with
     | .some a => .some (f a)

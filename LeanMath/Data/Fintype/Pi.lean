@@ -179,6 +179,7 @@ private def card_all_eq : ∀(n: ℕ) (f: ∀x < n, ℕ), Option (Σ'card: ℕ, 
   else
     .none
 
+@[implicit_reducible]
 private def instPiFin (card: Fin n -> ℕ) : Fintype (∀i: Fin n, Fin (card i)) where
   card := ∏i, card i
   repr := Trunc.mk {
@@ -191,6 +192,7 @@ private def instPiFin (card: Fin n -> ℕ) : Fintype (∀i: Fin n, Fin (card i))
     }
   }
 
+@[implicit_reducible]
 private def instFuncFin : Fintype (Fin n -> Fin m) where
   card := m ^ n
   repr := Trunc.mk {

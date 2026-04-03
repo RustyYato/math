@@ -179,7 +179,7 @@ instance : IsLinearOrder Nat where
   trichotomous := Nat.lt_trichotomy
 
 instance : IsLinearOrder Int where
-  lt_iff_le_and_not_ge := Int.lt_iff_le_not_le
+  lt_iff_le_and_not_ge := Int.lt_iff_le_and_not_ge
   refl := Int.le_refl
   trans := Int.le_trans
   antisymm := Int.le_antisymm

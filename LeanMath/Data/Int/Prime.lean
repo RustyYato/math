@@ -39,8 +39,6 @@ def minFact_prime (z: ℤ) (hz: ¬IsUnit z) : IsPrime (z.minFact: ℤ) := by
   exact hz (by simp; infer_instance)
   exact hz (by simp; infer_instance)
 
-#print axioms Int.natCast_dvd_natCast
-
 def of_dvd_one (a: ℤ) : a ∣ 1 -> a = 1 ∨ a = -1 := by
   intro h
   rcases Int.le_total a 0 with g | g

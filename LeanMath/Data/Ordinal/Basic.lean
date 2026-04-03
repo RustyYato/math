@@ -6,6 +6,7 @@ import LeanMath.Data.Fintype.Algebra.Monoid
 
 namespace Ordinal
 
+@[implicit_reducible]
 private def well_order_finite_iso [LEM] (r: Fin n -> Fin n -> Prop) [Relation.IsWellOrder r] : Nonempty (r ≃r (· < ·: Fin n -> Fin n -> Prop)) := by
   induction n with
   | zero =>

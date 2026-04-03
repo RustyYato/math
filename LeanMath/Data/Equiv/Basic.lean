@@ -265,8 +265,6 @@ def fin_erase (i: Fin (n + 1)) : Fin (n + 1) ≃ Option (Fin n) where
 @[simp] def symm_fin_erase_none (i: Fin (n + 1)) : (fin_erase i).symm .none = i := rfl
 @[simp] def symm_fin_erase_some (i: Fin (n + 1)) (x: Fin n) : (fin_erase i).symm (.some x) = if x.val < i.val then x.castSucc else x.succ := rfl
 
-#print axioms fin_erase
-
 def swap [DecidableEq α] (a b: α) (f: α ≃ β) : α ≃ β where
   toFun x := if x = a then f b else if x = b then f a else f x
   invFun x := if f.symm x = a then b else if f.symm x = b then a else f.symm x

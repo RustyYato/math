@@ -33,6 +33,7 @@ def unit_dvd (a b: α) [IsUnit a] : a ∣ b := by
 class IsDvdAntisymm (α: Type*) [MonoidOps α] [IsMonoid α] [IsUnitsCentral α] [Dvd α] where
   dvd_antisymm {a b: α} (h₀: a ∣ b) (h₁: b ∣ a) : Units.Associates a b
 
+@[implicit_reducible]
 def unit_of_dvd_unit [IsComm α] (a b: α) (h: a ∣ b) [IsUnit b] : IsUnit a := by
   rw [dvd_iff] at h
   obtain ⟨x, rfl⟩ := h

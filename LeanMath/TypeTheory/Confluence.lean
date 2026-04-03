@@ -35,6 +35,7 @@ private def ParallelBetaReductionChain.trans : ParallelBetaReductionChain a b ->
 private def ParallelBetaReductionChain.of : ParallelBeta a b -> ParallelBetaReductionChain a b :=
   fun x => .cons _ _ _ x (.refl _)
 
+@[implicit_reducible]
 def weaken_beta (term term': Term) (n: Nat) (h: term.Beta term') : Nonempty ((weaken n term).Beta (weaken n term')) := by
   induction h generalizing n with
   | Lam _ _ _ ih =>

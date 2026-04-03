@@ -91,6 +91,7 @@ def enumOrd_le_of_forall_lt (ha : a ∈ s) (H : ∀ b < o, enumOrd s b < a) : en
   apply sInf_le
   exact ⟨ha, H⟩
 
+@[implicit_reducible]
 def enumOrd_nonempty.{u} {U: Set Ordinal.{u}} (hU: ¬U.BoundedAbove) (x: Ordinal.{u}) :
   (U ∩ Set.ofMem fun y => ∀(o': Ordinal), o' < x -> enumOrd U o' < y).Nonempty := by
   rw [Set.not_bddAbove_iff] at hU
