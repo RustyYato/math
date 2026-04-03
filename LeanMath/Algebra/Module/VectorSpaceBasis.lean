@@ -4,8 +4,6 @@ import LeanMath.Data.LinearCombo.AddGroup
 import LeanMath.Algebra.Field.Defs
 import LeanMath.Order.Zorn
 
-set_option backward.isDefEq.respectTransparency false
-
 namespace BasisExists
 
 section

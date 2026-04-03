@@ -18,7 +18,7 @@ class SetLike (S: Type*) (α: outParam Type*) where
       apply SetLike.coeInj
       assumption
 
-@[coe] def Set.coe [SetLike S α] (s: S) : Set α := SetLike.coeSet s
+@[coe] abbrev Set.coe [SetLike S α] (s: S) : Set α := SetLike.coeSet s
 def Set.coe_inj [SetLike S α] : Function.Injective (Set.coe (S := S)) := SetLike.coeInj
 
 @[simp] def SetLike.coeSet_eq_Set_coe [SetLike S α] : SetLike.coeSet = Set.coe (S := S) (α := α) := rfl
