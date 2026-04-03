@@ -40,5 +40,6 @@ instance : IsAddGroupWithOne P[X] where
     simp; show _ = (-1 • (_: P[X])) i
     simp; rw [neg_one_zsmul]
 instance [IsComm P] : IsRing P[X] where
+instance : RingOps P[X] := inferInstance
 
 end Poly

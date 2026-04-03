@@ -24,7 +24,7 @@ instance : IsStrictOrderedSemiring ℝ := inferInstanceAs (IsStrictOrderedSemiri
 
 instance : SMul ℚ ℝ := inferInstanceAs (SMul ℚ (CauchySeq.Completion ℚ ℚ))
 instance : AlgebraMap ℚ ℝ := inferInstanceAs (AlgebraMap ℚ (CauchySeq.Completion ℚ ℚ))
-instance : IsAlgebra ℚ ℝ := inferInstanceAs (IsAlgebra ℚ (CauchySeq.Completion ℚ ℚ))
+instance : IsAlgebra ℚ ℝ := CauchySeq.instIsAlgebraCompletion
 instance : IsModule ℚ ℝ := inferInstance
 
 def ofRat : ℚ ↪+* ℝ where

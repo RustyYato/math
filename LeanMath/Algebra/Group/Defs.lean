@@ -18,23 +18,11 @@ def defaultSMulZ [SMul ℕ α] [Neg α] : SMul ℤ α where
   | .ofNat n, a => n • a
   | .negSucc n, a => -((n + 1) • a)
 
-instance (priority := 100) [GroupOps α] : One α := inferInstance
-instance (priority := 100) [GroupOps α] : Mul α := inferInstance
-instance (priority := 100) [GroupOps α] : Pow α ℕ := inferInstance
-instance (priority := 100) [GroupOps α] : Inv α := inferInstance
-instance (priority := 100) [GroupOps α] : Div α := inferInstance
 instance (priority := 100) [GroupOps α] : Pow α ℤ := GroupOps.toPowZ
-instance (priority := 100) [GroupOps α] : MonoidOps α := inferInstance
 
 instance (priority := 1100) [One α] [Mul α] [Pow α ℕ] [Inv α] [Div α] [Pow α ℤ] : GroupOps α where
 
-instance (priority := 100) [AddGroupOps α] : Zero α := inferInstance
-instance (priority := 100) [AddGroupOps α] : Add α := inferInstance
-instance (priority := 100) [AddGroupOps α] : SMul ℕ α := inferInstance
-instance (priority := 100) [AddGroupOps α] : Neg α := inferInstance
-instance (priority := 100) [AddGroupOps α] : Sub α := inferInstance
 instance (priority := 100) [AddGroupOps α] : SMul ℤ α := AddGroupOps.toZSMul
-instance (priority := 100) [AddGroupOps α] : AddMonoidOps α := inferInstance
 
 instance (priority := 1100) [Zero α] [Add α] [SMul ℕ α] [Neg α] [Sub α] [SMul ℤ α] : AddGroupOps α where
 
@@ -335,12 +323,14 @@ instance : IsSMulCon R ℤ where
     intros; apply resp_zsmul
     assumption
 
-instance : IsAddGroup (AlgQuot r) where
+instance : IsLawfulSub (AlgQuot r) where
   sub_eq_add_neg a b := by
     induction a with | mk a =>
     induction b with | mk b =>
     show (AlgQuot.mk r (a - b)) = (AlgQuot.mk r (a + -b))
     rw [sub_eq_add_neg]
+
+instance : IsAddGroup (AlgQuot r) where
   ofNat_zsmul a n := by
     induction a with | mk a =>
     show (AlgQuot.mk r ((n: ℤ) • a)) = (AlgQuot.mk r (n • a))
@@ -353,6 +343,8 @@ instance : IsAddGroup (AlgQuot r) where
     induction a with | mk a =>
     show (AlgQuot.mk r (a + -a)) = 0
     rw [add_neg_cancel, map_zero]
+
+instance : IsLawfulSub (AlgQuot r) := inferInstance
 
 end
 

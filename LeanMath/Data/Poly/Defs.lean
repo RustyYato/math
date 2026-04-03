@@ -533,4 +533,6 @@ def cast_C {f: P →+* R} (p: P) : cast f (C p) = C (f p) := by
   show cast f (term _ _) = term _ _
   rw [cast_term]
 
+instance : SemiringOps R[X] := inferInstance
+
 end Poly

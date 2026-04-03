@@ -45,14 +45,6 @@ private def equivQuot : Gaussian ≃+* AlgQuot Gaussian.Con where
   map_add _ _ := rfl
   map_mul _ _ := rfl
 
-instance : IsLawfulSub (AlgQuot Gaussian.Con) :=
-  @IsAddGroup.toIsLawfulSub (AlgQuot Gaussian.Con) inferInstance inferInstance
-
-instance : IsLawfulIntCast (AlgQuot Gaussian.Con) :=
-  @IsAddGroupWithOne.toIsLawfulIntCast (AlgQuot Gaussian.Con) inferInstance inferInstance
-instance : IsLawfulNatCast (AlgQuot Gaussian.Con) :=
-  @IsAddMonoidWithOne.toIsLawfulNatCast (AlgQuot Gaussian.Con) inferInstance inferInstance
-
 instance : IsLawfulPowN Gaussian :=
   IsLawfulPowN.lift equivQuot (fun _ _ => rfl)
 instance : IsLawfulSub Gaussian where
