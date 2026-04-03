@@ -118,7 +118,7 @@ def pow_ty.all_eq_or_exist_max [LEM] [Relation.IsWellOrder r] [Relation.IsWellOr
   exact hr
   trivial
 
-instance {r: α -> α -> Prop} {s: β -> β -> Prop} [LEM] [Relation.IsWellOrder r] [Relation.IsWellOrder s] : Relation.IsWellOrder (pow_rel r s) where
+instance {r: α -> α -> Prop} {s: β -> β -> Prop} [LEM] [Relation.IsWellOrder r] [Relation.IsWellOrder s] : Relation.IsTrans (pow_rel r s) where
   trans {a b c} h g := by
     obtain ⟨x, h, heq⟩ := h
     obtain ⟨y, g, geq⟩ := g
@@ -143,6 +143,8 @@ instance {r: α -> α -> Prop} {s: β -> β -> Prop} [LEM] [Relation.IsWellOrder
       rw [heq, geq]
       apply Relation.trans <;> assumption
       assumption
+
+instance {r: α -> α -> Prop} {s: β -> β -> Prop} [LEM] [Relation.IsWellOrder r] [Relation.IsWellOrder s] : Relation.IsTrichotomous (pow_rel r s) (· = ·) where
   trichotomous (f g) := by
     rcases Or.symm (em (∃x, f.val x ≠ g.val x)) with h | h
     · simp [-Classical.not_not, LEM.not_not] at h
@@ -184,6 +186,8 @@ instance {r: α -> α -> Prop} {s: β -> β -> Prop} [LEM] [Relation.IsWellOrder
         apply And.intro h
         intro x hx
         rw [imin _ hx]
+
+instance {r: α -> α -> Prop} {s: β -> β -> Prop} [LEM] [Relation.IsWellOrder r] [Relation.IsWellOrder s] : Relation.IsWellOrder (pow_rel r s) where
   wf := by
     apply wf_iff_exists_min.mpr
     intro S hS
