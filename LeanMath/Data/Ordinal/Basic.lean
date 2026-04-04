@@ -364,7 +364,26 @@ instance {r: α -> α -> Prop} {s: β -> β -> Prop} [LEM] [Relation.IsWellOrder
               true_and, X₁, X₀] at g_not_mem_X₁
             rw [and_comm, not_and] at g_not_mem_X₁
             rcases Relation.trichotomous s (g.val a₀) b₀ with h₁ | h₁ | h₁
-            · sorry
+            · rcases em (g ∈ X₀) with h₂ | h₂
+              · apply hb₀ _ _ h₁
+                apply Set.mem_image'
+                assumption
+              · simp only [true_and, g_mem_S, Set.mem_inter, Set.ofMem_mem,
+                  LEM.not_forall, LEM.not_not, X₀] at h₂
+                obtain ⟨a', a'_mem, ha'⟩ := h₂
+                apply Relation.asymm hg
+                apply pow_rel_of_small _ _ a'
+                have := f_mem.right
+                simp at this
+                have := (f_mem.left.right a' · ha')
+                rcases Relation.trichotomous s (f.val a') (g.val a') with h₂ | h₂ | h₂
+                assumption
+                obtain ⟨b, hb⟩ := a'_mem
+                rw [←h₂] at hb
+                nomatch this ⟨_, hb⟩
+                nomatch this ⟨_, h₂⟩
+                intro a'' ra'' sa'
+                exact (f_mem.left.right a' · ha') ⟨_, sa'⟩
             · replace g_not_mem_X₁ := g_not_mem_X₁ h₁
               simp only [LEM.not_forall, LEM.not_not] at g_not_mem_X₁
               obtain ⟨a', a'_mem, ha'⟩ := g_not_mem_X₁
