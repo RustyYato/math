@@ -79,6 +79,8 @@ instance (priority := 700) [SetLike S α] : HasSubset S where
 
 def sub_def (a b: Set α) : (a ⊆ b) = ∀x ∈ a, x ∈ b := rfl
 
+@[simp] def mk_mem {P: α -> Prop} : ∀{x}, (x ∈ Set.ofMem P) = P x := rfl
+
 @[ext] def ext (a b : Set α) : (∀x, x ∈ a ↔ x ∈ b) -> a = b := by
   intro h;
   cases a; cases b
@@ -462,6 +464,11 @@ def image_nonempty_iff {f: α -> β} {s: Set α} : (s.image f).Nonempty ↔ s.No
   exists f a
   apply Set.mem_image'
   assumption
+
+@[implicit_reducible]
+def univ_nonempty (α: Type*) [h: Nonempty α] : (⊤: Set α).Nonempty := by
+  obtain ⟨x⟩ := h
+  exact ⟨x, True.intro⟩
 
 end Set
 

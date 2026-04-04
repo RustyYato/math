@@ -337,7 +337,7 @@ private def collapse_helper_lt [LEM] (f: r ↪r s) : ∀b a, r a b -> s (collaps
   intro b
   show (collapse_helper f b).1 ∈ Set.ofMem fun a => ∀x (_ : r x b), s (collapse_helper f x).1 a
   conv => { rhs; unfold collapse_helper }
-  dsimp; apply Set.min_mem
+  dsimp only [Lean.Elab.WF.paramLet]; apply Set.min_mem
 
 private def collapse_helper_not_lt [LEM] [Relation.IsWellOrder s] (f : r ↪r s) (a : α) {b}
   (h : ∀x (_: r x a), s (collapse_helper f x).1 b) : ¬s b (collapse_helper f a).1 := by
