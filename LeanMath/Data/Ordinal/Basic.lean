@@ -6,8 +6,21 @@ import LeanMath.Data.Fintype.Algebra.Monoid
 
 namespace Ordinal
 
+def bool_2 : Ordinal := type (· < ·: Bool -> Bool -> Prop)
+
+def two_equiv : (· < ·: Bool -> Bool -> Prop) ≃r (· < ·: Fin 2 -> Fin 2 -> Prop) where
+  toFun
+  | false => ⟨0, by decide⟩
+  | true => ⟨1, by decide⟩
+  invFun x := x.val == 1
+  leftInv x := by decide +revert
+  rightInv x := by decide +revert
+  map_rel := by decide
+
+variable [LEM]
+
 @[implicit_reducible]
-private def well_order_finite_iso [LEM] (r: Fin n -> Fin n -> Prop) [Relation.IsWellOrder r] : Nonempty (r ≃r (· < ·: Fin n -> Fin n -> Prop)) := by
+private def well_order_finite_iso (r: Fin n -> Fin n -> Prop) [Relation.IsWellOrder r] : Nonempty (r ≃r (· < ·: Fin n -> Fin n -> Prop)) := by
   induction n with
   | zero =>
     refine ⟨?_⟩
@@ -55,7 +68,7 @@ private def well_order_finite_iso [LEM] (r: Fin n -> Fin n -> Prop) [Relation.Is
             Equiv.apply_toEmbedding, Equiv.symm_fin_erase_some, fi] using this
     }
 
-def finite {α: Type*} [LEM] [hfinite: Finite α] (r: α -> α -> Prop)
+def finite {α: Type*} [hfinite: Finite α] (r: α -> α -> Prop)
   [Relation.IsTrans r]
   [Relation.IsTrichotomous r (· = ·)]
   [Relation.IsIrrefl r] : ∃n: ℕ, type r = n := by
@@ -100,7 +113,7 @@ instance (f: pow_ty r s) : Finite f.support := f.property
 instance (f: pow_ty r s) [Relation.IsWellOrder r] : Relation.IsWellOrder f.support_rel :=
   inferInstanceAs (Relation.IsWellOrder (pullback_rel r Embedding.subtype_val: f.support -> f.support -> Prop))
 
-def pow_ty.all_eq_or_exist_max [LEM] [Relation.IsWellOrder r] [Relation.IsWellOrder s] (f: pow_ty r s) : (∀i j,f.val i = f.val j) ∧ (∀i x, ¬s x (f.val i)) ∨ ∃max ∈ f.support, ∀y ∈ f.support, ¬r max y := by
+def pow_ty.all_eq_or_exist_max [Relation.IsWellOrder r] [Relation.IsWellOrder s] (f: pow_ty r s) : (∀i j,f.val i = f.val j) ∧ (∀i x, ¬s x (f.val i)) ∨ ∃max ∈ f.support, ∀y ∈ f.support, ¬r max y := by
   rcases Or.symm (em (∃x, x ∈ f.support)) with h | h
   · rw [not_exists] at h
     left; apply And.intro; intro i j
@@ -123,7 +136,7 @@ def pow_ty.all_eq_or_exist_max [LEM] [Relation.IsWellOrder r] [Relation.IsWellOr
   exact hr
   trivial
 
-private def pow_rel_of_small [LEM] [Relation.IsWellOrder r] [Relation.IsWellOrder s] (f g: pow_ty r s)
+private def pow_rel_of_small [Relation.IsWellOrder r] [Relation.IsWellOrder s] (f g: pow_ty r s)
   (a: α) (ha: s (f.val a) (g.val a))
   (hle: ∀a', r a a' -> ¬s (g.val a') (f.val a')) : pow_rel r s f g := by
   have ⟨⟨a', a'_mem_supp⟩, ⟨sa', ha'⟩, u⟩ := Relation.exists_unique_min (flip g.support_rel) (P := fun a => s (f.val a) (g.val a)) ⟨⟨a, _, ha⟩, ha⟩
@@ -141,7 +154,7 @@ private def pow_rel_of_small [LEM] [Relation.IsWellOrder r] [Relation.IsWellOrde
   subst a'; assumption
   nomatch ha' _ ⟨_, ha⟩ h ha
 
-instance {r: α -> α -> Prop} {s: β -> β -> Prop} [LEM] [Relation.IsWellOrder r] [Relation.IsWellOrder s] : Relation.IsTrans (pow_rel r s) where
+instance {r: α -> α -> Prop} {s: β -> β -> Prop} [Relation.IsWellOrder r] [Relation.IsWellOrder s] : Relation.IsTrans (pow_rel r s) where
   trans {a b c} h g := by
     obtain ⟨x, h, heq⟩ := h
     obtain ⟨y, g, geq⟩ := g
@@ -167,7 +180,7 @@ instance {r: α -> α -> Prop} {s: β -> β -> Prop} [LEM] [Relation.IsWellOrder
       apply Relation.trans <;> assumption
       assumption
 
-instance {r: α -> α -> Prop} {s: β -> β -> Prop} [LEM] [Relation.IsWellOrder r] [Relation.IsWellOrder s] : Relation.IsTrichotomous (pow_rel r s) (· = ·) where
+instance {r: α -> α -> Prop} {s: β -> β -> Prop} [Relation.IsWellOrder r] [Relation.IsWellOrder s] : Relation.IsTrichotomous (pow_rel r s) (· = ·) where
   trichotomous (f g) := by
     rcases Or.symm (em (∃x, f.val x ≠ g.val x)) with h | h
     · simp only [ne_eq, not_exists, LEM.not_not] at h
@@ -210,12 +223,12 @@ instance {r: α -> α -> Prop} {s: β -> β -> Prop} [LEM] [Relation.IsWellOrder
         intro x hx
         rw [imin _ hx]
 
-instance {r: α -> α -> Prop} {s: β -> β -> Prop} [LEM] [Relation.IsWellOrder r] [Relation.IsWellOrder s] : Relation.IsIrrefl (pow_rel r s) where
+instance {r: α -> α -> Prop} {s: β -> β -> Prop} [Relation.IsWellOrder r] [Relation.IsWellOrder s] : Relation.IsIrrefl (pow_rel r s) where
   irrefl {f} h := by
     obtain ⟨a, ha, heq⟩ := h
     exact Relation.irrefl ha
 
-instance {r: α -> α -> Prop} {s: β -> β -> Prop} [LEM] [Relation.IsWellOrder r] [Relation.IsWellOrder s] : Relation.IsWellOrder (pow_rel r s) where
+instance {r: α -> α -> Prop} {s: β -> β -> Prop} [Relation.IsWellOrder r] [Relation.IsWellOrder s] : Relation.IsWellOrder (pow_rel r s) where
   wf := by
     open UniqueChoice in
     apply wf_iff_exists_min.mpr
@@ -505,7 +518,7 @@ instance {r: α -> α -> Prop} {s: β -> β -> Prop} [LEM] [Relation.IsWellOrder
             contradiction
 
 def pow_rel_map
-  [LEM]
+
   {r₀: α₀ -> α₀ -> Prop} {r₁: α₁ -> α₁ -> Prop}
   {s₀: β₀ -> β₀ -> Prop} {s₁: β₁ -> β₁ -> Prop}
   (hr: r₁ ≃r r₀) (hs: s₀ ≃r s₁) : pow_rel r₀ s₀ →r pow_rel r₁ s₁ where
@@ -546,10 +559,10 @@ def pow_rel_map
       have := ha _ hx
       simpa only [RelEquiv.symm_coe, (inj hs).eq_iff] using this
 
-def apply_pow_rel_map [LEM] (hr: r₁ ≃r r₀) (hs: s₀ ≃r s₁) (f: pow_ty r₀ s₀) :
+def apply_pow_rel_map (hr: r₁ ≃r r₀) (hs: s₀ ≃r s₁) (f: pow_ty r₀ s₀) :
   (pow_rel_map hr hs f).val = hs ∘ f.val ∘ hr := rfl
 
-def pow_rel_congr [LEM] (hr: r₀ ≃r r₁) (hs: s₀ ≃r s₁) : pow_rel r₀ s₀ ≃r pow_rel r₁ s₁ where
+def pow_rel_congr (hr: r₀ ≃r r₁) (hs: s₀ ≃r s₁) : pow_rel r₀ s₀ ≃r pow_rel r₁ s₁ where
   toFun := pow_rel_map hr.symm hs
   invFun := pow_rel_map hr hs.symm
   leftInv f := by
@@ -560,7 +573,7 @@ def pow_rel_congr [LEM] (hr: r₀ ≃r r₁) (hs: s₀ ≃r s₁) : pow_rel r₀
     simp only [Function.comp_apply, RelEquiv.coe_symm]
   map_rel := map_rel _
 
-def pow [LEM] : Ordinal -> Ordinal -> Ordinal :=
+def pow : Ordinal -> Ordinal -> Ordinal :=
   lift₂ (fun r s => type (pow_rel r s)) <| by
     intro _ _ _ _ a b c d _ _ _ _ ac bd
     apply sound
@@ -568,10 +581,10 @@ def pow [LEM] : Ordinal -> Ordinal -> Ordinal :=
     assumption
     assumption
 
-instance [LEM] : Pow Ordinal Ordinal where
+instance : Pow Ordinal Ordinal where
   pow := pow
 
-instance [LEM] : Pow Ordinal ℕ where
+instance : Pow Ordinal ℕ where
   pow a b := a ^ (b: Ordinal)
 
 end Ordinal

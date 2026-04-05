@@ -189,6 +189,31 @@ instance : IsLinearOrder Int where
   antisymm := Int.le_antisymm
   trichotomous := Int.lt_trichotomy
 
+instance : IsLinearOrder Bool where
+  lt_iff_le_and_not_ge := by decide
+  refl := by decide
+  trans := by decide
+  antisymm := by decide
+  trichotomous := by decide
+
+instance : IsLattice Bool where
+  left_le_max := by decide
+  right_le_max := by decide
+  max_le := by decide
+  min_le_left := by decide
+  min_le_right := by decide
+  le_min := by decide
+
+instance : @Relation.IsWelFounded Bool (· < ·) where
+  wf := by
+    apply WellFounded.intro
+    intro a; apply Acc.intro
+    intro b h
+    have : a = true ∧ b = false := by decide +revert
+    obtain ⟨rfl, rfl⟩ := this
+    apply Acc.intro
+    nofun
+
 instance : IsLattice Nat where
   left_le_max := Nat.le_max_left _ _
   right_le_max := Nat.le_max_right _ _
