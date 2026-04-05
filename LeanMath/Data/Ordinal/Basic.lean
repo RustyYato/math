@@ -31,7 +31,11 @@ private def well_order_finite_iso [LEM] (r: Fin n -> Fin n -> Prop) [Relation.Is
     exact {
       toEquiv := (Equiv.fin_erase 0).symm
       map_rel {a b} := by
-        cases a <;> cases b <;> simp [pullback_rel]
+        cases a <;> cases b <;> simp only [pullback_rel, Equiv.apply_comp, Equiv.apply_option_congr_some,
+          RelEquiv.apply_toEquiv, Equiv.symm_fin_erase_some, Equiv.apply_toFun, Fin.val_zero, Nat.not_lt_zero,
+          ↓reduceIte, Fin.succ_lt_succ_iff, Equiv.apply_option_congr_none, Equiv.symm_fin_erase_none,
+          RelEquiv.apply_toEquiv, Fin.val_zero, Fin.succ_pos, iff_true, Fin.lt_irrefl, iff_false,
+          Equiv.symm_fin_erase_none, Equiv.apply_toFun, Fin.not_lt_zero]
         · apply Relation.irrefl
         · rename_i a
           rcases Relation.trichotomous r i (if ↑(eqv.symm a) < i.val then (eqv.symm a).castSucc else (eqv.symm a).succ) with h | h | h
@@ -47,7 +51,8 @@ private def well_order_finite_iso [LEM] (r: Fin n -> Fin n -> Prop) [Relation.Is
           exact hi _ h
         · rename_i a b
           have := map_rel eqv.symm (a := a) (b := b)
-          symm; simpa [pullback_rel, fi] using this
+          symm; simpa only [pullback_rel, Embedding.apply_comp, Embedding.apply_option_some,
+            Equiv.apply_toEmbedding, Equiv.symm_fin_erase_some, fi] using this
     }
 
 def finite {α: Type*} [LEM] [hfinite: Finite α] (r: α -> α -> Prop)
@@ -122,7 +127,7 @@ private def pow_rel_of_small [LEM] [Relation.IsWellOrder r] [Relation.IsWellOrde
   (a: α) (ha: s (f.val a) (g.val a))
   (hle: ∀a', r a a' -> ¬s (g.val a') (f.val a')) : pow_rel r s f g := by
   have ⟨⟨a', a'_mem_supp⟩, ⟨sa', ha'⟩, u⟩ := Relation.exists_unique_min (flip g.support_rel) (P := fun a => s (f.val a) (g.val a)) ⟨⟨a, _, ha⟩, ha⟩
-  clear u; simp at sa' ha'
+  clear u; simp only [Subtype.forall] at sa' ha'
   replace ha' : ∀a, _ -> r a' a -> _ := ha'
   exists a'
   apply And.intro sa'
@@ -165,7 +170,7 @@ instance {r: α -> α -> Prop} {s: β -> β -> Prop} [LEM] [Relation.IsWellOrder
 instance {r: α -> α -> Prop} {s: β -> β -> Prop} [LEM] [Relation.IsWellOrder r] [Relation.IsWellOrder s] : Relation.IsTrichotomous (pow_rel r s) (· = ·) where
   trichotomous (f g) := by
     rcases Or.symm (em (∃x, f.val x ≠ g.val x)) with h | h
-    · simp [-Classical.not_not, LEM.not_not] at h
+    · simp only [ne_eq, not_exists, LEM.not_not] at h
       right; left; ext; apply h
     · have := f.property
       have := g.property
@@ -392,12 +397,12 @@ instance {r: α -> α -> Prop} {s: β -> β -> Prop} [LEM] [Relation.IsWellOrder
               apply And.intro
               · intro x hx b hb
                 unfold g' at hb
-                simp [hx] at hb
+                simp only [hx, ↓reduceIte] at hb
                 exact minval_spec _ True.intro hb
               · exists g; apply And.intro
                 assumption
                 intro x hx
-                unfold g'; simp [hx]
+                unfold g'; simp only [hx, ↓reduceIte]
             apply hprotof _ g'_in_U
             have ⟨a, g_lt_f, g_eq_f⟩ := hg
             have : r a a₀ := by
@@ -412,7 +417,7 @@ instance {r: α -> α -> Prop} {s: β -> β -> Prop} [LEM] [Relation.IsWellOrder
                 nomatch Relation.irrefl g_lt_f
             apply pow_rel_of_small
             show s (g'.val a) (protof.val a)
-            simp [g', this, protof_eq _ this]
+            simp only [this, ↓reduceIte, protof_eq _ this, g']
             assumption
             intro x hx hs
             have := g_eq_f _ hx
@@ -434,8 +439,6 @@ instance {r: α -> α -> Prop} {s: β -> β -> Prop} [LEM] [Relation.IsWellOrder
                 obtain ⟨a', a'_mem, ha'⟩ := h₂
                 apply Relation.asymm hg
                 apply pow_rel_of_small _ _ a'
-                have := f_mem.right
-                simp at this
                 have := (f_mem.left.right a' · ha')
                 rcases Relation.trichotomous s (f.val a') (g.val a') with h₂ | h₂ | h₂
                 assumption
@@ -450,8 +453,6 @@ instance {r: α -> α -> Prop} {s: β -> β -> Prop} [LEM] [Relation.IsWellOrder
               obtain ⟨a', a'_mem, ha'⟩ := g_not_mem_X₁
               apply Relation.asymm hg
               apply pow_rel_of_small _ _ a'
-              have := f_mem.right
-              simp at this
               have := (f_mem.left.right a' · ha')
               rcases Relation.trichotomous s (f.val a') (g.val a') with h₂ | h₂ | h₂
               assumption
@@ -496,12 +497,11 @@ instance {r: α -> α -> Prop} {s: β -> β -> Prop} [LEM] [Relation.IsWellOrder
         · rcases em (g ∈ X₀) with h₀ | h₀
           · have := hb₀ (g.val a₀) (Set.mem_image' h₀)
             contradiction
-          · simp [X₀, hg] at h₀
+          · simp only [Set.mem_inter, hg, Set.ofMem_mem, true_and, LEM.not_forall,
+            Decidable.not_not, X₀] at h₀
             obtain ⟨a₁, ⟨b, a₁_mem_gsupp⟩, a₀_lt_a₁⟩ := h₀
             rw [g_eq_f _ a₀_lt_a₁] at a₁_mem_gsupp
             have := f'_mem.left.right _ ⟨_, a₁_mem_gsupp⟩
             contradiction
-
-#print axioms instIsWellOrderPow_tyPow_relOfLEM
 
 end Ordinal
