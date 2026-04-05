@@ -83,29 +83,6 @@ def range_enumOrd (hs : ¬s.BoundedAbove) : Set.range (enumOrd s) = s := by
 def enumOrd_surj (hs : ¬s.BoundedAbove) (hx: x ∈ s) : x ∈ Set.range (enumOrd s) := by
   rwa [range_enumOrd hs]
 
-private def initialOrd_exists : type (α := Ordinal.{u}) (· < ·) = type (α := { o: Ordinal.{u} // IsInitial o }) (pullback_rel (· < ·) Embedding.subtype_val) := by
-  symm; apply le_antisymm
-  · refine ⟨?_⟩
-    apply InitialSegment.collapse
-    dsimp; exact {
-      toEmbedding := Embedding.subtype_val
-      map_rel := Iff.rfl
-    }
-  · refine ⟨?_⟩; dsimp
-    apply InitialSegment.collapse
-    exact {
-      toFun x := {
-        val := enumOrd initialOrdinals x
-        property := enumOrd_mem initialOrdinals_unbounded _
-      }
-      inj := by
-        intro a b h
-        dsimp at h
-        exact (enumOrd_inj initialOrdinals_unbounded).mp (Subtype.mk.inj h)
-      map_rel {a b} := by
-        apply (enumOrd_strictMono initialOrdinals_unbounded).lt_iff_lt.symm
-    }
-
 noncomputable def initialOrd : Ordinal.{u} ≃o { o: Ordinal.{u} // IsInitial o } where
   toEquiv := Equiv.ofBij {
     toFun x := {
