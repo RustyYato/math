@@ -492,19 +492,22 @@ instance [Relation.IsWellOrder r] [Relation.IsWellOrder s] : Relation.IsWellOrde
       apply ih
       assumption
 
+def sum_congr (h₀: r₀ ≃r r₁) (h₁: s₀ ≃r s₁) : Sum.Lex r₀ s₀ ≃r Sum.Lex r₁ s₁ where
+  toEquiv := Equiv.sum_congr h₀.toEquiv h₁.toEquiv
+  map_rel {a b} := by
+    simp
+    rcases a with a | a <;> rcases b with b | b <;> simp
+    apply map_rel h₀
+    apply map_rel h₁
+
 instance : Add Ordinal.{u} where
   add := lift₂ (fun r s => type (Sum.Lex r s)) <| by
     intro α₀ β₀ α₁ β₁ r₀ r₁ s₀ s₁ _ _ _ _ h₀ h₁
     simp
     apply sound
-    exact {
-      toEquiv := Equiv.sum_congr h₀.toEquiv h₁.toEquiv
-      map_rel {a b} := by
-        simp
-        rcases a with a | a <;> rcases b with b | b <;> simp
-        apply map_rel h₀
-        apply map_rel h₁
-    }
+    apply sum_congr
+    assumption
+    assumption
 
 private def lt_trichotomy_of_le [LEM] (o: Ordinal) : ∀{a b: Ordinal}, a ≤ o -> b ≤ o -> a < b ∨ a = b ∨ b < a := by
   intro a b ha hb
@@ -1149,5 +1152,30 @@ def boundedBelow (U: Set Ordinal) : U.BoundedBelow := by
   exists 0
   intro x hx
   apply zero_le
+
+def ω := ulift (type (α := ℕ) (· < ·))
+
+def lt_add_omega [LEM] (o: Ordinal) : o < o + ω := by
+  cases o with | _ r =>
+  refine ⟨?_⟩; dsimp
+  apply PrincipalSegment.trans_init _ (sum_congr (.id _) (ulift_rel_eqv_rel _).symm).toInitialSegment
+  exact {
+    toFun := .inl
+    inj _ _ := Sum.inl.inj
+    map_rel {a b} := by
+      apply Iff.intro
+      intro h; apply Sum.Lex.inl
+      assumption
+      intro h; cases h
+      assumption
+    isPrincipal := by
+      exists .inr 0
+      intro x; apply Iff.intro
+      intro h; cases h
+      contradiction
+      apply Set.mem_range'
+      rintro ⟨_, rfl⟩
+      apply Sum.Lex.sep
+  }
 
 end Ordinal
