@@ -138,13 +138,13 @@ namespace Cardinal
 open Classical
 
 private noncomputable def aleph' : Ordinal.{u} ↪ Cardinal where
-  toFun o := (Ordinal.initialOrd o).val.card
+  toFun o := (Ordinal.omega o).val.card
   inj a b h := by
     dsimp at h
-    apply inj Ordinal.initialOrd
+    apply inj Ordinal.omega
     apply le_antisymm
-    exact (Ordinal.initialOrd a).property _ h
-    exact (Ordinal.initialOrd b).property _ h.symm
+    exact (Ordinal.omega a).property _ h
+    exact (Ordinal.omega b).property _ h.symm
 
 noncomputable def aleph : Ordinal.{u} ↪o Cardinal where
   toEmbedding := aleph'
@@ -154,12 +154,12 @@ noncomputable def aleph : Ordinal.{u} ↪o Cardinal where
     apply Ordinal.IsInitial.to_le
     apply Subtype.property
     apply Subtype.property
-    show Ordinal.initialOrd a ≤ Ordinal.initialOrd b
+    show Ordinal.omega a ≤ Ordinal.omega b
     apply (map_le _ _ _).mp
     assumption
     intro h
     rcases lt_or_eq_of_le h with h | h
-    · exact le_of_lt <| (map_lt Ordinal.initialOrd _ _).mpr (Ordinal.lt_of_card_lt h)
+    · exact le_of_lt <| (map_lt Ordinal.omega _ _).mpr (Ordinal.lt_of_card_lt h)
     · rw [inj aleph' h]
 
 end Cardinal
