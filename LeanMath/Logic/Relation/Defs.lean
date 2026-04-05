@@ -488,6 +488,38 @@ instance (r: β -> β -> Prop) [Relation.IsWelFounded r] (f: α -> β) : Relatio
       exact ih _ hb _ rfl
 
 
+def pushfwd_rel [FunLike F α β] (r: α -> α -> Prop) (f: F) (_: Function.Surjective f) (a b: β) : Prop :=
+  ∃a' b': α, a = f a' ∧ b = f b' ∧ r a' b'
+instance [EmbeddingLike F α β] (r: α -> α -> Prop) [Relation.IsTrans r] (f: F) (hf: Function.Surjective f) : Relation.IsTrans (pushfwd_rel r f hf) where
+  trans {a b c} h g := by
+    obtain ⟨a, b, rfl, rfl, h⟩ := h
+    obtain ⟨c, d, h₀, rfl, g⟩ := g
+    cases inj f h₀
+    refine ⟨a, d, rfl, rfl,? _⟩
+    apply Relation.trans <;> assumption
+instance [EmbeddingLike F α β] (r: α -> α -> Prop) [Relation.IsWelFounded r] (f: F) (hf: Function.Surjective f) : Relation.IsWelFounded (pushfwd_rel r f hf) where
+  wf := by
+    apply WellFounded.intro
+    intro a; apply Acc.intro
+    rintro b ⟨a, b, rfl, rfl, h⟩
+    induction a using (Relation.wf r).induction generalizing b with
+    | _ a ih =>
+    apply Acc.intro
+    rintro c ⟨c, d, rfl, h₁, h'⟩
+    cases inj f h₁
+    apply ih
+    assumption
+    assumption
+instance [FunLike F α β] (r: α -> α -> Prop) [Relation.IsTrichotomous r (· = ·)] (f: F) (hf: Function.Surjective f) : Relation.IsTrichotomous (pushfwd_rel r f hf) (· = ·) where
+  trichotomous a b := by
+    obtain ⟨a, rfl⟩ := hf a
+    obtain ⟨b, rfl⟩ := hf b
+    rcases Relation.trichotomous r a b with h | h | h
+    · left; exact ⟨a, b, rfl, rfl, h⟩
+    · right; left; congr
+    · right; right; exact ⟨b, a, rfl, rfl, h⟩
+instance [EmbeddingLike F α β] (r: α -> α -> Prop) [Relation.IsWellOrder r] (f: F) (hf: Function.Surjective f) : Relation.IsWellOrder (pushfwd_rel r f hf) := inferInstance
+
 def pullback_rel [EmbeddingLike F α β] (r: β -> β -> Prop) (f: F) (a b: α) : Prop := r (f a) (f b)
 instance [EmbeddingLike F α β] (r: β -> β -> Prop) [Relation.IsTrans r] (f: F) : Relation.IsTrans (pullback_rel r f) :=
   inferInstanceAs (Relation.IsTrans (fun a b => r (f a) (f b)))

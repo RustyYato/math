@@ -96,6 +96,13 @@ def sound {r: α -> α -> Prop} {s: β -> β -> Prop} [Relation.IsWellOrder r] [
   apply Quotient.sound
   exact ⟨h⟩
 
+@[implicit_reducible]
+def exact' {r: α -> α -> Prop} {s: β -> β -> Prop} [Relation.IsWellOrder r] [Relation.IsWellOrder s] : type r = type s -> Nonempty (r ≃r s) := by
+  intro h
+  replace h := (Quotient.exact (Ordinal.ofQuot.inj h))
+  cases h; refine ⟨?_⟩
+  assumption
+
 noncomputable def exact {r: α -> α -> Prop} {s: β -> β -> Prop} [Relation.IsWellOrder r] [Relation.IsWellOrder s] : type r = type s -> r ≃r s := by
   intro h
   replace h := (Quotient.exact (Ordinal.ofQuot.inj h))
@@ -200,8 +207,8 @@ def rank_lt_rank_iff [LEM] {r: α -> α -> Prop} [Relation.IsWellOrder r] {a b: 
         rw [this]; exact x.property
       apply Subsingleton.allEq
 
-def rank_inj [LEM] {r: α -> α -> Prop} [Relation.IsWellOrder r] {a b: α} : rank r a = rank r b -> a = b := by
-  intro eq
+def rank_inj [LEM] {r: α -> α -> Prop} [Relation.IsWellOrder r] : Function.Injective (rank r) := by
+  intro a b eq
   rcases Relation.trichotomous r a b with h | h | h
   · rw [rank_lt_rank_iff (r := r), eq, ←rank_lt_rank_iff] at h
     nomatch Relation.irrefl h
@@ -243,7 +250,7 @@ def of_lt_type [LEM] {r: α -> α -> Prop} [Relation.IsWellOrder r] : ∀{o}, o 
       rw [(hg _).left]
   }
 
-private def ulift_rel (r: α -> α -> Prop) : ULift α -> ULift α -> Prop := fun a b => r a.down b.down
+def ulift_rel (r: α -> α -> Prop) : ULift α -> ULift α -> Prop := fun a b => r a.down b.down
 
 def ulift_rel_eqv_rel (r: α -> α -> Prop) : ulift_rel r ≃r r where
   toFun x := x.down
@@ -938,6 +945,34 @@ instance [LEM] : IsLattice Ordinal where
         simp; exists Quotient.mk _ (.inr b)
     }
 
+def rank_type_eq_ulift_type {α: Type u} [LEM] (r: α -> α -> Prop) [Relation.IsWellOrder r] : rank (α := Ordinal.{u}) (· < ·) (type r) = ulift.{u+1} (type r) := by
+  have ⟨f, hf⟩ := Classical.axiomOfUniqueChoice (α := rank_ty (· < ·) (type r)) (β := fun _ => α) (P := fun o a => rank r a = o.val) <| by
+    intro ⟨o, h⟩; dsimp at h
+    obtain ⟨a, rfl⟩ := of_lt_type h
+    exists a
+    apply And.intro rfl
+    rintro x hx
+    exact rank_inj hx.symm
+  simp at hf
+  symm; apply sound; dsimp
+  apply RelEquiv.trans (ulift_rel_eqv_rel _)
+  exact {
+    toFun a := {
+      val := rank r a
+      property := rank_lt_type _ _
+    }
+    invFun := f
+    leftInv x := by
+      apply Subtype.ext; dsimp
+      rw [(hf _).left]
+    rightInv x := by
+      dsimp
+      apply rank_inj (r := r)
+      rw [(hf _).left]
+    map_rel {a b} := by
+      apply rank_lt_rank_iff
+  }
+
 noncomputable instance [LEM] : InfSet Ordinal where
   sInf S :=
     open UniqueChoice in
@@ -1177,5 +1212,23 @@ def lt_add_omega [LEM] (o: Ordinal) : o < o + ω := by
       rintro ⟨_, rfl⟩
       apply Sum.Lex.sep
   }
+
+class IsLimit (o: Ordinal) : Prop where
+  -- o is not the successor of any ordinal
+  not_succ: ∀x, o ≠ x + 1
+
+def InjectsInto : Ordinal -> Ordinal -> Prop :=
+  lift₂ (fun {α β} a b => Nonempty (α ↪ β)) <| by
+    intro _ _ _ _ _ _ _ _ _ _ _ _ h₀ h₁
+    simp; apply Iff.intro <;> (intro ⟨h⟩; refine ⟨?_⟩)
+    apply Equiv.embed_congr h₀.toEquiv h₁.toEquiv h
+    apply Equiv.embed_congr h₀.toEquiv.symm h₁.toEquiv.symm h
+
+def injects_into_of_le (h: a ≤ b) : InjectsInto a b := by
+  cases a with | _ r =>
+  cases b with | _ s =>
+  obtain ⟨h⟩ := h
+  refine ⟨?_⟩
+  exact h.toEmbedding
 
 end Ordinal

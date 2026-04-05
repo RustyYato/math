@@ -38,7 +38,7 @@ def lift.{w, u, v} [h: Small.{u, v} α] : Small.{max u w, v} α :=
   have ⟨β, eqv⟩ := h
   .intro (ULift.{w} β) (eqv.trans (Equiv.ulift _))
 instance (priority := 100) uinc [h: Small.{u, v} α] : Small.{u + 1, v} α := lift.{u + 1, u, v}
-instance : Small.{v, v} α := .intro α (Equiv.id _)
+instance id : Small.{v, v} α := .intro α (Equiv.id _)
 
 def iff_equiv.{v, u} {α: Type u} : Small.{v, u} α ↔ ∃β: Type v, Nonempty (α ≃ β) where
   mp | ⟨β, eqv⟩ => ⟨β, ⟨eqv⟩⟩

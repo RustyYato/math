@@ -95,8 +95,7 @@ def finite_induction
     rw [show s = insert a.val (s \ {a.val}) from ?_]
     apply cons
     apply ih
-    · simp
-      refine {
+    · refine {
         toFun x := {
           val := hf x.succ
           property := ?_

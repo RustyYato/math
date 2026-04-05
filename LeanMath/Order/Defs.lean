@@ -434,3 +434,17 @@ instance [DecidableLE α] [FunLike F α β] [IsOrderHom F α β] [IsPartialOrder
     intro a b h
     dsimp at h
     exact DFunLike.coeInj (Embedding.mk.inj h)
+
+instance [IsLawfulLT α] {P: α -> Prop} : IsLawfulLT (Subtype P) where
+  lt_iff_le_and_not_ge := lt_iff_le_and_not_ge (α := α)
+instance [IsPreorder α] {P: α -> Prop} : IsPreorder (Subtype P) where
+  refl _ := le_refl (α := α) _
+  trans := le_trans (α := α)
+instance [IsPartialOrder α] {P: α -> Prop} : IsPartialOrder (Subtype P) where
+  antisymm h g := Subtype.ext (le_antisymm h g)
+instance [IsLinearOrder α] {P: α -> Prop} : IsLinearOrder (Subtype P) where
+  trichotomous a b := by
+    rcases Relation.trichotomous (α := α) (· < ·) a.val b.val with h | h | h
+    · left; assumption
+    · right; left; ext; assumption
+    · right; right; assumption

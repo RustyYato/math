@@ -2,6 +2,62 @@ import LeanMath.Data.Cardinal.Defs
 import LeanMath.Data.Ordinal.Defs
 import LeanMath.Order.WellOrdering
 
+namespace Cardinal
+
+open Classical
+
+instance (a: Cardinal.{u}) : Small.{u} (Set.Iic a) := by
+  rw [←Cardinal.out_spec a]
+  refine Small.of_surj (β := Set a.out) (fun x => ?_) ?_
+  exact {
+    val := type x
+    property := by
+      refine ⟨?_⟩
+      apply Embedding.subtype_val
+  }
+  intro ⟨x, hx⟩
+  induction x using ind with | type α =>
+  obtain ⟨hx⟩ := hx
+  exists Set.range hx
+  ext; simp
+  apply sound
+  exact (Equiv.ofBij (Bijection.embed_eqv_range hx)).symm
+
+def boundedAbove_iff_small (U: Set Cardinal.{u}) : Set.BoundedAbove U ↔ Small.{u} U := by
+  apply Iff.intro
+  · intro ⟨u, hu⟩
+    apply Small.subset (b := Set.Iic u)
+    intro x hx
+    apply hu
+    assumption
+  · intro ⟨ι, h⟩
+    exists sum (fun i: ι => (h.symm i).val)
+    intro c hc
+    induction c using ind with | type α =>
+    let i := h ⟨_, hc⟩
+    have ⟨eqv⟩ := exact (Cardinal.out_spec (type α))
+    refine ⟨?_⟩
+    dsimp
+    apply Embedding.comp
+    show (h.symm i).val.out ↪ Σi, (h.symm i).val.out
+    exact {
+      toFun x := ⟨i, x⟩
+      inj := by
+        intro a b h
+        exact eq_of_heq (Sigma.mk.inj h).right
+    }
+    unfold i
+    rw [Equiv.coe_symm]
+    exact eqv.symm.toEmbedding
+
+def boundedAbove_small (U: Set Cardinal.{u}) [Small.{u} U] : Set.BoundedAbove U := by
+  rwa [boundedAbove_iff_small]
+
+def boundedAbove_range {ι: Type u} (f: ι -> Cardinal.{u}) : Set.BoundedAbove (Set.range f) := by
+  apply boundedAbove_small
+
+end Cardinal
+
 namespace Ordinal
 
 def card : Ordinal -> Cardinal :=
@@ -9,6 +65,8 @@ def card : Ordinal -> Cardinal :=
     intro _ _ _  _ _ _ h
     apply Cardinal.sound
     exact h.toEquiv
+
+@[simp] def card_type (r: α -> α -> Prop) [Relation.IsWellOrder r] : card (type r) = Cardinal.type α := rfl
 
 def card_surj : Function.Surjective card := by
   intro x
@@ -335,3 +393,107 @@ def succ_inj : Function.Injective succ := by
   nomatch Relation.irrefl h
 
 end Cardinal
+
+namespace Ordinal
+
+open Classical in
+def boundedAbove_range {ι: Type u} (f: ι -> Ordinal.{u}) : Set.BoundedAbove (Set.range f) := by
+    exists (⨆i, (f i).card.succ).ord
+    rintro a ⟨i, rfl⟩
+    apply le_of_lt
+    apply Cardinal.lt_ord_of_card_lt
+    apply lt_of_lt_of_le
+    apply Cardinal.lt_succ
+    apply  le_csSup _
+    apply Set.mem_range'
+    apply Cardinal.boundedAbove_range
+
+open Classical in
+def boundedAbove_of_small (U: Set Ordinal.{u}) [hs: Small.{u} U] : U.BoundedAbove := by
+  obtain ⟨β, eqv⟩ := hs
+  have ⟨bound, hbound⟩ := boundedAbove_range fun x => (eqv.symm x).val
+  exists bound; intro u hu
+  apply hbound
+  simp; exists eqv ⟨u, hu⟩
+  simp
+
+def initialOrdinals : Set Ordinal := Set.ofMem Ordinal.IsInitial
+
+def initialOrdinals_unbounded.{u} [LEM] : ¬initialOrdinals.{u}.BoundedAbove := by
+  simp [Set.BoundedAbove]
+  intro x hx
+  suffices ∃o > x, o ∈ initialOrdinals by
+    obtain ⟨o, x_lt_o, o_mem⟩ := this
+    exact not_le_of_lt x_lt_o (hx o o_mem)
+  clear hx
+  let U : Set Ordinal.{u} := {
+    Mem u := u.InjectsInto x
+  }
+  have Unonuniv : Uᶜ.Nonempty := by
+    cases x with | @type α r =>
+    let β : Type u := (S: Set α) × (R: S -> S -> Prop) ×' (Relation.IsWellOrder R)
+    let ord : Set Ordinal.{u} := Set.range (fun (⟨S, R, _⟩: β) => type R)
+    have : ord = U := by
+      ext x
+      cases x with | @type β s =>
+      simp [ord, U, InjectsInto]
+      apply Iff.intro
+      · intro ⟨⟨S, R, _⟩, h⟩
+        dsimp at h
+        replace ⟨h⟩ := exact' h
+        exact ⟨h.symm.toEmbedding.trans  Embedding.subtype_val⟩
+      · intro ⟨f⟩
+        let rel := pushfwd_rel s (Bijection.embed_eqv_range f) (Bijection.surj _)
+        exists ⟨Set.range f, pushfwd_rel s (Bijection.embed_eqv_range f) (Bijection.surj _), inferInstance⟩
+        have ⟨inv, hinv⟩ := Classical.axiomOfChoice (Bijection.embed_eqv_range f).surj
+        replace hinv : ∀x: Set.range f, f (inv x) = x.val := by
+          intro x
+          exact congrArg Subtype.val (hinv x)
+        dsimp; symm; apply sound
+        exact {
+          toFun x := {
+            val := f x
+            property := Set.mem_range'
+          }
+          invFun := inv
+          leftInv x := by
+            dsimp; congr
+            rw [hinv]
+          rightInv x := by
+            apply inj f
+            rw [hinv]
+          map_rel {a b} := by
+            apply Iff.intro
+            intro h
+            refine ⟨a, _, rfl, rfl, h⟩
+            intro ⟨a, b, ha, hb, h⟩
+            cases inj f (Subtype.mk.inj ha)
+            cases inj f (Subtype.mk.inj hb)
+            assumption
+        }
+    rw [←this]
+    have ⟨ub, hub⟩ := boundedAbove_of_small ord
+    exists ub.succ
+    intro h
+    exact not_le_of_lt (lt_succ_self _) (hub _ h)
+  let ⟨u, ⟨umem,hu⟩, uniq⟩ := (Uᶜ).exists_unique_min (· < ·) Unonuniv
+  clear uniq
+  exists u
+  apply And.intro
+  · show _ < _
+    apply not_le.mp
+    intro h
+    have : u ∈ U := injects_into_of_le h
+    contradiction
+  · intro o ho
+    have : o ∈ Uᶜ := by
+      cases u with | _ ru =>
+      cases o with | _ ro =>
+      cases x with | _ rx =>
+      simp at ho
+      obtain ⟨ho⟩ := Cardinal.exact ho
+      intro ⟨hx⟩; dsimp at hx
+      apply umem; exact ⟨ho.toEmbedding.trans hx⟩
+    exact not_lt.mp (hu o this)
+
+end Ordinal

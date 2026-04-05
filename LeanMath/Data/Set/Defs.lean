@@ -248,8 +248,10 @@ def powerset (s: Set α) : Set (Set α) where
 
 @[simp] def mem_powerset {s: Set α} : ∀{x}, x ∈ s.powerset ↔ x ⊆ s := Iff.rfl
 
+@[coe] abbrev toType (s: Set α) := { x // x ∈ s }
+
 instance : CoeSort (Set α) (Sort _) where
-  coe s := { x // x ∈ s }
+  coe s := s.toType
 
 def attach (s: Set α) : Set s := ⊤
 
@@ -451,7 +453,7 @@ def nonempty_iff (a: Set α) : a.Nonempty ↔ ¬∀x, x ∉ a := by
 def image_eq_range (f: α -> β) (s: Set α): s.image f = Set.range (fun x: s => f x.val) := by
   ext b; simp
 
-def image_univ_eq_range (f: α -> β): image f ⊤  = Set.range f := by
+def image_univ_eq_range (f: α -> β): image f ⊤ = Set.range f := by
   ext b; simp
 
 def Induced (r: α -> α -> Prop) (U: Set α) : U -> U -> Prop := fun x y => r x y

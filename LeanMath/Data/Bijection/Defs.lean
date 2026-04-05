@@ -1,4 +1,4 @@
-import LeanMath.Logic.Funlike
+import LeanMath.Data.Embedding.Defs
 
 structure Bijection (α β: Sort*) where
   toFun: α -> β
@@ -9,7 +9,15 @@ infixr:25 " ↭ " => Bijection
 
 namespace Bijection
 
-instance : FunLike (α ↭ β) α β where
+instance : EmbeddingLike (α ↭ β) α β where
+  coeEmbedding f := {
+      toFun := _
+      inj := f.inj'
+  }
+  coeInj := by
+    intro ⟨_, _, _⟩ ⟨_, _, _⟩ h
+    cases h
+    congr
 
 protected def inj (f: α ↭ β) : Function.Injective f := f.inj'
 protected def surj (f: α ↭ β) : Function.Surjective f := f.surj'
