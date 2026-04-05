@@ -171,9 +171,9 @@ def initialOrd_of_le_omega : ∀x ≤ ω, initialOrd.{u} x = x := by
       exact not_le_of_lt (Nat.lt_succ_self _) (this _)
   intro x x_lt_omega
   rw [apply_initialOrd]
-  have xinit := this x x_lt_omega
   apply le_antisymm _ (le_enumOrd_self initialOrdinals_unbounded _)
   induction x with | _ x ih =>
+  have xinit := this x x_lt_omega
   apply enumOrd_le_of_forall_lt
   apply this
   assumption
@@ -181,10 +181,6 @@ def initialOrd_of_le_omega : ∀x ≤ ω, initialOrd.{u} x = x := by
   apply lt_of_le_of_lt
   apply ih
   assumption
-  apply le_trans; apply le_of_lt
-  assumption
-  assumption
-  apply this
   apply le_trans; apply le_of_lt
   assumption
   assumption
