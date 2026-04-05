@@ -157,10 +157,20 @@ def to_ord_spec (c: Cardinal) : c.ord.IsInitial := by
   show x.card = c
   rw [←hx, card_ord]
 
-noncomputable def to_initial_ord : Cardinal ↪o Ordinal where
-  toEmbedding := ord
-  map_rel := by
-    intro a b
+
+noncomputable def equiv_initial_ord : Cardinal ≃o { o: Ordinal // o.IsInitial } where
+  toFun x := {
+    val := x.ord
+    property := to_ord_spec _
+  }
+  invFun x := x.val.card
+  leftInv x := by
+    ext; dsimp; apply le_antisymm
+    apply ord_card
+    apply x.property
+    rw [card_ord]
+  rightInv x := by dsimp; rw [card_ord]
+  map_rel {a b} := by
     apply flip Iff.intro
     · intro h
       have ⟨α, r, hr, ha⟩ := a.ord.exists_eq_type
@@ -191,13 +201,13 @@ noncomputable def to_initial_ord : Cardinal ↪o Ordinal where
       contradiction
 
 noncomputable def to_initial_ord_lt : (· < ·: Cardinal -> Cardinal -> Prop) ↪r (· < ·: Ordinal -> Ordinal -> Prop) where
-  toEmbedding := to_initial_ord.toEmbedding
+  toEmbedding := equiv_initial_ord.toEmbedding.trans Embedding.subtype_val
   map_rel := by
     intro a b
-    rw [lt_iff_le_and_not_ge, lt_iff_le_and_not_ge, map_rel to_initial_ord, map_rel to_initial_ord]
+    rw [lt_iff_le_and_not_ge, lt_iff_le_and_not_ge, map_rel equiv_initial_ord, map_rel equiv_initial_ord]
     rfl
 
-instance : @Relation.IsTotal Cardinal (· ≤ ·) := to_initial_ord.liftTotal
+instance : @Relation.IsTotal Cardinal (· ≤ ·) := equiv_initial_ord.toRelEmbedding.liftTotal
 instance : @Relation.IsTrichotomous Cardinal (· < ·) (· = ·) := inferInstance
 instance : @Relation.IsWelFounded Cardinal (· < ·) := to_initial_ord_lt.liftWellfounded
 instance : IsLinearOrder Cardinal where

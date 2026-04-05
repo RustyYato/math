@@ -489,6 +489,9 @@ instance [IsLinearOrder α] {P: α -> Prop} : IsLinearOrder (Subtype P) where
 instance [@Relation.IsWellOrder α (· < ·)] {P: α -> Prop} : Relation.IsWelFounded (α := Subtype P) (· < ·) :=
   RelEmbedding.subtype_val.liftWellfounded
 
+instance [@Relation.IsTotal α (· ≤ ·)] {P: α -> Prop} : Relation.IsTotal (α := Subtype P) (· ≤ ·) :=
+  OrderEmbedding.subtype_val.liftTotal
+
 def order_emb_of_map_rel
   [LE α] [LT α] [IsPreorder α] [Relation.IsTrichotomous (α := α) (· < ·) (· = ·)]
   [LE β] [LT β] [IsPreorder β] [Relation.IsTrichotomous (α := β) (· < ·) (· = ·)]
@@ -522,3 +525,9 @@ def toLtEmb
   [IsLinearOrder α] [IsLinearOrder β]
   [FunLike F α β] [IsOrderHom F α β] [IsLawfulLT β] (f: F) : (· < ·: α -> α -> Prop) ↪r (· < ·: β -> β -> Prop) :=
   rel_emb_of_map_rel f (map_lt f)
+
+def toLtEquiv
+  [IsLinearOrder α] [IsLinearOrder β]
+  [EquivLike F α β] [IsOrderHom F α β] [IsLawfulLT β] (f: F) : (· < ·: α -> α -> Prop) ≃r (· < ·: β -> β -> Prop) where
+  toEquiv := Equiv.coe f
+  map_rel := map_rel (rel_emb_of_map_rel f (map_lt f))

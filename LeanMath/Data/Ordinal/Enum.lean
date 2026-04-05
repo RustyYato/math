@@ -131,6 +131,9 @@ def omega_zero : omega 0 = ω := by
   rw [add_zero, initialOrd_of_le_omega]
   apply le_refl
 
+noncomputable def cardInit : (· < ·: Ordinal -> Ordinal -> Prop) ≼r (· < ·: Cardinal -> Cardinal -> Prop) :=
+  (toLtEquiv (Cardinal.equiv_initial_ord.symm.comp initialOrd)).toInitialSegment
+
 end Ordinal
 
 namespace Cardinal
@@ -167,10 +170,13 @@ end Cardinal
 open Classical
 
 noncomputable def RelEquiv.ordinal_eqv_cardinal : (· < ·: Ordinal -> Ordinal -> Prop) ≃r (· < ·: Cardinal -> Cardinal -> Prop) :=
-  InitialSegment.antisymm (InitialSegment.collapse (toLtEmb Cardinal.aleph)) (InitialSegment.collapse (toLtEmb Cardinal.to_initial_ord))
+  InitialSegment.antisymm Ordinal.cardInit (InitialSegment.collapse <| (toLtEmb (Cardinal.equiv_initial_ord)).trans RelEmbedding.subtype_val)
 
 noncomputable def OrderEquiv.ordinal_eqv_cardinal : Ordinal ≃o Cardinal where
-toEquiv := RelEquiv.ordinal_eqv_cardinal.toEquiv
-map_rel {a b} := by
-  rw [←not_lt, ←not_lt, map_rel RelEquiv.ordinal_eqv_cardinal]
-  rfl
+  toEquiv := RelEquiv.ordinal_eqv_cardinal.toEquiv
+  map_rel {a b} := by
+    rw [←not_lt, ←not_lt, map_rel RelEquiv.ordinal_eqv_cardinal]
+    rfl
+
+@[simp] def RelEquiv.apply_ordinal_eqv_cardinal (x: Ordinal) : RelEquiv.ordinal_eqv_cardinal x = (Ordinal.initialOrd x).val.card := rfl
+@[simp] def OrderEquiv.apply_ordinal_eqv_cardinal (x: Ordinal) : OrderEquiv.ordinal_eqv_cardinal x = (Ordinal.initialOrd x).val.card := rfl
