@@ -504,4 +504,68 @@ instance {r: α -> α -> Prop} {s: β -> β -> Prop} [LEM] [Relation.IsWellOrder
             have := f'_mem.left.right _ ⟨_, a₁_mem_gsupp⟩
             contradiction
 
+def pow_rel_map
+  [LEM]
+  {r₀: α₀ -> α₀ -> Prop} {r₁: α₁ -> α₁ -> Prop}
+  {s₀: β₀ -> β₀ -> Prop} {s₁: β₁ -> β₁ -> Prop}
+  (hr: r₁ ≃r r₀) (hs: s₀ ≃r s₁) : pow_rel r₀ s₀ →r pow_rel r₁ s₁ where
+  toFun f := {
+    val a := hs (f.val (hr a))
+    property := by
+      apply Finite.ofEmbed (β := f.support)
+      refine {
+        toFun x := {
+          val := hr x
+          property := by
+            obtain ⟨x, hx⟩ := x; dsimp
+            simp only [Set.mem_preimage] at hx
+            obtain ⟨b, hx⟩ := hx
+            rw [←hs.symm_coe b, ←map_rel hs] at hx
+            exact ⟨_, hx⟩
+        }
+        inj := ?_
+      }
+      intro ⟨a, ha⟩ ⟨b, hb⟩ h; dsimp at h
+      ext; dsimp; exact inj hr (Subtype.mk.inj h)
+  }
+  map_rel {f g} := by
+    apply Iff.intro
+    · intro ⟨a, sa, ha⟩
+      exists hr.symm a
+      simp only [RelEquiv.symm_coe, ← map_rel hs, sa, true_and]
+      intro x hx
+      rw [map_rel hr, RelEquiv.symm_coe] at hx
+      congr
+      exact ha _ hx
+    · intro ⟨a, sa, ha⟩
+      exists hr a
+      simp only [←map_rel hs] at sa ha
+      apply And.intro sa
+      intro x hx
+      rw [map_rel hr.symm, RelEquiv.coe_symm] at hx
+      have := ha _ hx
+      simpa only [RelEquiv.symm_coe, (inj hs).eq_iff] using this
+
+def apply_pow_rel_map [LEM] (hr: r₁ ≃r r₀) (hs: s₀ ≃r s₁) (f: pow_ty r₀ s₀) :
+  (pow_rel_map hr hs f).val = hs ∘ f.val ∘ hr := rfl
+
+def pow_rel_congr [LEM] (hr: r₀ ≃r r₁) (hs: s₀ ≃r s₁) : pow_rel r₀ s₀ ≃r pow_rel r₁ s₁ where
+  toFun := pow_rel_map hr.symm hs
+  invFun := pow_rel_map hr hs.symm
+  leftInv f := by
+    ext; rw [apply_pow_rel_map, apply_pow_rel_map]
+    simp only [Function.comp_apply, RelEquiv.symm_coe]
+  rightInv f := by
+    ext; rw [apply_pow_rel_map, apply_pow_rel_map]
+    simp only [Function.comp_apply, RelEquiv.coe_symm]
+  map_rel := map_rel _
+
+def pow [LEM] : Ordinal -> Ordinal -> Ordinal :=
+  lift₂ (fun r s => type (pow_rel r s)) <| by
+    intro _ _ _ _ a b c d _ _ _ _ ac bd
+    apply sound
+    apply pow_rel_congr
+    assumption
+    assumption
+
 end Ordinal
