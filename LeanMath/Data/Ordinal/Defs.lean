@@ -270,8 +270,10 @@ def ulift.{v, u} : Ordinal.{u} -> Ordinal.{max u v} :=
     apply h.trans
     exact (ulift_rel_eqv_rel _).symm
 
-def omega': Ordinal.{0} := type (α := ℕ) (· < ·)
-def omega.{u} := ulift.{u} omega'
+def omega₀': Ordinal.{0} := type (α := ℕ) (· < ·)
+def omega₀.{u} := ulift.{u} omega₀'
+
+scoped notation "ω" => omega₀
 
 def ofNat' (n: ℕ) := type (α := Fin n) (· < ·)
 def ofNat.{u} (n: ℕ) := ulift.{u} (ofNat' n)
@@ -282,7 +284,7 @@ instance : NatCast Ordinal where
 instance : OfNat Ordinal n where
   ofNat := n
 
-def lt_omega_iff [LEM] : ∀{o: Ordinal.{u}}, o < omega ↔ ∃n: ℕ, o = n := by
+def lt_omega_iff [LEM] : ∀{o: Ordinal.{u}}, o < ω ↔ ∃n: ℕ, o = n := by
   intro o
   apply Iff.intro
   · cases o with | type r =>
@@ -1188,8 +1190,6 @@ def boundedBelow (U: Set Ordinal) : U.BoundedBelow := by
   intro x hx
   apply zero_le
 
-def ω := ulift (type (α := ℕ) (· < ·))
-
 def lt_add_omega [LEM] (o: Ordinal) : o < o + ω := by
   cases o with | _ r =>
   refine ⟨?_⟩; dsimp
@@ -1231,4 +1231,106 @@ def injects_into_of_le (h: a ≤ b) : InjectsInto a b := by
   refine ⟨?_⟩
   exact h.toEmbedding
 
+private def sum_rel_emb (f: r ↪r s) : Sum.Lex t r ↪r Sum.Lex t s :=
+  rel_emb_of_map_rel (fun
+      | .inl x => .inl x
+      | .inr x => .inr (f x))
+      (by
+        intro a b
+        dsimp
+        apply Iff.intro
+        intro h; cases h
+        apply Sum.Lex.inl; assumption
+        apply Sum.Lex.inr; apply map_rel_fwd f; assumption
+        apply Sum.Lex.sep
+        intro h
+        cases a <;> cases b <;> dsimp at h
+        any_goals (cases h)
+        · apply Sum.Lex.inl; assumption
+        · apply Sum.Lex.sep
+        · apply Sum.Lex.inr; apply map_rel_rev f; assumption)
+
+def add_le_add_left {a b: Ordinal} : a ≤ b -> ∀⦃k⦄, k + a ≤ k + b := by
+  intro h k
+  cases a with | @type A r =>
+  cases b with | @type B s =>
+  cases k with | @type K t =>
+  obtain ⟨f⟩ := h; dsimp at f
+  refine ⟨?_⟩; dsimp
+  exact {
+    toRelEmbedding := sum_rel_emb f.toRelEmbedding
+    isInitial := by
+      intro x y h
+      cases x <;> cases h
+      apply Set.mem_range.mpr
+      rename_i a _; exists .inl a
+      rename_i a b h
+      have ⟨k, hk⟩ := f.isInitial _ _ h
+      exists .inr k; show Sum.inr (f.toFun k) = _; congr
+      rename_i a k
+      exists .inl k
+  }
+
+def add_lt_add_left [LEM] {a b: Ordinal} : a < b -> ∀⦃k⦄, k + a < k + b := by
+  intro f k
+  cases a with | @type A r =>
+  cases b with | @type B s =>
+  cases k with | @type K t =>
+  obtain ⟨f⟩ := f; dsimp at f
+  refine ⟨?_⟩; dsimp
+  refine {
+      toRelEmbedding := sum_rel_emb f.toRelEmbedding
+      isPrincipal := by
+        have ⟨top, htop⟩ := f.IsPrincipal
+        exists .inr top
+        intro x
+        simp [sum_rel_emb, rel_emb_of_map_rel]
+        apply Iff.intro
+        intro h; cases h; rename_i b h
+        obtain ⟨a, rfl⟩ := (htop _).mp h
+        exists .inr a
+        rename_i k
+        exists .inl k
+        rintro ⟨y, rfl⟩
+        cases y
+        rename_i k
+        apply Sum.Lex.sep
+        apply Sum.Lex.inr
+        apply (htop _).mpr
+        apply Set.mem_range'
+  }
+
+def le_of_add_le_add_left [LEM] {a b k: Ordinal} : k + a ≤ k + b -> a ≤ b := by
+  intro h; apply not_lt.mp
+  intro g
+  exact Relation.irrefl (lt_of_le_of_lt h (add_lt_add_left g (k := k)))
+
+def add_le_add_left_iff_le [LEM] {a b k: Ordinal} : k + a ≤ k + b ↔ a ≤ b := by
+  apply Iff.intro <;> intro h
+  apply le_of_add_le_add_left; assumption
+  apply add_le_add_left; assumption
+
+def zero_eq_pempty : 0 = type (α := PEmpty) (· < ·) := by
+  apply sound
+  apply RelEquiv.trans (ulift_rel_eqv_rel _); dsimp
+  exact RelEquiv.symm {
+    toEquiv := Equiv.empty
+    map_rel := nofun
+  }
+
+def add_zero (a: Ordinal) : a + 0 = a := by
+  rw [zero_eq_pempty]
+  cases a with | @type α r =>
+  symm; apply sound; dsimp
+  exact {
+    toFun := .inl
+    invFun | .inl x => x
+    leftInv | .inl _ => rfl
+    rightInv _ := rfl
+    map_rel {a b} := by
+      apply Iff.intro
+      apply Sum.Lex.inl
+      intro h; cases h
+      assumption
+  }
 end Ordinal

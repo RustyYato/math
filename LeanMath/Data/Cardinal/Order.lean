@@ -93,6 +93,11 @@ def IsInitial.to_lt [LEM] (a b: Ordinal) (ha: a.IsInitial) (hb: b.IsInitial) : a
   dsimp; apply Equiv.symm
   assumption
 
+def IsInitial.to_le [LEM] (a b: Ordinal) (ha: a.IsInitial) (hb: b.IsInitial) : a ≤ b -> a.card ≤ b.card := by
+  intro h; rcases lt_or_eq_of_le h with h | h
+  apply le_of_lt; apply to_lt; repeat assumption
+  rw [h]
+
 def lt_of_card_lt [LEM] {a b: Ordinal} (h: a.card < b.card) : a < b := by
   apply not_le.mp
   induction a using Ordinal.ind with | @type α r =>
@@ -152,7 +157,7 @@ def to_ord_spec (c: Cardinal) : c.ord.IsInitial := by
   show x.card = c
   rw [←hx, card_ord]
 
-noncomputable def to_initial_ord : (· ≤ ·: Cardinal -> Cardinal -> Prop) ↪r (· ≤ ·: Ordinal -> Ordinal -> Prop) where
+noncomputable def to_initial_ord : Cardinal ↪o Ordinal where
   toEmbedding := ord
   map_rel := by
     intro a b

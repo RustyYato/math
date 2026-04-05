@@ -115,4 +115,62 @@ noncomputable def initialOrd : Ordinal.{u} ≃o { o: Ordinal.{u} // IsInitial o 
       map_rel := this.le_iff_le.symm
      }⟩
 
+def initialOrd_of_le_omega : ∀x ≤ ω, initialOrd x = x := by
+  intro x hx
+  sorry
+
+noncomputable def omega : Ordinal.{u} ↪o { o: Ordinal.{u} // IsInitial o } :=
+  order_emb_of_map_rel (initialOrd <| ω + ·) <| by
+    intro x y
+    dsimp
+    apply Iff.trans _ (map_rel initialOrd)
+    exact add_le_add_left_iff_le.symm
+
+def omega_zero : omega 0 = ω := by
+  show initialOrd (ω + 0) = ω
+  rw [add_zero, initialOrd_of_le_omega]
+  apply le_refl
+
 end Ordinal
+
+namespace Cardinal
+
+open Classical
+
+private noncomputable def aleph' : Ordinal.{u} ↪ Cardinal where
+  toFun o := (Ordinal.initialOrd o).val.card
+  inj a b h := by
+    dsimp at h
+    apply inj Ordinal.initialOrd
+    apply le_antisymm
+    exact (Ordinal.initialOrd a).property _ h
+    exact (Ordinal.initialOrd b).property _ h.symm
+
+noncomputable def aleph : Ordinal.{u} ↪o Cardinal where
+  toEmbedding := aleph'
+  map_rel {a b} := by
+    apply Iff.intro
+    intro h
+    apply Ordinal.IsInitial.to_le
+    apply Subtype.property
+    apply Subtype.property
+    show Ordinal.initialOrd a ≤ Ordinal.initialOrd b
+    apply (map_le _ _ _).mp
+    assumption
+    intro h
+    rcases lt_or_eq_of_le h with h | h
+    · exact le_of_lt <| (map_lt Ordinal.initialOrd _ _).mpr (Ordinal.lt_of_card_lt h)
+    · rw [inj aleph' h]
+
+end Cardinal
+
+open Classical
+
+noncomputable def RelEquiv.ordinal_eqv_cardinal : (· < ·: Ordinal -> Ordinal -> Prop) ≃r (· < ·: Cardinal -> Cardinal -> Prop) :=
+  InitialSegment.antisymm (InitialSegment.collapse (toLtEmb Cardinal.aleph)) (InitialSegment.collapse (toLtEmb Cardinal.to_initial_ord))
+
+noncomputable def OrderEquiv.ordinal_eqv_cardinal : Ordinal ≃o Cardinal where
+toEquiv := RelEquiv.ordinal_eqv_cardinal.toEquiv
+map_rel {a b} := by
+  rw [←not_lt, ←not_lt, map_rel RelEquiv.ordinal_eqv_cardinal]
+  rfl

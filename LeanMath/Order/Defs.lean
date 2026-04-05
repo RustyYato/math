@@ -214,6 +214,35 @@ instance : @Relation.IsWelFounded Bool (· < ·) where
     apply Acc.intro
     nofun
 
+instance : LE PEmpty where
+  le := nofun
+instance : LT PEmpty where
+  lt := nofun
+instance : Min PEmpty where
+  min := nofun
+instance : Max PEmpty where
+  max := nofun
+
+instance : IsLinearOrder PEmpty where
+  lt_iff_le_and_not_ge := nofun
+  refl := nofun
+  trans := nofun
+  antisymm := nofun
+  trichotomous := nofun
+
+instance : IsLattice PEmpty where
+  left_le_max := nofun
+  right_le_max := nofun
+  max_le := nofun
+  min_le_left := nofun
+  min_le_right := nofun
+  le_min := nofun
+
+instance : @Relation.IsWelFounded PEmpty r where
+  wf := by
+    apply WellFounded.intro
+    nofun
+
 instance : IsLattice Nat where
   left_le_max := Nat.le_max_left _ _
   right_le_max := Nat.le_max_right _ _
@@ -435,6 +464,14 @@ instance [DecidableLE α] [FunLike F α β] [IsOrderHom F α β] [IsPartialOrder
     dsimp at h
     exact DFunLike.coeInj (Embedding.mk.inj h)
 
+def OrderEmbedding.subtype_val {P: α -> Prop} : Subtype P ↪o α where
+  toEmbedding := Embedding.subtype_val
+  map_rel := Iff.rfl
+
+def RelEmbedding.subtype_val {P: α -> Prop} : (· < ·: Subtype P -> Subtype P -> Prop) ↪r (· < ·: α -> α -> Prop) where
+  toEmbedding := Embedding.subtype_val
+  map_rel := Iff.rfl
+
 instance [IsLawfulLT α] {P: α -> Prop} : IsLawfulLT (Subtype P) where
   lt_iff_le_and_not_ge := lt_iff_le_and_not_ge (α := α)
 instance [IsPreorder α] {P: α -> Prop} : IsPreorder (Subtype P) where
@@ -448,3 +485,40 @@ instance [IsLinearOrder α] {P: α -> Prop} : IsLinearOrder (Subtype P) where
     · left; assumption
     · right; left; ext; assumption
     · right; right; assumption
+
+instance [@Relation.IsWellOrder α (· < ·)] {P: α -> Prop} : Relation.IsWelFounded (α := Subtype P) (· < ·) :=
+  RelEmbedding.subtype_val.liftWellfounded
+
+def order_emb_of_map_rel
+  [LE α] [LT α] [IsPreorder α] [Relation.IsTrichotomous (α := α) (· < ·) (· = ·)]
+  [LE β] [LT β] [IsPreorder β] [Relation.IsTrichotomous (α := β) (· < ·) (· = ·)]
+  (f: α -> β) (h: ∀x y: α, x ≤ y ↔ f x ≤ f y) : α ↪o β where
+  toFun := f
+  inj {a b} heq := by
+    rcases lt_trichotomy a b with h₀ | h₀ | h₀
+    · have : f a < f b := by rwa [lt_iff_le_and_not_ge, ←h, ←h, ←lt_iff_le_and_not_ge]
+      rw [heq] at this; nomatch Relation.irrefl this
+    · assumption
+    · have : f b < f a := by rwa [lt_iff_le_and_not_ge, ←h, ←h, ←lt_iff_le_and_not_ge]
+      rw [heq] at this; nomatch Relation.irrefl this
+  map_rel := h _ _
+
+def rel_emb_of_map_rel
+  {r: α -> α -> Prop} {s: β -> β -> Prop}
+  [Relation.IsTrichotomous r (· = ·)] [Relation.IsIrrefl r]
+  [Relation.IsTrichotomous s (· = ·)] [Relation.IsIrrefl s]
+  (f: α -> β) (h: ∀x y: α, r x y ↔ s (f x) (f y)) : r ↪r s where
+  toFun := f
+  inj {a b} heq := by
+    rcases Relation.trichotomous r a b with h₀ | h₀ | h₀
+    · have : s (f a) (f b) := by rwa [←h]
+      rw [heq] at this; nomatch Relation.irrefl this
+    · assumption
+    · have : s (f b) (f a) := by rwa [←h]
+      rw [heq] at this; nomatch Relation.irrefl this
+  map_rel := h _ _
+
+def toLtEmb
+  [IsLinearOrder α] [IsLinearOrder β]
+  [FunLike F α β] [IsOrderHom F α β] [IsLawfulLT β] (f: F) : (· < ·: α -> α -> Prop) ↪r (· < ·: β -> β -> Prop) :=
+  rel_emb_of_map_rel f (map_lt f)
