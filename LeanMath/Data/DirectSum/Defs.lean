@@ -330,7 +330,7 @@ def from_elements_set_nodup
   apply h; assumption
   apply h; assumption
 
-private def exists_nodup_elements' [LEM] (lc: ⊕a, R a) : ∃elements: List (Σa, R a), elements.Pairwise (fun x y => x.1 ≠ y.1) ∧ lc = from_elements elements := by
+private def exists_nodup_elements' [ExcludedMiddleEq α] (lc: ⊕a, R a) : ∃elements: List (Σa, R a), elements.Pairwise (fun x y => x.1 ≠ y.1) ∧ lc = from_elements elements := by
   induction lc using list_induction with
   | zero => exact ⟨[], List.Pairwise.nil, rfl⟩
   | ι_add a r as ih =>
@@ -361,7 +361,7 @@ private def exists_nodup_elements' [LEM] (lc: ⊕a, R a) : ∃elements: List (Σ
         assumption
       · simp; congr
 
-def exists_nodup_elements [LEM] (lc: ⊕a, R a) : ∃elements: List (Σa, R a), elements.Pairwise (fun x y => x.1 ≠ y.1) ∧ lc = from_elements elements ∧ ∀x ∈ elements, x.2 ≠ 0 := by
+def exists_nodup_elements [ExcludedMiddleEq α] [∀(a: α) (r: R a), ExcludedMiddle (r = 0)] (lc: ⊕a, R a) : ∃elements: List (Σa, R a), elements.Pairwise (fun x y => x.1 ≠ y.1) ∧ lc = from_elements elements ∧ ∀x ∈ elements, x.2 ≠ 0 := by
   have ⟨elements, nodup, eq⟩ := exists_nodup_elements' lc; subst lc
   suffices ∃e: List (Σa, R a), e.Sublist elements ∧ from_elements elements = from_elements e ∧ ∀x ∈ e, x.2 ≠ 0 by
     obtain ⟨e, sub, eq, h⟩ := this

@@ -1,7 +1,7 @@
 import LeanMath.Data.DirectSum.Defs
 
 structure LinearCombo (R α: Type*) [Zero R] [Add R] where
-  ofDirectSum :: toDirectSum : ⊕_: α, R
+ofDirectSum :: toDirectSum : ⊕_: α, R
 
 namespace LinearCombo
 
@@ -161,7 +161,7 @@ def from_elements : List (α × R) -> LinearCombo R α :=
 @[simp] def from_elements_nil : from_elements (α := α) (R := R) [] = 0 := rfl
 @[simp] def from_elements_cons (a: α × R) (as: List (α × R)) : from_elements (a::as) = ι a.1 a.2 + from_elements as := rfl
 
-def exists_nodup_elements [LEM] (lc: LinearCombo R α) : ∃elements: List (α × R), elements.Pairwise (fun x y => x.1 ≠ y.1) ∧ lc = from_elements elements ∧ ∀x ∈ elements, x.2 ≠ 0 := by
+def exists_nodup_elements [ExcludedMiddleEq R] [ExcludedMiddleEq α] (lc: LinearCombo R α) : ∃elements: List (α × R), elements.Pairwise (fun x y => x.1 ≠ y.1) ∧ lc = from_elements elements ∧ ∀x ∈ elements, x.2 ≠ 0 := by
   have ⟨elements, nodup, eq, nezero⟩ := DirectSum.exists_nodup_elements (equivDirectSum lc)
   refine ⟨elements.map fun x => ⟨x.1, x.2⟩, ?_, ?_, ?_⟩
   · apply nodup.map

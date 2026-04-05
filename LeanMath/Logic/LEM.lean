@@ -2,6 +2,7 @@ class ExcludedMiddle (P: Prop) where
   em : P ∨ ¬P
 
 abbrev ExcludedMiddleEq (α: Sort u) := ∀a b: α, ExcludedMiddle (a = b)
+abbrev ExcludedMiddlePred (P: α -> Prop) := ∀a, ExcludedMiddle (P a)
 
 scoped instance Classical.ExcludedMiddle : ExcludedMiddle P where
   em := Classical.em _
@@ -134,3 +135,27 @@ def Classical.axiomOfUniqueChoice {α: Sort u} {β: α -> Sort v} {P: ∀a: α, 
   intro g hg a
   apply Classical.choose_unique_spec_unique
   apply hg
+
+instance {P: Fin n -> Prop} [ExcludedMiddlePred P] : ExcludedMiddle (∃a, P a) where
+  em := by
+    induction n with
+    | zero => right; nofun
+    | succ n ih =>
+      rcases em (P ⟨0, Nat.zero_lt_succ _⟩) with h₀ | h₀
+      exact .inl ⟨_, h₀⟩
+      rcases ih (P := fun i => P i.succ) with h₁ | h₁
+      obtain ⟨a, pa⟩ := h₁
+      exact .inl ⟨_, pa⟩
+      right; intro ⟨a, ha⟩
+      match a with
+      | ⟨0, _⟩ => contradiction
+      | ⟨a + 1, h⟩ =>
+        apply h₁
+        exact ⟨⟨a, Nat.lt_of_succ_lt_succ h⟩, ha⟩
+
+instance (priority := 500) {P: α -> Prop} [ExcludedMiddlePred P] [ExcludedMiddle (∃a, ¬P a)] : ExcludedMiddle (∀a, P a) where
+  em := by
+    rcases em (∃a, ¬P a) with ⟨a, pa⟩ | h
+    · right; intro h; exact pa (h _)
+    · left; intro a
+      exact LEM.not_not.mp (h ⟨a, ·⟩)

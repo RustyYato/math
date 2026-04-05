@@ -715,3 +715,20 @@ def factorBijOrEquiv {ι: Sort*} {α: ι -> Sort*} [Fintype ι] [∀i, Fintype (
       | .inr x => x.toBij)
 
 end Fintype
+
+namespace Finite
+
+instance (priority := 900) [Finite ι] {P: ι -> Prop} [ExcludedMiddlePred P] : ExcludedMiddle (∃x, P x) where
+  em := by
+    have ⟨card, ⟨bij⟩⟩ := Finite.finBij ι
+    rcases em (∃i, P (bij i)) with ⟨i, h⟩ | h
+    · left; exists bij i
+    · right; intro g; apply h
+      obtain ⟨i, hi⟩ := g
+      obtain ⟨n, rfl⟩ := bij.surj i
+      exists n
+
+instance (priority := 900) [Finite ι] {P: ι -> Prop} [ExcludedMiddlePred P] : ExcludedMiddle (∀x, P x) :=
+  inferInstance
+
+end Finite
