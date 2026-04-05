@@ -2,78 +2,80 @@ import LeanMath.Data.Set.Defs
 import LeanMath.Data.Equiv.Basic
 import LeanMath.Order.CompleteLattice
 
-class Topology (α: Type*) where
+structure Topology (α: Type*) where
   -- the set of open sets
   protected IsOpen : Set α -> Prop
   protected open_univ: IsOpen ⊤
   protected open_sUnion (U: Set (Set α)) (hU: ∀u ∈ U, IsOpen u) : IsOpen (⋃ U)
   protected open_inter (a b: Set α) (ha: IsOpen a) (hb: IsOpen b) : IsOpen (a ∩ b)
 
+class TopologicalSpace (α: Type*) extends Topology α where
+
+export TopologicalSpace (toTopology)
+
 namespace Topology
 
-def OpenSets (α: Type*) [Topology α] : Set (Set α) where
-  Mem := Topology.IsOpen
-def OpenSets_inj (α: Type*): Function.Injective (α := Topology α) (fun a => a.OpenSets) := by
+variable {α β γ: Type*} (t: Topology α) (u: Topology β) (v: Topology γ)
+
+def OpenSets : Set (Set α) where
+  Mem := t.IsOpen
+def OpenSets_inj: Function.Injective (α := Topology α) (fun a => a.OpenSets) := by
   intro a b h
   cases a; cases b; congr
   cases h; rfl
-def OpenSets.univ {_: Topology α} : ⊤ ∈ OpenSets α := Topology.open_univ
-def OpenSets.inter {_: Topology α} {a b: Set α} : a ∈ OpenSets α -> b ∈ OpenSets α -> a ∩ b ∈ OpenSets α := Topology.open_inter _ _
-def OpenSets.sUnion {_: Topology α} {U: Set (Set α)} : (∀u ∈ U, u ∈ OpenSets α) -> ⋃ U ∈ OpenSets α := Topology.open_sUnion _
-def OpenSets.empty {_: Topology α} : ⊥ ∈ OpenSets α := by
+def OpenSets.univ : ⊤ ∈ t.OpenSets := t.open_univ
+def OpenSets.inter {a b: Set α} : a ∈ t.OpenSets -> b ∈ t.OpenSets -> a ∩ b ∈ t.OpenSets := t.open_inter _ _
+def OpenSets.sUnion {U: Set (Set α)} : (∀u ∈ U, u ∈ t.OpenSets) -> ⋃ U ∈ t.OpenSets := t.open_sUnion _
+def OpenSets.empty : ⊥ ∈ t.OpenSets := by
   rw [←Set.sUnion_empty]
   apply sUnion
   nofun
 
-def ClosedSets (α: Type*) [Topology α] : Set (Set α) where
-  Mem s := sᶜ ∈ OpenSets α
-def ClosedSets.univ {_: Topology α} : ⊤ ∈ ClosedSets α := by
-  show ⊤ᶜ ∈ OpenSets α
+def ClosedSets : Set (Set α) where
+  Mem s := sᶜ ∈ t.OpenSets
+def ClosedSets.univ : ⊤ ∈ t.ClosedSets := by
+  show ⊤ᶜ ∈ t.OpenSets
   simp; apply OpenSets.empty
-def ClosedSets.empty {_: Topology α} : ⊥ ∈ ClosedSets α := by
-  show ⊥ᶜ ∈ OpenSets α
+def ClosedSets.empty : ⊥ ∈ t.ClosedSets := by
+  show ⊥ᶜ ∈ t.OpenSets
   simp; apply OpenSets.univ
-def ClosedSets.sInter {_: Topology α} (U: Set (Set α)) (hU: ∀u ∈ U, u ∈ ClosedSets α) : ⋂ U ∈ ClosedSets α := by
-  show _ᶜ ∈ OpenSets α
+def ClosedSets.sInter (U: Set (Set α)) (hU: ∀u ∈ U, u ∈ t.ClosedSets) : ⋂ U ∈ t.ClosedSets := by
+  show _ᶜ ∈ t.OpenSets
   simp; apply OpenSets.sUnion
   intro u hu
   simp at hu
-  have : _ ∈ OpenSets α := hU _ hu
+  have : _ ∈ t.OpenSets := hU _ hu
   simpa using this
-def ClosedSets.union {_: Topology α} {a b: Set α} : a ∈ ClosedSets α -> b ∈ ClosedSets α -> a ∪ b ∈ ClosedSets α := by
+def ClosedSets.union {a b: Set α} : a ∈ t.ClosedSets -> b ∈ t.ClosedSets -> a ∪ b ∈ t.ClosedSets := by
   intro ha hb
-  show _ᶜ ∈ OpenSets α
+  show _ᶜ ∈ t.OpenSets
   simp; apply OpenSets.inter
   assumption
   assumption
 
-variable {α β γ: Type*} [Topology α] [Topology β] [Topology γ]
-
 -- the interior of a set is the union of all open subsets
-def Interior (U: Set α) : Set α := ⋃ (OpenSets α ∩ U.powerset)
+def Interior (U: Set α) : Set α := ⋃ (t.OpenSets ∩ U.powerset)
 -- the closure of a set is the intersection fo all closed supersets
-def Closure (U: Set α) : Set α := ⋂ (ClosedSets α ∩ Set.ofMem (U ⊆ ·))
+def Closure (U: Set α) : Set α := ⋂ (t.ClosedSets ∩ Set.ofMem (U ⊆ ·))
 
-class IsContinuousAt (f : α → β) (tα: Topology α) (tβ: Topology β) : Prop where
-  isOpen_preimage : ∀s ∈ OpenSets β, s.preimage f ∈ OpenSets α
+class IsContinuous (f : α → β) (t: Topology α) (u: Topology β) : Prop where
+  isOpen_preimage : ∀s ∈ u.OpenSets, s.preimage f ∈ t.OpenSets
 
-abbrev IsContinuous (f : α → β) := IsContinuousAt f inferInstance inferInstance
+def OpenSets.preimage (f: α -> β) [IsContinuous f t u] : ∀s ∈ u.OpenSets, s.preimage f ∈ t.OpenSets :=
+  IsContinuous.isOpen_preimage
 
-def OpenSets.preimage (f: α -> β) [IsContinuous f] : ∀s ∈ OpenSets β, s.preimage f ∈ OpenSets α :=
-  IsContinuousAt.isOpen_preimage
+def OpenSets.preimage_at (f: α -> β) [IsContinuous f t u] : ∀s ∈ u.OpenSets, s.preimage f ∈ t.OpenSets :=
+  IsContinuous.isOpen_preimage
 
-def OpenSets.preimage_at (f: α -> β) [IsContinuousAt f tα tβ] : ∀s ∈ tβ.OpenSets β, s.preimage f ∈ tα.OpenSets α :=
-  IsContinuousAt.isOpen_preimage
-
-def IsOpen.Interior (s: Set α) : Interior s ∈ OpenSets α := by
+def IsOpen.Interior (s: Set α) : t.Interior s ∈ t.OpenSets := by
   apply OpenSets.sUnion
   intro x hx
   exact hx.left
 
-protected instance IsContinuous.id [Topology α] : IsContinuous (fun x: α => x) where
+protected instance IsContinuous.id : IsContinuous (fun x: α => x) t t where
   isOpen_preimage _ := id
 
-instance IsContinuous.const [LEM] (x: β) : IsContinuous (fun _: α => x) where
+instance IsContinuous.const [LEM] (x: β) : IsContinuous (fun _: α => x) t u where
   isOpen_preimage s sopen := by
     rcases em (x ∈ s) with h | h
     suffices s.preimage (fun _: α => x) = (⊤: Set α) by
@@ -89,28 +91,28 @@ instance IsContinuous.const [LEM] (x: β) : IsContinuous (fun _: α => x) where
     intro
     assumption
 
-instance IsContinuous.comp [Topology α] [Topology β] [Topology γ]  (f: β -> γ) (g: α -> β) [IsContinuous f] [IsContinuous g] : IsContinuous (f ∘ g) where
+@[implicit_reducible]
+def IsContinuous.comp (f: β -> γ) (g: α -> β) [IsContinuous f u v] [IsContinuous g t u] : IsContinuous (f ∘ g) t v where
   isOpen_preimage s hs := by
     show Set.preimage g (Set.preimage f s) ∈ _
-    apply OpenSets.preimage g
-    apply OpenSets.preimage f
+    apply OpenSets.preimage t u g
+    apply OpenSets.preimage u v f
     assumption
 
-@[implicit_reducible]
-def IsContinuous.comp' [Topology α] [Topology β] [Topology γ]  (f: β -> γ) (g: α -> β) (hf: IsContinuous f) (hg: IsContinuous g) : IsContinuous (f ∘ g) :=
-  inferInstance
-
-@[implicit_reducible]
-def instDiscrete : Topology α where
-  IsOpen _ := True
-  open_univ := True.intro
-  open_sUnion _ _ := True.intro
-  open_inter _ _ _ _ := True.intro
+-- the discrete topology
+instance : Bot (Topology α) where
+  bot := {
+    IsOpen _ := True
+    open_univ := True.intro
+    open_sUnion _ _ := True.intro
+    open_inter _ _ _ _ := True.intro
+  }
 
 inductive IsTrivial : Set α -> Prop where
 | empty : IsTrivial ⊥
 | univ : IsTrivial ⊤
 
+-- the trivial topology
 instance [LEM] : Top (Topology α) where
   top := {
     IsOpen := IsTrivial
@@ -133,12 +135,6 @@ instance [LEM] : Top (Topology α) where
       iterate 3 apply IsTrivial.empty
       apply IsTrivial.univ
   }
-
-instance : Bot (Topology α) where
-  bot := instDiscrete
-
-instance : Topology ℕ := instDiscrete
-instance : Topology ℤ := instDiscrete
 
 inductive Generate (U: Set (Set α)) : Set α -> Prop where
 | of (u: Set α) : u ∈ U -> Generate U u
@@ -373,7 +369,7 @@ def induced (f: α -> β) (tβ: Topology β) : Topology α where
 @[implicit_reducible]
 def coinduced (f: α -> β) (tα: Topology α) : Topology β where
   IsOpen s := s.preimage f ∈ tα.OpenSets
-  open_univ := OpenSets.univ
+  open_univ := OpenSets.univ _
   open_inter := by
     intro a b ha hb
     show a.preimage f ∩ b.preimage f ∈ _
@@ -399,37 +395,40 @@ def coinduced (f: α -> β) (tα: Topology α) : Topology β where
 
 end Topology
 
-structure TopologyEquiv {α β: Type*} (tα: Topology α) (tβ: Topology β) extends α ≃ β where
-  toFun_continuous : Topology.IsContinuous toFun
-  invFun_continuous : Topology.IsContinuous invFun
+structure TopologyEquiv {α β: Type*} (t: Topology α) (u: Topology β) extends α ≃ β where
+  toFun_continuous : Topology.IsContinuous toFun t u
+  invFun_continuous : Topology.IsContinuous invFun u t
 
-infixr:50 " ≃ₜ " => fun α β [Topology α] [Topology β] => @TopologyEquiv α β inferInstance inferInstance
+infixr:50 " ≃ₜ " => fun α β [TopologicalSpace α] [TopologicalSpace β] => @TopologyEquiv α β toTopology toTopology
+infixr:50 " ≃ᵗ " => TopologyEquiv
 
 namespace TopologyEquiv
 
-instance {tα: Topology α} {tβ: Topology β} : EquivLike (α ≃ₜ β) α β where
+instance [tα: TopologicalSpace α] [tβ: TopologicalSpace β] : EquivLike (α ≃ₜ β) α β where
 
-def id (t: Topology α) : α ≃ₜ α where
+instance {t: Topology α} {u: Topology β} : EquivLike (TopologyEquiv t u) α β where
+
+def id (t: Topology α) : t ≃ᵗ t where
   toEquiv := Equiv.id _
-  toFun_continuous := Topology.IsContinuous.id
-  invFun_continuous := Topology.IsContinuous.id
+  toFun_continuous := Topology.IsContinuous.id _
+  invFun_continuous := Topology.IsContinuous.id _
 
-def symm {tα: Topology α} {tβ: Topology β} (f: α ≃ₜ β) : β ≃ₜ α where
+def symm {t: Topology α} {u: Topology β} (f: t ≃ᵗ u) : u ≃ᵗ t where
   toEquiv := f.toEquiv.symm
   toFun_continuous := f.invFun_continuous
   invFun_continuous := f.toFun_continuous
 
-instance {tα: Topology α} {tβ: Topology β} (f: α ≃ₜ β) : Topology.IsContinuous f :=
+instance {t: Topology α} {u: Topology β} (f: t ≃ᵗ u) : Topology.IsContinuous f t u :=
   f.toFun_continuous
-instance {tα: Topology α} {tβ: Topology β} (f: α ≃ₜ β) : Topology.IsContinuous f.symm :=
+instance {t: Topology α} {u: Topology β} (f: t ≃ᵗ u) : Topology.IsContinuous f.symm u t :=
   f.invFun_continuous
 
-def comp {tα: Topology α} {tβ: Topology β} {tγ: Topology γ} (f: β ≃ₜ γ) (g: α ≃ₜ β) : α ≃ₜ γ where
+def comp {t: Topology α} {u: Topology β} {v: Topology γ} (f: u ≃ᵗ v) (g: t ≃ᵗ u) : t ≃ᵗ v where
   toEquiv := f.toEquiv.comp g.toEquiv
-  toFun_continuous := Topology.IsContinuous.comp f g
-  invFun_continuous := Topology.IsContinuous.comp g.symm f.symm
+  toFun_continuous := Topology.IsContinuous.comp _ u _ f g
+  invFun_continuous := Topology.IsContinuous.comp _ u _ g.symm f.symm
 
-def trans {tα: Topology α} {tβ: Topology β} {tγ: Topology γ} (f: α ≃ₜ β) (g: β ≃ₜ γ) : α ≃ₜ γ := g.comp f
+def trans {t: Topology α} {u: Topology β} {v: Topology γ} (f: t ≃ᵗ u) (g: u ≃ᵗ v) : t ≃ᵗ v := g.comp f
 
 @[simp] def apply_id (α: Sort*) (x: α) : Equiv.id α x = x := rfl
 @[simp] def apply_comp (f: β ≃ γ) (g: α ≃ β) (x: α) : (f.comp g) x = f (g x) := rfl
@@ -462,62 +461,81 @@ namespace Topology
 
 variable [LEM]
 
-instance topo_prod [Topology α] [Topology β] : Topology (α × β) :=
-  induced Prod.fst inferInstance ⊓ induced Prod.snd inferInstance
-instance topo_sum [Topology α] [Topology β] : Topology (α ⊕ β) :=
-  coinduced Sum.inl inferInstance ⊔ coinduced Sum.inr inferInstance
+def prod (t: Topology α) (u: Topology β) : Topology (α × β) :=
+  induced Prod.fst t ⊓ induced Prod.snd u
+def sum (t: Topology α) (u: Topology β) : Topology (α ⊕ β) :=
+  coinduced Sum.inl t ⊔ coinduced Sum.inr u
 
 @[implicit_reducible]
-def IsContinuous.min_left [Topology α] [Topology β] (t₀ t₁: Topology α) (f: α -> β) (_: IsContinuousAt f t₀ inferInstance) : IsContinuousAt f (t₀ ⊓ t₁) inferInstance where
+def IsContinuous.min_left (t₀ t₁: Topology α) (u: Topology β) (f: α -> β) (_: IsContinuous f t₀ u) : IsContinuous f (t₀ ⊓ t₁) u where
   isOpen_preimage s := by
     intro h
     apply mem_generate_of
     left
-    apply OpenSets.preimage_at (tβ := inferInstance)
+    apply OpenSets.preimage_at (u := u)
     assumption
 
 @[implicit_reducible]
-def IsContinuous.min_right [Topology α] [Topology β] (t₀ t₁: Topology α) (f: α -> β) (_: IsContinuousAt f t₁ inferInstance) : IsContinuousAt f (t₀ ⊓ t₁) inferInstance where
+def IsContinuous.min_right (t₀ t₁: Topology α) (u: Topology β) (f: α -> β) (_: IsContinuous f t₁ u) : IsContinuous f (t₀ ⊓ t₁) u where
   isOpen_preimage s := by
     intro h
     apply mem_generate_of
     right
-    apply OpenSets.preimage_at (tβ := inferInstance)
+    apply OpenSets.preimage_at (u := u)
     assumption
 
 @[implicit_reducible]
-def IsContinuous.max_left [Topology α] [Topology β] (t₀ t₁: Topology β) (f: α -> β) (_: IsContinuousAt f inferInstance t₀) : IsContinuousAt f inferInstance (t₀ ⊔ t₁) where
+def IsContinuous.max_left (t: Topology α) (u₀ u₁: Topology β) (f: α -> β) (_: IsContinuous f t u₀) : IsContinuous f t (u₀ ⊔ u₁) where
   isOpen_preimage s := by
     intro h
-    apply OpenSets.preimage_at f _ h.left
+    apply OpenSets.preimage_at _ _ f _ h.left
 
 @[implicit_reducible]
-def IsContinuous.max_right [Topology α] [Topology β] (t₀ t₁: Topology β) (f: α -> β) (_: IsContinuousAt f inferInstance t₁) : IsContinuousAt f inferInstance (t₀ ⊔ t₁) where
+def IsContinuous.max_right (t: Topology α) (u₀ u₁: Topology β) (f: α -> β) (_: IsContinuous f t u₁) : IsContinuous f t (u₀ ⊔ u₁) where
   isOpen_preimage s := by
     intro h
-    apply OpenSets.preimage_at f _ h.right
+    apply OpenSets.preimage_at _ _ f _ h.right
 
-protected instance IsContinuous.induced [Topology α] [Topology β] {f: α -> β} : IsContinuousAt f (induced f inferInstance) inferInstance where
+protected instance IsContinuous.induced (u: Topology β) {f: α -> β} : IsContinuous f (induced f u) u where
   isOpen_preimage s hs := by exists s
-protected instance IsContinuous.coinduced [Topology α] [Topology β] {f: α -> β} : IsContinuousAt f inferInstance (coinduced f inferInstance) where
+protected instance IsContinuous.coinduced (t: Topology α) {f: α -> β} : IsContinuous f t (coinduced f t) where
   isOpen_preimage s hs := by assumption
 
 @[implicit_reducible]
-protected def IsContinuous.induced' {_: Topology α} {_: Topology β} {f: α -> β} : IsContinuousAt f (induced f inferInstance) inferInstance where
+protected def IsContinuous.induced' (u: Topology β) {f: α -> β} : IsContinuous f (induced f u) u where
   isOpen_preimage s hs := by exists s
 @[implicit_reducible]
-protected def IsContinuous.coinduced' {_: Topology α} {_: Topology β} {f: α -> β} : IsContinuousAt f inferInstance (coinduced f inferInstance) where
+protected def IsContinuous.coinduced' (t: Topology α) {f: α -> β} : IsContinuous f t (coinduced f t) where
   isOpen_preimage s hs := by assumption
 
-instance [Topology α] [Topology β] : IsContinuous (Prod.fst: α × β -> α) := IsContinuous.min_left _ _ _ inferInstance
-instance [Topology α] [Topology β] : IsContinuous (Prod.snd: α × β -> β) := IsContinuous.min_right _ _ _ inferInstance
-instance [Topology α] [Topology β] : IsContinuous (Sum.inl: α -> α ⊕ β) := IsContinuous.max_left _ _ _ inferInstance
-instance [Topology α] [Topology β] : IsContinuous (Sum.inr: β -> α ⊕ β) := IsContinuous.max_right _ _ _ inferInstance
+instance (t: Topology α) (u: Topology β) : IsContinuous (Prod.fst: α × β -> α) (t.prod u) t := IsContinuous.min_left _ _ _ _ inferInstance
+instance (t: Topology α) (u: Topology β) : IsContinuous (Prod.snd: α × β -> β) (t.prod u) u := IsContinuous.min_right _ _ _ _ inferInstance
+instance (t: Topology α) (u: Topology β) : IsContinuous (Sum.inl: α -> α ⊕ β) t (t.sum u) := IsContinuous.max_left _ _ _ _ inferInstance
+instance (t: Topology α) (u: Topology β) : IsContinuous (Sum.inr: β -> α ⊕ β) u (t.sum u) := IsContinuous.max_right _ _ _ _ inferInstance
 
-instance topo_pi {ι : Type*} {Y : ι → Type v} [t₂:  ∀i: ι, Topology (Y i)] : Topology (∀i: ι, Y i) :=
-  ⨅i, induced (fun f => f i) (t₂ i)
+def sigma {ι : Type*} {Y : ι → Type*} (t:  ∀i: ι, Topology (Y i)) : Topology (Σi: ι, Y i) :=
+  ⨆i, coinduced (Sigma.mk i) (t i)
 
-instance IsContinuous.apply [Topology α] [Topology β] : IsContinuous (fun (f: α -> β) (a: α) => f a) where
+instance IsContinuous.sigma_mk {ι : Type*} {Y : ι → Type*} (t:  ∀i: ι, Topology (Y i)) (i: ι) : IsContinuous (Sigma.mk i) (t i) (sigma t) where
+  isOpen_preimage := by
+    intro U hU
+    have := hU (coinduced (Sigma.mk i) (t i)).OpenSets (by
+      apply Set.mem_image'
+      apply Set.mem_range')
+    apply this
+
+def pi {ι : Type*} {Y : ι → Type*} (t:  ∀i: ι, Topology (Y i)) : Topology (∀i: ι, Y i) :=
+  ⨅i, induced (fun f => f i) (t i)
+
+abbrev func (α: Type*) {β: Type*} (u: Topology β) : Topology (α -> β) := pi (fun _ => u)
+
+instance IsContinuous.apply_at {ι: Type*} {Y: ι -> Type*} (t:  ∀i: ι, Topology (Y i)) (i: ι) : IsContinuous (fun (f: ∀i, Y i) => f i) (pi t) (t i) where
+  isOpen_preimage s hs := by
+    apply mem_generate_of
+    simp
+    refine ⟨_, ⟨_, ⟨_, rfl⟩, rfl⟩, _, hs, rfl⟩
+
+instance IsContinuous.apply (u: Topology β) : IsContinuous (fun (f: α -> β) a => f a) (func α u) (func α u) where
   isOpen_preimage s hs := by
     apply of_mem_generate hs
     intro u hu
@@ -527,18 +545,7 @@ instance IsContinuous.apply [Topology α] [Topology β] : IsContinuous (fun (f: 
     simp
     exact ⟨_, ⟨_, ⟨_, rfl⟩, rfl⟩, _, hu, rfl⟩
 
-@[implicit_reducible]
-def IsContinuous.apply' {_: Topology α} {_: Topology β} : IsContinuous (fun (f: α -> β) (a: α) => f a) where
-  isOpen_preimage s hs := by
-    apply of_mem_generate hs
-    intro u hu
-    simp at hu
-    obtain ⟨_, ⟨_, ⟨a, _, rfl⟩, rfl⟩, ⟨u, hu, rfl⟩⟩ := hu
-    apply mem_generate_of
-    simp
-    exact ⟨_, ⟨_, ⟨_, rfl⟩, rfl⟩, _, hu, rfl⟩
-
-instance [Topology α] [Topology β] : IsContinuous (Prod.mk : α -> β -> α × β) where
+instance IsContinuous.prod_mk (t: Topology α) (u: Topology β) : IsContinuous (Prod.mk : α -> β -> α × β) t (pi fun _ => t.prod u) where
   isOpen_preimage s hs := by
     induction hs with
     | univ => apply OpenSets.univ
@@ -579,7 +586,8 @@ instance [Topology α] [Topology β] : IsContinuous (Prod.mk : α -> β -> α ×
           apply OpenSets.preimage
           assumption
 
-def prod_func_eq_func2 [Topology α] [Topology β] [Topology γ] : (α -> β -> γ) ≃ₜ (α × β -> γ) where
+def prod_func_eq_func2 (t: Topology α) (u: Topology β) (v: Topology γ) :
+  func α (func β v) ≃ᵗ func (α × β) v where
   toFun f a := f a.fst a.snd
   invFun f a b := f (a, b)
   leftInv _ := rfl
@@ -604,7 +612,7 @@ def prod_func_eq_func2 [Topology α] [Topology β] [Topology γ] : (α -> β -> 
         · apply mem_generate_of
           refine ⟨_, ⟨_, ⟨b, rfl⟩, rfl⟩, ?_⟩
           dsimp
-          apply IsContinuous.induced.isOpen_preimage
+          apply (IsContinuous.induced _).isOpen_preimage
           assumption
         · rfl
   }
@@ -640,12 +648,12 @@ def prod_func_eq_func2 [Topology α] [Topology β] [Topology γ] : (α -> β -> 
   }
 
 -- private instance IsContinuous.pi_comp'
---   [Topology γ'] [Topology α] [Topology β] [Topology γ]
+--   [Topology γ'] (t: Topology α) (u: Topology β) [Topology γ]
 --   (f: α × β -> γ) (ga: γ' -> α) (gb: γ' -> β) {hf: IsContinuous f} [hga: IsContinuous ga] [hgb: IsContinuous gb] : IsContinuous (fun x => f (ga x, gb x)) := by
 --   sorry
 
 -- instance IsContinuous.apply₂
---   [Topology α] [Topology β] [Topology γ]
+--   (t: Topology α) (u: Topology β) [Topology γ]
 --   (f: α -> β -> γ) [hf: IsContinuous f] (a: α) : IsContinuous (f a) := by
 --   -- We want to show: the map b ↦ f a b is continuous
 --   -- Observe that f a b = f (a, b)
@@ -664,7 +672,7 @@ def prod_func_eq_func2 [Topology α] [Topology β] [Topology γ] : (α -> β -> 
 --   exact IsContinuous.comp' _ _ hf hg
 
 -- instance IsContinuous.pi_comp
---   [Topology γ'] [Topology α] [Topology β] [Topology γ]
+--   [Topology γ'] (t: Topology α) (u: Topology β) [Topology γ]
 --   (f: α -> β -> γ) (ga: γ' -> α) (gb: γ' -> β)
 --   [hf: IsContinuous f] [hga: IsContinuous ga] [hgb: IsContinuous gb] : IsContinuous (fun x => f (ga x) (gb x)) := by
 --   show IsContinuous (fun x => prod_func_eq_func2 f (ga x, gb x))
@@ -681,14 +689,14 @@ def prod_func_eq_func2 [Topology α] [Topology β] [Topology γ] : (α -> β -> 
 --   sorry
 
 -- instance IsContinuous.comp₂
---   [Topology γ']  [Topology α] [Topology β] [Topology γ]
+--   [Topology γ']  (t: Topology α) (u: Topology β) [Topology γ]
 --   (f: α -> β -> γ) (ga: γ' -> α) (gb: γ' -> β) [hf: IsContinuous f] [hga: IsContinuous ga] [hgb: IsContinuous gb] : IsContinuous (fun x => f (ga x) (gb x)) where
 --   isOpen_preimage s hs := by
 
 --     sorry
 
 -- def IsContinuous.comp₂'
---   [Topology γ'] [Topology α] [Topology β] [Topology γ]
+--   [Topology γ'] (t: Topology α) (u: Topology β) [Topology γ]
 --   (f: α -> β -> γ) (ga: γ' -> α) (gb: γ' -> β) (hf: IsContinuous f) (hga: IsContinuous ga) (hgb: IsContinuous gb) : IsContinuous (fun x => f (ga x) (gb x)) :=
 --   IsContinuous.comp₂ _ _ _
 
@@ -711,7 +719,7 @@ def prod_func_eq_func2 [Topology α] [Topology β] [Topology γ] : (α -> β -> 
 --     apply IsContinuous.comp
 
 -- instance
---   [Topology α] [Topology β] [Topology γ]
+--   (t: Topology α) (u: Topology β) [Topology γ]
 --   (f: γ -> α)
 --   (g: γ -> β)
 --   [IsContinuous f]
@@ -720,3 +728,69 @@ def prod_func_eq_func2 [Topology α] [Topology β] [Topology γ] : (α -> β -> 
 --     apply IsContinuous.comp₂' Prod.mk <;> infer_instance
 
 end Topology
+
+namespace TopologicalSpace
+
+variable [TopologicalSpace α] [TopologicalSpace β] [TopologicalSpace γ]
+
+def OpenSets (α: Type*) [TopologicalSpace α] : Set (Set α) := toTopology.OpenSets
+def OpenSets.univ : ⊤ ∈ OpenSets α := toTopology.open_univ
+def OpenSets.inter {a b: Set α} : a ∈ OpenSets α -> b ∈ OpenSets α -> a ∩ b ∈ OpenSets α := toTopology.open_inter _ _
+def OpenSets.sUnion {U: Set (Set α)} : (∀u ∈ U, u ∈ OpenSets α) -> ⋃ U ∈ OpenSets α := toTopology.open_sUnion _
+def OpenSets.empty : ⊥ ∈ OpenSets α := Topology.OpenSets.empty _
+def ClosedSets (α: Type*) [TopologicalSpace α] : Set (Set α) where
+  Mem s := sᶜ ∈ OpenSets α
+def ClosedSets.univ : ⊤ ∈ ClosedSets α := by
+  show ⊤ᶜ ∈ OpenSets α
+  simp; apply OpenSets.empty
+def ClosedSets.empty : ⊥ ∈ ClosedSets α := by
+  show ⊥ᶜ ∈ OpenSets α
+  simp; apply OpenSets.univ
+def ClosedSets.sInter (U: Set (Set α)) (hU: ∀u ∈ U, u ∈ ClosedSets α) : ⋂ U ∈ ClosedSets α := by
+  show _ᶜ ∈ OpenSets α
+  simp; apply OpenSets.sUnion
+  intro u hu
+  simp at hu
+  have : _ ∈ OpenSets α := hU _ hu
+  simpa using this
+def ClosedSets.union {a b: Set α} : a ∈ ClosedSets α -> b ∈ ClosedSets α -> a ∪ b ∈ ClosedSets α := by
+  intro ha hb
+  show _ᶜ ∈ OpenSets α
+  simp; apply OpenSets.inter
+  assumption
+  assumption
+
+-- the interior of a set is the union of all open subsets
+def Interior (U: Set α) : Set α := ⋃ (OpenSets α ∩ U.powerset)
+-- the closure of a set is the intersection fo all closed supersets
+def Closure (U: Set α) : Set α := ⋂ (ClosedSets α ∩ Set.ofMem (U ⊆ ·))
+
+abbrev IsContinuous (f : α → β) := Topology.IsContinuous f toTopology toTopology
+
+def OpenSets.preimage (f: α -> β) [IsContinuous f] : ∀s ∈ OpenSets β, s.preimage f ∈ OpenSets α :=
+  Topology.OpenSets.preimage _ _ f
+
+def IsOpen.Interior (s: Set α) : Interior s ∈ OpenSets α := by
+  apply OpenSets.sUnion
+  intro x hx
+  exact hx.left
+
+instance : TopologicalSpace ℕ := ⟨⊥⟩
+instance : TopologicalSpace ℤ := ⟨⊥⟩
+
+instance : TopologicalSpace (α × β) := ⟨toTopology.prod toTopology⟩
+instance : TopologicalSpace (α ⊕ β) := ⟨toTopology.sum toTopology⟩
+instance {ι: Type*} {α: ι -> Type*} [∀i, TopologicalSpace (α i)] : TopologicalSpace (∀i, α i) := ⟨Topology.pi (fun _ => toTopology)⟩
+instance {ι: Type*} {α: ι -> Type*} [∀i, TopologicalSpace (α i)] : TopologicalSpace (Σi, α i) := ⟨Topology.sigma (fun _ => toTopology)⟩
+
+instance {ι : Type*} {Y : ι → Type*} [∀i: ι, TopologicalSpace (Y i)] (i: ι) : IsContinuous (Sigma.mk (β := Y) i) :=
+  Topology.IsContinuous.sigma_mk (fun _ => toTopology) _
+
+instance {ι : Type*} {Y : ι → Type*} [∀i: ι, TopologicalSpace (Y i)] (i: ι) : IsContinuous (fun (f: ∀i, Y i) => f i) :=
+  Topology.IsContinuous.apply_at (fun _ => toTopology) _
+
+instance : IsContinuous (fun (f: α -> β) (a: α) => f a) := inferInstance
+
+instance [LEM] : IsContinuous (Prod.mk : α -> β -> α × β) := Topology.IsContinuous.prod_mk toTopology toTopology
+
+end TopologicalSpace

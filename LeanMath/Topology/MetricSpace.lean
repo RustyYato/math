@@ -57,9 +57,17 @@ def ball_sub_ball (x: α) (δ₀ δ₁: ℝ) (h: δ₀ ≤ δ₁) : Ball x δ₀
   assumption
   assumption
 
+end IsLawfulMetric
+
+namespace Topology
+
+variable [Metric α] [IsLawfulMetric α]
+
+open IsLawfulMetric
+
 -- for all points in the set, if there is an open ball which is contained in the set, then the set is open
 -- this gives the same topology as Topology.generate (Ball center r)
-scoped instance : Topology α where
+def ofMetric : Topology α where
   IsOpen s := ∀x ∈ s, ∃δ > 0, Ball x δ ⊆ s
   open_univ := by
     intro x hx
@@ -86,9 +94,7 @@ scoped instance : Topology α where
       apply ball_sub_ball _ (δ₀ ⊓ δ₁) δ₁ min_le_right
       assumption
 
-end IsLawfulMetric
+end Topology
 
-open IsLawfulMetric in
-instance : Topology ℝ := inferInstance
-open IsLawfulMetric in
-instance : Topology ℚ := inferInstance
+instance : TopologicalSpace ℝ := ⟨Topology.ofMetric⟩
+instance : TopologicalSpace ℚ := ⟨Topology.ofMetric⟩
