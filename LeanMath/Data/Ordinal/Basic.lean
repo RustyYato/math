@@ -568,4 +568,10 @@ def pow [LEM] : Ordinal -> Ordinal -> Ordinal :=
     assumption
     assumption
 
+instance [LEM] : Pow Ordinal Ordinal where
+  pow := pow
+
+instance [LEM] : Pow Ordinal ℕ where
+  pow a b := a ^ (b: Ordinal)
+
 end Ordinal
