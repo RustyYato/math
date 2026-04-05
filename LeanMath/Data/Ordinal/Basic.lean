@@ -418,8 +418,9 @@ instance {r: α -> α -> Prop} {s: β -> β -> Prop} [LEM] [Relation.IsWellOrder
             have := g_eq_f _ hx
             dsimp [g'] at hs; split at hs <;> rename_i h
             rw [protof_eq _ h] at hs
-            exact Relation.asymm g_lt_f hs
-            contradiction
+            rw [this] at hs
+            exact Relation.irrefl hs
+            nomatch minval_spec _ True.intro hs
           · simp only [Set.mem_sep, Set.mem_inter, g_mem_S, Set.ofMem_mem,
               true_and, X₁, X₀] at g_not_mem_X₁
             rw [and_comm, not_and] at g_not_mem_X₁
@@ -443,7 +444,7 @@ instance {r: α -> α -> Prop} {s: β -> β -> Prop} [LEM] [Relation.IsWellOrder
                 nomatch this ⟨_, hb⟩
                 nomatch this ⟨_, h₂⟩
                 intro a'' ra'' sa'
-                exact (f_mem.left.right a' · ha') ⟨_, sa'⟩
+                exact (f_mem.left.right a'' · (Relation.trans ha' ra'')) ⟨_, sa'⟩
             · replace g_not_mem_X₁ := g_not_mem_X₁ h₁
               simp only [LEM.not_forall, LEM.not_not] at g_not_mem_X₁
               obtain ⟨a', a'_mem, ha'⟩ := g_not_mem_X₁
@@ -459,14 +460,13 @@ instance {r: α -> α -> Prop} {s: β -> β -> Prop} [LEM] [Relation.IsWellOrder
               nomatch this ⟨_, hb⟩
               nomatch this ⟨_, h₂⟩
               intro a'' ra'' sa'
-              exact (f_mem.left.right a' · ha') ⟨_, sa'⟩
+              exact (f_mem.left.right a'' · (Relation.trans ha' ra'')) ⟨_, sa'⟩
             · clear g_not_mem_X₁
               apply Relation.asymm hg
               apply pow_rel_of_small _ _ a₀
               rwa [f_mem.right]
               intro a' ha' sa'
-              rw [f_mem.right] at sa'
-              exact Relation.asymm h₁ sa'
+              nomatch f_mem.left.right _ ⟨_, sa'⟩ ha'
         · intro f hf
           have ⟨a, ha₀, ha₁⟩ := h f hf
           exists a
