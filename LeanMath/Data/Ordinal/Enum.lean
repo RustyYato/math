@@ -123,6 +123,8 @@ noncomputable def initialOrd : Ordinal.{u} ≃o { o: Ordinal.{u} // IsInitial o 
   }
   map_rel {a b} := (enumOrd_strictMono initialOrdinals_unbounded).le_iff_le.symm
 
+@[simp] def apply_initialOrd : (initialOrd x).val = enumOrd initialOrdinals x := rfl
+
 def initialOrd_of_le_omega : ∀x ≤ ω, initialOrd.{u} x = x := by
   have : ∀x ≤ ω, IsInitial.{u} x := by
     intro x hx
@@ -167,11 +169,26 @@ def initialOrd_of_le_omega : ∀x ≤ ω, initialOrd.{u} x = x := by
         have := le_max_of_range (ho x) ho.symm
         simpa using this
       exact not_le_of_lt (Nat.lt_succ_self _) (this _)
-  intro x hx
-  have xinit := this x hx
-  apply le_antisymm
-  · sorry
-  · sorry
+  intro x x_lt_omega
+  rw [apply_initialOrd]
+  have xinit := this x x_lt_omega
+  apply le_antisymm _ (le_enumOrd_self initialOrdinals_unbounded _)
+  induction x with | _ x ih =>
+  apply enumOrd_le_of_forall_lt
+  apply this
+  assumption
+  intro y hy
+  apply lt_of_le_of_lt
+  apply ih
+  assumption
+  apply le_trans; apply le_of_lt
+  assumption
+  assumption
+  apply this
+  apply le_trans; apply le_of_lt
+  assumption
+  assumption
+  assumption
 
 noncomputable def omega : Ordinal.{u} ↪o { o: Ordinal.{u} // IsInitial o } :=
   order_emb_of_map_rel (initialOrd <| ω + ·) <| by
