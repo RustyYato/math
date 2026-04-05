@@ -1,4 +1,4 @@
-import LeanMath.Data.Ordinal.Defs
+import LeanMath.Data.Ordinal.Basic
 import LeanMath.Data.Cardinal.Order
 import LeanMath.Order.Set
 import LeanMath.Order.Monotone
@@ -106,18 +106,72 @@ private def initialOrd_exists : type (α := Ordinal.{u}) (· < ·) = type (α :=
         apply (enumOrd_strictMono initialOrdinals_unbounded).lt_iff_lt.symm
     }
 
-noncomputable def initialOrd : Ordinal.{u} ≃o { o: Ordinal.{u} // IsInitial o } :=
-  Classical.choice <| by
-     obtain h := exact initialOrd_exists.{u}
-     have : StrictMonotone h := fun _ _ => (map_rel h).mp
-     exact ⟨{
-      toEquiv := h.toEquiv
-      map_rel := this.le_iff_le.symm
-     }⟩
+noncomputable def initialOrd : Ordinal.{u} ≃o { o: Ordinal.{u} // IsInitial o } where
+  toEquiv := Equiv.ofBij {
+    toFun x := {
+      val := enumOrd initialOrdinals x
+      property := enumOrd_mem initialOrdinals_unbounded _
+    }
+    inj' := by
+      intro a b h
+      dsimp at h
+      exact (enumOrd_inj initialOrdinals_unbounded).mp (Subtype.mk.inj h)
+    surj' := by
+      intro o
+      have ⟨i, hi⟩ := enumOrd_surj initialOrdinals_unbounded o.property
+      exists i; ext; assumption
+  }
+  map_rel {a b} := (enumOrd_strictMono initialOrdinals_unbounded).le_iff_le.symm
 
-def initialOrd_of_le_omega : ∀x ≤ ω, initialOrd x = x := by
+def initialOrd_of_le_omega : ∀x ≤ ω, initialOrd.{u} x = x := by
+  have : ∀x ≤ ω, IsInitial.{u} x := by
+    intro x hx
+    rcases lt_or_eq_of_le hx with hx | rfl
+    · obtain ⟨n, rfl⟩ := lt_omega_iff.mp hx
+      rename_i h; clear hx h
+      intro o ho
+      cases o with | @type α r =>
+      replace ho : Nat.cast n = Cardinal.type α := ho
+      apply le_of_eq
+      have : Finite α := Finite.ofBij ((Equiv.ulift _).trans (Cardinal.exact' ho)).toBij
+      have ⟨m, hm⟩ := Ordinal.finite r
+      rw [hm]; congr
+      have := Equiv.ulift_congr.symm ((Cardinal.exact' ho).trans (exact hm).toEquiv)
+      exact Equiv.of_fin_eqv this
+    · clear hx; intro o ho
+      apply not_lt.mp; intro h
+      cases o with | @type α r =>
+      obtain ⟨f⟩ := h; dsimp at f
+      replace f := f.trans_init (ulift_rel_eqv_rel _).toInitialSegment
+      have ⟨n, htop⟩ := f.IsPrincipal
+      have hf : ∀x, f x < n := by
+        intro x
+        apply (htop _).mpr
+        apply Set.mem_range'
+      have : Finite α := by
+        apply Finite.ofEmbed (β := Fin n)
+        exact {
+          toFun a := ⟨f a, hf _⟩
+          inj := by
+            intro a b h
+            dsimp at h
+            exact f.inj (Fin.mk.inj h)
+        }
+      have ⟨m, h⟩ := finite r
+      rw [h] at ho
+      replace ho := Equiv.ulift_congr.symm (Cardinal.exact' ho)
+      dsimp at ho
+      let max := max_of_range ho.symm
+      have : ∀x, x ≤ max := by
+        intro x
+        have := le_max_of_range (ho x) ho.symm
+        simpa using this
+      exact not_le_of_lt (Nat.lt_succ_self _) (this _)
   intro x hx
-  sorry
+  have xinit := this x hx
+  apply le_antisymm
+  · sorry
+  · sorry
 
 noncomputable def omega : Ordinal.{u} ↪o { o: Ordinal.{u} // IsInitial o } :=
   order_emb_of_map_rel (initialOrd <| ω + ·) <| by

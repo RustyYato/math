@@ -262,6 +262,7 @@ instance : IsLattice Int where
 -- variable [DecidableLE α]
 
 def le_refl [IsPreorder α] (a: α) : a ≤ a := Relation.refl _
+def le_of_eq [IsPreorder α] {a b: α} : a = b -> a ≤ b := fun h => h ▸ le_refl _
 
 def le_trans [IsPreorder α] {a b c: α} : a ≤ b -> b ≤ c -> a ≤ c := Relation.trans
 

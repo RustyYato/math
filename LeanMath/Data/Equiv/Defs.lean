@@ -170,7 +170,17 @@ private noncomputable def existsOfBij (f: α ↭ β) : ∃g: α ≃ β, ∀x, g 
     rightInv b := by apply f.inj; rw [(hg _).left]
   }, fun _ => rfl⟩
 
-noncomputable def ofBij (f: α ↭ β) : α ≃ β :=
+def copy_toFun (f: α ≃ β) (f₀: α -> β) (h: ∀x, f₀ x = f x) : α ≃ β where
+  toFun := f₀
+  invFun := f.symm
+  leftInv := by
+    intro x
+    rw [h, Equiv.symm_coe]
+  rightInv := by
+    intro x
+    rw [h, Equiv.coe_symm]
+
+noncomputable def ofBij' (f: α ↭ β) : α ≃ β :=
   Classical.choose_unique (P := fun g: α ≃ β => ∀x, g x = f x) (by
     obtain ⟨g, hg⟩ := existsOfBij f
     exists g
@@ -180,8 +190,13 @@ noncomputable def ofBij (f: α ↭ β) : α ≃ β :=
     apply DFunLike.ext; intro x
     rw [hg, hg'])
 
-@[simp] def apply_ofBij (f: α ↭ β) : ∀x, ofBij f x = f x :=
+private def apply_ofBij' (f: α ↭ β) : ∀x, ofBij' f x = f x :=
   Classical.choose_unique_spec (P := fun g: α ≃ β => ∀x, g x = f x) _
+
+noncomputable def ofBij (f: α ↭ β) : α ≃ β :=
+  copy_toFun (ofBij' f) f (by intro x; rw [apply_ofBij'])
+
+@[simp] def apply_ofBij (f: α ↭ β) : ∀x, ofBij f x = f x := fun _ => rfl
 
 def symm_eq_iff {f: α ≃ β} : f.symm x = y ↔ f y = x := by
   apply Iff.intro

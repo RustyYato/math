@@ -3,6 +3,7 @@ import LeanMath.Data.Set.Finite
 import LeanMath.Data.Set.WellFounded
 import LeanMath.Data.Bijection.Basic
 import LeanMath.Data.Fintype.Algebra.Monoid
+import LeanMath.Data.Fintype.Order
 
 namespace Ordinal
 

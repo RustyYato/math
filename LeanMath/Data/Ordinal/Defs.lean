@@ -1141,8 +1141,7 @@ noncomputable def ToType.mk [LEM] {o: Ordinal} : Set.Iio o ≃o o.ToType where
   invFun x := {
     val := (enum (· < ·)).symm x
     property := by
-      show _ < o
-      rw [enum_symm_eq_rank]
+      rw [enum_symm_eq_rank]; simp [Set.Iio]
       conv => { rhs; rw [←type_toType o] }
       apply rank_lt_type
   }
