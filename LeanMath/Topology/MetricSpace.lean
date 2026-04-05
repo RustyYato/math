@@ -1,5 +1,5 @@
 import LeanMath.Topology.Defs
-import LeanMath.Data.Real
+import LeanMath.Data.Real.Defs
 
 variable [LEM]
 

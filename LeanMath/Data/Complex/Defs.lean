@@ -1,4 +1,4 @@
-import LeanMath.Data.Real
+import LeanMath.Data.Real.Defs
 import LeanMath.Data.RsqrtD.Field
 
 variable [LEM]
