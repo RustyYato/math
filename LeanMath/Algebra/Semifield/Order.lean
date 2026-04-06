@@ -66,6 +66,22 @@ def lt_of_mul_lt_mul_of_pos_right: ∀(a b c : α), 0 < c → a * c < b * c -> a
   rwa [mul_assoc, mul_assoc, mul_inv?_cancel,
     mul_one, mul_one] at this
 
+def le_of_mul_le_mul_of_pos_left: ∀(a b c : α), 0 < c → c * a ≤ c * b -> a ≤ b := by
+  intro a b c cpos ab
+  have := mul_le_mul_of_nonneg_left ab c⁻¹? ?_
+  rwa [←mul_assoc, ←mul_assoc, inv?_mul_cancel, one_mul, one_mul] at this
+  apply le_of_lt
+  apply pos_inv?
+  assumption
+
+def mul_le_mul_of_pos_right: ∀(a b c : α), 0 < c → a * c ≤ b * c -> a ≤ b := by
+  intro a b c cpos ab
+  have := mul_le_mul_of_nonneg_right ab c⁻¹? ?_
+  rwa [mul_assoc, mul_assoc, mul_inv?_cancel, mul_one, mul_one] at this
+  apply le_of_lt
+  apply pos_inv?
+  assumption
+
 local macro_rules
 | `(tactic|invert_tactic_trivial) => `(tactic|apply natCast_ne_zero)
 

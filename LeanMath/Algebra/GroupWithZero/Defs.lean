@@ -256,6 +256,13 @@ instance (a b: α) (h: a ≠ 0) [IsCommAt a b] : IsCommAt a⁻¹? b where
 
 instance (a b: α) (h: a ≠ 0) [IsCommAt a b] : IsCommAt b a⁻¹? := inferInstance
 
+instance (a b c: α) (h: c ≠ 0) [IsCommAt a b] [IsCommAt c b] : IsCommAt (a /? c) b where
+  mul_comm := by
+    rw [div?_eq_mul_inv?, mul_assoc, mul_comm _ b, ←mul_assoc,
+      mul_comm _ b, mul_assoc]
+
+instance (a b c: α) (h: c ≠ 0) [IsCommAt a b] [IsCommAt c b] : IsCommAt b (a /? c) := inferInstance
+
 def inv?_mul_rev (a b: α) (h: a * b ≠ 0) : (a * b)⁻¹? = b⁻¹? * a⁻¹? := by
   symm; apply eq_inv?_of_mul
   rw [mul_assoc, ←mul_assoc _ a, inv?_mul_cancel, one_mul, inv?_mul_cancel]

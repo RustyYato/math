@@ -238,40 +238,50 @@ instance : FunLike (CauchySeq α γ) ℕ α where
 
 protected def is_cauchy (c: CauchySeq α γ) : is_cauchy c := c.is_cauchy'
 
+def symm : ∀{f g: ℕ -> α}, is_cauchy_eqv f g -> is_cauchy_eqv g f := by
+  intro a b h
+  intro ε hε
+  have ⟨k, hk⟩ := h ε hε
+  exists k
+  intro i j hi hj
+  rw [norm_sub]
+  apply hk <;> assumption
+
+def trans : ∀{a b c: ℕ -> α}, is_cauchy_eqv b b -> is_cauchy_eqv a b -> is_cauchy_eqv b c -> is_cauchy_eqv a c := by
+  intro x y z hb h g
+  intro ε εpos
+  replace h := h _ (half_pos (half_pos εpos))
+  replace g := g _ (half_pos (half_pos εpos))
+  replace c := hb _ (half_pos εpos)
+  replace h := (h.merge₂ g).merge₂ c; clear g c
+  obtain ⟨k, h⟩ := h
+  exists k
+  intro i j hi hj
+  replace ⟨⟨h, g⟩, c⟩ := h i j hi hj
+  rw [norm_sub] at c
+  have := lt_of_le_of_lt (norm_add_le_add_norm _ _) (add_lt_add h g)
+  replace := lt_of_le_of_lt (norm_add_le_add_norm _ _) (add_lt_add this c)
+  clear h g c
+  rwa [half_add_half, half_add_half,
+    sub_add_assoc, ←add_sub_assoc (-_),
+    add_comm (-_), ←sub_eq_add_neg,
+    sub_eq_add_neg _ (z j),
+    add_comm _ (-z j), ←add_assoc,
+    ←sub_eq_add_neg, add_assoc,
+    ←neg_sub (y i),  add_neg_cancel,
+    add_zero] at this
+
 instance setoid : Setoid (CauchySeq α γ) where
   r a b := is_cauchy_eqv a b
   iseqv := {
     refl a := a.is_cauchy
-    symm := by
-      intro a b h
-      intro ε hε
-      have ⟨k, hk⟩ := h ε hε
-      exists k
-      intro i j hi hj
-      rw [norm_sub]
-      apply hk <;> assumption
+    symm {x y} := by
+      apply symm
     trans {x y z} h g := by
-      intro ε εpos
-      replace h := h _ (half_pos (half_pos εpos))
-      replace g := g _ (half_pos (half_pos εpos))
-      replace c := y.is_cauchy _ (half_pos εpos)
-      replace h := (h.merge₂ g).merge₂ c; clear g c
-      obtain ⟨k, h⟩ := h
-      exists k
-      intro i j hi hj
-      replace ⟨⟨h, g⟩, c⟩ := h i j hi hj
-      rw [norm_sub] at c
-      have := lt_of_le_of_lt (norm_add_le_add_norm _ _) (add_lt_add h g)
-      replace := lt_of_le_of_lt (norm_add_le_add_norm _ _) (add_lt_add this c)
-      clear h g c
-      rwa [half_add_half, half_add_half,
-        sub_add_assoc, ←add_sub_assoc (-_),
-        add_comm (-_), ←sub_eq_add_neg,
-        sub_eq_add_neg _ (z j),
-        add_comm _ (-z j), ←add_assoc,
-        ←sub_eq_add_neg, add_assoc,
-        ←neg_sub (y i),  add_neg_cancel,
-        add_zero] at this
+      apply trans
+      exact y.is_cauchy
+      assumption
+      assumption
   }
 
 def bounded (c: CauchySeq α γ) : ∃B, ∀i, ‖c i‖ < B := by

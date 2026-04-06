@@ -9,8 +9,7 @@ class IsRing (α: Type*) [RingOps α] : Prop extends IsSemiring α, IsAddGroupWi
 
 section
 
-variable [RingOps α] [IsRing α] [RingOps β] [IsRing β]
-  [FunLike F α β] [IsZeroHom F α β] [IsOneHom F α β] [IsAddHom F α β] [IsMulHom F α β]
+variable [AddGroupOps α] [Mul α] [IsAddGroup α] [IsLawfulZeroMul α] [IsLeftDistrib α] [IsRightDistrib α]
 
 def neg_mul_left (a b: α) : -(a * b) = -a * b := by
   symm; apply eq_neg_of_add
@@ -18,6 +17,16 @@ def neg_mul_left (a b: α) : -(a * b) = -a * b := by
 def neg_mul_right (a b: α) : -(a * b) = a * -b := by
   symm; apply eq_neg_of_add
   rw [←mul_add, neg_add_cancel, mul_zero]
+
+instance (a b: α) [IsCommAt a b] : IsCommAt a (-b) where
+  mul_comm := by rw [←neg_mul_left, ←neg_mul_right, mul_comm]
+
+end
+
+section
+
+variable [RingOps α] [IsRing α] [RingOps β] [IsRing β]
+  [FunLike F α β] [IsZeroHom F α β] [IsOneHom F α β] [IsAddHom F α β] [IsMulHom F α β]
 
 def zsmul_eq_intCast_mul (n: ℤ) (a: α) : n • a = n * a := by
   cases n with
@@ -62,6 +71,12 @@ instance : Subsingleton (ℤ →+* α) where
 
 def intCast_npow (n: ℤ) (m: ℕ) : (n ^ m: ℤ) = (n: α) ^ m :=
   map_npow (f := intCastHom) _ _
+
+def neg_sq (a: α) : (-a) ^ 2 = a ^ 2 := by
+  rw [npow_two, npow_two, ←neg_mul_left, ←neg_mul_right, neg_neg]
+
+def sub_sq (a b: α) [IsCommAt a b] : (a - b) ^ 2 = a ^ 2 - (2: ℕ) * (a * b) + b ^ 2 := by
+  rw [sub_eq_add_neg, add_sq, neg_sq, ←neg_mul_right, ←neg_mul_right, sub_eq_add_neg]
 
 variable [RelLike R α] [IsCon R] [IsAddCon R] [IsMulCon R] (r: R)
 

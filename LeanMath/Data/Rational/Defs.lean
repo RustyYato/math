@@ -626,4 +626,7 @@ def ofInt : ℤ ↪+* ℚ where
 instance : HasChar ℚ 0 :=
   HasChar.of_ring_emb ofInt
 
+def approx (q: ℚ) : Float :=
+  Float.ofInt q.num / Float.ofNat q.den
+
 end Rational

@@ -268,6 +268,13 @@ instance : Subsingleton (ℕ →+* α) where
 def natCast_npow (n m: ℕ) : (n ^ m: ℕ) = (n: α) ^ m :=
   map_npow (f := natCastHom) _ _
 
+def two_mul (a: α) : (2: ℕ) * a = a + a := by
+  rw [←nsmul_eq_natCast_mul, succ_nsmul, one_nsmul]
+
+def add_sq (a b: α) [IsCommAt a b] : (a + b) ^ 2 = a ^ 2 + (2: ℕ) * (a * b) + b ^ 2 := by
+  rw [npow_succ, npow_one, mul_add, add_mul, add_mul, mul_comm b,
+    ←add_assoc, add_assoc (a * a), ←two_mul, ←npow_two, ←npow_two]
+
 end
 
 section

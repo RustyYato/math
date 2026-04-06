@@ -806,6 +806,12 @@ def npow_mul (a: α) (n m: ℕ) : a ^ (n * m) = (a ^ n) ^ m := by
 def mul_nsmul (a: α) (n m: ℕ) : (n * m) • a = m • n • a :=
   npow_mul (α := MulOfAdd α) _ _ _
 
+def npow_two (a: α) : a ^ 2 = a * a := by
+  rw [npow_succ, npow_one]
+
+def two_nsmul (a: α) : 2 • a = a + a :=
+  npow_two (α := MulOfAdd α) _
+
 end
 
 section

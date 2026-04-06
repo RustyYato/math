@@ -31,3 +31,11 @@ def natCast_div?_natCast (n m: ℕ) (h: m ∣ n) (hm: (m: α) ≠ 0 := by invert
   assumption
   rw [div?_mul_cancel, ←natCast_mul, Nat.div_mul_cancel]
   assumption
+
+def add_div? (a b k: α) (hk: k ≠ 0) : (a + b) /? k = a /? k + b /? k := by
+  iterate 3 rw [div?_eq_mul_inv?]
+  rw [add_mul]
+
+def npow_div? (a b: α) [IsCommAt a b] (hb: b ≠ 0) (n: ℕ) : (a /? b) ^ n = a ^ n /? (b ^ n) := by
+  apply (eq_div_iff_mul_eq _ _ _ _).mpr
+  rw [←mul_npow, div?_mul_cancel]
