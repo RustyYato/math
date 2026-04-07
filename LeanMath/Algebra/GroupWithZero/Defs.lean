@@ -55,6 +55,8 @@ class IsGroupWithZero (α: Type*) [GroupWithZeroOps α] : Prop
   extends IsMonoidWithZero α, IsLawfulDiv? α, IsLawfulZPow? α, IsZeroNeOne α where
   protected mul_inv?_cancel (a: α) (h: a ≠ 0) : a * a⁻¹? = 1
 
+section
+
 variable [GroupWithZeroOps α] [IsGroupWithZero α]
    [GroupWithZeroOps β] [IsGroupWithZero β]
 
@@ -406,3 +408,46 @@ def eq_div_iff_mul_eq (a b c: α) (hc: c ≠ 0) : a = b /? c ↔ a * c = b := by
   rw [h, div?_mul_cancel]
   intro h
   rw [←h, mul_div?_assoc, div?_self, mul_one]
+
+end
+
+namespace OfEquiv
+
+variable (f: α ≃ β)
+
+def apply_ne_zero [Zero β] (a: OfEquiv f) (ha: a ≠ 0) : f a ≠ 0 := by
+  intro h; apply ha; dsimp
+  rw [←h, Equiv.coe_symm]
+
+macro_rules
+| `(tactic|invert_tactic_trivial) => `(tactic|apply apply_ne_zero <;> invert_tactic)
+
+instance [Zero β] [CheckedDiv? β] : CheckedDiv? (OfEquiv f) where
+  checked_div a b hb := f.symm (f a /? f b)
+
+instance [Zero β] [CheckedInv? β] : CheckedInv? (OfEquiv f) where
+  checked_inv a ha := f.symm (f a)⁻¹?
+
+instance [Zero β] [CheckedZPow? β] : CheckedZPow? (OfEquiv f) where
+  checked_pow a n ha := f.symm (f a ^? n)
+
+instance [GroupWithZeroOps β] : GroupWithZeroOps (OfEquiv f) := inferInstance
+
+@[simp] def inv?_def [Zero β] [CheckedInv? β] (a: OfEquiv f) (ha: a ≠ 0) : a⁻¹? = f.symm (f a)⁻¹? := rfl
+@[simp] def div?_def [Zero β] [CheckedDiv? β] (a b: OfEquiv f) (hb: b ≠ 0) : a /? b = f.symm (f a /? f b) := rfl
+@[simp] def pow?_def [Zero β] [CheckedZPow? β] (a: OfEquiv f) (z: ℤ) (h: 0 ≤ z ∨ a ≠ 0) : a ^? z = f.symm (f a ^? z) := rfl
+
+instance [Zero β] [Mul β] [CheckedInv? β] [CheckedDiv? β] [IsLawfulDiv? β] : IsLawfulDiv? (OfEquiv f) where
+  div?_eq_mul_inv? a b h := by dsimp; rw [Equiv.symm_coe, div?_eq_mul_inv?]
+
+instance [Zero β] [CheckedInv? β] [Pow β ℕ] [CheckedZPow? β] [IsLawfulZPow? β] : IsLawfulZPow? (OfEquiv f) where
+  zpow?_ofNat a n := by dsimp; rw [zpow?_ofNat]
+  zpow?_negSucc a n ha := by dsimp; rw [zpow?_negSucc, Equiv.symm_coe]
+
+instance [Zero β] [One β] [IsZeroNeOne β] : IsZeroNeOne (OfEquiv f) where
+  zero_ne_one h := zero_ne_one _ (inj f.symm h)
+
+instance [GroupWithZeroOps β] [IsGroupWithZero β] : IsGroupWithZero (OfEquiv f) where
+  mul_inv?_cancel a ha := by dsimp; rw [Equiv.symm_coe, mul_inv?_cancel]
+
+end OfEquiv

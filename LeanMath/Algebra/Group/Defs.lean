@@ -90,7 +90,9 @@ class IsLawfulOneInv (α: Type*) [Inv α] [One α] : Prop where
 class IsLawfulNegZero (α: Type*) [Neg α] [Zero α] : Prop where
   protected neg_zero : -(0: α) = 0
 
+@[implicit_reducible]
 def one_inv [Inv α] [One α] [IsLawfulOneInv α] : (1: α)⁻¹ = 1 := IsLawfulOneInv.one_inv
+@[implicit_reducible]
 def neg_zero [Neg α] [Zero α] [IsLawfulNegZero α] : -(0: α) = 0 := IsLawfulNegZero.neg_zero
 
 instance [Inv α] [One α] [IsLawfulOneInv α] : IsLawfulNegZero (AddOfMul α) where
@@ -770,3 +772,38 @@ instance [AddGroupOps α] [IsAddGroup α] (a: α) : IsAddUnit a where
   exists_eq_add_unit := ⟨AddUnits.equiv a, rfl⟩
 
 end AddUnits
+
+namespace OfEquiv
+
+variable (f: α ≃ β)
+
+protected scoped instance GroupOps [GroupOps β] : GroupOps (OfEquiv f) := inferInstance
+protected scoped instance AddGroupOps [AddGroupOps β] : AddGroupOps (OfEquiv f) := inferInstance
+
+protected scoped instance IsLawfulPowZ [GroupOps β] [IsLawfulPowZ β] : IsLawfulPowZ (OfEquiv f) where
+  zpow_ofNat a n := by
+    dsimp; rw [zpow_ofNat]
+  zpow_negSucc a n := by
+    dsimp; rw [zpow_negSucc, Equiv.symm_coe]
+
+protected scoped instance IsLawfulZSMul [AddGroupOps β] [IsLawfulZSMul β] : IsLawfulZSMul (OfEquiv f) where
+  ofNat_zsmul a n := by
+    dsimp; rw [ofNat_zsmul]
+  negSucc_zsmul a n := by
+    dsimp; rw [negSucc_zsmul, Equiv.symm_coe]
+
+protected scoped instance IsLawfulDiv [Mul β] [Div β] [Inv β] [IsLawfulDiv β] : IsLawfulDiv (OfEquiv f) where
+  div_eq_mul_inv a b := by
+    dsimp; rw [div_eq_mul_inv, Equiv.symm_coe]
+
+protected scoped instance IsLawfulSub [Add β] [Sub β] [Neg β] [IsLawfulSub β] : IsLawfulSub (OfEquiv f) where
+  sub_eq_add_neg a b := by
+    dsimp; rw [sub_eq_add_neg, Equiv.symm_coe]
+
+protected scoped instance IsGroup [GroupOps β] [IsGroup β] : IsGroup (OfEquiv f) where
+  mul_inv_cancel a := by dsimp; rw [Equiv.symm_coe, mul_inv_cancel]
+
+protected scoped instance IsAddGroup [AddGroupOps β] [IsAddGroup β] : IsAddGroup (OfEquiv f) where
+  add_neg_cancel a := by dsimp; rw [Equiv.symm_coe, add_neg_cancel]
+
+end OfEquiv

@@ -538,3 +538,117 @@ instance : IsRightCancel₀ ℕ := inferInstance
 instance : IsRightCancel₀ ℤ := inferInstance
 
 def smul_eq_mul [Mul α] (a b: α) : a • b = a * b := rfl
+
+def OfEquiv (_: α ≃ β) := α
+
+namespace OfEquiv
+
+variable (f: α ≃ β)
+
+protected scoped instance mul [Mul β] : Mul (OfEquiv f) where
+  mul a b := f.symm (f a * f b)
+protected scoped instance add [Add β] : Add (OfEquiv f) where
+  add a b := f.symm (f a + f b)
+
+protected scoped instance smul (R: Type*) [SMul R β] : SMul R (OfEquiv f) where
+  smul r a := f.symm (r • f a)
+protected scoped instance pow (R: Type*) [Pow β R] : Pow (OfEquiv f) R where
+  pow a r := f.symm (f a ^ r)
+
+protected scoped instance inv [Inv β] : Inv (OfEquiv f) where
+  inv a := f.symm (f a)⁻¹
+protected scoped instance neg [Neg β] : Neg (OfEquiv f) where
+  neg a := f.symm (-f a)
+
+protected scoped instance div [Div β] : Div (OfEquiv f) where
+  div a b := f.symm (f a / f b)
+protected scoped instance sub [Sub β] : Sub (OfEquiv f) where
+  sub a b := f.symm (f a - f b)
+
+protected scoped instance one [One β] : One (OfEquiv f) where
+  one := f.symm 1
+protected scoped instance zero [Zero β] : Zero (OfEquiv f) where
+  zero := f.symm 0
+
+protected scoped instance natCast [NatCast β] : NatCast (OfEquiv f) where
+  natCast n := f.symm n
+protected scoped instance intCast [IntCast β] : IntCast (OfEquiv f) where
+  intCast n := f.symm n
+
+@[simp] def mul_def [Mul β] (a b: OfEquiv f) : a * b = f.symm (f a * f b) := rfl
+@[simp] def add_def [Add β] (a b: OfEquiv f) : a + b = f.symm (f a + f b) := rfl
+
+@[simp] def inv_def [Inv β] (a: OfEquiv f) : a⁻¹ = f.symm (f a)⁻¹ := rfl
+@[simp] def neg_def [Neg β] (a: OfEquiv f) : -a = f.symm (-f a) := rfl
+
+@[simp] def div_def [Div β] (a b: OfEquiv f) : a / b = f.symm (f a / f b) := rfl
+@[simp] def sub_def [Sub β] (a b: OfEquiv f) : a - b = f.symm (f a - f b) := rfl
+
+@[simp] def smul_def [SMul R β] (r: R) (a: OfEquiv f) : r • a = f.symm (r • f a) := rfl
+@[simp] def pow_def [Pow β R] (a: OfEquiv f) (r: R) : a ^ r = f.symm (f a ^ r) := rfl
+
+@[simp] def one_def [One β] : (1: OfEquiv f) = f.symm 1 := rfl
+@[simp] def zero_def [Zero β] : (0: OfEquiv f) = f.symm 0 := rfl
+
+@[simp] def natCast_def [NatCast β] (n: ℕ) : (n: OfEquiv f) = f.symm n := rfl
+@[simp] def intCast_def [IntCast β] (n: ℤ) : (n: OfEquiv f) = f.symm n := rfl
+
+protected scoped instance IsSemigroup [Mul β] [IsSemigroup β] : IsSemigroup (OfEquiv f) where
+  mul_assoc a b c := by
+    dsimp; repeat rw [Equiv.symm_coe]
+    rw [mul_assoc]
+
+protected scoped instance IsAddSemigroup [Add β] [IsAddSemigroup β] : IsAddSemigroup (OfEquiv f) where
+  add_assoc a b c := by
+    dsimp; repeat rw [Equiv.symm_coe]
+    rw [add_assoc]
+
+protected scoped instance IsComm [Mul β] [IsComm β] : IsComm (OfEquiv f) where
+  mul_comm a b := by
+    dsimp; repeat rw [Equiv.symm_coe]
+    rw [mul_comm]
+
+protected scoped instance IsAddComm [Add β] [IsAddComm β] : IsAddComm (OfEquiv f) where
+  add_comm a bc := by
+    dsimp; repeat rw [Equiv.symm_coe]
+    rw [add_comm]
+
+protected scoped instance IsLeftCancel [Mul β] [IsLeftCancel β] : IsLeftCancel (OfEquiv f) where
+  of_mul_left h := by
+    dsimp at h
+    exact inj f (of_mul_left (inj f.symm h))
+
+protected scoped instance IsRightCancel [Mul β] [IsRightCancel β] : IsRightCancel (OfEquiv f) where
+  of_mul_right h := by
+    dsimp at h
+    exact inj f (of_mul_right (inj f.symm h))
+
+protected scoped instance IsAddLeftCancel [Add β] [IsLeftAddCancel β] : IsLeftAddCancel (OfEquiv f) where
+  of_add_left h := by
+    dsimp at h
+    exact inj f (of_add_left (inj f.symm h))
+
+protected scoped instance IsAddRightCancel [Add β] [IsRightAddCancel β] : IsRightAddCancel (OfEquiv f) where
+  of_add_right h := by
+    dsimp at h
+    exact inj f (of_add_right (inj f.symm h))
+
+protected scoped instance IsLeftCancel₀ [Zero β] [Mul β] [IsLeftCancel₀ β] : IsLeftCancel₀ (OfEquiv f) where
+  of_mul_left₀ {k a b} hk h := by
+    dsimp at h
+    replace hk : f k ≠ 0 := by
+      intro h; apply hk
+      have := congrArg f.symm h
+      rwa [Equiv.coe_symm] at this
+    exact inj f (of_mul_left₀ hk (inj f.symm h))
+
+protected scoped instance IsRightCancel₀ [Zero β] [Mul β] [IsRightCancel₀ β] : IsRightCancel₀ (OfEquiv f) where
+  of_mul_right₀ {k a b} hk h := by
+    dsimp at h
+    replace hk : f k ≠ 0 := by
+      intro h; apply hk
+      have := congrArg f.symm h
+      rwa [Equiv.coe_symm] at this
+    exact inj f (of_mul_right₀ hk (inj f.symm h))
+
+end OfEquiv

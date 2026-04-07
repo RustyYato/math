@@ -5,7 +5,21 @@ class RingOps (α: Type*) extends SemiringOps α, AddGroupWithOneOps α where
 
 instance (priority := 1100) [MonoidOps α] [AddGroupWithOneOps α] : RingOps α where
 
-class IsRing (α: Type*) [RingOps α] : Prop extends IsSemiring α, IsAddGroupWithOne α where
+class IsNonUnitalNonAssocRing (α: Type*)
+  [AddGroupOps α] [Mul α] extends
+  IsNonUnitalNonAssocSemiring α, IsAddGroup α, IsLeftDistrib α, IsRightDistrib α, IsLawfulZeroMul α, IsAddComm α  where
+
+class IsNonUnitalRing (α: Type*)
+  [AddGroupOps α] [Mul α] extends
+  IsNonUnitalSemiring α, IsNonUnitalNonAssocRing α, IsSemigroup α where
+
+class IsNonAssocRing (α: Type*)
+  [AddGroupWithOneOps α] [Mul α] extends
+  IsNonAssocSemiring α, IsNonUnitalNonAssocRing α, IsAddGroupWithOne α, IsLawfulOneMul α where
+
+class IsRing (α: Type*) [RingOps α] : Prop extends IsSemiring α, IsAddGroupWithOne α, IsNonUnitalRing α, IsNonAssocRing α, IsMonoidWithZero α where
+
+-- class IsRing (α: Type*) [RingOps α] : Prop extends IsSemiring α, IsAddGroupWithOne α where
 
 section
 
@@ -78,9 +92,18 @@ def neg_sq (a: α) : (-a) ^ 2 = a ^ 2 := by
 def sub_sq (a b: α) [IsCommAt a b] : (a - b) ^ 2 = a ^ 2 - (2: ℕ) * (a * b) + b ^ 2 := by
   rw [sub_eq_add_neg, add_sq, neg_sq, ←neg_mul_right, ←neg_mul_right, sub_eq_add_neg]
 
-variable [RelLike R α] [IsCon R] [IsAddCon R] [IsMulCon R] (r: R)
+end
 
-instance : IsRing (AlgQuot r) where
+section
+
+variable [RelLike R α] [IsCon R] (r: R)
+
+instance [RingOps α] [IsLawfulPowN α] [IsAddGroupWithOne α] [IsAddCon R] [IsMulCon R] : RingOps (AlgQuot r) := inferInstance
+
+instance [AddGroupOps α] [Mul α] [IsNonUnitalNonAssocRing α] [IsAddCon R] [IsMulCon R] : IsNonUnitalNonAssocRing (AlgQuot r) where
+instance [AddGroupOps α] [Mul α] [IsNonUnitalRing α] [IsAddCon R] [IsMulCon R] : IsNonUnitalRing (AlgQuot r) where
+instance [AddGroupWithOneOps α] [Mul α] [IsNonAssocRing α] [IsAddCon R] [IsMulCon R] : IsNonAssocRing (AlgQuot r) where
+instance [RingOps α] [IsRing α] [IsAddCon R] [IsMulCon R] : IsRing (AlgQuot r) where
 
 end
 
@@ -102,3 +125,24 @@ instance [RingOps R] [IsRing R] (r: R) [IsUnit r] : IsUnit (-r) where
   exists_eq_unit :=
     have ⟨u, h⟩ := IsUnit.exists_eq_unit (a := r)
     ⟨-u, by rw [h]; rfl⟩
+
+namespace OfEquiv
+
+variable (f: α ≃ β)
+
+instance [RingOps β] : RingOps (OfEquiv f) := inferInstance
+
+instance [Add β] [Mul β] [IsLeftDistrib β] : IsLeftDistrib (OfEquiv f) where
+  mul_add k a b := by dsimp; rw [Equiv.symm_coe]; rw [mul_add]; iterate 2 rw [Equiv.symm_coe]
+instance [Add β] [Mul β] [IsRightDistrib β] : IsRightDistrib (OfEquiv f) where
+  add_mul k a b := by dsimp; rw [Equiv.symm_coe]; rw [add_mul]; iterate 2 rw [Equiv.symm_coe]
+
+instance [AddGroupOps β] [Mul β] [IsNonUnitalNonAssocRing β] : IsNonUnitalNonAssocRing (OfEquiv f) where
+
+instance [AddGroupOps β] [Mul β] [IsNonUnitalRing β] : IsNonUnitalRing (OfEquiv f) where
+
+instance [AddGroupWithOneOps β] [Mul β] [IsNonAssocRing β] : IsNonAssocRing (OfEquiv f) where
+
+instance [RingOps β] [IsRing β] : IsRing (OfEquiv f) where
+
+end OfEquiv

@@ -24,14 +24,10 @@ def default_succ_nsmul [Zero α] [Add α] (a: α) (n: ℕ) : (n + 1) • a = n �
 
 end
 
-instance (priority := 100) [MonoidOps α] : One α := MonoidOps.toOne
-instance (priority := 100) [MonoidOps α] : Mul α := MonoidOps.toMul
 instance (priority := 100) [MonoidOps α] : Pow α ℕ := MonoidOps.toPowN
 
 instance (priority := 1100) [One α] [Mul α] [Pow α ℕ] : MonoidOps α where
 
-instance (priority := 100) [AddMonoidOps α] : Zero α := AddMonoidOps.toZero
-instance (priority := 100) [AddMonoidOps α] : Add α := AddMonoidOps.toAdd
 instance (priority := 100) [AddMonoidOps α] : SMul ℕ α := AddMonoidOps.toNSMul
 
 instance (priority := 1100) [Zero α] [Add α] [SMul ℕ α] : AddMonoidOps α where
@@ -1440,3 +1436,46 @@ instance (z: ℤ) : Decidable (IsUnit z) :=
 
 instance (n: ℕ) : Decidable (IsUnit n) :=
   decidable_of_iff (n = 1) Nat.is_unit_iff.symm
+
+namespace OfEquiv
+
+variable (f: α ≃ β)
+
+protected scoped instance MonoidOps [MonoidOps β] : MonoidOps (OfEquiv f) := inferInstance
+protected scoped instance AddMonoidOps [AddMonoidOps β] : AddMonoidOps (OfEquiv f) := inferInstance
+
+protected scoped instance IsLawfulPowN [MonoidOps β] [IsLawfulPowN β] : IsLawfulPowN (OfEquiv f) where
+  npow_zero a := by dsimp; rw [npow_zero]
+  npow_succ a n := by
+    dsimp; rw [npow_succ]
+    rw [Equiv.symm_coe]
+
+protected scoped instance IsLawfulNSMul [AddMonoidOps β] [IsLawfulNSMul β] : IsLawfulNSMul (OfEquiv f) where
+  zero_nsmul a := by dsimp; rw [zero_nsmul]
+  succ_nsmul n a := by
+    dsimp; rw [succ_nsmul]
+    rw [Equiv.symm_coe]
+
+protected scoped instance IsLawfulOneMul [One β] [Mul β] [IsLawfulOneMul β] : IsLawfulOneMul (OfEquiv f) where
+  one_mul a := by dsimp; rw [Equiv.symm_coe, one_mul, Equiv.coe_symm]
+  mul_one a := by dsimp; rw [Equiv.symm_coe, mul_one, Equiv.coe_symm]
+
+protected scoped instance IsLawfulZeroMul [Zero β] [Mul β] [IsLawfulZeroMul β] : IsLawfulZeroMul (OfEquiv f) where
+  zero_mul a := by dsimp; rw [Equiv.symm_coe, zero_mul]
+  mul_zero a := by dsimp; rw [Equiv.symm_coe, mul_zero]
+
+protected scoped instance IsLawfulZeroAdd [Zero β] [Add β] [IsLawfulZeroAdd β] : IsLawfulZeroAdd (OfEquiv f) where
+  zero_add a := by dsimp; rw [Equiv.symm_coe, zero_add, Equiv.coe_symm]
+  add_zero a := by dsimp; rw [Equiv.symm_coe, add_zero, Equiv.coe_symm]
+
+protected scoped instance NoZeroDivisors [Mul β] [Zero β] [NoZeroDivisors β] : NoZeroDivisors (OfEquiv f) where
+  of_mul_eq_zero {a b} h := by
+    dsimp at h
+    rcases of_mul_eq_zero (inj f.symm h) with h | h
+    rw [←Equiv.coe_symm f a, ←Equiv.coe_symm f b, h]; left; rfl
+    rw [←Equiv.coe_symm f a, ←Equiv.coe_symm f b, h]; right; rfl
+
+protected scoped instance IsMonoid [MonoidOps β] [IsMonoid β] : IsMonoid (OfEquiv f) where
+protected scoped instance IsAddMonoid [AddMonoidOps β] [IsAddMonoid β] : IsAddMonoid (OfEquiv f) where
+
+end OfEquiv

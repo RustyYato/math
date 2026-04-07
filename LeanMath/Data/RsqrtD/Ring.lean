@@ -37,6 +37,9 @@ instance : IsRing (RsqrtD α r) where
   intCast_ofNat _ := by ext; apply intCast_ofNat; rfl
   intCast_negSucc _ := by ext; apply intCast_negSucc; simp [neg_zero]
 
+
+instance : IsLawfulNegZero (RsqrtD α r) := inferInstance
+
 def conj : RsqrtD α r ↪+* RsqrtD α r where
   toFun a := {
     real := a.real
@@ -46,9 +49,9 @@ def conj : RsqrtD α r ↪+* RsqrtD α r where
     have ⟨h₀, h₁⟩ := mk.inj h
     rw [neg_inj] at h₁
     ext <;> assumption
-  map_zero := by ext <;> simp [neg_zero]
-  map_one := by congr; simp [neg_zero]
-  map_add a b := by ext <;> simp [neg_add_rev, add_comm]
+  map_zero := by ext <;> simp; rw [neg_zero]
+  map_one := by congr; simp; rw [neg_zero]
+  map_add a b := by ext <;> simp; rw [neg_add_rev, add_comm]
   map_mul a b := by
     ext <;> simp
     rw [←neg_mul_left, ←neg_mul_right, neg_neg]

@@ -48,3 +48,15 @@ instance : EmbeddingLike F D R where
       rw [map_mul, h, zero_mul] at this
       exact zero_ne_one _ this
   }
+
+namespace OfEquiv
+
+variable (f: α ≃ β)
+
+instance [ops: FieldOps β] : FieldOps (OfEquiv f) where
+
+instance [FieldOps β] [IsDivisionRing β] : IsDivisionRing (OfEquiv f) where
+
+instance [FieldOps β] [IsField β] : IsField (OfEquiv f) where
+
+end OfEquiv

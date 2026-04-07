@@ -6,6 +6,8 @@ class SemifieldOps (α: Type*) extends GroupWithZeroOps α, SemiringOps α where
 class IsDivisionSemiring (α: Type*) [SemifieldOps α] : Prop extends IsSemiring α, IsGroupWithZero α, NoZeroDivisors α where
 class IsSemifield (α: Type*) [SemifieldOps α] : Prop extends IsDivisionSemiring α, IsComm α where
 
+section
+
 variable [SemifieldOps α] [IsDivisionSemiring α]
 
 def div?_add_div? (a b c d: α) [IsCommAt b d] (hb: b ≠ 0) (hd: d ≠ 0) : a /? b + c /? d = (a * d + c * b) /? (b * d) := by
@@ -39,3 +41,17 @@ def add_div? (a b k: α) (hk: k ≠ 0) : (a + b) /? k = a /? k + b /? k := by
 def npow_div? (a b: α) [IsCommAt a b] (hb: b ≠ 0) (n: ℕ) : (a /? b) ^ n = a ^ n /? (b ^ n) := by
   apply (eq_div_iff_mul_eq _ _ _ _).mpr
   rw [←mul_npow, div?_mul_cancel]
+
+end
+
+namespace OfEquiv
+
+variable (f: α ≃ β)
+
+instance [ops: SemifieldOps β] : SemifieldOps (OfEquiv f) where
+
+instance [SemifieldOps β] [IsDivisionSemiring β] : IsDivisionSemiring (OfEquiv f) where
+
+instance [SemifieldOps β] [IsSemifield β] : IsSemifield (OfEquiv f) where
+
+end OfEquiv

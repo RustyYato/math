@@ -10,3 +10,11 @@ def zero_npow (n: ℕ) (hn: 0 < n) : (0: α) ^ n = 0 := by
 
 instance : IsMonoidWithZero ℕ where
 instance : IsMonoidWithZero ℤ where
+
+namespace OfEquiv
+
+variable (f: α ≃ β)
+
+instance [Zero β] [MonoidOps β] [IsMonoidWithZero β] : IsMonoidWithZero (OfEquiv f) where
+
+end OfEquiv
