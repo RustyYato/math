@@ -1,5 +1,6 @@
 import LeanMath.Data.Real.Defs
 import LeanMath.Data.RsqrtD.Field
+import LeanMath.Data.RsqrtD.Algebra
 
 variable [LEM]
 
@@ -31,6 +32,9 @@ instance : RsqrtD.NoSolution ℝ (-1: ℤ) where
 
 instance : FieldOps ℂ := inferInstanceAs (FieldOps (RsqrtD ℝ (-1: ℤ)))
 instance : IsField ℂ := inferInstanceAs (IsField (RsqrtD ℝ (-1: ℤ)))
+instance : SMul ℝ ℂ := inferInstanceAs (SMul ℝ (RsqrtD ℝ (-1: ℤ)))
+instance : AlgebraMap ℝ ℂ := inferInstanceAs (AlgebraMap ℝ (RsqrtD ℝ (-1: ℤ)))
+instance : IsAlgebra ℝ ℂ := inferInstanceAs (IsAlgebra ℝ (RsqrtD ℝ (-1: ℤ)))
 
 def ofReal : ℝ ↪+* ℂ := RsqrtD.of_real
 instance : HasChar ℂ 0 := HasChar.of_ring_emb ofReal
