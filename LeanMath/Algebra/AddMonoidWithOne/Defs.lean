@@ -141,9 +141,9 @@ namespace OfEquiv
 
 variable (f: α ≃ β)
 
-instance [AddMonoidWithOneOps β] : AddMonoidWithOneOps (OfEquiv f) := inferInstance
+protected scoped instance [AddMonoidWithOneOps β] : AddMonoidWithOneOps (OfEquiv f) := inferInstance
 
-instance [Add β] [Zero β] [One β] [NatCast β] [IsLawfulNatCast β] : IsLawfulNatCast (OfEquiv f) where
+protected scoped instance [Add β] [Zero β] [One β] [NatCast β] [IsLawfulNatCast β] : IsLawfulNatCast (OfEquiv f) where
   natCast_zero := by dsimp; rw [natCast_zero]
   natCast_one := by dsimp; rw [natCast_one]
   natCast_succ n := by dsimp; rw [natCast_succ, Equiv.symm_coe, Equiv.symm_coe]

@@ -130,19 +130,19 @@ namespace OfEquiv
 
 variable (f: α ≃ β)
 
-instance [RingOps β] : RingOps (OfEquiv f) := inferInstance
+protected scoped instance [RingOps β] : RingOps (OfEquiv f) := inferInstance
 
-instance [Add β] [Mul β] [IsLeftDistrib β] : IsLeftDistrib (OfEquiv f) where
+protected scoped instance [Add β] [Mul β] [IsLeftDistrib β] : IsLeftDistrib (OfEquiv f) where
   mul_add k a b := by dsimp; rw [Equiv.symm_coe]; rw [mul_add]; iterate 2 rw [Equiv.symm_coe]
-instance [Add β] [Mul β] [IsRightDistrib β] : IsRightDistrib (OfEquiv f) where
+protected scoped instance [Add β] [Mul β] [IsRightDistrib β] : IsRightDistrib (OfEquiv f) where
   add_mul k a b := by dsimp; rw [Equiv.symm_coe]; rw [add_mul]; iterate 2 rw [Equiv.symm_coe]
 
-instance [AddGroupOps β] [Mul β] [IsNonUnitalNonAssocRing β] : IsNonUnitalNonAssocRing (OfEquiv f) where
+protected scoped instance [AddGroupOps β] [Mul β] [IsNonUnitalNonAssocRing β] : IsNonUnitalNonAssocRing (OfEquiv f) where
 
-instance [AddGroupOps β] [Mul β] [IsNonUnitalRing β] : IsNonUnitalRing (OfEquiv f) where
+protected scoped instance [AddGroupOps β] [Mul β] [IsNonUnitalRing β] : IsNonUnitalRing (OfEquiv f) where
 
-instance [AddGroupWithOneOps β] [Mul β] [IsNonAssocRing β] : IsNonAssocRing (OfEquiv f) where
+protected scoped instance [AddGroupWithOneOps β] [Mul β] [IsNonAssocRing β] : IsNonAssocRing (OfEquiv f) where
 
-instance [RingOps β] [IsRing β] : IsRing (OfEquiv f) where
+protected scoped instance [RingOps β] [IsRing β] : IsRing (OfEquiv f) where
 
 end OfEquiv

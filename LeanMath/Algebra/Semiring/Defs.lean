@@ -394,20 +394,20 @@ namespace OfEquiv
 
 variable (f: α ≃ β)
 
-instance [SemiringOps β] : SemiringOps (OfEquiv f) := inferInstance
+protected scoped instance [SemiringOps β] : SemiringOps (OfEquiv f) := inferInstance
 
-instance [Add β] [Mul β] [IsLeftDistrib β] : IsLeftDistrib (OfEquiv f) where
+protected scoped instance [Add β] [Mul β] [IsLeftDistrib β] : IsLeftDistrib (OfEquiv f) where
   mul_add k a b := by dsimp; rw [Equiv.symm_coe]; rw [mul_add]; iterate 2 rw [Equiv.symm_coe]
-instance [Add β] [Mul β] [IsRightDistrib β] : IsRightDistrib (OfEquiv f) where
+protected scoped instance [Add β] [Mul β] [IsRightDistrib β] : IsRightDistrib (OfEquiv f) where
   add_mul k a b := by dsimp; rw [Equiv.symm_coe]; rw [add_mul]; iterate 2 rw [Equiv.symm_coe]
 
-instance [AddMonoidOps β] [Mul β] [IsNonUnitalNonAssocSemiring β] : IsNonUnitalNonAssocSemiring (OfEquiv f) where
+protected scoped instance [AddMonoidOps β] [Mul β] [IsNonUnitalNonAssocSemiring β] : IsNonUnitalNonAssocSemiring (OfEquiv f) where
 
-instance [AddMonoidOps β] [Mul β] [IsNonUnitalSemiring β] : IsNonUnitalSemiring (OfEquiv f) where
+protected scoped instance [AddMonoidOps β] [Mul β] [IsNonUnitalSemiring β] : IsNonUnitalSemiring (OfEquiv f) where
 
-instance [AddMonoidWithOneOps β] [Mul β] [IsNonAssocSemiring β] : IsNonAssocSemiring (OfEquiv f) where
+protected scoped instance [AddMonoidWithOneOps β] [Mul β] [IsNonAssocSemiring β] : IsNonAssocSemiring (OfEquiv f) where
 
-instance [SemiringOps β] [IsSemiring β] : IsSemiring (OfEquiv f) where
+protected scoped instance [SemiringOps β] [IsSemiring β] : IsSemiring (OfEquiv f) where
 
 def ringEquiv [Zero β] [One β] [Add β] [Mul β] : OfEquiv f ≃+* β where
   toEquiv := f

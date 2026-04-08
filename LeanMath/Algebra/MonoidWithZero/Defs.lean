@@ -15,6 +15,6 @@ namespace OfEquiv
 
 variable (f: α ≃ β)
 
-instance [Zero β] [MonoidOps β] [IsMonoidWithZero β] : IsMonoidWithZero (OfEquiv f) where
+protected scoped instance [Zero β] [MonoidOps β] [IsMonoidWithZero β] : IsMonoidWithZero (OfEquiv f) where
 
 end OfEquiv

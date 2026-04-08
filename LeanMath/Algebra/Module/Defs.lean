@@ -38,6 +38,6 @@ namespace OfEquiv
 
 variable (R S α β: Type*) (f: α ≃ β)
 
-instance [SemiringOps R] [IsSemiring R] [AddMonoidOps β] [IsAddMonoid β] [IsAddComm β] [SMul R β] [IsModule R β] : IsModule R (OfEquiv f) where
+protected scoped instance [SemiringOps R] [IsSemiring R] [AddMonoidOps β] [IsAddMonoid β] [IsAddComm β] [SMul R β] [IsModule R β] : IsModule R (OfEquiv f) where
 
 end OfEquiv

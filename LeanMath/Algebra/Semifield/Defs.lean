@@ -48,10 +48,10 @@ namespace OfEquiv
 
 variable (f: α ≃ β)
 
-instance [ops: SemifieldOps β] : SemifieldOps (OfEquiv f) where
+protected scoped instance [ops: SemifieldOps β] : SemifieldOps (OfEquiv f) where
 
-instance [SemifieldOps β] [IsDivisionSemiring β] : IsDivisionSemiring (OfEquiv f) where
+protected scoped instance [SemifieldOps β] [IsDivisionSemiring β] : IsDivisionSemiring (OfEquiv f) where
 
-instance [SemifieldOps β] [IsSemifield β] : IsSemifield (OfEquiv f) where
+protected scoped instance [SemifieldOps β] [IsSemifield β] : IsSemifield (OfEquiv f) where
 
 end OfEquiv

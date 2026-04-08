@@ -93,9 +93,9 @@ namespace OfEquiv
 
 variable (f: α ≃ β)
 
-instance [AddGroupWithOneOps β] : AddGroupWithOneOps (OfEquiv f) := inferInstance
+protected scoped instance [AddGroupWithOneOps β] : AddGroupWithOneOps (OfEquiv f) := inferInstance
 
-instance [Neg β] [NatCast β] [IntCast β] [IsLawfulIntCast β] : IsLawfulIntCast (OfEquiv f) where
+protected scoped instance [Neg β] [NatCast β] [IntCast β] [IsLawfulIntCast β] : IsLawfulIntCast (OfEquiv f) where
   intCast_ofNat _ := by dsimp; rw [intCast_ofNat]
   intCast_negSucc _ := by dsimp; rw [intCast_negSucc, Equiv.symm_coe]
 
