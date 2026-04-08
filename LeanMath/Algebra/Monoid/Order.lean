@@ -247,3 +247,34 @@ def lt_of_add_lt_add_right : ∀{k a b: α}, a + k < b + k → a < b :=
   lt_of_mul_lt_mul_right (α := MulOfAdd α)
 
 end IsOrderedCancelAddCommMonoid
+
+namespace OfEquiv
+
+variable (f: α ≃ β)
+
+protected scoped instance [LE β] [LT β] [Zero β] [One β] [IsZeroLEOne β] : IsZeroLEOne (OfEquiv f) where
+  zero_le_one := by dsimp; rw [Equiv.symm_coe, Equiv.symm_coe]; apply zero_le_one
+
+protected scoped instance [LE β] [LT β] [MonoidOps β] [IsOrderedCommMonoid β] : IsOrderedCommMonoid (OfEquiv f) where
+  mul_le_mul_left {a b} h k := by
+    dsimp; rw [Equiv.symm_coe, Equiv.symm_coe]; apply mul_le_mul_left
+    assumption
+
+protected scoped instance [LE β] [LT β] [AddMonoidOps β] [IsOrderedAddCommMonoid β] : IsOrderedAddCommMonoid (OfEquiv f) where
+  add_le_add_left {a b} h k := by
+    dsimp; rw [Equiv.symm_coe, Equiv.symm_coe]; apply add_le_add_left
+    assumption
+
+protected scoped instance [LE β] [LT β] [MonoidOps β] [IsOrderedCancelCommMonoid β] : IsOrderedCancelCommMonoid (OfEquiv f) where
+  le_of_mul_le_mul_left {a b} k h := by
+    dsimp at h; rw [Equiv.symm_coe, Equiv.symm_coe] at h
+    dsimp; apply le_of_mul_le_mul_left
+    assumption
+
+protected scoped instance [LE β] [LT β] [AddMonoidOps β] [IsOrderedCancelAddCommMonoid β] : IsOrderedCancelAddCommMonoid (OfEquiv f) where
+  le_of_add_le_add_left {a b} k h := by
+    dsimp at h; rw [Equiv.symm_coe, Equiv.symm_coe] at h
+    dsimp; apply le_of_add_le_add_left
+    assumption
+
+end OfEquiv

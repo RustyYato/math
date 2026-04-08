@@ -35,4 +35,25 @@ def mul_le_mul_of_nonneg_right: ∀{a b: α}, a ≤ b -> ∀c, 0 ≤ c -> a * c 
 
 end
 
-variable [LE α] [LT α] [Mul α] [Zero α] [IsOrderedZeroMul α] [IsPartialOrder α]
+namespace OfEquiv
+
+variable (f: α ≃ β)
+
+protected scoped instance [LE β] [LT β] [Mul β] [Zero β] [IsOrderedZeroMul β] : IsOrderedZeroMul (OfEquiv f) where
+  mul_nonneg {a b} ha hb := by
+    dsimp at *
+    rw [Equiv.symm_coe] at *
+    rw [Equiv.symm_coe]
+    apply mul_nonneg <;> assumption
+  mul_le_mul_of_nonneg_left {a b} h k hk := by
+    dsimp at *
+    rw [Equiv.symm_coe] at *
+    rw [Equiv.symm_coe]
+    apply mul_le_mul_of_nonneg_left <;> assumption
+  mul_le_mul_of_nonneg_right {a b} h k hk := by
+    dsimp at *
+    rw [Equiv.symm_coe] at *
+    rw [Equiv.symm_coe]
+    apply mul_le_mul_of_nonneg_right <;> assumption
+
+end OfEquiv

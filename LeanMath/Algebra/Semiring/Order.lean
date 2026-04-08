@@ -18,6 +18,8 @@ instance : IsStrictOrderedSemiring ℕ where
 instance : IsStrictOrderedSemiring ℤ where
   mul_pos := Int.mul_pos
 
+def mul_pos [AddMonoidOps α] [Mul α] [LT α] [LE α] [IsStrictOrderedNonUnitalNonAssocSemiring α] : ∀{a b: α}, 0 < a -> 0 < b -> 0 < a * b := IsStrictOrderedNonUnitalNonAssocSemiring.mul_pos
+
 section IsStrictOrderedSemiring
 
 variable [LE α] [LT α] [AddMonoidWithOneOps α] [IsAddMonoidWithOne α] [IsOrderedCancelAddCommMonoid α]
@@ -78,3 +80,19 @@ section IsStrictOrderedSemiring
 variable [LE α] [LT α] [SemiringOps α] [IsOrderedSemiring α]
 
 end IsStrictOrderedSemiring
+
+namespace OfEquiv
+
+variable (f: α ≃ β)
+
+protected scoped instance [LT β] [LE β] [AddMonoidOps β] [Mul β] [IsOrderedNonUnitalNonAssocSemiring β] : IsOrderedNonUnitalNonAssocSemiring (OfEquiv f) where
+protected scoped instance [LT β] [LE β] [SemiringOps β] [IsOrderedSemiring β] : IsOrderedSemiring (OfEquiv f) where
+protected scoped instance [LT β] [LE β] [AddMonoidOps β] [Mul β] [IsStrictOrderedNonUnitalNonAssocSemiring β] : IsStrictOrderedNonUnitalNonAssocSemiring (OfEquiv f) where
+  mul_pos {a b} ha hb := by
+    dsimp at *
+    rw [Equiv.symm_coe] at *
+    rw [Equiv.symm_coe]
+    apply mul_pos <;> assumption
+protected scoped instance [LT β] [LE β] [SemiringOps β] [IsStrictOrderedSemiring β] : IsStrictOrderedSemiring (OfEquiv f) where
+
+end OfEquiv
