@@ -1478,4 +1478,14 @@ protected scoped instance NoZeroDivisors [Mul β] [Zero β] [NoZeroDivisors β] 
 protected scoped instance IsMonoid [MonoidOps β] [IsMonoid β] : IsMonoid (OfEquiv f) where
 protected scoped instance IsAddMonoid [AddMonoidOps β] [IsAddMonoid β] : IsAddMonoid (OfEquiv f) where
 
+def addGroupEquiv [Zero β] [Add β] : OfEquiv f ≃+ β where
+  toEquiv := f
+  map_zero := by dsimp; rw [Equiv.symm_coe]
+  map_add _ _ := by dsimp; rw [Equiv.symm_coe]
+
+def groupEquiv [One β] [Mul β] : OfEquiv f ≃* β where
+  toEquiv := f
+  map_one := by dsimp; rw [Equiv.symm_coe]
+  map_mul _ _ := by dsimp; rw [Equiv.symm_coe]
+
 end OfEquiv

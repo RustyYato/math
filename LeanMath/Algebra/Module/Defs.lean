@@ -33,3 +33,11 @@ instance : IsScalarTower ℕ R β where
     induction n with
     | zero => simp [zero_smul]
     | succ n ih => rw [succ_nsmul, succ_nsmul, add_smul, ih]
+
+namespace OfEquiv
+
+variable (R S α β: Type*) (f: α ≃ β)
+
+instance [SemiringOps R] [IsSemiring R] [AddMonoidOps β] [IsAddMonoid β] [IsAddComm β] [SMul R β] [IsModule R β] : IsModule R (OfEquiv f) where
+
+end OfEquiv

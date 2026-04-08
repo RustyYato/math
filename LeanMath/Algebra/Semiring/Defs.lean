@@ -409,4 +409,11 @@ instance [AddMonoidWithOneOps β] [Mul β] [IsNonAssocSemiring β] : IsNonAssocS
 
 instance [SemiringOps β] [IsSemiring β] : IsSemiring (OfEquiv f) where
 
+def ringEquiv [Zero β] [One β] [Add β] [Mul β] : OfEquiv f ≃+* β where
+  toEquiv := f
+  map_zero := by dsimp; rw [Equiv.symm_coe]
+  map_one := by dsimp; rw [Equiv.symm_coe]
+  map_add _ _ := by dsimp; rw [Equiv.symm_coe]
+  map_mul _ _ := by dsimp; rw [Equiv.symm_coe]
+
 end OfEquiv

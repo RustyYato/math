@@ -222,3 +222,33 @@ instance : IsAlgebra α (OfRingHom f h) where
   commutes := h
 
 end IsAlgebra
+
+namespace OfEquiv
+
+variable (R α: Type*) (f: α ≃ β)
+
+protected scoped instance algebraMap [SemiringOps R] [SemiringOps β] [AlgebraMap R β] : AlgebraMap R (OfEquiv f) where
+  toAlgebraMap := (ringEquiv f).symm.toRingHom.comp (algebraMap R)
+
+@[simp] def apply_algebraMap [SemiringOps R] [SemiringOps β] [AlgebraMap R β]
+  (r: R) : algebraMap (α := OfEquiv f) R r = f.symm (algebraMap R r) := rfl
+
+protected scoped instance
+  [AddMonoidOps R] [Mul R]
+  [AddMonoidOps β] [Mul β]
+  [SMul R β]
+  [IsNonUnitalNonAssocSemiring R] [IsNonUnitalNonAssocSemiring β]
+  [IsNonUnitalAlgebra R β]
+: IsNonUnitalAlgebra R (OfEquiv f) where
+  smul_compat (r s: R) (a b: α) := by dsimp; rw [Equiv.symm_coe, Equiv.symm_coe, Equiv.symm_coe, smul_compat]
+
+protected scoped instance
+  [SemiringOps R] [SemiringOps β]
+  [SMul R β] [AlgebraMap R β]
+  [IsSemiring R] [IsSemiring β]
+  [IsAlgebra R β] :
+  IsAlgebra R (OfEquiv f) where
+  commutes (r: R) (a: α) := by dsimp; rw [Equiv.symm_coe, commutes]
+  smul_def (r: R) (a: α) := by dsimp; rw [Equiv.symm_coe, _root_.smul_def]
+
+end OfEquiv

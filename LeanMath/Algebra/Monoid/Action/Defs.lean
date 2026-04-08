@@ -202,3 +202,12 @@ instance : IsSMulHom F ℕ α β where
     induction n with
     | zero => rw [zero_smul, zero_smul, map_zero]
     | succ n ih => rw [succ_nsmul, succ_nsmul, map_add, ih]
+
+namespace OfEquiv
+
+variable (R S α β: Type*) (f: α ≃ β)
+
+protected scoped instance [MonoidOps R] [IsMonoid R] [SMul R β] [IsMonoidAction R β] : IsMonoidAction R (OfEquiv f) where
+protected scoped instance [MonoidOps R] [IsMonoid R] [AddMonoidOps β] [IsAddMonoid β] [SMul R β] [IsDistributiveAction R β] : IsDistributiveAction R (OfEquiv f) where
+
+end OfEquiv
