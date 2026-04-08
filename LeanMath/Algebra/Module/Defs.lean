@@ -36,7 +36,7 @@ instance : IsScalarTower ℕ R β where
 
 namespace OfEquiv
 
-variable (R S α β: Type*) (f: α ≃ β)
+variable {R S α β: Type*} (f: α ≃ β)
 
 protected scoped instance [SemiringOps R] [IsSemiring R] [AddMonoidOps β] [IsAddMonoid β] [IsAddComm β] [SMul R β] [IsModule R β] : IsModule R (OfEquiv f) where
 

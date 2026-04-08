@@ -4,7 +4,8 @@ import LeanMath.Algebra.Algebra.Ring
 
 variable [LEM]
 
-def Real := CauchySeq.Completion ℚ ℚ
+structure Real where
+  ofCauchySeq :: toCauchySeq : CauchySeq.Completion ℚ ℚ
 
 notation "ℝ" => Real
 
@@ -12,20 +13,34 @@ namespace Real
 
 section
 
--- unseal Real
+def equivCauchySeq : ℝ ≃ CauchySeq.Completion ℚ ℚ where
+  toFun := Real.toCauchySeq
+  invFun := Real.ofCauchySeq
+  leftInv _ := rfl
+  rightInv _ := rfl
 
-instance : FieldOps ℝ := inferInstanceAs (FieldOps (CauchySeq.Completion ℚ ℚ))
-instance : IsField ℝ := inferInstanceAs (IsField (CauchySeq.Completion ℚ ℚ))
-instance : LT ℝ := inferInstanceAs (LT (CauchySeq.Completion ℚ ℚ))
-instance : LE ℝ := inferInstanceAs (LE (CauchySeq.Completion ℚ ℚ))
-instance : IsZeroLEOne ℝ := inferInstanceAs (IsZeroLEOne (CauchySeq.Completion ℚ ℚ))
-instance : IsLinearOrder ℝ := inferInstanceAs (IsLinearOrder (CauchySeq.Completion ℚ ℚ))
-instance : IsStrictOrderedSemiring ℝ := inferInstanceAs (IsStrictOrderedSemiring (CauchySeq.Completion ℚ ℚ))
+instance : FieldOps ℝ := OfEquiv.instFieldOps equivCauchySeq
+instance : IsField ℝ := OfEquiv.instIsField equivCauchySeq
 
-instance : SMul ℚ ℝ := inferInstanceAs (SMul ℚ (CauchySeq.Completion ℚ ℚ))
-instance : AlgebraMap ℚ ℝ := inferInstanceAs (AlgebraMap ℚ (CauchySeq.Completion ℚ ℚ))
-instance : IsAlgebra ℚ ℝ := CauchySeq.instIsAlgebraCompletion
-instance : IsModule ℚ ℝ := inferInstance
+def ringEquivCauchySeq : ℝ ≃+* CauchySeq.Completion ℚ ℚ :=
+  OfEquiv.ringEquiv equivCauchySeq
+
+def cau_ind {motive: ℝ -> Prop} (ofCauchy: ∀c, motive (ringEquivCauchySeq.symm (CauchySeq.ofSeq c))) (x: ℝ) : motive x := by
+  induction h:ringEquivCauchySeq x using CauchySeq.ind with | _ x' =>
+  rw [←RingEquiv.coe_symm ringEquivCauchySeq (x := x)]
+  rw [h]; apply ofCauchy
+
+instance : LT ℝ := OfEquiv.instLT equivCauchySeq
+instance : LE ℝ := OfEquiv.instLE equivCauchySeq
+instance : IsLinearOrder ℝ := OfEquiv.instIsLinearOrder equivCauchySeq
+
+instance : IsZeroLEOne ℝ := OfEquiv.instIsZeroLEOne equivCauchySeq
+instance : IsStrictOrderedSemiring ℝ := OfEquiv.instIsStrictOrderedSemiring equivCauchySeq
+
+instance : SMul ℚ ℝ := OfEquiv.smul equivCauchySeq _
+instance : AlgebraMap ℚ ℝ := OfEquiv.algebraMap equivCauchySeq
+instance : IsAlgebra ℚ ℝ := OfEquiv.instIsAlgebra (R := ℚ) equivCauchySeq
+instance : IsModule ℚ ℝ := OfEquiv.instIsModule equivCauchySeq
 
 def ofRat : ℚ ↪+* ℝ where
     toRingHom := algebraMap ℚ
@@ -36,9 +51,9 @@ instance : IsAlgebra ℤ ℝ := inferInstance
 instance : AlgebraMap ℕ ℝ := inferInstance
 instance : IsAlgebra ℕ ℝ := inferInstance
 
-instance : Norm ℝ ℝ := inferInstanceAs (Norm (CauchySeq.Completion ℚ ℚ) (CauchySeq.Completion ℚ ℚ))
-instance : IsLawfulAbs ℝ := inferInstanceAs (IsLawfulAbs (CauchySeq.Completion ℚ ℚ))
-instance : IsAbsMax ℝ := inferInstanceAs (IsAbsMax (CauchySeq.Completion ℚ ℚ))
+instance : Norm ℝ ℝ := OfEquiv.NormSelf.instNorm equivCauchySeq
+instance : IsLawfulAbs ℝ := OfEquiv.NormSelf.instIsLawfulAbs equivCauchySeq
+instance : IsAbsMax ℝ := OfEquiv.NormSelf.instIsAbsMax equivCauchySeq
 
 instance : Min ℝ where
     min a b := (a + b - ‖a - b‖) /? (2: ℕ)
@@ -63,8 +78,8 @@ private protected def min_le_left (a b: ℝ) : a ⊓ b ≤ a := by
       rw [sub_add_assoc, neg_add_cancel, add_zero]
       apply le_of_add_le_add_left
       rw [←add_assoc, neg_add_cancel a, zero_add, add_comm, norm_sub, ←sub_eq_add_neg]
-      induction a using CauchySeq.ind with | _ a =>
-      induction b using CauchySeq.ind with | _ b =>
+      induction a using cau_ind with | _ a =>
+      induction b using cau_ind with | _ b =>
       apply CauchySeq.le_of_eventually_le
       exists 0; intro i hi
       show b i - a i ≤ ‖b i - a i‖
@@ -84,8 +99,8 @@ private protected def left_le_max (a b: ℝ) : a ≤ a ⊔ b := by
       rw [add_comm]
       apply le_of_add_le_add_right
       rw [add_assoc, add_neg_cancel b, add_zero, ←sub_eq_add_neg]
-      induction a using CauchySeq.ind with | _ a =>
-      induction b using CauchySeq.ind with | _ b =>
+      induction a using cau_ind with | _ a =>
+      induction b using cau_ind with | _ b =>
       apply CauchySeq.le_of_eventually_le
       exists 0; intro i hi
       show a i - b i ≤ ‖a i - b i‖
@@ -129,7 +144,7 @@ instance : IsLattice ℝ where
 
 unsafe instance : Repr ℝ where
   reprPrec r n :=
-    let f := (CauchySeq.Completion.toQuot r).lift (fun x => x) lcProof
+    let f := (CauchySeq.Completion.toQuot r.toCauchySeq).lift (fun x => x) lcProof
     repr (Array.ofFn (n := bif n == 0 then 5 else n) fun i => (f i))
 
 end

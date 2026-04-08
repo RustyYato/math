@@ -83,7 +83,7 @@ def LinearHom.copy (f: α →ₗ[R] β) (g: α -> β) (h: ∀x, g x = f x) : α 
 
 namespace OfEquiv
 
-variable (R S α β: Type*) (f: α ≃ β)
+variable {R S α β: Type*} (f: α ≃ β)
 
 protected scoped instance [One R] [SMul R β] [IsLawfulOneSMul R β] :  IsLawfulOneSMul R (OfEquiv f) where
   one_smul (a: (OfEquiv f)) : (1: R) • a = a := by

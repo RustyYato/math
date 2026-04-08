@@ -225,7 +225,7 @@ end IsAlgebra
 
 namespace OfEquiv
 
-variable (R α: Type*) (f: α ≃ β)
+variable {R α: Type*} (f: α ≃ β)
 
 protected scoped instance algebraMap [SemiringOps R] [SemiringOps β] [AlgebraMap R β] : AlgebraMap R (OfEquiv f) where
   toAlgebraMap := (ringEquiv f).symm.toRingHom.comp (algebraMap R)
