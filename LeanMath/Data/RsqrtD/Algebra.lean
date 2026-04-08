@@ -1,4 +1,4 @@
-import LeanMath.Data.RsqrtD.Defs
+import LeanMath.Data.RsqrtD.Module
 import LeanMath.Algebra.Algebra.Defs
 
 namespace RsqrtD

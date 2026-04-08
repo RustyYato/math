@@ -18,10 +18,24 @@ def equivCauchySeq : ℝ ≃ CauchySeq.Completion ℚ ℚ where
 instance : RingOps ℝ := OfEquiv.instRingOps equivCauchySeq
 instance : IsRing ℝ := OfEquiv.instIsRing equivCauchySeq
 
-variable [LEM]
+instance : LT ℝ := OfEquiv.instLT equivCauchySeq
+instance : LE ℝ := OfEquiv.instLE equivCauchySeq
+instance : IsPartialOrder ℝ := OfEquiv.instIsPartialOrder equivCauchySeq
 
-instance : FieldOps ℝ := OfEquiv.instFieldOps equivCauchySeq
-instance : IsField ℝ := OfEquiv.instIsField equivCauchySeq
+instance : IsZeroLEOne ℝ := OfEquiv.instIsZeroLEOne equivCauchySeq
+instance : IsStrictOrderedSemiring ℝ := OfEquiv.instIsStrictOrderedSemiring equivCauchySeq
+
+instance : SMul ℚ ℝ := OfEquiv.smul equivCauchySeq _
+instance : AlgebraMap ℚ ℝ := OfEquiv.algebraMap equivCauchySeq
+instance : IsModule ℚ ℝ := OfEquiv.instIsModule equivCauchySeq
+instance : IsAlgebra ℚ ℝ := OfEquiv.instIsAlgebra (R := ℚ) equivCauchySeq
+
+instance : AlgebraMap ℤ ℝ := inferInstance
+instance : IsAlgebra ℤ ℝ := inferInstance
+instance : AlgebraMap ℕ ℝ := inferInstance
+instance : IsAlgebra ℕ ℝ := inferInstance
+
+instance : Norm ℝ ℝ := OfEquiv.NormSelf.instNorm equivCauchySeq
 
 def ringEquivCauchySeq : ℝ ≃+* CauchySeq.Completion ℚ ℚ :=
   OfEquiv.ringEquiv equivCauchySeq
@@ -31,26 +45,17 @@ def cau_ind {motive: ℝ -> Prop} (ofCauchy: ∀c, motive (ringEquivCauchySeq.sy
   rw [←RingEquiv.coe_symm ringEquivCauchySeq (x := x)]
   rw [h]; apply ofCauchy
 
-instance : LT ℝ := OfEquiv.instLT equivCauchySeq
-instance : LE ℝ := OfEquiv.instLE equivCauchySeq
-instance : IsLinearOrder ℝ := OfEquiv.instIsLinearOrder equivCauchySeq
-
-instance : IsZeroLEOne ℝ := OfEquiv.instIsZeroLEOne equivCauchySeq
-instance : IsStrictOrderedSemiring ℝ := OfEquiv.instIsStrictOrderedSemiring equivCauchySeq
-
-instance : SMul ℚ ℝ := OfEquiv.smul equivCauchySeq _
-instance : AlgebraMap ℚ ℝ := OfEquiv.algebraMap equivCauchySeq
-instance : IsAlgebra ℚ ℝ := OfEquiv.instIsAlgebra (R := ℚ) equivCauchySeq
-instance : IsModule ℚ ℝ := OfEquiv.instIsModule equivCauchySeq
-
 def ofRat : ℚ ↪+* ℝ := RingEmbedding.ofFieldHom (algebraMap ℚ)
 
-instance : AlgebraMap ℤ ℝ := inferInstance
-instance : IsAlgebra ℤ ℝ := inferInstance
-instance : AlgebraMap ℕ ℝ := inferInstance
-instance : IsAlgebra ℕ ℝ := inferInstance
+instance : HasChar ℝ 0 := HasChar.of_ring_emb ofRat
 
-instance : Norm ℝ ℝ := OfEquiv.NormSelf.instNorm equivCauchySeq
+variable [LEM]
+
+instance : FieldOps ℝ := OfEquiv.instFieldOps equivCauchySeq
+instance : IsField ℝ := OfEquiv.instIsField equivCauchySeq
+
+instance : IsLinearOrder ℝ := OfEquiv.instIsLinearOrder equivCauchySeq
+
 instance : IsLawfulAbs ℝ := OfEquiv.NormSelf.instIsLawfulAbs equivCauchySeq
 instance : IsAbsMax ℝ := OfEquiv.NormSelf.instIsAbsMax equivCauchySeq
 
@@ -145,7 +150,5 @@ unsafe instance : Repr ℝ where
   reprPrec r n :=
     let f := (CauchySeq.Completion.toQuot r.toCauchySeq).lift (fun x => x) lcProof
     repr (Array.ofFn (n := bif n == 0 then 5 else n) fun i => (f i))
-
-instance : HasChar ℝ 0 := HasChar.of_ring_emb ofRat
 
 end Real

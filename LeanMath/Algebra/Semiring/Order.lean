@@ -10,7 +10,7 @@ class IsStrictOrderedNonUnitalNonAssocSemiring (α: Type*)
   mul_pos: ∀{a b: α}, 0 < a -> 0 < b -> 0 < a * b
 
 class IsStrictOrderedSemiring (α: Type*) [SemiringOps α] [LT α] [LE α] extends
-  IsOrderedSemiring α, IsStrictOrderedNonUnitalNonAssocSemiring α where
+  IsOrderedSemiring α, IsStrictOrderedNonUnitalNonAssocSemiring α, IsZeroNeOne α where
 
 instance : IsStrictOrderedSemiring ℕ where
   mul_pos := Nat.mul_pos

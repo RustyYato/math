@@ -13,6 +13,22 @@ instance (priority := 2000) : IsRing ℂ := inferInstanceAs (IsRing (RsqrtD ℝ 
 
 def ofReal : ℝ ↪+* ℂ := RsqrtD.of_real
 
+instance : SMul ℚ ℂ := inferInstanceAs (SMul ℚ (RsqrtD ℝ (-1: ℤ)))
+instance : AlgebraMap ℚ ℂ := inferInstanceAs (AlgebraMap ℚ (RsqrtD ℝ (-1: ℤ)))
+instance : IsModule ℚ ℂ := inferInstanceAs (IsModule ℚ (RsqrtD ℝ (-1: ℤ)))
+instance : IsAlgebra ℚ ℂ := inferInstanceAs (IsAlgebra ℚ (RsqrtD ℝ (-1: ℤ)))
+
+def ofRat : ℚ ↪+* ℂ := ofReal.comp Real.ofRat
+
+instance : HasChar ℂ 0 := HasChar.of_ring_emb ofReal
+
+def conj : ℂ ↪+* ℂ := RsqrtD.conj
+
+def apply_conj_real (a: ℂ) : (conj a).real = a.real := rfl
+def apply_conj_imag (a: ℂ) : (conj a).imag = -a.imag := rfl
+
+def conj_conj (a: ℂ) : conj (conj a) = a := RsqrtD.conj_conj _
+
 variable [LEM]
 
 instance : RsqrtD.NoSolution ℝ (-1: ℤ) where
@@ -42,21 +58,5 @@ instance : SMul ℝ ℂ := inferInstanceAs (SMul ℝ (RsqrtD ℝ (-1: ℤ)))
 instance : AlgebraMap ℝ ℂ := inferInstanceAs (AlgebraMap ℝ (RsqrtD ℝ (-1: ℤ)))
 instance : IsAlgebra ℝ ℂ := inferInstanceAs (IsAlgebra ℝ (RsqrtD ℝ (-1: ℤ)))
 instance : IsModule ℝ ℂ := inferInstanceAs (IsModule ℝ (RsqrtD ℝ (-1: ℤ)))
-
-instance : SMul ℚ ℂ := inferInstanceAs (SMul ℚ (RsqrtD ℝ (-1: ℤ)))
-instance : AlgebraMap ℚ ℂ := inferInstanceAs (AlgebraMap ℚ (RsqrtD ℝ (-1: ℤ)))
-instance : IsAlgebra ℚ ℂ := inferInstanceAs (IsAlgebra ℚ (RsqrtD ℝ (-1: ℤ)))
-instance : IsModule ℚ ℂ := inferInstanceAs (IsModule ℚ (RsqrtD ℝ (-1: ℤ)))
-
-instance : HasChar ℂ 0 := HasChar.of_ring_emb ofReal
-
-def conj : ℂ ↪+* ℂ := RsqrtD.conj
-
-def apply_conj_real (a: ℂ) : (conj a).real = a.real := rfl
-def apply_conj_imag (a: ℂ) : (conj a).imag = -a.imag := rfl
-
-def conj_conj (a: ℂ) : conj (conj a) = a := RsqrtD.conj_conj _
-
-def ofRat : ℚ ↪+* ℂ := RingEmbedding.ofFieldHom (algebraMap ℚ)
 
 end Complex
