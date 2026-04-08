@@ -1,5 +1,4 @@
-import LeanMath.Order.Defs
-import LeanMath.Data.Set.Defs
+import LeanMath.Order.Set
 
 class IsCompleteSemilatticeSup (α: Type*) [LE α] [LT α] [Max α] [SupSet α] [Top α] [Bot α] : Prop extends IsSemiLatticeMax α, IsLawfulSup α, IsLawfulTop α, IsLawfulBot α where
   protected sSup_le (U: Set α) (x: α) : (∀u ∈ U, u ≤ x) -> ⨆ U ≤ x
@@ -52,3 +51,29 @@ def sInf_univ : ⨅ ⊤ = (⊥: α) := by
   trivial
 
 end IsCompleteSemilatticeInf
+
+namespace OfEquiv
+
+variable (f: α ≃ β)
+
+instance [LE β] [LT β] [Max β] [SupSet β] [Top β] [Bot β] [IsCompleteSemilatticeSup β] : IsCompleteSemilatticeSup (OfEquiv f) where
+  sSup_le U v hv := by
+    dsimp; rw [Equiv.symm_coe]
+    apply sSup_le
+    intro u hu
+    rw [←Equiv.symm_coe f u]
+    apply hv
+    assumption
+
+instance [LE β] [LT β] [Min β] [InfSet β] [Top β] [Bot β] [IsCompleteSemilatticeInf β] : IsCompleteSemilatticeInf (OfEquiv f) where
+  le_sInf U v hv := by
+    dsimp; rw [Equiv.symm_coe]
+    apply le_sInf
+    intro u hu
+    rw [←Equiv.symm_coe f u]
+    apply hv
+    assumption
+
+instance [LE β] [LT β] [Max β] [Min β] [SupSet β] [InfSet β] [Top β] [Bot β] [IsCompleteLattice β] : IsCompleteLattice (OfEquiv f) where
+
+end OfEquiv

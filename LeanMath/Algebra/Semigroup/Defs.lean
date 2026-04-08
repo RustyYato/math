@@ -7,6 +7,7 @@ import LeanMath.Data.Equiv.Defs
 import LeanMath.Data.AddMul.Defs
 import LeanMath.Data.Cong.Defs
 import LeanMath.Data.Hom
+import LeanMath.Data.OfEquiv.Defs
 
 class IsSemigroup (α: Type*) [Mul α] : Prop where
   protected mul_assoc (a b c: α) : (a * b) * c = a * (b * c)
@@ -538,8 +539,6 @@ instance : IsRightCancel₀ ℕ := inferInstance
 instance : IsRightCancel₀ ℤ := inferInstance
 
 def smul_eq_mul [Mul α] (a b: α) : a • b = a * b := rfl
-
-def OfEquiv (_: α ≃ β) := α
 
 namespace OfEquiv
 

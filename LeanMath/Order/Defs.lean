@@ -1,5 +1,6 @@
 import LeanMath.Logic.Relation.Defs
 import LeanMath.Data.TopBot.Defs
+import LeanMath.Data.OfEquiv.Defs
 
 open Relation
 
@@ -532,3 +533,63 @@ def toLtEquiv
   [EquivLike F α β] [IsOrderHom F α β] [IsLawfulLT β] (f: F) : (· < ·: α -> α -> Prop) ≃r (· < ·: β -> β -> Prop) where
   toEquiv := Equiv.coe f
   map_rel := map_rel (rel_emb_of_map_rel f (map_lt f))
+
+namespace OfEquiv
+
+variable (f: α ≃ β)
+
+protected scoped instance [LT β] : LT (OfEquiv f) where
+  lt := pullback_rel (· < ·) f
+protected scoped instance [LE β] : LE (OfEquiv f) where
+  le := pullback_rel (· ≤ ·) f
+
+protected scoped instance [Min β] : Min (OfEquiv f) where
+  min a b := f.symm (f a ⊓ f b)
+protected scoped instance [Max β] : Max (OfEquiv f) where
+  max a b := f.symm (f a ⊔ f b)
+
+protected scoped instance [Top β] : Top (OfEquiv f) where
+  top := f.symm ⊤
+protected scoped instance [Bot β] : Bot (OfEquiv f) where
+  bot := f.symm ⊥
+
+@[simp] def lt_def (a b: OfEquiv f) : (a < b) = (f a < f b) := rfl
+@[simp] def le_def (a b: OfEquiv f) : (a ≤ b) = (f a ≤ f b) := rfl
+
+@[simp] def min_def [Min β] (a b: OfEquiv f) : a ⊓ b = f.symm (f a ⊓ f b) := rfl
+@[simp] def max_def [Max β] (a b: OfEquiv f) : a ⊔ b = f.symm (f a ⊔ f b) := rfl
+@[simp] def top_def [Top β] : (⊤: OfEquiv f) = f.symm ⊤ := rfl
+@[simp] def bot_def [Bot β] : (⊥: OfEquiv f) = f.symm ⊥ := rfl
+
+protected scoped instance [IsLawfulLT β] : IsLawfulLT (OfEquiv f) where
+  lt_iff_le_and_not_ge := lt_iff_le_and_not_ge (α := β)
+protected scoped instance [IsPreorder β] : IsPreorder (OfEquiv f) where
+  refl _ := le_refl (α := β) _
+  trans := le_trans (α := β)
+protected scoped instance [IsPartialOrder β] : IsPartialOrder (OfEquiv f) where
+  antisymm h g := inj f (le_antisymm h g)
+protected scoped instance [IsLTTrichotomous β] : IsLTTrichotomous (OfEquiv f) :=
+  inferInstanceAs (Relation.IsTrichotomous (pullback_rel (· < ·) f) (· = ·))
+protected scoped instance [IsLinearOrder β] : IsLinearOrder (OfEquiv f) where
+
+protected scoped instance [Min β] [IsLawfulMin β] : IsLawfulMin (OfEquiv f) where
+  min_le_left {a b} := by dsimp; rw [Equiv.symm_coe]; apply min_le_left
+  min_le_right {a b} := by dsimp; rw [Equiv.symm_coe]; apply min_le_right
+
+protected scoped instance [Max β] [IsLawfulMax β] : IsLawfulMax (OfEquiv f) where
+  left_le_max {a b} := by dsimp; rw [Equiv.symm_coe]; apply left_le_max
+  right_le_max {a b} := by dsimp; rw [Equiv.symm_coe]; apply right_le_max
+
+protected scoped instance [Top β] [IsLawfulTop β] : IsLawfulTop (OfEquiv f) where
+  le_top a := by dsimp; rw [Equiv.symm_coe]; apply le_top
+
+protected scoped instance [Bot β] [IsLawfulBot β] : IsLawfulBot (OfEquiv f) where
+  bot_le a := by dsimp; rw [Equiv.symm_coe]; apply bot_le
+
+protected scoped instance [Min β] [IsSemiLatticeMin β] : IsSemiLatticeMin (OfEquiv f) where
+  le_min {x a b} ha hb := by dsimp; rw [Equiv.symm_coe]; apply le_min <;> assumption
+protected scoped instance [Max β] [IsSemiLatticeMax β] : IsSemiLatticeMax (OfEquiv f) where
+  max_le {x a b} ha hb := by dsimp; rw [Equiv.symm_coe]; apply max_le <;> assumption
+protected scoped instance [Max β] [Min β] [IsLattice β] : IsLattice (OfEquiv f) where
+
+end OfEquiv

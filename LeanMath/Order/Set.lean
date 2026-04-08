@@ -61,3 +61,31 @@ instance [SupSet α] : InfSet αᵒᵖ where
   sInf := sSup (α := α)
 instance [InfSet α] : SupSet αᵒᵖ where
   sSup := sInf (α := α)
+
+namespace OfEquiv
+
+variable (f: α ≃ β)
+
+instance [SupSet β] : SupSet (OfEquiv f) where
+   sSup U := f.symm (⨆ U.preimage f.symm)
+instance [InfSet β] : InfSet (OfEquiv f) where
+   sInf U := f.symm (⨅ U.preimage f.symm)
+
+@[simp] def sSup_def [SupSet β] (U: Set (OfEquiv f)) : ⨆ U = f.symm (⨆ U.preimage f.symm) := rfl
+@[simp] def sInf_def [InfSet β] (U: Set (OfEquiv f)) : ⨅ U = f.symm (⨅ U.preimage f.symm) := rfl
+
+instance [LE β] [SupSet β] [IsLawfulSup β] : IsLawfulSup (OfEquiv f) where
+  le_sSup U u hu := by
+    dsimp; rw [Equiv.symm_coe]
+    apply le_sSup
+    apply Set.mem_preimage.mpr
+    rwa [Equiv.coe_symm]
+
+instance [LE β] [InfSet β] [IsLawfulInf β] : IsLawfulInf (OfEquiv f) where
+  sInf_le U u hu := by
+    dsimp; rw [Equiv.symm_coe]
+    apply sInf_le
+    apply Set.mem_preimage.mpr
+    rwa [Equiv.coe_symm]
+
+end OfEquiv
