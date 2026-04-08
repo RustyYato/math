@@ -2,13 +2,18 @@ import LeanMath.Data.Real.Defs
 import LeanMath.Data.RsqrtD.Field
 import LeanMath.Data.RsqrtD.Algebra
 
-variable [LEM]
-
 abbrev Complex := RsqrtD ℝ (-1: ℤ)
 
 notation "ℂ" => Complex
 
 namespace Complex
+
+instance (priority := 2000) : RingOps ℂ := inferInstanceAs (RingOps (RsqrtD ℝ (-1: ℤ)))
+instance (priority := 2000) : IsRing ℂ := inferInstanceAs (IsRing (RsqrtD ℝ (-1: ℤ)))
+
+def ofReal : ℝ ↪+* ℂ := RsqrtD.of_real
+
+variable [LEM]
 
 instance : RsqrtD.NoSolution ℝ (-1: ℤ) where
   sq_ne_r a h := by
@@ -43,7 +48,6 @@ instance : AlgebraMap ℚ ℂ := inferInstanceAs (AlgebraMap ℚ (RsqrtD ℝ (-1
 instance : IsAlgebra ℚ ℂ := inferInstanceAs (IsAlgebra ℚ (RsqrtD ℝ (-1: ℤ)))
 instance : IsModule ℚ ℂ := inferInstanceAs (IsModule ℚ (RsqrtD ℝ (-1: ℤ)))
 
-def ofReal : ℝ ↪+* ℂ := RsqrtD.of_real
 instance : HasChar ℂ 0 := HasChar.of_ring_emb ofReal
 
 def conj : ℂ ↪+* ℂ := RsqrtD.conj
@@ -52,5 +56,7 @@ def apply_conj_real (a: ℂ) : (conj a).real = a.real := rfl
 def apply_conj_imag (a: ℂ) : (conj a).imag = -a.imag := rfl
 
 def conj_conj (a: ℂ) : conj (conj a) = a := RsqrtD.conj_conj _
+
+def ofRat : ℚ ↪+* ℂ := RingEmbedding.ofFieldHom (algebraMap ℚ)
 
 end Complex

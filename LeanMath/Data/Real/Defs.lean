@@ -2,8 +2,6 @@ import LeanMath.Data.CauSeq.Defs
 import LeanMath.Data.Rational.Norm
 import LeanMath.Algebra.Algebra.Ring
 
-variable [LEM]
-
 structure Real where
   ofCauchySeq :: toCauchySeq : CauchySeq.Completion ℚ ℚ
 
@@ -11,13 +9,16 @@ notation "ℝ" => Real
 
 namespace Real
 
-section
-
 def equivCauchySeq : ℝ ≃ CauchySeq.Completion ℚ ℚ where
   toFun := Real.toCauchySeq
   invFun := Real.ofCauchySeq
   leftInv _ := rfl
   rightInv _ := rfl
+
+instance : RingOps ℝ := OfEquiv.instRingOps equivCauchySeq
+instance : IsRing ℝ := OfEquiv.instIsRing equivCauchySeq
+
+variable [LEM]
 
 instance : FieldOps ℝ := OfEquiv.instFieldOps equivCauchySeq
 instance : IsField ℝ := OfEquiv.instIsField equivCauchySeq
@@ -42,9 +43,7 @@ instance : AlgebraMap ℚ ℝ := OfEquiv.algebraMap equivCauchySeq
 instance : IsAlgebra ℚ ℝ := OfEquiv.instIsAlgebra (R := ℚ) equivCauchySeq
 instance : IsModule ℚ ℝ := OfEquiv.instIsModule equivCauchySeq
 
-def ofRat : ℚ ↪+* ℝ where
-    toRingHom := algebraMap ℚ
-    inj := inj (algebraMap ℚ (α := ℝ))
+def ofRat : ℚ ↪+* ℝ := RingEmbedding.ofFieldHom (algebraMap ℚ)
 
 instance : AlgebraMap ℤ ℝ := inferInstance
 instance : IsAlgebra ℤ ℝ := inferInstance
@@ -146,8 +145,6 @@ unsafe instance : Repr ℝ where
   reprPrec r n :=
     let f := (CauchySeq.Completion.toQuot r.toCauchySeq).lift (fun x => x) lcProof
     repr (Array.ofFn (n := bif n == 0 then 5 else n) fun i => (f i))
-
-end
 
 instance : HasChar ℝ 0 := HasChar.of_ring_emb ofRat
 

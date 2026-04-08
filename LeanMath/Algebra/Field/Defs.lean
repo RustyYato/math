@@ -49,6 +49,14 @@ instance : EmbeddingLike F D R where
       exact zero_ne_one _ this
   }
 
+def RingEmbedding.ofFieldHom (f: F) : D ↪+* R where
+  toFun := f
+  inj := inj f
+  map_zero := map_zero f
+  map_one := map_one f
+  map_add := map_add f
+  map_mul := map_mul f
+
 namespace OfEquiv
 
 variable (f: α ≃ β)
