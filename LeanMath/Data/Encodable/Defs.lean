@@ -106,7 +106,7 @@ def Encodable.ofEquiv (f: α ≃ β) : Encodable β where
   encode b := Encodable.encode (f.symm b)
   spec b := by simp [Encodable.spec]
 
-protected scoped instance : Encodable (Fin n) := .ofEquiv (Equiv.fin_eqv_suptype n).symm
+instance : Encodable (Fin n) := .ofEquiv (Equiv.fin_eqv_suptype n).symm
 
 instance : Encodable Bool where
   decode

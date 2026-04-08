@@ -1,5 +1,6 @@
 import LeanMath.Data.Equiv.Defs
 
+@[implicit_reducible]
 def OfEquiv (_: α ≃ β) := α
 
 namespace OfEquiv

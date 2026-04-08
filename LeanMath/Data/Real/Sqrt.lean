@@ -344,8 +344,8 @@ def sqrt_func_is_cauchy {f g: CauchySeq ℚ ℚ} (h: f ≈ g) : is_cauchy_eqv (s
     rw [←neg_lt_neg_iff, neg_zero]
     apply flip lt_trans <;> assumption
 
-def sqrt : ℝ -> ℝ :=
-  CauchySeq.lift (fun q =>
-    CauchySeq.ofSeq sorry) sorry
+-- def sqrt : ℝ -> ℝ :=
+--   CauchySeq.lift (fun q =>
+--     CauchySeq.ofSeq sorry) sorry
 
 end Real

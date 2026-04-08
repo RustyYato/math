@@ -538,6 +538,9 @@ namespace OfEquiv
 
 variable (f: α ≃ β)
 
+set_option allowUnsafeReducibility true in
+attribute [local semireducible] OfEquiv
+
 protected scoped instance [Top β] : Top (OfEquiv f) where
   top := f.symm ⊤
 protected scoped instance [Bot β] : Bot (OfEquiv f) where
