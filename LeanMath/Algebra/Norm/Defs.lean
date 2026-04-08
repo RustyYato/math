@@ -1,4 +1,5 @@
 import LeanMath.Tactic.TypeStar
+import LeanMath.Data.OfEquiv.Defs
 
 class Norm (α: Type*) (γ: outParam Type*) where
   protected norm : α -> γ
@@ -87,3 +88,84 @@ def of_norm_eq_zero [Zero α] [IsLawfulAbs γ] [IsLawfulNorm α γ] {a: α} : �
 def abs_eq_of_nonneg [IsAbsMax γ] (a: γ): 0 ≤ a -> ‖a‖ = a := IsAbsMax.abs_eq_of_nonneg _
 
 end
+
+namespace OfEquiv
+
+variable {α β γ: Type*} (f: α ≃ β)
+
+namespace NormExt
+
+protected scoped instance [Norm β γ] : Norm (OfEquiv f) γ where
+  norm a := ‖f a‖
+
+@[simp] protected def norm_def [Norm β γ] (a: OfEquiv f) : ‖a‖ = ‖f a‖ := rfl
+
+protected scoped instance
+  [Norm β γ] [Norm γ γ] [SMul γ β] [Add β] [LE γ] [Mul γ] [Add γ] [Zero γ] [IsLawfulSemiAbs γ]
+  [IsLawfulSemiNorm β γ]
+  : IsLawfulSemiNorm (OfEquiv f) γ where
+  norm_nonneg a := by dsimp; apply norm_nonneg
+  norm_smul a b  := by dsimp; rw [Equiv.symm_coe, norm_smul]
+  norm_add_le_add_norm a b := by dsimp; rw [Equiv.symm_coe]; apply norm_add_le_add_norm
+
+protected scoped instance
+  [Norm β γ] [Norm γ γ] [SMul γ β] [Add β] [LE γ] [Mul γ] [Add γ] [Zero γ] [IsLawfulSemiAbs γ]
+  [IsLawfulSemiNorm β γ]
+  : IsLawfulSemiNorm (OfEquiv f) γ where
+  norm_nonneg a := by dsimp; apply norm_nonneg
+  norm_smul a b  := by dsimp; rw [Equiv.symm_coe, norm_smul]
+  norm_add_le_add_norm a b := by dsimp; rw [Equiv.symm_coe]; apply norm_add_le_add_norm
+
+protected scoped instance
+  [Norm β γ] [Norm γ γ] [SMul γ β] [Zero β] [Add β] [LE γ] [Mul γ] [Add γ] [Zero γ] [IsLawfulAbs γ]
+  [IsLawfulNorm β γ]
+  : IsLawfulNorm (OfEquiv f) γ where
+  norm_eq_zero {a} := by
+    dsimp; apply Iff.trans norm_eq_zero
+    refine Function.Injective.eq_iff' ?_ ?_
+    exact inj f; rw [Equiv.symm_coe]
+
+protected scoped instance
+  [Norm β γ] [Norm γ γ] [SMul γ β] [Zero β] [Add β] [Mul β] [LE γ] [Mul γ] [Add γ] [Zero γ] [IsLawfulAbs γ]
+  [IsLawfulMulNorm β γ]
+  : IsLawfulMulNorm (OfEquiv f) γ where
+  norm_mul a b := by dsimp; rw [Equiv.symm_coe, norm_mul]
+
+end NormExt
+
+namespace NormSelf
+
+protected scoped instance [Norm β β] : Norm (OfEquiv f) (OfEquiv f) where
+  norm a := f.symm ‖f a‖
+
+@[simp] protected def norm_def [Norm β β] (a: OfEquiv f) : ‖a‖ = f.symm ‖f a‖ := rfl
+
+protected scoped instance
+  [Norm β β] [Mul β] [Add β] [Zero β] [LE β] [IsLawfulSemiAbs β] :
+  IsLawfulSemiAbs (OfEquiv f) where
+  abs_nonneg a := by dsimp; rw [Equiv.symm_coe, Equiv.symm_coe]; apply norm_nonneg
+  abs_mul a b  := by dsimp; rw [Equiv.symm_coe, Equiv.symm_coe, Equiv.symm_coe, norm_mul]
+  abs_add_le_add_abs a b := by
+    dsimp; repeat rw [Equiv.symm_coe]
+    apply norm_add_le_add_norm
+    repeat rw [Equiv.coe_symm]
+
+protected scoped instance
+  [Norm β β] [Mul β] [Add β] [Zero β] [LE β] [IsLawfulAbs β] :
+  IsLawfulAbs (OfEquiv f) where
+  abs_eq_zero {a} := by
+    dsimp; apply Iff.trans (inj f.symm).eq_iff
+    apply Iff.trans norm_eq_zero
+    refine Function.Injective.eq_iff' ?_ ?_
+    exact inj f; rw [Equiv.symm_coe]
+
+protected scoped instance
+  [Norm β β] [Zero β] [LE β] [IsAbsMax β] :
+  IsAbsMax (OfEquiv f) where
+  abs_eq_of_nonneg a := by
+    dsimp; rw [Equiv.symm_coe]
+    intro h; rwa [abs_eq_of_nonneg, Equiv.coe_symm]
+
+end NormSelf
+
+end OfEquiv

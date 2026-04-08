@@ -538,26 +538,11 @@ namespace OfEquiv
 
 variable (f: α ≃ β)
 
-protected scoped instance [LT β] : LT (OfEquiv f) where
-  lt := pullback_rel (· < ·) f
-protected scoped instance [LE β] : LE (OfEquiv f) where
-  le := pullback_rel (· ≤ ·) f
-
-protected scoped instance [Min β] : Min (OfEquiv f) where
-  min a b := f.symm (f a ⊓ f b)
-protected scoped instance [Max β] : Max (OfEquiv f) where
-  max a b := f.symm (f a ⊔ f b)
-
 protected scoped instance [Top β] : Top (OfEquiv f) where
   top := f.symm ⊤
 protected scoped instance [Bot β] : Bot (OfEquiv f) where
   bot := f.symm ⊥
 
-@[simp] def lt_def (a b: OfEquiv f) : (a < b) = (f a < f b) := rfl
-@[simp] def le_def (a b: OfEquiv f) : (a ≤ b) = (f a ≤ f b) := rfl
-
-@[simp] def min_def [Min β] (a b: OfEquiv f) : a ⊓ b = f.symm (f a ⊓ f b) := rfl
-@[simp] def max_def [Max β] (a b: OfEquiv f) : a ⊔ b = f.symm (f a ⊔ f b) := rfl
 @[simp] def top_def [Top β] : (⊤: OfEquiv f) = f.symm ⊤ := rfl
 @[simp] def bot_def [Bot β] : (⊥: OfEquiv f) = f.symm ⊥ := rfl
 
