@@ -5,7 +5,7 @@ def ne_zero_of_pos [LE α] [LT α] [IsPreorder α] [Zero α] (a: α) (ha: 0 < a)
   intro rfl
   exact Relation.irrefl ha
 
-variable [SemifieldOps α] [IsSemifield α] [LE α] [LT α] [IsOrderedSemiring α]
+variable [SemifieldOps α] [IsDivisionSemiring α] [LE α] [LT α] [IsOrderedSemiring α]
   -- [IsORCanMo]
 
 macro_rules

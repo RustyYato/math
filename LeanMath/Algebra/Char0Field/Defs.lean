@@ -33,6 +33,13 @@ class IsLawfulRatCast (α: Type*) [FieldOps α] [IsField α] [RatCast α] extend
 def ratCast_def [FieldOps α] [IsField α] [RatCast α] [IsLawfulRatCast α] (q: ℚ) : (q: α) = defaultRatCast q :=
   IsLawfulRatCast.ratCast_def _
 
+def defaultRatCast_mk [FieldOps α] [IsField α] [RatCast α] [HasChar α 0] (q: Rational.Fract) : defaultRatCast (Rational.mk q) = (q.num: α) /? q.den := by
+  unfold defaultRatCast
+  rw [Rational.lift_mk]
+
+def ratCast_mk [FieldOps α] [IsField α] [RatCast α] [IsLawfulRatCast α] (q: Rational.Fract) : ((Rational.mk q): α) = (q.num: α) /? q.den := by
+  rw [ratCast_def, defaultRatCast_mk]
+
 class IsChar0Field (α: Type*) [FieldOps α] [RatCast α] extends IsField α, IsLawfulRatCast α where
 
 instance : RatCast ℚ where
@@ -78,3 +85,8 @@ def ratCastHom [FieldOps α] [RatCast α] [IsChar0Field α] : ℚ →+* α where
   map_one := ratCast_one
   map_add := ratCast_add
   map_mul := ratCast_mul
+
+def ratCast_intCast [FieldOps α] [RatCast α] [IsChar0Field α] (a: ℤ) : Rational.cast (Int.cast a) = (Int.cast a: α) := by
+  show ratCastHom _ = _; rw [map_intCast]
+def ratCast_natCast [FieldOps α] [RatCast α] [IsChar0Field α] (a: ℕ) : Rational.cast (Nat.cast a) = (Nat.cast a: α) := by
+  show ratCastHom _ = _; rw [map_natCast]
