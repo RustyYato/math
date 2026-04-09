@@ -23,7 +23,8 @@ instance : LE ℝ := OfEquiv.instLE equivCauchySeq
 instance : IsPartialOrder ℝ := OfEquiv.instIsPartialOrder equivCauchySeq
 
 instance : IsZeroLEOne ℝ := OfEquiv.instIsZeroLEOne equivCauchySeq
-instance : IsStrictOrderedSemiring ℝ := OfEquiv.instIsStrictOrderedSemiring equivCauchySeq
+instance : IsOrderedSemiring ℝ := OfEquiv.instIsOrderedSemiring equivCauchySeq
+instance : IsZeroNeOne ℝ := OfEquiv.IsZeroNeOne equivCauchySeq
 
 instance : SMul ℚ ℝ := OfEquiv.smul equivCauchySeq _
 instance : AlgebraMap ℚ ℝ := OfEquiv.algebraMap equivCauchySeq
@@ -36,6 +37,8 @@ instance : AlgebraMap ℕ ℝ := inferInstance
 instance : IsAlgebra ℕ ℝ := inferInstance
 
 instance : Norm ℝ ℝ := OfEquiv.NormSelf.instNorm equivCauchySeq
+instance : IsLawfulAbs ℝ := OfEquiv.NormSelf.instIsLawfulAbs equivCauchySeq
+instance : IsAbsMax ℝ := OfEquiv.NormSelf.instIsAbsMax equivCauchySeq
 
 def ringEquivCauchySeq : ℝ ≃+* CauchySeq.Completion ℚ ℚ :=
   OfEquiv.ringEquiv equivCauchySeq
@@ -55,9 +58,7 @@ instance : FieldOps ℝ := OfEquiv.instFieldOps equivCauchySeq
 instance : IsField ℝ := OfEquiv.instIsField equivCauchySeq
 
 instance : IsLinearOrder ℝ := OfEquiv.instIsLinearOrder equivCauchySeq
-
-instance : IsLawfulAbs ℝ := OfEquiv.NormSelf.instIsLawfulAbs equivCauchySeq
-instance : IsAbsMax ℝ := OfEquiv.NormSelf.instIsAbsMax equivCauchySeq
+instance : IsStrictOrderedSemiring ℝ := OfEquiv.instIsStrictOrderedSemiring equivCauchySeq
 
 instance : Min ℝ where
     min a b := (a + b - ‖a - b‖) /? (2: ℕ)
