@@ -856,9 +856,7 @@ instance : IsZeroNeOne (CauchySeq.Completion α γ) where
     rw [h] at zero_not_pos
     contradiction
 
-variable [LEM]
-
-def norm_pos_of_ne_zero (c: CauchySeq α γ) (h: ¬c ≈ 0) : ‖c‖.IsPos := by
+def norm_pos_of_ne_zero [LEM] (c: CauchySeq α γ) (h: ¬c ≈ 0) : ‖c‖.IsPos := by
   apply LEM.byContradiction; intro g
   replace g := not_exists.mp g
   simp only [Eventually, not_and, not_exists, LEM.not_forall, not_lt] at g
@@ -901,7 +899,7 @@ instance : IsLinearOrder γ := inferInstance
 instance : @Relation.IsIrrefl γ (· < ·) := inferInstance
 instance : @Relation.IsAsymm γ (· < ·) := inferInstance
 
-protected def is_cauchy_eqv.safe_inv
+protected def is_cauchy_eqv.safe_inv [LEM]
   [IsLawfulMulNorm α γ]
   {a b: CauchySeq α γ}
   (h: a ≈ b) (ha: ¬a ≈ 0) :
@@ -957,7 +955,7 @@ protected def is_cauchy_eqv.safe_inv
   · intro h; rw [h, norm_zero] at hBa
     exact Relation.asymm hBa Ba_pos
 
-instance : CheckedInv (CauchySeq α γ) (fun a => ¬a ≈ 0) where
+instance [LEM] : CheckedInv (CauchySeq α γ) (fun a => ¬a ≈ 0) where
   checked_inv a h := {
     toFun := safe_inv a
     is_cauchy' := by
@@ -976,7 +974,7 @@ def lift_with {P: Completion α γ -> Prop} (f: ∀c, P (ofSeq c) -> β) (hf: �
     simp; apply hf
     assumption
 
-instance : CheckedInv? (Completion α γ) where
+instance [LEM] : CheckedInv? (Completion α γ) where
   checked_inv := lift_with (P := (· ≠ 0)) (fun c hc =>
     have : ¬c ≈ 0 := fun g => hc (sound g)
     ofSeq c⁻¹?) <| by
@@ -1050,7 +1048,7 @@ protected def Completion.of_norm_pos (c: Completion γ γ) : ‖c‖.IsPos -> c.
   induction c with | _ c =>
   apply of_norm_pos
 
-protected def Completion.norm_pos_of_ne_zero (c: Completion α γ) (h: c ≠ 0) : ‖c‖.IsPos := by
+protected def Completion.norm_pos_of_ne_zero [LEM] (c: Completion α γ) (h: c ≠ 0) : ‖c‖.IsPos := by
   induction c with | _ c =>
   apply norm_pos_of_ne_zero
   intro g; apply h; apply sound
@@ -1061,7 +1059,7 @@ instance : LT (Completion γ γ) where
 instance : LE (Completion γ γ) where
   le a b := a < b ∨ a = b
 
-instance : IsLTTrichotomous (Completion γ γ) where
+instance [LEM] : IsLTTrichotomous (Completion γ γ) where
   trichotomous a b := by
     rcases em (a = b) with h | h
     right; left; assumption
@@ -1145,9 +1143,9 @@ instance : IsPartialOrder (Completion γ γ) where
     nomatch Relation.asymm h g
     symm; assumption
     assumption
-instance : IsLinearOrder (Completion γ γ) where
+instance [LEM] : IsLinearOrder (Completion γ γ) where
 
-def le_of_eventually_le (a b: CauchySeq γ γ) : (Eventually fun i => a i ≤ b i) -> ofSeq a ≤ ofSeq b := by
+def le_of_eventually_le [LEM] (a b: CauchySeq γ γ) : (Eventually fun i => a i ≤ b i) -> ofSeq a ≤ ofSeq b := by
   intro h
   apply not_lt.mp
   intro ⟨B, Bpos, hB⟩
@@ -1159,14 +1157,14 @@ def le_of_eventually_le (a b: CauchySeq γ γ) : (Eventually fun i => a i ≤ b 
   rw [lt_sub_iff_add_lt, zero_add] at this
   exact not_le_of_lt this h
 
-protected def Completion.norm_add_le_add_norm (a b: Completion α γ) : ‖a + b‖ ≤ ‖a‖ + ‖b‖ := by
+protected def Completion.norm_add_le_add_norm [LEM] (a b: Completion α γ) : ‖a + b‖ ≤ ‖a‖ + ‖b‖ := by
   induction a with | _ a =>
   induction b with | _ b =>
   apply le_of_eventually_le
   exists 0; intro i hi
   apply norm_add_le_add_norm
 
-protected def Completion.norm_nonneg (a: Completion α γ) : 0 ≤ ‖a‖ := by
+protected def Completion.norm_nonneg [LEM] (a: Completion α γ) : 0 ≤ ‖a‖ := by
   induction a with | _ a =>
   apply le_of_eventually_le
   exists 0; intro i hi
@@ -1181,8 +1179,8 @@ protected def Completion.norm_smul (a: Completion γ γ) (b: Completion α γ) :
 protected def Completion.norm_zero : ‖(0: Completion α γ)‖ = 0  := by
   show ofSeq _ = ofSeq _; congr 1; ext i
   apply norm_zero
-protected def Completion.of_norm_eq_zero (a: Completion α γ) : ‖a‖ = 0 -> a = 0 := by
 
+protected def Completion.of_norm_eq_zero (a: Completion α γ) : ‖a‖ = 0 -> a = 0 := by
   induction a with | _ a =>
   intro h; replace h : ‖a‖ ≈ 0 := exact h
   apply sound
@@ -1192,24 +1190,25 @@ protected def Completion.of_norm_eq_zero (a: Completion α γ) : ‖a‖ = 0 -> 
   show ‖a i - 0‖ < _; rw [sub_zero]
   have : ‖‖a i‖ - 0‖ < ε := h i j hi hj
   rwa [sub_zero, norm_abs] at this
+
 protected def Completion.norm_eq_zero {a: Completion α γ} : ‖a‖ = 0 ↔ a = 0 := by
   apply Iff.intro
   apply Completion.of_norm_eq_zero
   intro rfl; exact Completion.norm_zero
 
-instance : IsLawfulAbs (Completion γ γ) where
+instance [LEM] : IsLawfulAbs (Completion γ γ) where
   abs_nonneg := Completion.norm_nonneg
   abs_mul := Completion.norm_smul
   abs_add_le_add_abs := Completion.norm_add_le_add_norm
   abs_eq_zero := Completion.norm_eq_zero
 
-instance : IsLawfulNorm (Completion α γ) (Completion γ γ) where
+instance [LEM] : IsLawfulNorm (Completion α γ) (Completion γ γ) where
   norm_nonneg := Completion.norm_nonneg
   norm_smul := Completion.norm_smul
   norm_add_le_add_norm := Completion.norm_add_le_add_norm
   norm_eq_zero := Completion.norm_eq_zero
 
-def eventually_ne_zero_of_ne_zero (a: CauchySeq α γ) (h: ¬a ≈ 0) : Eventually fun i => a i ≠ 0 := by
+def eventually_ne_zero_of_ne_zero [LEM] (a: CauchySeq α γ) (h: ¬a ≈ 0) : Eventually fun i => a i ≠ 0 := by
   have ⟨B, Bpos, k, h⟩ := norm_pos_of_ne_zero _ h
   exists k; intro i hi; replace h : B < ‖a i‖ := h i hi
   intro  g
@@ -1217,7 +1216,7 @@ def eventually_ne_zero_of_ne_zero (a: CauchySeq α γ) (h: ¬a ≈ 0) : Eventual
   rw [g] at h
   exact Relation.asymm Bpos h
 
-instance : IsAbsMax (Completion γ γ) where
+instance [LEM] : IsAbsMax (Completion γ γ) where
   abs_eq_of_nonneg a ha := by
     rcases lt_or_eq_of_le ha with ha | rfl
     · induction a with | _ a =>
@@ -1232,19 +1231,19 @@ instance : IsAbsMax (Completion γ γ) where
       assumption
     · rw [norm_zero]
 
-instance : CheckedDiv? (Completion α γ) where
+instance [LEM] : CheckedDiv? (Completion α γ) where
   checked_div a b h := a * b⁻¹?
-instance : CheckedZPow? (Completion α γ) where
+instance [LEM] : CheckedZPow? (Completion α γ) where
   checked_pow a b h :=
     match b with
     | .ofNat b => a ^ b
     | .negSucc b => a⁻¹? ^ (b + 1)
 
-instance : GroupWithZeroOps (Completion α γ) := inferInstance
-instance : AddGroupWithOneOps (Completion α γ) := inferInstance
-instance (priority := 100000) : FieldOps (Completion α γ) := instFieldOpsOfGroupWithZeroOpsOfAddGroupWithOneOps
+instance [LEM] : GroupWithZeroOps (Completion α γ) := inferInstance
+instance [LEM] : AddGroupWithOneOps (Completion α γ) := inferInstance
+instance (priority := 100000) [LEM] : FieldOps (Completion α γ) := instFieldOpsOfGroupWithZeroOpsOfAddGroupWithOneOps
 
-instance : IsGroupWithZero (Completion α γ) where
+instance [LEM] : IsGroupWithZero (Completion α γ) where
   zero_ne_one := by
     intro h
     replace h := exact h
@@ -1271,8 +1270,8 @@ instance : IsGroupWithZero (Completion α γ) where
     apply hk
     assumption
 
-instance : NoZeroDivisors (Completion α γ) := inferInstance
-instance (priority := 100000) : IsField (Completion α γ) where
+instance [LEM] : NoZeroDivisors (Completion α γ) := inferInstance
+instance (priority := 100000) [LEM] : IsField (Completion α γ) where
 
 instance : IsZeroLEOne (Completion γ γ) where
   zero_le_one := by
@@ -1411,15 +1410,6 @@ instance
     show ofSeq _ = ofSeq _; congr 1; ext i
     simp [zero_smul]; apply zero_smul
 
-instance : AlgebraMap α (Completion α γ) where
-  toAlgebraMap := {
-    toFun := CauchySeq.Completion.const
-    map_zero := rfl
-    map_one := rfl
-    map_add _ _ := rfl
-    map_mul _ _ := rfl
-  }
-
 end CauchySeq
 
 namespace CauchySeq
@@ -1431,6 +1421,15 @@ variable
   [IsVectorSpace α γ] [IsVectorSpace β γ]
   [SMul α γ] [IsScalarTower α γ α]
   [IsLawfulNorm α γ] [IsLawfulMulNorm α γ]
+
+instance : AlgebraMap α (Completion α γ) where
+  toAlgebraMap := {
+    toFun := CauchySeq.Completion.const
+    map_zero := rfl
+    map_one := rfl
+    map_add _ _ := rfl
+    map_mul _ _ := rfl
+  }
 
 instance : IsAlgebra α (Completion α γ) where
   commutes _ _ := by rw [mul_comm]
