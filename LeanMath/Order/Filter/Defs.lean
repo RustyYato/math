@@ -1,5 +1,6 @@
 import LeanMath.Order.GaloisConnection
 import LeanMath.Data.Set.Defs
+import LeanMath.Order.Basic
 
 class IsFilter (F: Type*) (α: Type*) [Membership α F] [LE α] [Min α] where
   protected mem_min (f: F) {a b: α}: a ∈ f -> b ∈ f -> a ⊓ b ∈ f := by intro f; exact f.mem_min
@@ -25,6 +26,22 @@ instance [LE α] [Min α] : Membership α (Prefilter α) where
 
 instance [LE α] [Min α] : IsFilter (Prefilter α) α where
 
+def copy [LE α] [Min α] (f: Prefilter α) (U: Set α) (hx: ∀x, x ∈ f ↔ x ∈ U) : Prefilter α where
+  toSet := U
+  mem_min {a b} ha hb := by
+    apply (hx _).mp
+    apply mem_min f
+    apply (hx _).mpr
+    assumption
+    apply (hx _).mpr
+    assumption
+  mem_ge {a} ha {b} hb := by
+    apply (hx _).mp
+    apply mem_ge f
+    apply (hx _).mpr
+    assumption
+    assumption
+
 inductive Generate {α: Type*} [LE α] [Min α] (U: Set α) : α -> Prop where
 | of (a: α) (ha: a ∈ U) : Generate U a
 | min {a b: α} : Generate U a -> Generate U b -> Generate U (a ⊓ b)
@@ -43,6 +60,66 @@ def of_mem_generate [LE α] [Min α] (U: Set α) (f: Prefilter α) (h: ∀x ∈ 
   | of => apply h; assumption
   | min => apply mem_min <;> assumption
   | ge => apply mem_ge <;> assumption
+
+def mem_generate_iff [LE α] [LT α] [Min α] [IsSemiLatticeMin α] {U: Set α} : ∀{x}, x ∈ generate U ↔ ∃(as: List α) (has: as ≠ []), Set.ofList as ⊆ U ∧ as.min has ≤ x := by
+  intro x; apply Iff.intro
+  · intro h
+    induction h with
+    | of a ha =>
+      refine ⟨[a], nofun, ?_, ?_⟩
+      · intro x hx; cases hx
+        assumption
+        contradiction
+      · rfl
+    | min x y hx hy =>
+      obtain ⟨as, has, as_sub, as_eq⟩ := hx
+      obtain ⟨bs, hbs, bs_sub, bs_eq⟩ := hy
+      refine ⟨as ++ bs, ?_, ?_, ?_⟩
+      · intro h
+        rw [List.append_eq_nil_iff] at h
+        cases h; contradiction
+      · intro x hx
+        simp at hx
+
+        rcases hx with hx | hx
+        · apply as_sub; assumption
+        · apply bs_sub; assumption
+      · rw [List.min_append as bs has hbs]
+        apply min_le_min
+        assumption
+        assumption
+    | @ge a ha b hb ih =>
+      obtain ⟨as, has, sub, le⟩ := ih
+      refine ⟨as, has, sub, ?_⟩
+      apply le_trans le
+      assumption
+  · intro ⟨as, has, sub, le⟩
+    apply Generate.ge _ le
+    show Generate U (as.min has)
+    clear le
+    cases as with
+    | nil => contradiction
+    | cons a as =>
+    unfold List.min; dsimp
+    clear has
+    have ha : Generate U a := by
+      apply generate_of
+      apply sub; left
+    replace sub : Set.ofList as ⊆ U := by
+      intro x hx
+      apply sub
+      right; assumption
+    induction as generalizing a with
+    | nil => assumption
+    | cons a' as ih =>
+      rw [List.foldl_cons]
+      apply ih
+      apply Generate.min
+      assumption
+      apply generate_of
+      apply sub; left
+      intro x hx
+      apply sub; right; assumption
 
 instance [LE α] [Min α] : LE (Prefilter α) where
   le B C := ∀x ∈ C, x ∈ B
@@ -121,8 +198,6 @@ example : (⊥: Prefilter α).toSet = ⊤ := rfl
 
 end
 
-variable [LE α] [Min α]
-
 end Order.Prefilter
 
 namespace Order.Filter
@@ -131,6 +206,12 @@ instance [LE α] [Min α] : Membership α (Filter α) where
   mem f a := a ∈ f.toSet
 
 instance [LE α] [Min α] : IsFilter (Filter α) α where
+
+def copy [LE α] [Min α] (f: Filter α) (U: Set α) (hx: ∀x, x ∈ f ↔ x ∈ U) : Filter α where
+  toPrefilter := f.toPrefilter.copy U hx
+  nonempty := by
+    have ⟨x, h⟩ := f.nonempty
+    exists x; exact (hx _).mp h
 
 section
 
@@ -230,6 +311,285 @@ def le_principal_iff {s: α} : f ≤ 𝓟 s ↔ s ∈ f := by
   apply mem_ge
   assumption
   assumption
+
+end
+
+section
+
+variable [LE α] [LT α] [Min α] [Top α] [IsLawfulTop α] [IsSemiLatticeMin α]
+
+def mem_top (f: Filter α) : ⊤ ∈ f := by
+  have ⟨x, hx⟩ := f.nonempty
+  apply mem_ge
+  assumption
+  apply le_top
+
+instance : Top (Filter α) where
+  top := {
+    toSet := {⊤}
+    nonempty := ⟨⊤, Set.mem_singleton.mp rfl⟩
+    mem_min := by
+      intro x y rfl rfl
+      apply le_antisymm
+      apply le_min
+      repeat apply le_top
+    mem_ge := by
+      intro x y _ _; subst x
+      apply le_antisymm
+      assumption; apply le_top
+  }
+
+instance : IsLawfulTop (Filter α) where
+  le_top a := by intro _ rfl; apply mem_top
+
+instance : Bot (Filter α) where
+  bot := {
+    toSet := ⊤
+    nonempty := ⟨⊤, True.intro⟩
+    mem_min _ _ := True.intro
+    mem_ge _ _ _ := True.intro
+  }
+
+instance : IsLawfulBot (Filter α) where
+  bot_le _ _ _ := True.intro
+
+def generate (U: Set α) : Filter α where
+  toPrefilter := Prefilter.generate (insert ⊤ U)
+  nonempty := by
+    exists ⊤
+    apply Prefilter.generate_of
+    left; rfl
+
+def generate_of (U: Set α) : ∀x ∈ U, x ∈ generate U := by
+  intro x hx
+  apply Prefilter.generate_of
+  right; assumption
+
+def of_mem_generate (U: Set α) (f: Filter α) (h: ∀x ∈ U, x ∈ f) : ∀x ∈ generate U, x ∈ f := by
+  intro x hx
+  induction hx with
+  | of x hx =>
+    rcases hx with rfl | hx
+    apply mem_top
+    apply h
+    assumption
+  | min => apply mem_min <;> assumption
+  | ge => apply mem_ge <;> assumption
+
+def mem_generate_iff {U: Set α} : ∀{x}, x ∈ generate U ↔ ∃as: List α, Set.ofList as ⊆ U ∧ (⊤::as).min nofun ≤ x := by
+  intro x; apply Iff.trans Prefilter.mem_generate_iff
+  apply Iff.intro
+  ·
+    intro ⟨as, has, sub, le⟩
+    suffices ∃bs: List α, Set.ofList bs ⊆ U ∧ (⊤::bs).min nofun ≤ as.min has by
+      obtain ⟨bs, hbs, le'⟩ := this
+      exists bs; apply And.intro hbs
+      apply le_trans le'
+      assumption
+    clear le x
+    induction as with
+    | nil => contradiction
+    | cons a as ih =>
+      show ∃_, _ ∧ _ ≤ List.min (a::as) nofun
+      clear has
+      rcases em (as = []) with h | h
+      · subst as
+        have := sub a (by simp)
+        rcases this with rfl | ha
+        · exists []; apply And.intro
+          nofun; rfl
+        · exists [a]; apply And.intro
+          intro x; simp; intro rfl; assumption
+          simp; rw [min_eq_right]
+          apply le_top
+      · have ⟨bs, hbs, bs_le⟩ := ih h ?_
+        have := sub a (by simp)
+        rcases this with rfl | ha
+        · exists bs; apply And.intro
+          assumption;
+          rw [List.min_cons'' _ _ h]
+          rw [min_eq_right]
+          assumption
+          apply le_top
+        · exists a::bs; apply And.intro
+          intro x; simp
+          intro h; rcases h with rfl | h
+          assumption
+          apply hbs; assumption
+          rw [List.min_eq_of_perm _ _ (List.Perm.swap _ _ _),
+            List.min_cons', List.min_cons'' _ _ h]
+          apply min_le_min (le_refl _)
+          assumption
+        · apply Set.sub_trans _ sub
+          intro x hx; right; assumption
+  · intro ⟨as, sub, le⟩
+    cases as with
+    | nil =>
+      refine ⟨[⊤], nofun, ?_, ?_⟩
+      intro x hx
+      cases List.mem_singleton.mp hx
+      left; rfl
+      assumption
+    | cons a as =>
+      refine ⟨a::as, nofun, ?_, ?_⟩
+      apply Set.sub_trans sub
+      intro x hx; right; assumption
+      apply le_trans _ le
+      rw [List.min_cons']
+      rw [min_eq_right]
+      apply le_top
+
+def ofPrefilter (f: Prefilter α) : Filter α where
+  toSet := insert ⊤ f.toSet
+  nonempty := ⟨_, .inl rfl⟩
+  mem_min := by
+    intro a b ha hb
+    rcases ha with rfl | ha <;> rcases hb with rfl | hb
+    left; rw [min_eq_right]; rfl; rfl
+    right; rwa [min_eq_right]
+    apply le_top; rw [min_eq_left]
+    right; assumption; apply le_top
+    right; apply mem_min f <;> assumption
+  mem_ge := by
+    intro a ha b hb
+    rcases ha with rfl | ha
+    left; apply le_antisymm
+    assumption; apply le_top
+    right; apply mem_ge f
+    assumption; assumption
+
+attribute [local irreducible] OrderOpp in
+def gi (α: Type*) [LE α] [LT α] [Min α] [Top α] [IsLawfulTop α] [IsSemiLatticeMin α] : GaloisInsertion (α := (Prefilter α)ᵒᵖ) (β := (Filter α)ᵒᵖ) (OrderOpp.mk ∘ ofPrefilter ∘ OrderOpp.get) (OrderOpp.mk ∘ toPrefilter ∘ OrderOpp.get) :=
+  GaloisCoinsertion.dual {
+    gc := by
+      intro a b
+      apply Iff.intro
+      intro h
+      intro x hx
+      rcases hx with rfl | hx
+      apply mem_top; apply h; assumption
+      intro h x hx
+      apply h
+      right; assumption
+    u_l_le := by
+      intro f a ha
+      right; assumption
+    choice x hx := {
+      toPrefilter := x
+      nonempty := ⟨_, hx ⊤ (mem_top _)⟩
+    }
+    choice_eq := by
+      intro a ha
+      ext x; simp [ofPrefilter]
+      intro rfl;
+      apply ha; apply mem_top
+  }
+
+instance : SupSet (Filter α) where
+  sSup U := {
+    toSet := { Mem x := ∀f ∈ U, x ∈ f }
+    nonempty := ⟨⊤, fun f _ => mem_top _⟩
+    mem_min := by
+      intro a b ha hb f hf
+      apply mem_min
+      apply ha
+      assumption
+      apply hb
+      assumption
+    mem_ge := by
+      intro a ha b hb f hf
+      apply mem_ge
+      apply ha
+      assumption
+      assumption
+  }
+
+instance : InfSet (Filter α) where
+  sInf U := ⨆ U.lowerBounds -- generate (⋃ U.image fun x => x.toSet)
+
+instance : Max (Filter α) where
+  max a b := {
+    toPrefilter := a.toPrefilter ⊔ b.toPrefilter
+    nonempty := by
+      show (a.toSet ⊓ b.toSet).Nonempty
+      exists ⊤
+      apply And.intro
+      apply mem_top
+      apply mem_top
+  }
+
+protected def le_sSup (U: Set (Filter α)) (u: Filter α) (hu: u ∈ U) : u ≤ ⨆ U := by
+  intro x hx
+  apply hx
+  assumption
+
+protected def sSup_le (U: Set (Filter α)) (x: Filter α) : (∀u ∈ U, u ≤ x) -> ⨆ U ≤ x := by
+  intro hU a ha f hf
+  apply hU
+  assumption
+  assumption
+
+instance : IsCompleteLattice (Filter α) where
+  left_le_max := left_le_max (α := Prefilter α)
+  right_le_max := right_le_max (α := Prefilter α)
+  max_le := max_le (α := Prefilter α)
+  le_sSup := Filter.le_sSup
+  sSup_le := Filter.sSup_le
+  sInf_le := by
+    intro U f hf u hu f' hf'
+    apply hf'
+    assumption
+    assumption
+  le_sInf := by
+    intro U f hU x hx
+    apply hx
+    intro f' hf'
+    apply hU
+    assumption
+
+example : (⊤: Prefilter α).toSet = ⊥ := rfl
+example : (⊥: Prefilter α).toSet = ⊤ := rfl
+
+def mem_sSup {U: Set (Filter α)} : ∀{x}, x ∈ sSup U ↔ ∀u ∈ U, x ∈ u := Iff.rfl
+
+end
+
+section
+
+variable [LE α] [LT α] [Min α] [Top α] [IsLawfulTop α] [IsSemiLatticeMin α]
+
+def join (fs : Filter (Set (Filter α))) : Filter α where
+  toSet := { Mem a := (Set.ofMem fun f => a ∈ f) ∈ fs }
+  nonempty := by
+    exists ⊤; dsimp
+    have ⟨U, hU⟩ := fs.nonempty
+    rw [show Set.ofMem (fun f: Filter α => ⊤ ∈ f) = ⊤ from ?_]
+    apply mem_top
+    ext; simp; apply mem_top
+  mem_min {a b} ha hb := by
+    dsimp at *
+    rw [show Set.ofMem (fun f: Filter α => min a b ∈ f) = (
+      Set.ofMem (fun f: Filter α => a ∈ f) ⊓ Set.ofMem (fun f: Filter α => b ∈ f)
+    ) from ?_]
+    apply mem_min <;> assumption
+    ext f; simp
+    apply Iff.intro
+    intro hx; apply And.intro
+    dsimp ; apply mem_ge; assumption; apply min_le_left
+    dsimp ; apply mem_ge; assumption; apply min_le_right
+    intro ⟨ha, hb⟩
+    apply mem_min <;> assumption
+  mem_ge {a} ha {b} hb := by
+    dsimp at *
+    apply mem_ge
+    assumption
+    intro f; dsimp
+    intro
+    apply mem_ge
+    assumption
+    assumption
+
+@[simp] def mem_join [Top α] [IsLawfulTop α] {s : α} {f : Filter (Set (Filter α))} : s ∈ join f ↔ (Set.ofMem fun t => s ∈ t) ∈ f := Iff.rfl
 
 end
 

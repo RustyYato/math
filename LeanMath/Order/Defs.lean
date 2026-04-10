@@ -459,6 +459,19 @@ def lt_min [IsLinearOrder α] [IsSemiLatticeMin α] {x a b: α} : x < a -> x < b
   rwa [min_eq_left h]
   rwa [min_eq_right h]
 
+def min_le_min [IsSemiLatticeMin α] {a b c d: α} : a ≤ c -> b ≤ d -> a ⊓ b ≤ c ⊓ d := by
+  intro ac bd
+  apply le_min
+  apply le_trans; apply min_le_left; assumption
+  apply le_trans; apply min_le_right; assumption
+
+def max_le_max [IsSemiLatticeMax α] {a b c d: α} : a ≤ c -> b ≤ d -> a ⊔ b ≤ c ⊔ d := by
+  intro ac bd
+  apply max_le
+  apply le_trans; assumption; apply left_le_max
+  apply le_trans; assumption; apply right_le_max
+
+
 end
 
 instance [DecidableLE α] [FunLike F α β] [IsOrderHom F α β] [IsPartialOrder α] [IsPreorder β] : EmbeddingLike F α β where
