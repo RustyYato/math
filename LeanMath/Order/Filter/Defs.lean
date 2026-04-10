@@ -505,7 +505,7 @@ instance : SupSet (Filter α) where
   }
 
 instance : InfSet (Filter α) where
-  sInf U := ⨆ U.lowerBounds -- generate (⋃ U.image fun x => x.toSet)
+  sInf U := generate (⋃ U.image fun x => x.toSet)
 
 instance : Max (Filter α) where
   max a b := {
@@ -536,21 +536,29 @@ instance : IsCompleteLattice (Filter α) where
   le_sSup := Filter.le_sSup
   sSup_le := Filter.sSup_le
   sInf_le := by
-    intro U f hf u hu f' hf'
-    apply hf'
+    intro U f hf u hu
+    apply generate_of
+    exists f.toSet; apply And.intro
+    apply Set.mem_image'
     assumption
     assumption
   le_sInf := by
     intro U f hU x hx
-    apply hx
-    intro f' hf'
+    apply of_mem_generate _ _ _ _ hx
+    intro y hy
+    simp at hy
+    obtain ⟨_, ⟨f', hf', rfl⟩, _⟩ := hy
     apply hU
+    assumption
     assumption
 
 example : (⊤: Prefilter α).toSet = ⊥ := rfl
 example : (⊥: Prefilter α).toSet = ⊤ := rfl
 
 def mem_sSup {U: Set (Filter α)} : ∀{x}, x ∈ sSup U ↔ ∀u ∈ U, x ∈ u := Iff.rfl
+def mem_sInf {U: Set (Filter α)} : ∀{x}, x ∈ sInf U ↔
+  ∃(as: List α), Set.ofList as ⊆ (⋃ (U.image (fun f => f.toSet))) ∧ (⊤::as).min nofun ≤ x := by
+  apply mem_generate_iff
 
 end
 
