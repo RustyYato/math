@@ -87,10 +87,10 @@ structure CauchySeq (α γ: Type*)
 
 end
 
-private class MetricFieldOps (γ: Type*) extends FieldOps γ, LE γ, LT γ, Max γ, Norm γ γ where
+protected class CauchySeq.MetricFieldOps (γ: Type*) extends FieldOps γ, LE γ, LT γ, Max γ, Norm γ γ where
 
-private class IsMetricField (γ: Type*)
-  [MetricFieldOps γ] : Prop
+protected class CauchySeq.IsMetricField (γ: Type*)
+  [CauchySeq.MetricFieldOps γ] : Prop
   extends
   IsField γ,
   IsLinearOrder γ, IsSemiLatticeMax γ,
@@ -100,46 +100,50 @@ private class IsMetricField (γ: Type*)
 
 instance
   (priority := 100)
+  CauchySeq.isntMetricFieldOps
   [LE γ] [LT γ] [FieldOps γ] [Norm γ γ] [Max γ]
-  : MetricFieldOps γ where
+  : CauchySeq.MetricFieldOps γ where
 
 instance
   (priority := 100)
-  [MetricFieldOps γ]
+  CauchySeq.instIsMetricField
+  [CauchySeq.MetricFieldOps γ]
   [IsLinearOrder γ] [IsField γ]
   [IsZeroLEOne γ] [IsStrictOrderedSemiring γ]
   [IsSemiLatticeMax γ] [IsLawfulAbs γ] [IsAbsMax γ]
-  : IsMetricField γ where
+  : CauchySeq.IsMetricField γ where
 
 -- private class VectorSpaceOps (α: Type*) (γ: outParam Type*) [MetricField γ] [FieldOps α] [IsField α] [Norm α γ]
 --   extends SMul γ α, IsLawfulNorm α γ,
 --     IsDistributiveAction γ α, IsLeftDistribSMul γ α, IsLawfulZeroSMul γ α where
 
-private class VectorSpaceOps (α: Type*) (γ: outParam Type*) [MetricFieldOps γ] [FieldOps α] extends Norm α γ, SMul γ α where
+protected class CauchySeq.VectorSpaceOps (α: Type*) (γ: outParam Type*) [CauchySeq.MetricFieldOps γ] [FieldOps α] extends Norm α γ, SMul γ α where
 
-private class IsVectorSpace (α γ: Type*) [MetricFieldOps γ] [IsMetricField γ] [FieldOps α] [IsField α] [VectorSpaceOps α γ]
+protected class CauchySeq.IsVectorSpace (α γ: Type*) [CauchySeq.MetricFieldOps γ] [CauchySeq.IsMetricField γ] [FieldOps α] [IsField α] [CauchySeq.VectorSpaceOps α γ]
   : Prop extends IsLawfulNorm α γ, IsDistributiveAction γ α, IsLeftDistribSMul γ α, IsLawfulZeroSMul γ α where
 
 instance
   (priority := 100)
-  [MetricFieldOps γ] [FieldOps α]
-  [Norm α γ] [SMul γ α] : VectorSpaceOps α γ where
+  CauchySeq.instVectorSpaceOps
+  [CauchySeq.MetricFieldOps γ] [FieldOps α]
+  [Norm α γ] [SMul γ α] : CauchySeq.VectorSpaceOps α γ where
 
 instance
   (priority := 100)
-  [MetricFieldOps γ] [IsMetricField γ] [FieldOps α] [IsField α]
-  [VectorSpaceOps α γ]
+  CauchySeq.instIsVectorSpace
+  [CauchySeq.MetricFieldOps γ] [CauchySeq.IsMetricField γ] [FieldOps α] [IsField α]
+  [CauchySeq.VectorSpaceOps α γ]
   [IsLawfulNorm α γ]
   [IsDistributiveAction γ α] [IsLeftDistribSMul γ α]
-  [IsLawfulZeroSMul γ α] : IsVectorSpace α γ where
+  [IsLawfulZeroSMul γ α] : CauchySeq.IsVectorSpace α γ where
 
 section
 
 variable
-  [MetricFieldOps γ] [IsMetricField γ]
+  [CauchySeq.MetricFieldOps γ] [CauchySeq.IsMetricField γ]
   [FieldOps α] [IsField α] [FieldOps β] [IsField β]
-  [VectorSpaceOps α γ] [VectorSpaceOps β γ]
-  [IsVectorSpace α γ] [IsVectorSpace β γ]
+  [CauchySeq.VectorSpaceOps α γ] [CauchySeq.VectorSpaceOps β γ]
+  [CauchySeq.IsVectorSpace α γ] [CauchySeq.IsVectorSpace β γ]
 
 local macro_rules
 | `(tactic|invert_tactic_trivial) => `(tactic|apply natCast_ne_zero)
@@ -229,10 +233,10 @@ namespace CauchySeq
 section
 
 variable
-  [MetricFieldOps γ] [IsMetricField γ]
+  [CauchySeq.MetricFieldOps γ] [CauchySeq.IsMetricField γ]
   [FieldOps α] [IsField α] [FieldOps β] [IsField β]
-  [VectorSpaceOps α γ] [VectorSpaceOps β γ]
-  [IsVectorSpace α γ] [IsVectorSpace β γ]
+  [CauchySeq.VectorSpaceOps α γ] [CauchySeq.VectorSpaceOps β γ]
+  [CauchySeq.IsVectorSpace α γ] [CauchySeq.IsVectorSpace β γ]
 
 instance : FunLike (CauchySeq α γ) ℕ α where
 
@@ -376,7 +380,6 @@ def _root_.is_cauchy_eqv.mul
 end
 
 structure Completion (α γ: Type*)
-
   [LE γ] [LT γ] [IsLinearOrder γ]
   [FieldOps γ] [IsField γ] [Norm γ γ]
   [IsZeroLEOne γ] [IsStrictOrderedSemiring γ]
@@ -390,10 +393,10 @@ structure Completion (α γ: Type*)
   ofQuot :: toQuot : Quotient (setoid (α := α))
 
 variable
-  [MetricFieldOps γ] [IsMetricField γ]
+  [CauchySeq.MetricFieldOps γ] [CauchySeq.IsMetricField γ]
   [FieldOps α] [IsField α] [FieldOps β] [IsField β]
-  [VectorSpaceOps α γ] [VectorSpaceOps β γ]
-  [IsVectorSpace α γ] [IsVectorSpace β γ]
+  [CauchySeq.VectorSpaceOps α γ] [CauchySeq.VectorSpaceOps β γ]
+  [CauchySeq.IsVectorSpace α γ] [CauchySeq.IsVectorSpace β γ]
 
 def const (a: α) : CauchySeq α γ where
   toFun _ := a
@@ -1606,10 +1609,10 @@ end CauchySeq
 namespace CauchySeq
 
 variable
-  [MetricFieldOps γ] [IsMetricField γ]
+  [CauchySeq.MetricFieldOps γ] [CauchySeq.IsMetricField γ]
   [FieldOps α] [IsField α] [FieldOps β] [IsField β]
-  [VectorSpaceOps α γ] [VectorSpaceOps β γ]
-  [IsVectorSpace α γ] [IsVectorSpace β γ]
+  [CauchySeq.VectorSpaceOps α γ] [CauchySeq.VectorSpaceOps β γ]
+  [CauchySeq.IsVectorSpace α γ] [CauchySeq.IsVectorSpace β γ]
   [SMul α γ] [IsScalarTower α γ α]
   [IsLawfulNorm α γ] [IsLawfulMulNorm α γ]
 

@@ -11,10 +11,10 @@ def upperBounds (s: Set α) : Set α where
 def lowerBounds (s: Set α) : Set α where
   Mem x := ∀a ∈ s, x ≤ a
 
-def isMaximal (s: Set α) (x: α) : Prop := ∀a ∈ s, x ≤ a -> a ≤ x
-def isMax (s: Set α) (x: α) : Prop := ∀a ∈ s, a ≤ x
-def isMinimal (s: Set α) (x: α) : Prop := ∀a ∈ s, a ≤ x -> x ≤ a
-def isMin (s: Set α) (x: α) : Prop := ∀a ∈ s, x ≤ a
+def isMaximal (s: Set α) (x: α) : Prop := x ∈ s ∧ ∀a ∈ s, x ≤ a -> a ≤ x
+def isMax (s: Set α) (x: α) : Prop := x ∈ s ∧ ∀a ∈ s, a ≤ x
+def isMinimal (s: Set α) (x: α) : Prop := x ∈ s ∧ ∀a ∈ s, a ≤ x -> x ≤ a
+def isMin (s: Set α) (x: α) : Prop := x ∈ s ∧ ∀a ∈ s, x ≤ a
 
 def IsGLB (s: Set α) (x: α) := s.lowerBounds.isMax x
 def IsLUB (s: Set α) (x: α) := s.upperBounds.isMin x
@@ -54,6 +54,15 @@ def not_bddAbove_iff [LEM] [IsLinearOrder α] {s: Set α} : ¬s.BoundedAbove ↔
     have := not_le.mpr h
     exists a
     exists ha
+
+def not_mem_ub_lt_mem_ub
+  [LE α] [LT α] [IsPreorder α]
+  (U: Set α) (a b: α) (ha: a ∉ U.upperBounds) (hb: b ∈ U.upperBounds) : ¬b ≤ a := by
+  intro h; apply ha
+  intro x hx
+  apply le_trans _ h
+  apply hb
+  assumption
 
 end Set
 

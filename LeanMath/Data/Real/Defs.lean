@@ -40,8 +40,14 @@ instance : Norm ℝ ℝ := OfEquiv.NormSelf.instNorm equivCauchySeq
 instance : IsLawfulAbs ℝ := OfEquiv.NormSelf.instIsLawfulAbs equivCauchySeq
 instance : IsAbsMax ℝ := OfEquiv.NormSelf.instIsAbsMax equivCauchySeq
 
+instance : IsLawfulNorm ℝ ℝ := inferInstance
+instance : IsDistributiveAction ℝ ℝ := inferInstance
+
 def ringEquivCauchySeq : ℝ ≃+* CauchySeq.Completion ℚ ℚ :=
   OfEquiv.ringEquiv equivCauchySeq
+
+def equivCauchySeq_eq_ringEquivCauchySeq : (equivCauchySeq: ℝ -> _) = (ringEquivCauchySeq: ℝ -> _) :=
+  rfl
 
 def cau_ind {motive: ℝ -> Prop} (ofCauchy: ∀c, motive (ringEquivCauchySeq.symm (CauchySeq.ofSeq c))) (x: ℝ) : motive x := by
   induction h:ringEquivCauchySeq x using CauchySeq.ind with | _ x' =>

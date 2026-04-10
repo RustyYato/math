@@ -99,6 +99,16 @@ instance [LEM] : IsConditionallyCompleteLattice ℕ where
     apply hy
     assumption
 
+private def int_natCast_toNat_eq_self {a : ℤ} : ↑a.toNat = a ↔ 0 ≤ a := by
+  match a with
+  | .ofNat _ =>
+    dsimp; apply Iff.intro <;> intro
+    apply Int.natCast_nonneg
+    rfl
+  | .negSucc n =>
+    dsimp [Int.toNat]
+    apply Iff.intro nofun nofun
+
 def Int.lub_of_ub [LEM] (U: Set ℤ) (h: U.Nonempty) (hU: U.BoundedAbove) : existsUnique fun z => U.IsLUB z := by
   suffices ∃z, Set.IsLUB U z by
     obtain ⟨z, hz⟩ := this
@@ -119,7 +129,7 @@ def Int.lub_of_ub [LEM] (U: Set ℤ) (h: U.Nonempty) (hU: U.BoundedAbove) : exis
   let P (n: ℕ) : Prop := (u + n) ∈ U.upperBounds
   have P_of_ub : ∀z ∈ U.upperBounds, P (z - u).toNat := by
     unfold P; intro z hz v hv
-    rw [Int.natCast_toNat_eq_self.mpr]
+    rw [int_natCast_toNat_eq_self.mpr]
     rw [Int.add_comm, Int.sub_add_cancel]
     apply hz; assumption
     apply Int.le_sub_right_of_add_le
@@ -135,7 +145,7 @@ def Int.lub_of_ub [LEM] (U: Set ℤ) (h: U.Nonempty) (hU: U.BoundedAbove) : exis
   intro a ha
   rw [←Int.add_zero a, ←Int.sub_self u,
     ←Int.add_sub_assoc, Int.add_comm a, Int.add_sub_assoc,
-    ←(Int.natCast_toNat_eq_self (a := a - u)).mpr]
+    ←(int_natCast_toNat_eq_self (a := a - u)).mpr]
   rw [←not_lt]; intro h
   apply Nat.find_minimal Pexists
   exact Int.ofNat_lt.mp (Int.lt_of_add_lt_add_left h)
@@ -202,4 +212,68 @@ instance [LEM] : IsConditionallyCompleteLattice ℤ where
     obtain ⟨x, hx⟩ := hU
     exists x; intro y hy
     apply hy
+    assumption
+
+def Int.csSup_mem [LEM] (U: Set ℤ) (h: U.Nonempty) (hU: U.BoundedAbove) : ⨆ U ∈ U := by
+  open UniqueChoice in
+  obtain ⟨ub, hub⟩ := hU
+  have hub' (x: ℤ) (hx: x ∈ U) : 0 ≤ ub - x := by
+    apply Int.le_sub_left_of_add_le
+    rw [Int.add_zero]; apply hub
+    assumption
+  let X : Set ℕ := U.image fun z => (ub - z).toNat
+  have Xnonempty: X.Nonempty := by
+    apply Set.image_nonempty_iff.mpr
+    assumption
+  replace Xnonempty: ∃x, x ∈ X := by obtain ⟨x, hx⟩ := Xnonempty; exists x
+  have ⟨i, hi, eq⟩ := Set.mem_image.mp (Nat.find_spec Xnonempty)
+  rw [show ⨆ U = ub - Nat.find Xnonempty from ?_]
+  rwa [←eq, Int.toNat_of_nonneg, Int.sub_sub_self]
+  apply hub'; assumption
+  apply le_antisymm
+  · apply csSup_le
+    assumption
+    intro x hx
+    rw [←not_lt]; intro h
+    refine Nat.find_minimal Xnonempty (ub - x).toNat ?_ ?_
+    apply Int.ofNat_lt.mp
+    rwa [Int.toNat_of_nonneg, Int.sub_lt_iff, Int.add_comm, ←Int.sub_lt_iff]
+    apply hub'; assumption
+    apply Set.mem_image'
+    assumption
+  · apply le_csSup
+    exists ub
+    rwa [←eq, Int.toNat_of_nonneg, Int.sub_sub_self]
+    apply hub'; assumption
+
+def Int.csInf_mem [LEM] (U: Set ℤ) (h: U.Nonempty) (hU: U.BoundedBelow) : ⨅ U ∈ U := by
+  open UniqueChoice in
+  obtain ⟨lb, hlb⟩ := hU
+  have hlb' (x: ℤ) (hx: x ∈ U) : 0 ≤ x - lb := by
+    apply Int.le_sub_left_of_add_le
+    rw [Int.add_zero]; apply hlb
+    assumption
+  let X : Set ℕ := U.image fun z => (z - lb).toNat
+  have Xnonempty: X.Nonempty := by
+    apply Set.image_nonempty_iff.mpr
+    assumption
+  replace Xnonempty: ∃x, x ∈ X := by obtain ⟨x, hx⟩ := Xnonempty; exists x
+  have ⟨i, hi, eq⟩ := Set.mem_image.mp (Nat.find_spec Xnonempty)
+  rw [show ⨅ U = Nat.find Xnonempty + lb from ?_]
+  rwa [←eq, Int.toNat_of_nonneg, Int.sub_add_cancel]
+  apply hlb'; assumption
+  apply le_antisymm
+  · apply csInf_le
+    exists lb
+    rwa [←eq, Int.toNat_of_nonneg, Int.sub_add_cancel]
+    apply hlb'; assumption
+  · apply le_csInf
+    assumption
+    intro x hx
+    rw [←not_lt]; intro h
+    refine Nat.find_minimal Xnonempty (x - lb).toNat ?_ ?_
+    apply Int.ofNat_lt.mp
+    rwa [Int.toNat_of_nonneg, Int.sub_lt_iff]
+    apply hlb'; assumption
+    apply Set.mem_image'
     assumption

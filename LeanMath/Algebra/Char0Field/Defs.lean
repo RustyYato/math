@@ -86,6 +86,8 @@ def ratCastHom [FieldOps α] [RatCast α] [IsChar0Field α] : ℚ →+* α where
   map_add := ratCast_add
   map_mul := ratCast_mul
 
+@[simp] def apply_ratCastHom [FieldOps α] [RatCast α] [IsChar0Field α] (q: ℚ) : ratCastHom q = (q: α) := rfl
+
 def ratCast_intCast [FieldOps α] [RatCast α] [IsChar0Field α] (a: ℤ) : Rational.cast (Int.cast a) = (Int.cast a: α) := by
   show ratCastHom _ = _; rw [map_intCast]
 def ratCast_natCast [FieldOps α] [RatCast α] [IsChar0Field α] (a: ℕ) : Rational.cast (Nat.cast a) = (Nat.cast a: α) := by

@@ -109,3 +109,41 @@ def pos_div?_natCast {a: α} (ha: 0 < a) (n: ℕ) : 0 < a /? (n + 1: ℕ) := by
   apply pos_div?
   assumption
   apply pos_natCast
+
+def inv?_le_inv? [IsComm α] [IsZeroLEOne α]
+  {a b: α} (ha: 0 < a) (h: a ≤ b) : b⁻¹?~(by
+    have := lt_of_lt_of_le ha h
+    invert_tactic) ≤ a⁻¹? := by
+    apply le_of_mul_le_mul_of_pos_left
+    assumption
+    rw [mul_inv?_cancel]
+    apply le_of_mul_le_mul_of_pos_left
+    apply lt_of_lt_of_le _ h
+    assumption
+    rwa [mul_comm, mul_assoc, inv?_mul_cancel,
+      mul_one, mul_one]
+
+def inv?_lt_inv? [IsComm α] [IsZeroLEOne α]
+  {a b: α} (ha: 0 < a) (h: a < b) : b⁻¹?~(by
+    have := lt_trans ha h
+    invert_tactic) < a⁻¹? := by
+    apply lt_of_mul_lt_mul_of_pos_left
+    assumption
+    rw [mul_inv?_cancel]
+    apply lt_of_mul_lt_mul_of_pos_left
+    apply lt_trans _ h
+    assumption
+    rwa [mul_comm, mul_assoc, inv?_mul_cancel,
+      mul_one, mul_one]
+
+def of_inv?_le_inv? [IsComm α] [IsZeroLEOne α]
+  {a b: α} (hb: 0 < b) (ha: a ≠ 0) (h: b⁻¹? ≤ a⁻¹?) : a ≤ b := by
+    have := inv?_le_inv? ?_ h
+    rwa [inv?_inv?, inv?_inv?] at this
+    apply pos_inv?; assumption
+
+def of_inv?_lt_inv? [IsComm α] [IsZeroLEOne α]
+  {a b: α} (hb: 0 < b) (ha: a ≠ 0) (h: b⁻¹? < a⁻¹?) : a < b := by
+    have := inv?_lt_inv? ?_ h
+    rwa [inv?_inv?, inv?_inv?] at this
+    apply pos_inv?; assumption

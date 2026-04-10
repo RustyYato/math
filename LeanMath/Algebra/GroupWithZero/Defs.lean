@@ -199,6 +199,11 @@ def map_inv? (f: F) (x: α) (h: x ≠ 0) : f (x⁻¹?) = (f x)⁻¹? := by
 def map_div? (f: F) (a b: α) (h: b ≠ 0) : f (a /? b) = f a /? f b := by
   rw [div?_eq_mul_inv?, div?_eq_mul_inv?, map_mul, map_inv?]
 
+def map_div?' (f: F) (a b: α) (h: f b ≠ 0) : f a /? f b = f (a /? b~(by
+  intro g; apply h
+  rw [g, map_zero])) := by
+  rw [div?_eq_mul_inv?, div?_eq_mul_inv?, map_mul, map_inv?]
+
 def map_zpow? (f: F) (a: α) (z: ℤ) (h: 0 ≤ z ∨ a ≠ 0) : f (a ^? z) = f a ^? z := by
   cases z <;> rename_i z
   rw [zpow?_ofNat, zpow?_ofNat, map_npow]

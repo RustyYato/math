@@ -26,6 +26,9 @@ def intCast_div?_intCast (n m: ℤ) (h: m ∣ n) (hm: (m: α) ≠ 0 := by invert
   rw [div?_mul_cancel, ←intCast_mul, Int.ediv_mul_cancel]
   assumption
 
+def sub_div? (a b k: α) (hk: k ≠ 0) : (a - b) /? k = a /? k - b /? k := by
+  rw [sub_eq_add_neg, sub_eq_add_neg, add_div?, neg_div?_left]
+
 end
 
 variable {R D: Type*} [FunLike F D R] [FieldOps D] [RingOps R] [IsRing R] [IsDivisionRing D]
