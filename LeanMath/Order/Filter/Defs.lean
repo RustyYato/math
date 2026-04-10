@@ -14,6 +14,10 @@ structure Order.Prefilter (α: Type*) [LE α] [Min α] where
   protected mem_min {a b: α}: a ∈ toSet -> b ∈ toSet -> a ⊓ b ∈ toSet
   protected mem_ge {a: α} : a ∈ toSet -> ∀{b}, a ≤ b -> b ∈ toSet
 
+@[ext]
+structure Order.Filter (α: Type*) [LE α] [Min α] extends Order.Prefilter α where
+  protected nonempty : toSet.Nonempty
+
 namespace Order.Prefilter
 
 instance [LE α] [Min α] : Membership α (Prefilter α) where
@@ -119,16 +123,88 @@ end
 
 variable [LE α] [Min α]
 
+end Order.Prefilter
+
+namespace Order.Filter
+
+instance [LE α] [Min α] : Membership α (Filter α) where
+  mem f a := a ∈ f.toSet
+
+instance [LE α] [Min α] : IsFilter (Filter α) α where
+
 section
 
-variable [LT α] [IsSemiLatticeMin α]
+variable [LE α] [Min α]
 
-def principal (a: α) : Prefilter α where
+instance : LE (Filter α) where
+  le B C := ∀x ∈ C, x ∈ B
+instance : LT (Filter α) where
+  lt a b := a ≤ b ∧ ¬b ≤ a
+
+def orderHomPrefilter : Filter α ↪o Prefilter α where
+  toFun := toPrefilter
+  map_rel := Iff.rfl
+  inj := by
+    intro a b h
+    cases a; congr
+
+instance : IsLawfulLT (Filter α) where
+  lt_iff_le_and_not_ge := Iff.rfl
+instance : IsPartialOrder (Filter α) where
+  refl _ := le_refl (α := Prefilter α) _
+  trans := le_trans (α := Prefilter α)
+  antisymm {a b} h g := by
+    apply inj orderHomPrefilter
+    apply le_antisymm <;> assumption
+
+instance : Min (Filter α) where
+  min a b := {
+    toPrefilter := a.toPrefilter ⊓ b.toPrefilter
+    nonempty := by
+      show (Prefilter.generate (a.toSet ⊔ b.toSet)).toSet.Nonempty
+      have ⟨x, hx⟩ := a.nonempty
+      exists x
+      apply Prefilter.generate_of
+      left; assumption
+  }
+
+instance [Max α] [IsLawfulMax α] : Max (Filter α) where
+  max a b := {
+    toPrefilter := a.toPrefilter ⊔ b.toPrefilter
+    nonempty := by
+      show (a.toSet ⊓ b.toSet).Nonempty
+      have ⟨x, hx⟩ := a.nonempty
+      have ⟨y, hy⟩ := b.nonempty
+      exists x ⊔ y
+      apply And.intro
+      apply mem_ge a
+      assumption; apply left_le_max
+      apply mem_ge b
+      assumption; apply right_le_max
+  }
+
+instance : IsSemiLatticeMin (Filter α) where
+  min_le_left := min_le_left (α := Prefilter α)
+  min_le_right := min_le_right (α := Prefilter α)
+  le_min := le_min (α := Prefilter α)
+instance [Max α] [IsLawfulMax α] : IsLattice (Filter α) where
+  left_le_max := left_le_max (α := Prefilter α)
+  right_le_max := right_le_max (α := Prefilter α)
+  max_le := max_le (α := Prefilter α)
+
+end
+
+section
+
+variable [LE α] [LT α] [Min α] [IsSemiLatticeMin α]
+
+def principal (a: α) : Filter α where
   toSet := Set.Ici a
+  nonempty := ⟨a, le_refl _⟩
   mem_min {_ _} hx hy := le_min hx hy
   mem_ge {_} hx {_} hy := le_trans hx hy
 
-scoped notation "𝓟" => Prefilter.principal
+scoped notation "𝓟" => Filter.principal
 
 @[simp] def mem_principal {s t : α} : s ∈ 𝓟 t ↔ t ≤ s := Iff.rfl
 
@@ -157,4 +233,4 @@ def le_principal_iff {s: α} : f ≤ 𝓟 s ↔ s ∈ f := by
 
 end
 
-end Order.Prefilter
+end Order.Filter
