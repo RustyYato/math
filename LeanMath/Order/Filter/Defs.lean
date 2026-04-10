@@ -9,46 +9,46 @@ def mem_min [Membership α F] [LE α] [Min α] [IsFilter F α] (f: F) {a b: α}:
 def mem_ge [Membership α F] [LE α] [Min α] [IsFilter F α] (f: F) {a: α} : a ∈ f -> ∀{b}, a ≤ b -> b ∈ f := IsFilter.mem_ge _
 
 @[ext]
-structure Order.Filter (α: Type*) [LE α] [Min α] where
+structure Order.Prefilter (α: Type*) [LE α] [Min α] where
   toSet: Set α
   protected mem_min {a b: α}: a ∈ toSet -> b ∈ toSet -> a ⊓ b ∈ toSet
   protected mem_ge {a: α} : a ∈ toSet -> ∀{b}, a ≤ b -> b ∈ toSet
 
-namespace Order.Filter
+namespace Order.Prefilter
 
-instance [LE α] [Min α] : Membership α (Filter α) where
+instance [LE α] [Min α] : Membership α (Prefilter α) where
   mem f a := a ∈ f.toSet
 
-instance [LE α] [Min α] : IsFilter (Filter α) α where
+instance [LE α] [Min α] : IsFilter (Prefilter α) α where
 
 inductive Generate {α: Type*} [LE α] [Min α] (U: Set α) : α -> Prop where
 | of (a: α) (ha: a ∈ U) : Generate U a
 | min {a b: α} : Generate U a -> Generate U b -> Generate U (a ⊓ b)
 | ge {a: α} : Generate U a -> ∀{b}, a ≤ b -> Generate U b
 
-def generate [LE α] [Min α] (U: Set α) : Filter α where
+def generate [LE α] [Min α] (U: Set α) : Prefilter α where
   toSet := Set.ofMem (Generate U)
   mem_min := Generate.min
   mem_ge := Generate.ge
 
 def generate_of [LE α] [Min α] (U: Set α) : ∀x ∈ U, x ∈ generate U := Generate.of
 
-def of_mem_generate [LE α] [Min α] (U: Set α) (f: Filter α) (h: ∀x ∈ U, x ∈ f) : ∀x ∈ generate U, x ∈ f := by
+def of_mem_generate [LE α] [Min α] (U: Set α) (f: Prefilter α) (h: ∀x ∈ U, x ∈ f) : ∀x ∈ generate U, x ∈ f := by
   intro x hx
   induction hx with
   | of => apply h; assumption
   | min => apply mem_min <;> assumption
   | ge => apply mem_ge <;> assumption
 
-instance [LE α] [Min α] : LE (Filter α) where
+instance [LE α] [Min α] : LE (Prefilter α) where
   le B C := ∀x ∈ C, x ∈ B
-instance [LE α] [Min α] : LT (Filter α) where
+instance [LE α] [Min α] : LT (Prefilter α) where
   lt a b := a ≤ b ∧ ¬b ≤ a
 
 section
 
 attribute [local irreducible] OrderOpp in
-def gi (α: Type*) [LE α] [Min α] : GaloisInsertion (α := Set α) (β := (Filter α)ᵒᵖ) (OrderOpp.mk ∘ generate) (toSet ∘ OrderOpp.get) where
+def gi (α: Type*) [LE α] [Min α] : GaloisInsertion (α := Set α) (β := (Prefilter α)ᵒᵖ) (OrderOpp.mk ∘ generate) (toSet ∘ OrderOpp.get) where
   gc := by
     intro a b
     cases b with | _ b =>
@@ -82,7 +82,7 @@ def gi (α: Type*) [LE α] [Min α] : GaloisInsertion (α := Set α) (β := (Fil
     apply hx
     assumption
 
-instance [LE α] [Min α] : IsPartialOrder (Filter α) where
+instance [LE α] [Min α] : IsPartialOrder (Prefilter α) where
   lt_iff_le_and_not_ge := Iff.rfl
   refl a _ := id
   trans f g _ h := f _ (g _ h)
@@ -91,7 +91,7 @@ instance [LE α] [Min α] : IsPartialOrder (Filter α) where
     apply g; apply f
 
 @[reducible]
-local instance lattice (α: Type*) [LE α] [Min α] : GaloisConnection.CompleteLattice (Filter α)ᵒᵖ := {
+local instance lattice (α: Type*) [LE α] [Min α] : GaloisConnection.CompleteLattice (Prefilter α)ᵒᵖ := {
   (gi α).liftCompleteLattice with
   bot := OrderOpp.mk {
     toSet := ⊥
@@ -103,17 +103,17 @@ local instance lattice (α: Type*) [LE α] [Min α] : GaloisConnection.CompleteL
 
 variable [LE α] [Min α]
 
-instance : Top (Filter α) := (inferInstance: (Top (Filter α)ᵒᵖᵒᵖ))
-instance : Bot (Filter α) := (inferInstance: (Bot (Filter α)ᵒᵖᵒᵖ))
-instance : Min (Filter α) := (inferInstance: (Min (Filter α)ᵒᵖᵒᵖ))
-instance : Max (Filter α) := (inferInstance: (Max (Filter α)ᵒᵖᵒᵖ))
-instance : SupSet (Filter α) := (inferInstance: (SupSet (Filter α)ᵒᵖᵒᵖ))
-instance : InfSet (Filter α) := (inferInstance: (InfSet (Filter α)ᵒᵖᵒᵖ))
-instance : IsCompleteLattice (Filter α) :=
+instance : Top (Prefilter α) := (inferInstance: (Top (Prefilter α)ᵒᵖᵒᵖ))
+instance : Bot (Prefilter α) := (inferInstance: (Bot (Prefilter α)ᵒᵖᵒᵖ))
+instance : Min (Prefilter α) := (inferInstance: (Min (Prefilter α)ᵒᵖᵒᵖ))
+instance : Max (Prefilter α) := (inferInstance: (Max (Prefilter α)ᵒᵖᵒᵖ))
+instance : SupSet (Prefilter α) := (inferInstance: (SupSet (Prefilter α)ᵒᵖᵒᵖ))
+instance : InfSet (Prefilter α) := (inferInstance: (InfSet (Prefilter α)ᵒᵖᵒᵖ))
+instance : IsCompleteLattice (Prefilter α) :=
   (lattice α).toIsCompleteLattice.opp
 
-example : (⊤: Filter α).toSet = ⊥ := rfl
-example : (⊥: Filter α).toSet = ⊤ := rfl
+example : (⊤: Prefilter α).toSet = ⊥ := rfl
+example : (⊥: Prefilter α).toSet = ⊤ := rfl
 
 end
 
@@ -123,12 +123,12 @@ section
 
 variable [LT α] [IsSemiLatticeMin α]
 
-def principal (a: α) : Filter α where
+def principal (a: α) : Prefilter α where
   toSet := Set.Ici a
   mem_min {_ _} hx hy := le_min hx hy
   mem_ge {_} hx {_} hy := le_trans hx hy
 
-scoped notation "𝓟" => Filter.principal
+scoped notation "𝓟" => Prefilter.principal
 
 @[simp] def mem_principal {s t : α} : s ∈ 𝓟 t ↔ t ≤ s := Iff.rfl
 
@@ -157,4 +157,4 @@ def le_principal_iff {s: α} : f ≤ 𝓟 s ↔ s ∈ f := by
 
 end
 
-end Order.Filter
+end Order.Prefilter
