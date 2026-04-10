@@ -161,6 +161,9 @@ private def lim_const (r: ℝ) : lim (CauchySeq.Completion.const r) = r := by
   unfold lim
   apply lim'_const
 
+def lim_spec (c: CauchySeq.Completion ℝ ℝ) : CauchySeq.Completion.const (lim c) = c := by
+  symm; unfold lim; apply Classical.choose_unique_spec (complete' c)
+
 end
 
 end Real
