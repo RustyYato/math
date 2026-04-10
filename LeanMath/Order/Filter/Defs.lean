@@ -599,6 +599,19 @@ def join (fs : Filter (Set (Filter α))) : Filter α where
 
 @[simp] def mem_join [Top α] [IsLawfulTop α] {s : α} {f : Filter (Set (Filter α))} : s ∈ join f ↔ (Set.ofMem fun t => s ∈ t) ∈ f := Iff.rfl
 
+def sSup_eq_join_princ (U: Set (Filter α)) : ⨆ U = join (𝓟 U) := by
+  apply le_antisymm
+  · apply sSup_le
+    intro f hf x hx
+    rw [mem_join, mem_principal] at hx
+    apply hx
+    assumption
+  · intro x hx
+    rw [mem_join, mem_principal]
+    intro f hf
+    apply hx
+    assumption
+
 end
 
 end Order.Filter
