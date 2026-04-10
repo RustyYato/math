@@ -10,7 +10,7 @@ def mem_ge [Membership α F] [LE α] [Min α] [IsFilter F α] (f: F) {a: α} : a
 
 @[ext]
 structure Order.Filter (α: Type*) [LE α] [Min α] where
-  toSet :  Set α
+  toSet: Set α
   protected mem_min {a b: α}: a ∈ toSet -> b ∈ toSet -> a ⊓ b ∈ toSet
   protected mem_ge {a: α} : a ∈ toSet -> ∀{b}, a ≤ b -> b ∈ toSet
 
@@ -41,7 +41,7 @@ def of_mem_generate [LE α] [Min α] (U: Set α) (f: Filter α) (h: ∀x ∈ U, 
   | ge => apply mem_ge <;> assumption
 
 instance [LE α] [Min α] : LE (Filter α) where
-  le B C := C.toSet ⊆ B.toSet
+  le B C := ∀x ∈ C, x ∈ B
 instance [LE α] [Min α] : LT (Filter α) where
   lt a b := a ≤ b ∧ ¬b ≤ a
 
@@ -114,6 +114,46 @@ instance : IsCompleteLattice (Filter α) :=
 
 example : (⊤: Filter α).toSet = ⊥ := rfl
 example : (⊥: Filter α).toSet = ⊤ := rfl
+
+end
+
+variable [LE α] [Min α]
+
+section
+
+variable [LT α] [IsSemiLatticeMin α]
+
+def principal (a: α) : Filter α where
+  toSet := Set.Ici a
+  mem_min {_ _} hx hy := le_min hx hy
+  mem_ge {_} hx {_} hy := le_trans hx hy
+
+scoped notation "𝓟" => Filter.principal
+
+@[simp] def mem_principal {s t : α} : s ∈ 𝓟 t ↔ t ≤ s := Iff.rfl
+
+def mem_principal_self (s : α) : s ∈ 𝓟 s := le_refl _
+
+def principal_le_principal {s t: α} : s ≤ t ↔ 𝓟 s ≤ 𝓟 t := by
+  apply Iff.intro
+  · intro t_le_s x hx
+    rw [mem_principal] at *
+    apply le_trans
+    assumption
+    assumption
+  · intro h; apply h
+    apply mem_principal_self
+
+def le_principal_iff {s: α} : f ≤ 𝓟 s ↔ s ∈ f := by
+  apply Iff.intro
+  intro h
+  apply h
+  apply mem_principal_self
+  intro h x hx
+  have := mem_principal.mp hx
+  apply mem_ge
+  assumption
+  assumption
 
 end
 
