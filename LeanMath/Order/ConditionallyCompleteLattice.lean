@@ -45,6 +45,15 @@ def csInf_mem [LEM] [IsLinearOrder α] [@Relation.IsWelFounded α (· < ·)]
   exists u
   simpa [not_lt] using hu
 
+def lt_mem_of_lt_csSup [LEM] [IsLinearOrder α] (U: Set α) (h: Nonempty U) : ∀{a}, a < ⨆ U -> ∃u ∈ U, a < u := by
+  intro a ha
+  apply LEM.byContradiction; intro g
+  simp only [not_exists, not_lt, not_and] at g
+  rw [←not_le] at ha; apply ha; clear ha
+  apply csSup_le
+  assumption
+  apply g
+
 noncomputable instance [LEM] : SupSet ℕ where
   sSup U :=
     open UniqueChoice in
