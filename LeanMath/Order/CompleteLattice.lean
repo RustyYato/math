@@ -52,6 +52,21 @@ def sInf_univ : ⨅ ⊤ = (⊥: α) := by
 
 end IsCompleteSemilatticeInf
 
+section
+
+variable (α: Type*) [LE α] [LT α] [Max α] [Min α] [SupSet α] [InfSet α] [Top α] [Bot α]
+
+instance [IsCompleteLattice α] : IsCompleteLattice αᵒᵖ where
+  sInf_le := le_sSup (α := α)
+  le_sInf := sSup_le (α := α)
+  le_sSup := sInf_le (α := α)
+  sSup_le := le_sInf (α := α)
+
+@[implicit_reducible]
+def IsCompleteLattice.opp (h: IsCompleteLattice α) : IsCompleteLattice αᵒᵖ := inferInstance
+
+end
+
 namespace OfEquiv
 
 variable (f: α ≃ β)
@@ -73,7 +88,5 @@ instance [LE β] [LT β] [Min β] [InfSet β] [Top β] [Bot β] [IsCompleteSemil
     rw [←Equiv.symm_coe f u]
     apply hv
     assumption
-
-instance [LE β] [LT β] [Max β] [Min β] [SupSet β] [InfSet β] [Top β] [Bot β] [IsCompleteLattice β] : IsCompleteLattice (OfEquiv f) where
 
 end OfEquiv

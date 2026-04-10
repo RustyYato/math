@@ -24,6 +24,15 @@ def OrderOpp.mk : α ↪ OrderOpp α := Embedding.id _
 
 postfix:max "ᵒᵖ" => OrderOpp
 
+@[cases_eliminator]
+def OrderOpp.cases
+  {motive: αᵒᵖ -> Sort u}
+  (mk: ∀x, motive (OrderOpp.mk x))
+  (a: αᵒᵖ) : motive a := mk a
+
+@[simp] def OrderOpp.get_mk (a: α) : (OrderOpp.mk a).get = a := rfl
+@[simp] def OrderOpp.mk_get (a: αᵒᵖ) : OrderOpp.mk a.get = a := rfl
+
 instance [LE α] : LE αᵒᵖ where
   le a b := b.get ≤ a.get
 
