@@ -142,27 +142,25 @@ private def lim'_const (r: ℝ) : lim' (CauchySeq.Completion.const r) = r := by
   exact (inj CauchySeq.constHom this).symm
 
 @[irreducible]
-def lim : CauchySeq.Completion ℝ ℝ →+* ℝ where
-  toFun := lim'
-  map_zero := lim'_const _
-  map_one := lim'_const _
-  map_add a b := by
-    obtain ⟨a, rfl⟩ := complete a
-    obtain ⟨b, rfl⟩ := complete b
-    show lim' (CauchySeq.Completion.const (a + b)) = _
-    iterate 3 rw [lim'_const]
-  map_mul a b := by
-    obtain ⟨a, rfl⟩ := complete a
-    obtain ⟨b, rfl⟩ := complete b
-    show lim' (CauchySeq.Completion.const (a * b)) = _
-    iterate 3 rw [lim'_const]
+def lim : CauchySeq.Completion ℝ ℝ ≃+* ℝ := RingEquiv.symm {
+  toFun := CauchySeq.Completion.const
+  invFun := lim'
+  map_zero := rfl
+  map_one := rfl
+  map_add _ _ := rfl
+  map_mul _ _ := rfl
+  rightInv := lim'_const
+  leftInv c := (Classical.choose_unique_spec (complete' c)).symm
+}
 
-private def lim_const (r: ℝ) : lim (CauchySeq.Completion.const r) = r := by
-  unfold lim
-  apply lim'_const
+unseal lim in
+def symm_lim : (lim.symm: _ -> _) = CauchySeq.Completion.const := rfl
 
-def lim_spec (c: CauchySeq.Completion ℝ ℝ) : CauchySeq.Completion.const (lim c) = c := by
-  symm; unfold lim; apply Classical.choose_unique_spec (complete' c)
+@[simp] def lim_const (r: ℝ) : lim (CauchySeq.Completion.const r) = r := by
+  rw [←symm_lim, RingEquiv.symm_coe]
+
+@[simp] def const_lim (c: CauchySeq.Completion ℝ ℝ) : CauchySeq.Completion.const (lim c) = c := by
+  rw [←symm_lim, RingEquiv.coe_symm]
 
 end
 
