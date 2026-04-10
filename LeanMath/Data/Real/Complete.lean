@@ -120,4 +120,47 @@ def complete (c: CauchySeq.Completion ℝ ℝ) : ∃r: ℝ, c = .const r := by
   rwa [max_eq_right h, ←neg_lt_neg_iff, neg_neg]
   rwa [max_eq_left h]
 
+def CauchySeq.constHom : ℝ →+* CauchySeq.Completion ℝ ℝ where
+  toFun := CauchySeq.Completion.const
+  map_zero := rfl
+  map_one := rfl
+  map_add _ _ := rfl
+  map_mul _ _ := rfl
+
+private def complete' (c: CauchySeq.Completion ℝ ℝ) : existsUnique fun r: ℝ => c = .const r := by
+  obtain ⟨r, hr⟩ := complete c
+  refine ⟨r, hr, ?_⟩
+  intro s hs; rw [hs] at hr; clear hs
+  exact (inj CauchySeq.constHom hr).symm
+
+noncomputable section
+
+private def lim' (c: CauchySeq.Completion ℝ ℝ) : ℝ := Classical.choose_unique (complete' c)
+
+private def lim'_const (r: ℝ) : lim' (CauchySeq.Completion.const r) = r := by
+  have := Classical.choose_unique_spec (complete' (CauchySeq.Completion.const r))
+  exact (inj CauchySeq.constHom this).symm
+
+@[irreducible]
+def lim : CauchySeq.Completion ℝ ℝ →+* ℝ where
+  toFun := lim'
+  map_zero := lim'_const _
+  map_one := lim'_const _
+  map_add a b := by
+    obtain ⟨a, rfl⟩ := complete a
+    obtain ⟨b, rfl⟩ := complete b
+    show lim' (CauchySeq.Completion.const (a + b)) = _
+    iterate 3 rw [lim'_const]
+  map_mul a b := by
+    obtain ⟨a, rfl⟩ := complete a
+    obtain ⟨b, rfl⟩ := complete b
+    show lim' (CauchySeq.Completion.const (a * b)) = _
+    iterate 3 rw [lim'_const]
+
+private def lim_const (r: ℝ) : lim (CauchySeq.Completion.const r) = r := by
+  unfold lim
+  apply lim'_const
+
+end
+
 end Real
