@@ -1,6 +1,9 @@
 import LeanMath.Data.Real.CeilFloor
+import LeanMath.Data.Fintype.Algebra.Monoid
 
 namespace Real
+
+attribute [local irreducible] Rational.lift Rational.lift₂ Rational.lift_with
 
 variable [LEM]
 
@@ -392,6 +395,12 @@ instance : IsConditionallyCompleteLattice ℝ where
     apply hy
     assumption
 
+end Real
+
+namespace Real
+
+variable [LEM]
+
 private def sets (ε: ℚ) (f: ℕ -> ℚ) (i: ℕ) : Set ℕ := { Mem j := i < j ∧ ε ≤ f i - f j }
 @[implicit_reducible]
 private def sets_nonempty (ε: ℚ) (εpos: 0 < ε) (f: ℕ -> ℚ) (i: ℕ)
@@ -459,5 +468,261 @@ def of_antitone_bounded_below [LEM] (f: ℕ -> ℚ) (anti: Antitone f) (bounded:
     replace := lt_of_lt_of_le this (hr N)
     rw [sub_eq_add_neg, sub_eq_add_neg, ←not_le, add_le_add_left_iff, not_le, neg_lt_neg_iff] at this
     exact not_le_of_lt this (hB (f (r N)) Set.mem_range')
+
+def of_monotone_bounded_above [LEM] (f: ℕ -> ℚ) (mono: Monotone f) (bounded: (Set.range f).BoundedAbove) : CauchySeq ℚ ℚ where
+  toFun := f
+  is_cauchy' := by
+    rw [show f = fun i => - - f i from ?_]
+    apply is_cauchy_eqv.neg
+    apply (of_antitone_bounded_below (fun i => -f i) _ _).is_cauchy
+    · intro i j h
+      dsimp; rw [neg_le_neg_iff]
+      apply mono
+      assumption
+    · obtain ⟨B, hB⟩ := bounded
+      exists -B
+      rintro _ ⟨i, rfl⟩
+      dsimp; rw [neg_le_neg_iff]
+      apply hB
+      apply Set.mem_range'
+    · ext; rw [neg_neg]
+
+private def bit_sum_seq (f: ℕ -> Bool) (offset: ℕ) (i: ℕ) : ℚ :=
+  ∑x: Fin i, bif f (x + offset) then (2: ℕ) ^? (-(x.val + offset)) else 0
+
+def bit_sum_seq_succ (f: ℕ -> Bool) (offset: ℕ) (i: ℕ) : bit_sum_seq f offset (i + 1) = (bif f offset then (2: ℕ) ^? (-offset) else 0: ℚ) + bit_sum_seq f (offset + 1) i := by
+  unfold bit_sum_seq
+  rw [fin_sum_succ]
+  simp; congr
+  dsimp; congr; ext x
+  congr 1
+  rw [add_assoc, add_comm 1]
+  congr 1
+  rw [add_assoc, add_comm 1]
+
+def bit_sum_seq_succ' (f: ℕ -> Bool) (offset: ℕ) (i: ℕ) : bit_sum_seq f offset (i + 1) = (bif f (i + offset) then (2: ℕ) ^? (-(i + offset)) else 0: ℚ) + bit_sum_seq f offset i := by
+  unfold bit_sum_seq
+  rw [fin_sum_succ_last, add_comm]
+  simp
+
+private def two_zpow_pos (n: ℤ) : (0: ℚ) < ((2: ℕ) ^? n: ℚ) := by
+  cases n
+  · rw [zpow?_ofNat]
+    rw [←natCast_npow, ←natCast_zero]
+    apply (natCast_lt_natCast _ _).mpr
+    apply Nat.two_pow_pos
+  · rw [zpow?_negSucc]
+    · rw [inv?_npow]
+      apply pos_inv?
+      rw [←natCast_npow, ←natCast_zero]
+      apply (natCast_lt_natCast _ _).mpr
+      apply Nat.two_pow_pos
+    · decide
+
+private def two_zpow_strict_mono : StrictMonotone (fun n => ((2: ℕ) ^? n: ℚ)) := by
+  intro i j h; dsimp
+  conv => {
+    rhs; arg 2; rw [←add_zero j, ←neg_add_cancel i,
+      ←add_assoc, ←sub_eq_add_neg]
+  }
+  rw [←one_mul ((2: ℕ) ^? i: ℚ), zpow?_add]
+  apply mul_lt_mul_of_pos_right
+  · revert i j
+    suffices ∀i: ℤ, 0 < i -> 1 < ((2: ℕ) ^? i: ℚ) by
+      intro i j h; apply this
+      rwa [lt_sub_iff_add_lt, zero_add]
+    intro i hi
+    match i with
+    | (n + 1: ℕ) =>
+    clear hi
+    rw [zpow?_ofNat, ←natCast_npow, ←natCast_one,
+      natCast_lt_natCast]
+    exact Nat.one_lt_two_pow' n
+  · apply two_zpow_pos
+  · decide
+
+private def bit_sum_seq_nonneg (f: ℕ -> Bool) (o: ℕ) (i: ℕ) : 0 ≤ bit_sum_seq f o i := by
+  induction i generalizing o with
+  | zero => rfl
+  | succ n ih =>
+    rw [bit_sum_seq_succ]
+    cases f o <;> dsimp
+    rw [zero_add]; apply ih
+    apply flip nonneg_add
+    apply ih
+    apply le_of_lt
+    apply two_zpow_pos
+
+private def bit_sum_seq_monotone (f: ℕ -> Bool) (o: ℕ) : Monotone (bit_sum_seq f o) := by
+  intro a b h
+  unfold bit_sum_seq
+  rw [fin_sum_min _ _ h]
+  dsimp; apply le_add_right
+  conv => {
+    rhs; rhs; intro i
+    conv => { arg 1; rw [add_comm_right, add_assoc] }
+    conv => { lhs; arg 2; rw [add_comm_right, add_assoc] }
+  }
+  apply bit_sum_seq_nonneg f (o + a)
+
+private def bit_sum_seq_lt (f: ℕ -> Bool) : bit_sum_seq f o i < ((2: ℕ) ^? (-o + 1): ℚ) := by
+  induction i generalizing o with
+  | zero => apply two_zpow_pos
+  | succ n ih =>
+    rw [bit_sum_seq_succ]
+    cases f o <;> dsimp
+    rw [zero_add]
+    apply lt_trans
+    · apply ih
+    · apply two_zpow_strict_mono
+      apply add_lt_add_right
+      rw [neg_lt_neg_iff]
+      apply Int.lt_succ
+    rw [zpow?_succ, mul_comm, two_mul]
+    apply add_lt_add_left
+    have := @ih (o + 1)
+    conv at this => {
+      rhs; arg 2; rw [natCast_succ, neg_add_rev, add_comm (-1),
+        add_assoc, neg_add_cancel, add_zero]
+    }
+    assumption
+    decide
+
+def bit_sum_offset (f: ℕ -> Bool) (o: ℕ) : ℝ :=
+  Real.ringEquivCauchySeq.symm <| CauchySeq.ofSeq (
+    of_monotone_bounded_above (bit_sum_seq f o) (bit_sum_seq_monotone f _) <| by
+      exists (2: ℕ); rintro _ ⟨i, rfl⟩
+      rw [←one_mul ((2: ℕ): ℚ)]
+      apply le_of_lt
+      apply lt_of_lt_of_le
+      apply bit_sum_seq_lt
+      rw [zpow?_succ, ←inv?_zpow?]
+      apply mul_le_mul_of_nonneg_right _ _ (by decide)
+      decide
+      · rw [zpow?_ofNat, ←one_inv?, inv?_npow]
+        apply inv?_le_inv?
+        decide
+        rw [←natCast_npow, ←natCast_one, natCast_le_natCast]
+        exact Nat.one_le_two_pow
+      decide
+  )
+
+def bit_sum (f: ℕ -> Bool) : ℝ := bit_sum_offset f 1
+
+noncomputable def testBit (r: ℝ) (i: ℤ) : Bool :=
+  (r /? ((2: ℕ) ^? i: ℚ)).floor % 2 = 1
+
+def _root_.Rational.floor (x: ℚ) : ℤ :=
+  x.num / x.den
+
+def ratTestBit (r: ℚ) (i: ℤ) : Bool :=
+  (r /? ((2: ℕ) ^? i: ℚ)).floor % 2 == 1
+
+def bit_sum_true_eq_one : (bit_sum fun  _=> true) = 1 := by
+  apply sound
+  intro ε εpos
+  show CauchySeq.Eventually₂ fun i j => ‖(bit_sum_seq (fun _ => true) 1 i - 1: ℚ)‖ < ε
+  let S : Set ℕ := { Mem n := (2 ^ n)⁻¹? < ε }
+  have ⟨k, hk⟩ : S.Nonempty := by
+    have ⟨n, hn⟩ := archimedean_iff_nat_lt.mp inferInstance ε⁻¹?
+    exists n
+    show _ < ε
+    have := inv?_lt_inv? ?_ hn
+    rw [inv?_inv?] at this
+    apply lt_of_le_of_lt _ this
+    apply pos_inv?; assumption
+    apply inv?_le_inv?
+    apply lt_trans _ hn
+    apply pos_inv?; assumption
+    show n ≤ ((2: ℕ) ^ n: ℚ)
+    rw [←natCast_npow, natCast_le_natCast]
+    exact nat_le_two_pow n
+  exists k; intro i j hi hj
+  apply lt_of_le_of_lt _ hk
+  rw [norm_sub, abs_eq_of_nonneg _ (by
+    rw [le_sub_iff_add_le, zero_add]
+    apply le_of_lt
+    apply bit_sum_seq_lt)]
+  clear hj j
+  clear hk S ε εpos
+  rw [←inv?_npow _ _ (by decide), ←zpow?_ofNat, inv?_zpow?]
+  show _ ≤ ((2: ℕ) ^? _: ℚ)
+  induction i generalizing k with
+  | zero =>
+    cases Nat.le_zero.mp hi
+    rfl
+  | succ i ih =>
+    rw [bit_sum_seq_succ']
+    dsimp
+    rw [sub_add, sub_eq_add_neg, add_le_iff_le_sub]
+    rw [sub_eq_add_neg _ (-_), neg_neg]
+    replace hi := Or.symm (lt_or_eq_of_le hi)
+    rcases hi with hi | hi
+    · subst k
+      conv in (Nat.cast i + 1: ℤ) =>  { rw [←natCast_succ] }
+      rw [←two_mul, mul_comm, ←zpow?_succ _ _ (by decide)]
+      conv in (-Nat.cast (i + 1) + 1) => {
+        rw [natCast_succ, neg_add_rev, add_comm (-1), add_assoc,
+          neg_add_cancel, add_zero]
+      }
+      apply ih; rfl
+    · rw [Nat.lt_succ_iff] at hi
+      apply le_trans
+      apply ih _ hi
+      apply le_add_right
+      apply le_of_lt
+      apply two_zpow_pos
+
+private noncomputable def bit_sum_func (r: ℝ) (acc: ℚ) (i: ℕ) : ℕ -> Bool
+| 0 => acc < r
+| n + 1 =>
+  let q := acc + 2 ^ i
+  if r < q then
+    bit_sum_func r acc (i + 1) n
+  else
+    bit_sum_func r q (i + 1) n
+
+def bit_sum_spec (r: ℝ) : r ∈ Set.Icc 0 1 ↔ r ∈ Set.range bit_sum := by
+  symm; apply Iff.intro
+  · rintro ⟨f, rfl⟩
+    apply And.intro
+    · apply le_cauchy_of_pointwise
+      exists 0; intro i hi
+      rw [←ratCast_zero, ratCast_le_ratCast]
+      apply bit_sum_seq_nonneg
+    · apply cauchy_le_of_pointwise
+      exists 0; intro i hi
+      rw [←ratCast_one, ratCast_le_ratCast]
+      show bit_sum_seq f 1 i ≤ 1
+      apply le_of_lt
+      apply bit_sum_seq_lt
+  · intro h
+    by_cases hr:r = 1
+    · subst r; clear h
+      exists fun _ => true
+      rw [bit_sum_true_eq_one]
+    · replace h : r ∈ Set.Ico 0 1 := by
+        apply And.intro h.left
+        apply lt_of_le_of_ne
+        exact h.right; assumption
+      clear hr
+      exists fun i => testBit r i
+
+      sorry
+
+-- noncomputable def exists_monotone_decreasing_eqv (r: ℝ) : ℕ -> ℚ
+-- | 0 => sorry
+-- | i => sorry
+
+-- def exists_monotone_decreasing_eqv (r: ℝ) : ∃c: CauchySeq ℚ ℚ, r = Real.ringEquivCauchySeq.symm c.ofSeq ∧ Antitone c ∧ (Set.range c).BoundedBelow := by
+--   rcases lt_trichotomy 0 r with nonneg | rfl | nonpos
+--   · sorry
+--   · exists 0
+--     apply And.intro rfl
+--     apply And.intro
+--     · intro _ _ _; rfl
+--     · exists 0; rintro _ ⟨_, rfl⟩
+--       rfl
+--   · sorry
 
 end Real

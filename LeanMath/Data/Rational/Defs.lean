@@ -180,7 +180,7 @@ def lift_with (P: ℚ -> Prop) (f: ∀q, P (mk q) -> α) (_: ∀a b (ha: P (mk a
   apply h
   apply mk_rel
 
-attribute [irreducible] lift lift₂ lift_with
+attribute [local irreducible] lift lift₂ lift_with
 
 @[induction_eliminator]
 def ind {motive: ℚ -> Prop} (mk: ∀q, motive (mk q)) (q: ℚ) : motive q := by

@@ -176,4 +176,11 @@ def offset (n: ℕ) : ℝ -> ℝ :=
     apply CauchySeq.is_cauchy_eqv.offset
     assumption
 
+noncomputable instance (a b: ℝ) : Decidable (a ≤ b) :=
+  open UniqueChoice in inferInstance
+noncomputable instance (a b: ℝ) : Decidable (a < b) :=
+  open UniqueChoice in inferInstance
+noncomputable instance (a b: ℝ) : Decidable (a = b) :=
+  open UniqueChoice in inferInstance
+
 end Real
