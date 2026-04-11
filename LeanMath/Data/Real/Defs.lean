@@ -153,9 +153,15 @@ instance : IsLattice ℝ where
       intro x a b ha hb
       rcases min_eq a b with h | h <;> rwa [h]
 
-unsafe instance : Repr ℝ where
+unsafe scoped instance Repr.Float.instRepr : Repr ℝ where
   reprPrec r n :=
     let f := (CauchySeq.Completion.toQuot r.toCauchySeq).lift (fun x => x) lcProof
+    repr (Array.ofFn (n := bif n == 0 then 5 else n) fun i => (f i).approx)
+
+unsafe scoped instance Repr.Rat.instRepr : Repr ℝ where
+  reprPrec r n :=
+    let f := (CauchySeq.Completion.toQuot r.toCauchySeq).lift (fun x => x) lcProof
+    repr (Array.ofFn (n := bif n == 0 then 5 else n) fun i => f i)
 
 def lift (f: CauchySeq ℚ ℚ -> α) (hf: ∀a b, a ≈ b -> f a = f b) : ℝ -> α :=
   fun r => CauchySeq.lift f hf (Real.ringEquivCauchySeq r)
