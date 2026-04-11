@@ -1374,16 +1374,19 @@ instance [DecidableEq α] [LEM] : IsGroupWithZero (Completion α γ) where
     apply hk
     assumption
 
-private def offset (c: CauchySeq α γ) (n: ℕ) : CauchySeq α γ where
+def is_cauchy_eqv.offset (a b: ℕ -> α) (h: is_cauchy_eqv a b) (n: ℕ) : is_cauchy_eqv (fun i => a (i + n)) (fun i => b (i + n)) := by
+  intro ε εpos
+  have ⟨k, hk⟩ := h ε εpos
+  exists k; intros i j hi hj
+  apply hk
+  apply Nat.le_trans hi; apply Nat.le_add_right
+  apply Nat.le_trans hj; apply Nat.le_add_right
+
+def offset (c: CauchySeq α γ) (n: ℕ) : CauchySeq α γ where
   toFun i := c (i + n)
   is_cauchy' := by
-    intro ε εpos
-    have ⟨k, hk⟩ := c.is_cauchy ε εpos
-    exists k; intro i j hi hj
-    dsimp
-    apply hk
-    apply le_trans hi; apply le_add_right; apply bot_le
-    apply le_trans hj; apply le_add_right; apply bot_le
+    apply is_cauchy_eqv.offset
+    apply c.is_cauchy
 
 protected def is_cauchy_eqv.inv
   [IsLawfulMulNorm α γ] [LEM]

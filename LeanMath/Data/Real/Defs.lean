@@ -156,6 +156,18 @@ instance : IsLattice ℝ where
 unsafe instance : Repr ℝ where
   reprPrec r n :=
     let f := (CauchySeq.Completion.toQuot r.toCauchySeq).lift (fun x => x) lcProof
-    repr (Array.ofFn (n := bif n == 0 then 5 else n) fun i => (f i))
+
+def lift (f: CauchySeq ℚ ℚ -> α) (hf: ∀a b, a ≈ b -> f a = f b) : ℝ -> α :=
+  fun r => CauchySeq.lift f hf (Real.ringEquivCauchySeq r)
+
+def sound (a b: CauchySeq ℚ ℚ) : a ≈ b -> Real.ringEquivCauchySeq.symm a.ofSeq = Real.ringEquivCauchySeq.symm b.ofSeq := by
+  intro h; rw [CauchySeq.sound h]
+
+def offset (n: ℕ) : ℝ -> ℝ :=
+  lift (fun r => ringEquivCauchySeq.symm <| (r.offset n).ofSeq) <| by
+    intro a b h
+    apply sound
+    apply CauchySeq.is_cauchy_eqv.offset
+    assumption
 
 end Real
