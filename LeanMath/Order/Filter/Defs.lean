@@ -9,13 +9,11 @@ class IsFilter (F: Type*) (α: Type*) [Membership α F] [LE α] [Min α] where
 def mem_min [Membership α F] [LE α] [Min α] [IsFilter F α] (f: F) {a b: α}: a ∈ f -> b ∈ f -> a ⊓ b ∈ f := IsFilter.mem_min _
 def mem_ge [Membership α F] [LE α] [Min α] [IsFilter F α] (f: F) {a: α} : a ∈ f -> ∀{b}, a ≤ b -> b ∈ f := IsFilter.mem_ge _
 
-@[ext]
 structure Order.Prefilter (α: Type*) [LE α] [Min α] where
   toSet: Set α
   protected mem_min {a b: α}: a ∈ toSet -> b ∈ toSet -> a ⊓ b ∈ toSet
   protected mem_ge {a: α} : a ∈ toSet -> ∀{b}, a ≤ b -> b ∈ toSet
 
-@[ext]
 structure Order.Filter (α: Type*) [LE α] [Min α] extends Order.Prefilter α where
   protected nonempty : toSet.Nonempty
 
@@ -25,6 +23,9 @@ instance [LE α] [Min α] : Membership α (Prefilter α) where
   mem f a := a ∈ f.toSet
 
 instance [LE α] [Min α] : IsFilter (Prefilter α) α where
+
+@[ext] def ext [LE α] [Min α] (a b: Prefilter α) : (∀x, x ∈ a ↔ x ∈ b) -> a = b := by
+  intro h; cases a; congr; ext; apply h
 
 def copy [LE α] [Min α] (f: Prefilter α) (U: Set α) (hx: ∀x, x ∈ f ↔ x ∈ U) : Prefilter α where
   toSet := U
@@ -41,6 +42,10 @@ def copy [LE α] [Min α] (f: Prefilter α) (U: Set α) (hx: ∀x, x ∈ f ↔ x
     apply (hx _).mpr
     assumption
     assumption
+
+@[simp] def mem_mk [LE α] [Min α]  (s: Set α) {h₀ h₁} : a ∈ Prefilter.mk s h₀ h₁ ↔ a ∈ s := Iff.rfl
+
+@[simp] def mem_toSet [LE α] [Min α]  (f: Prefilter α) : a ∈ f.toSet ↔ a ∈ f := Iff.rfl
 
 inductive Generate {α: Type*} [LE α] [Min α] (U: Set α) : α -> Prop where
 | of (a: α) (ha: a ∈ U) : Generate U a
@@ -207,11 +212,16 @@ instance [LE α] [Min α] : Membership α (Filter α) where
 
 instance [LE α] [Min α] : IsFilter (Filter α) α where
 
+@[ext] def ext [LE α] [Min α] (a b: Filter α) : (∀x, x ∈ a ↔ x ∈ b) -> a = b := by
+  intro h; cases a; congr; ext; apply h
+
 def copy [LE α] [Min α] (f: Filter α) (U: Set α) (hx: ∀x, x ∈ f ↔ x ∈ U) : Filter α where
   toPrefilter := f.toPrefilter.copy U hx
   nonempty := by
     have ⟨x, h⟩ := f.nonempty
     exists x; exact (hx _).mp h
+
+@[simp] def mem_mk [LE α] [Min α]  (f: Prefilter α) {hf} : a ∈ Filter.mk f hf ↔ a ∈ f := Iff.rfl
 
 section
 
@@ -318,7 +328,7 @@ section
 
 variable [LE α] [LT α] [Min α] [Top α] [IsLawfulTop α] [IsSemiLatticeMin α]
 
-def mem_top (f: Filter α) : ⊤ ∈ f := by
+def top_mem (f: Filter α) : ⊤ ∈ f := by
   have ⟨x, hx⟩ := f.nonempty
   apply mem_ge
   assumption
@@ -340,7 +350,7 @@ instance : Top (Filter α) where
   }
 
 instance : IsLawfulTop (Filter α) where
-  le_top a := by intro _ rfl; apply mem_top
+  le_top a := by intro _ rfl; apply top_mem
 
 instance : Bot (Filter α) where
   bot := {
@@ -370,7 +380,7 @@ def of_mem_generate (U: Set α) (f: Filter α) (h: ∀x ∈ U, x ∈ f) : ∀x �
   induction hx with
   | of x hx =>
     rcases hx with rfl | hx
-    apply mem_top
+    apply top_mem
     apply h
     assumption
   | min => apply mem_min <;> assumption
@@ -467,7 +477,7 @@ def gi (α: Type*) [LE α] [LT α] [Min α] [Top α] [IsLawfulTop α] [IsSemiLat
       intro h
       intro x hx
       rcases hx with rfl | hx
-      apply mem_top; apply h; assumption
+      apply top_mem; apply h; assumption
       intro h x hx
       apply h
       right; assumption
@@ -476,19 +486,19 @@ def gi (α: Type*) [LE α] [LT α] [Min α] [Top α] [IsLawfulTop α] [IsSemiLat
       right; assumption
     choice x hx := {
       toPrefilter := x
-      nonempty := ⟨_, hx ⊤ (mem_top _)⟩
+      nonempty := ⟨_, hx ⊤ (top_mem _)⟩
     }
     choice_eq := by
       intro a ha
       ext x; simp [ofPrefilter]
-      intro rfl;
-      apply ha; apply mem_top
+      intro rfl; apply ha
+      apply top_mem
   }
 
 instance : SupSet (Filter α) where
   sSup U := {
     toSet := { Mem x := ∀f ∈ U, x ∈ f }
-    nonempty := ⟨⊤, fun f _ => mem_top _⟩
+    nonempty := ⟨⊤, fun f _ => top_mem _⟩
     mem_min := by
       intro a b ha hb f hf
       apply mem_min
@@ -514,8 +524,8 @@ instance : Max (Filter α) where
       show (a.toSet ⊓ b.toSet).Nonempty
       exists ⊤
       apply And.intro
-      apply mem_top
-      apply mem_top
+      apply top_mem
+      apply top_mem
   }
 
 protected def le_sSup (U: Set (Filter α)) (u: Filter α) (hu: u ∈ U) : u ≤ ⨆ U := by
@@ -560,6 +570,14 @@ def mem_sInf {U: Set (Filter α)} : ∀{x}, x ∈ sInf U ↔
   ∃(as: List α), Set.ofList as ⊆ (⋃ (U.image (fun f => f.toSet))) ∧ (⊤::as).min nofun ≤ x := by
   apply mem_generate_iff
 
+@[simp] def mem_top : ∀{x}, x ∈ (⊤: Filter α) ↔ x = ⊤ := by
+  intro x; apply Iff.intro
+  intro rfl; rfl
+  intro rfl; rfl
+
+@[simp] def mem_bot : ∀{x}, x ∈ (⊥: Filter α) := by
+  intro x; trivial
+
 end
 
 section
@@ -572,8 +590,8 @@ def join (fs : Filter (Set (Filter α))) : Filter α where
     exists ⊤; dsimp
     have ⟨U, hU⟩ := fs.nonempty
     rw [show Set.ofMem (fun f: Filter α => ⊤ ∈ f) = ⊤ from ?_]
-    apply mem_top
-    ext; simp; apply mem_top
+    apply top_mem
+    ext; simp; apply top_mem
   mem_min {a b} ha hb := by
     dsimp at *
     rw [show Set.ofMem (fun f: Filter α => min a b ∈ f) = (
@@ -611,6 +629,16 @@ def sSup_eq_join_princ (U: Set (Filter α)) : ⨆ U = join (𝓟 U) := by
     intro f hf
     apply hx
     assumption
+
+def eq_bot_iff_mem_bot [LE α] [Min α] [Bot α] [IsLawfulBot α] (f: Filter  α) : f = ⊥ ↔ ⊥ ∈ f := by
+  apply Iff.intro
+  intro h
+  rw [h]; trivial
+  intro
+  ext; simp
+  apply mem_ge
+  assumption
+  apply bot_le
 
 end
 
