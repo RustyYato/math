@@ -392,4 +392,72 @@ instance : IsConditionallyCompleteLattice ℝ where
     apply hy
     assumption
 
+private def sets (ε: ℚ) (f: ℕ -> ℚ) (i: ℕ) : Set ℕ := { Mem j := i < j ∧ ε ≤ f i - f j }
+@[implicit_reducible]
+private def sets_nonempty (ε: ℚ) (εpos: 0 < ε) (f: ℕ -> ℚ) (i: ℕ)
+  (anti: Antitone f)
+  (hf: ∀N, ∃i j: ℕ, N ≤ i ∧ N ≤ j ∧ i ≤ j ∧ ε ≤ ‖f i - f j‖)
+  : (sets ε f i).Nonempty := by
+  have ⟨x, y, hx, hy, x_le_y, diff⟩ := hf i
+  rw [abs_eq_of_nonneg] at diff
+  have : ε ≤ f i - f y := by
+    apply le_trans diff
+    rw [sub_eq_add_neg, sub_eq_add_neg]
+    apply add_le_add_right
+    apply anti
+    assumption
+  have : i < y := by
+    apply lt_of_le_of_ne
+    assumption
+    intro rfl
+    rw [sub_self] at this
+    exact not_le_of_lt εpos this
+  exists y
+  rw [le_sub_iff_add_le, zero_add]
+  apply anti; assumption
+
+private noncomputable def reindex (ε: ℚ) (f: ℕ -> ℚ) : ℕ -> ℕ
+| 0 => 0
+| i + 1 => ⨅ (sets ε f (reindex ε f i))
+
+def of_antitone_bounded_below [LEM] (f: ℕ -> ℚ) (anti: Antitone f) (bounded: (Set.range f).BoundedBelow) : CauchySeq ℚ ℚ where
+  toFun := f
+  is_cauchy' := by
+    intro ε εpos
+    apply CauchySeq.Eventually₂_of_le
+    refine ⟨?_⟩; intro i j h; rwa [norm_sub]
+    apply LEM.byContradiction
+    intro h
+    simp only [CauchySeq.Eventually₂, not_exists, LEM.not_forall, not_lt] at h
+    let sets (i: ℕ) : Set ℕ := Real.sets ε f i
+    have sets_nonempty (i: ℕ) : (sets i).Nonempty := by
+      apply Real.sets_nonempty
+      assumption
+      assumption
+      intro N; have ⟨x₀, x₁, x₂, x₃, x₄, x₅⟩ := h N
+      exact ⟨x₀, x₁, x₂, x₃, x₄, x₅⟩
+    let r := reindex ε f
+    have rsucc (n: ℕ) : r (n + 1) = (⨅ sets (r n)) := rfl
+    have hr (i: ℕ) : i * ε ≤ f (r 0) - f (r i) := by
+      rw [←nsmul_eq_natCast_mul]
+      induction i with
+      | zero => rw [sub_self, zero_nsmul]
+      | succ i ih =>
+        rw [succ_nsmul, ←add_zero (f (r 0)), ←neg_add_cancel (f (r i)),
+          ←add_assoc, ←sub_eq_add_neg, add_sub_assoc]
+        apply add_le_add; apply ih
+        clear ih
+        have := Nat.csInf_mem (sets_nonempty (r i))
+        exact this.right
+    have ⟨B, hB⟩ := bounded
+    replace hB : B ∈ (Set.range (f ∘ r)).lowerBounds := by
+      rintro _ ⟨i, rfl⟩
+      apply hB; apply Set.mem_range'
+    have ⟨N, hN⟩ := archimedean_iff_nat_lt.mp inferInstance ((f (r 0) - B) /? ε)
+    have := mul_lt_mul_of_pos_right _ _ hN _  εpos
+    rw [div?_mul_cancel] at this
+    replace := lt_of_lt_of_le this (hr N)
+    rw [sub_eq_add_neg, sub_eq_add_neg, ←not_le, add_le_add_left_iff, not_le, neg_lt_neg_iff] at this
+    exact not_le_of_lt this (hB (f (r N)) Set.mem_range')
+
 end Real

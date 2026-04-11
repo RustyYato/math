@@ -1,4 +1,5 @@
 import LeanMath.Order.Set
+import LeanMath.Order.Monotone
 import LeanMath.Data.Set.Relation
 import LeanMath.Data.Nat.Find
 
@@ -7,6 +8,8 @@ class IsConditionallyCompleteLattice (α: Type*) [LE α] [LT α] [Min α] [Max �
   protected csSup_le : ∀{s} {a: α}, Set.Nonempty s → a ∈ s.upperBounds → ⨆ s ≤ a
   protected csInf_le : ∀{s} {a: α}, s.BoundedBelow → a ∈ s → ⨅ s ≤ a
   protected le_csInf : ∀{s} {a: α}, Set.Nonempty s → a ∈ s.lowerBounds → a ≤ ⨅ s
+
+section
 
 variable [LE α] [LT α] [Min α] [Max α] [InfSet α] [SupSet α] [IsConditionallyCompleteLattice α]
 
@@ -54,58 +57,73 @@ def lt_mem_of_lt_csSup [LEM] [IsLinearOrder α] (U: Set α) (h: Nonempty U) : �
   assumption
   apply g
 
-noncomputable instance [LEM] : SupSet ℕ where
-  sSup U :=
+end
+
+noncomputable instance [LEM] : InfSet ℕ where
+  sInf U :=
     open UniqueChoice in
-    if h:U.BoundedAbove then
-      Nat.find (P := fun n => n ∈ U.upperBounds) (by
+    if h:U.Nonempty then
+      Nat.find (P := fun n => n ∈ U) (by
         dsimp; obtain ⟨n, hn⟩ := h
         exists n)
     else
       0
 
-noncomputable instance [LEM] : InfSet ℕ where
-  sInf U := sSup U.lowerBounds
+noncomputable instance [LEM] : SupSet ℕ where
+  sSup U := sInf U.upperBounds
 
 def Nat.BoundedBelow (U: Set ℕ) : U.BoundedBelow := by
   exists 0; intro _ _; apply bot_le
-def Nat.le_csSup [LEM] : ∀{s} {a: ℕ}, s.BoundedAbove → a ∈ s → a ≤ (⨆ s) := by
+
+def Nat.csInf_le [LEM] : ∀{s} {a: ℕ}, s.BoundedBelow → a ∈ s → (⨅ s) ≤ a := by
   open UniqueChoice in
   intro U u hU hu
-  simp [SupSet.sSup]
-  rw [dif_pos hU]
-  apply Nat.find_spec (P := fun n => n ∈ U.upperBounds) (by
-    dsimp; obtain ⟨n, hn⟩ := hU
-    exists n)
-  assumption
-def Nat.csSup_le [LEM] : ∀{s} {a: ℕ}, Set.Nonempty s → a ∈ s.upperBounds → (⨆ s) ≤ a := by
+  simp [InfSet.sInf]
+  rw [dif_pos, ←not_lt]; intro h
+  exact Nat.find_minimal _ _ h hu
+  exists u
+
+def Nat.csInf_mem [LEM] : ∀{s: Set ℕ}, Set.Nonempty s → (⨅ s) ∈ s := by
+  open UniqueChoice in
+  intro U hU
+  simp [InfSet.sInf, dif_pos hU]
+  apply Nat.find_spec
+
+def Nat.le_csInf [LEM] : ∀{s} {a: ℕ}, Set.Nonempty s → a ∈ s.lowerBounds → a ≤ (⨅ s) := by
   open UniqueChoice in
   intro U u hU hu
-  simp [SupSet.sSup]
-  rw [dif_pos ⟨_, hu⟩]
-  rw [←not_lt]; intro h
-  apply Nat.find_minimal (P := fun n => n ∈ U.upperBounds) (by
-    exists u)
-  assumption
+  apply hu
+  apply Nat.csInf_mem
   assumption
 
+instance [LEM] : IsLawfulInf ℕ where
+  sInf_le := by
+    intro U hU h
+    apply Nat.csInf_le
+    apply Nat.BoundedBelow
+    assumption
+
 instance [LEM] : IsConditionallyCompleteLattice ℕ where
-  le_csSup := Nat.le_csSup
-  csSup_le := Nat.csSup_le
+  le_csSup := by
+    intro U a hU ha
+    simp [SupSet.sSup]
+    apply Nat.le_csInf
+    assumption
+    intro x hx; apply hx
+    assumption
+  csSup_le := by
+    intro U a hU ha
+    simp [SupSet.sSup]
+    apply sInf_le
+    assumption
   le_csInf := by
-    intro U u hU hu
-    apply Nat.le_csSup
-    obtain ⟨x, hx⟩ := hU
-    exists x; intro y hy
-    apply hy
+    intro U a hU ha
+    apply Nat.le_csInf
     assumption
     assumption
   csInf_le := by
     intro U u hU hu
-    apply Nat.csSup_le
-    obtain ⟨x, hx⟩ := hU
-    exists x; intro y hy
-    apply hy
+    apply sInf_le
     assumption
 
 private def int_natCast_toNat_eq_self {a : ℤ} : ↑a.toNat = a ↔ 0 ≤ a := by
@@ -172,9 +190,6 @@ noncomputable instance [LEM] : SupSet ℤ where
       Classical.choose_unique (Int.lub_of_ub U h.left h.right)
     else
       0
-
-noncomputable instance [LEM] : InfSet ℕ where
-  sInf U := sSup U.lowerBounds
 
 noncomputable instance [LEM] : InfSet ℤ where
   sInf U := sSup U.lowerBounds
@@ -286,3 +301,35 @@ def Int.csInf_mem [LEM] (U: Set ℤ) (h: U.Nonempty) (hU: U.BoundedBelow) : ⨅ 
     apply hlb'; assumption
     apply Set.mem_image'
     assumption
+
+def Nat.csSup_mem [LEM] (U: Set ℕ) (h: U.Nonempty) (hU: U.BoundedAbove) : ⨆ U ∈ U := by
+  suffices ∃x ∈ U, ∀u ∈ U, u ≤ x by
+    have ⟨ub, ub_mem, hub⟩ := this
+    rwa [show ⨆ U = ub from ?_]
+    apply le_antisymm
+    apply csSup_le
+    assumption; apply hub
+    apply le_csSup
+    assumption
+    assumption
+  obtain ⟨n, hn⟩ := hU
+  induction n with
+  | zero =>
+    obtain ⟨x, hx⟩ := h
+    cases (Nat.le_zero.mp (hn x hx))
+    exists 0
+  | succ n ih =>
+    rcases em (n ∈ U.upperBounds) with g | g
+    apply ih; assumption
+    exists n + 1
+    apply And.intro
+    apply LEM.byContradiction; intro h'
+    apply g
+    intro x xmem
+    rw [←not_lt]; intro hx
+    rcases lt_or_eq_of_le (Nat.succ_le_of_lt hx) with hx | hx
+    exact not_le_of_lt hx (hn x xmem)
+    subst x
+    contradiction
+    intro u hu
+    apply hn; assumption
