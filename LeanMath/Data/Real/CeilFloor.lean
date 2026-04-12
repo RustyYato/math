@@ -88,4 +88,84 @@ def ceil_pred_lt [LEM] (a r: ℝ) : r ≤ a -> r.ceil - 1 < a := by
   rw [←not_lt] at this; apply this
   refine Int.sub_one_lt_of_le ?_; rfl
 
+def exists_rat_between {a b: ℝ} : a < b ↔ ∃q: ℚ, a < q ∧ q < b := by
+  apply flip Iff.intro
+  · intro ⟨q, ha, hb⟩
+    exact lt_trans ha hb
+  intro h
+  have : 0 < b - a := by rwa [lt_sub_iff_add_lt, zero_add]
+  have ⟨d, hn⟩ := archimedean_iff_nat_lt.mp inferInstance (b - a)⁻¹?
+
+  have d_ne_zero : d ≠ 0 := by
+    intro rfl
+    rw [natCast_zero] at hn
+    apply Relation.asymm hn
+    apply pos_inv?
+    assumption
+  have a_add_ninv_lt_b : a + (d: ℝ)⁻¹? < b := by
+    rw [add_lt_iff_lt_sub, sub_eq_add_neg, add_comm,
+      lt_add_iff_sub_lt, ←neg_lt_neg_iff, neg_neg, neg_sub]
+    rw [←inv?_inv? (b - a)]
+    apply inv?_lt_inv?
+    apply pos_inv?; assumption
+    assumption
+  let n := (a * d).floor + 1
+  let q : Rational := Rational.mk {
+    num := n
+    den := d
+    den_ne_zero := d_ne_zero
+  }
+  have d_pos : 0 < (d: ℝ) := by
+    match d with
+    | _ + 1 => apply pos_natCast
+    | 0 =>
+      rw [natCast_zero] at hn
+      exfalso; apply Relation.asymm hn
+      apply pos_inv?; assumption
+  exists q
+  apply And.intro
+  · rw [ratCast_mk]; dsimp
+    apply lt_of_mul_lt_mul_of_pos_left
+    exact d_pos
+    rw (occs := [2]) [mul_comm]
+    rw [div?_mul_cancel]
+    rw [mul_comm]
+    unfold n; rw [intCast_add, intCast_one]
+    apply lt_floor_succ
+    apply le_refl
+  · rw [ratCast_mk]; dsimp
+    apply lt_of_le_of_lt _ a_add_ninv_lt_b
+    unfold n
+    rw [intCast_add, intCast_one, add_div?, one_div?]
+    apply add_le_add_right
+    apply le_of_mul_le_mul_of_pos_left
+    exact d_pos; rw [mul_comm, div?_mul_cancel, mul_comm]
+    apply floor_le
+
+def of_norm_lt_all_pos_rat (a: ℝ) : (∀ε: ℚ, 0 < ε -> ‖a‖ < ε) -> a = 0 := by
+  intro ha
+  rcases lt_trichotomy a 0 with h | h | h
+  · have ⟨q, a_lt_q, q_neg⟩ := exists_rat_between.mp h
+    have := ha (-q) (by
+      rwa [←neg_zero, neg_lt_neg_iff, ←ratCast_lt_ratCast (α := ℝ),
+        ratCast_zero])
+    rw [←neg_norm, abs_eq_of_nonneg,
+      ←apply_ratCastHom, map_neg, apply_ratCastHom,
+      neg_lt_neg_iff] at this
+    nomatch Relation.asymm a_lt_q this
+    rw [←neg_zero, neg_le_neg_iff]; apply le_of_lt
+    assumption
+  · assumption
+  · have ⟨q, q_pos, a_lt_q⟩ := exists_rat_between.mp h
+    have := ha q (by
+      rwa [←ratCast_lt_ratCast (α := ℝ), ratCast_zero])
+    rw [abs_eq_of_nonneg] at this
+    nomatch Relation.asymm a_lt_q this
+    apply le_of_lt
+    assumption
+
+def eq_of_lim_eq_zero (a b: ℝ) : (∀ε: ℚ, 0 < ε -> ‖a - b‖ < ε) -> a = b := by
+  intro h
+  exact (sub_eq_zero _ _).mpr (of_norm_lt_all_pos_rat _ h)
+
 end Real

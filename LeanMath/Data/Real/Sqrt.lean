@@ -1,4 +1,4 @@
-import LeanMath.Data.Real.Defs
+import LeanMath.Data.Real.Lattice
 
 variable [LEM]
 
@@ -305,6 +305,7 @@ def sqrt_func_is_cauchy_of_eq_zero' {f: CauchySeq ℚ ℚ} (hf: f ≈ 0)
   rwa [Rational.sqrt_approx_neg, norm_zero]
   assumption
   replace h₀ := not_lt.mp h₀
+
   sorry
 
 def sqrt_func_is_cauchy_of_eq_zero {f g: CauchySeq ℚ ℚ} (hf: f ≈ 0) (hg: g ≈ 0)
@@ -344,8 +345,17 @@ def sqrt_func_is_cauchy {f g: CauchySeq ℚ ℚ} (h: f ≈ g) : is_cauchy_eqv (s
     rw [←neg_lt_neg_iff, neg_zero]
     apply flip lt_trans <;> assumption
 
--- def sqrt : ℝ -> ℝ :=
---   CauchySeq.lift (fun q =>
---     CauchySeq.ofSeq sorry) sorry
+def sqrt : ℝ -> ℝ :=
+  Real.lift (fun q => Real.ringEquivCauchySeq.symm <| CauchySeq.ofSeq <| {
+    toFun := sqrt_func q
+    is_cauchy' := by apply sqrt_func_is_cauchy; rfl
+  }) <| by
+    intro a b h;
+    apply sound
+    apply sqrt_func_is_cauchy
+    assumption
+
+open Classical Real.Repr.Float  in
+#eval! (sqrt <| Real.ofRat (1 /? 2: ℚ)).offset 0
 
 end Real

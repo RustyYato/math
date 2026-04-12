@@ -1,6 +1,83 @@
 import LeanMath.Data.Real.CeilFloor
 import LeanMath.Data.Fintype.Algebra.Monoid
 
+namespace Nat
+
+def eq_of_bitwise (a b: ℕ) (h: ∀i: ℕ, (a / 2 ^ i) % 2 = (b / 2 ^ i) % 2) : a = b := by
+  sorry
+
+end Nat
+
+namespace Int
+
+def eq_of_bitwise (a b: ℤ) (h: ∀i: ℕ, (a / 2 ^ i) % 2 = (b / 2 ^ i) % 2) : a = b := by
+  rcases a.eq_nat_or_neg with ⟨a, rfl | rfl⟩
+  <;> rcases b.eq_nat_or_neg with ⟨b, rfl | rfl⟩
+  · congr
+    replace h := h
+    apply Nat.eq_of_bitwise
+    intro i
+    have : (a: ℤ) / (2 ^ i: ℕ) % (2: ℕ) = (b: ℤ) / (2 ^ i: ℕ) % (2: ℕ) := h i
+    rw [←Int.natCast_ediv, ←Int.natCast_ediv,
+      ←Int.natCast_emod, ←Int.natCast_emod] at this
+    exact Int.ofNat.inj this
+  · exfalso; sorry
+  · exfalso; sorry
+  · congr
+    replace h := h
+    apply Nat.eq_of_bitwise
+    intro i
+    have : (-a: ℤ) / (2 ^ i: ℕ) % (2: ℕ) = (-b: ℤ) / (2 ^ i: ℕ) % (2: ℕ) := h i
+    rw [Int.neg_ediv, Int.neg_ediv,
+      ←Int.natCast_ediv, ←Int.natCast_ediv] at this
+    split at this <;> rename_i ha <;> split at this <;> rename_i hb
+    rw [sub_zero, sub_zero, Int.neg_emod, Int.neg_emod] at this
+    split at this <;> rename_i ha₁
+    rw [Int.natCast_dvd_natCast', Nat.dvd_iff_mod_eq_zero] at ha₁
+    rw [ha₁]; symm; rw [←Nat.dvd_iff_mod_eq_zero, ←Int.natCast_dvd_natCast']
+    split at this
+    assumption
+    repeat sorry
+
+
+
+
+    -- rw [←Int.natCast_emod, ←Int.natCast_emod] at this
+    -- exact Int.ofNat.inj this
+  -- induction ha:a.natAbs using Nat.strongRecOn generalizing a b with
+  -- | _ norm_a ih =>
+  -- by_cases a_ne_zero:a = 0
+  -- · subst a_ne_zero
+  --   have : 0 = norm_a := ha
+  --   subst norm_a; symm
+  --   clear this ih
+  --   induction hb:b.natAbs using Nat.strongRecOn generalizing b with
+  --   | _ norm_b ih =>
+  --   apply LEM.byContradiction
+  --   intro b_ne_zero
+  --   have : (b / 2).natAbs < b.natAbs := by
+  --     cases b with
+  --     | ofNat b => sorry
+  --     | negSucc b =>
+  --       clear b_ne_zero
+  --       dsimp
+  --       rw [Int.negSucc_eq, Int.neg_ediv]
+  --       split <;> rename_i h₁
+  --       rw [sub_zero, Int.natAbs_neg, ←natCast_succ,
+  --         show (2: ℤ) = (2: ℕ) from rfl,
+  --         ←Int.natCast_ediv, Int.natAbs_natCast]
+  --       refine Nat.bitwise_rec_lemma ?_
+  --       nofun
+  --       sorry
+
+
+
+
+  --   sorry
+  -- · sorry
+
+end Int
+
 namespace Real
 
 attribute [local irreducible] Rational.lift Rational.lift₂ Rational.lift_with
@@ -25,60 +102,6 @@ private def nat_le_two_pow (n: ℕ) : n ≤ 2 ^ n := by
     rw [npow_succ, Nat.mul_two]
     apply Nat.add_le_add; assumption
     apply Nat.one_le_two_pow
-
-def exists_rat_between {a b: ℝ} : a < b ↔ ∃q: ℚ, a < q ∧ q < b := by
-  apply flip Iff.intro
-  · intro ⟨q, ha, hb⟩
-    exact lt_trans ha hb
-  intro h
-  have : 0 < b - a := by rwa [lt_sub_iff_add_lt, zero_add]
-  have ⟨d, hn⟩ := archimedean_iff_nat_lt.mp inferInstance (b - a)⁻¹?
-
-  have d_ne_zero : d ≠ 0 := by
-    intro rfl
-    rw [natCast_zero] at hn
-    apply Relation.asymm hn
-    apply pos_inv?
-    assumption
-  have a_add_ninv_lt_b : a + (d: ℝ)⁻¹? < b := by
-    rw [add_lt_iff_lt_sub, sub_eq_add_neg, add_comm,
-      lt_add_iff_sub_lt, ←neg_lt_neg_iff, neg_neg, neg_sub]
-    rw [←inv?_inv? (b - a)]
-    apply inv?_lt_inv?
-    apply pos_inv?; assumption
-    assumption
-  let n := (a * d).floor + 1
-  let q : Rational := Rational.mk {
-    num := n
-    den := d
-    den_ne_zero := d_ne_zero
-  }
-  have d_pos : 0 < (d: ℝ) := by
-    match d with
-    | _ + 1 => apply pos_natCast
-    | 0 =>
-      rw [natCast_zero] at hn
-      exfalso; apply Relation.asymm hn
-      apply pos_inv?; assumption
-  exists q
-  apply And.intro
-  · rw [ratCast_mk]; dsimp
-    apply lt_of_mul_lt_mul_of_pos_left
-    exact d_pos
-    rw (occs := [2]) [mul_comm]
-    rw [div?_mul_cancel]
-    rw [mul_comm]
-    unfold n; rw [intCast_add, intCast_one]
-    apply lt_floor_succ
-    apply le_refl
-  · rw [ratCast_mk]; dsimp
-    apply lt_of_le_of_lt _ a_add_ninv_lt_b
-    unfold n
-    rw [intCast_add, intCast_one, add_div?, one_div?]
-    apply add_le_add_right
-    apply le_of_mul_le_mul_of_pos_left
-    exact d_pos; rw [mul_comm, div?_mul_cancel, mul_comm]
-    apply floor_le
 
 def le_cauchy_of_pointwise (a: ℝ) (c: CauchySeq ℚ ℚ) : (CauchySeq.Eventually fun i => a ≤ c i) -> a ≤ Real.ringEquivCauchySeq.symm (CauchySeq.ofSeq c) := by
   intro h; rw [←not_lt]; intro g
@@ -618,6 +641,53 @@ def _root_.Rational.floor (x: ℚ) : ℤ :=
 def ratTestBit (r: ℚ) (i: ℤ) : Bool :=
   (r /? ((2: ℕ) ^? i: ℚ)).floor % 2 == 1
 
+def ext_test_bit (a b: ℝ) : (∀i, a.testBit i = b.testBit i) -> a = b := by
+  intro h; apply eq_of_lim_eq_zero
+  intro ε εpos
+  let s (i: ℤ) (r: ℝ) := (r /? ((2: ℕ) ^? i: ℚ)).floor
+  have (i: ℤ) : s i a = s i b := by
+    unfold s
+    unfold testBit at h
+    sorry
+  -- have ⟨na, hna⟩ := archimedean_iff_nat_lt.mp inferInstance a
+  -- have ⟨nb, hnb⟩ := archimedean_iff_nat_lt.mp inferInstance b
+  -- have ⟨nε, hnε⟩ := archimedean_iff_nat_lt.mp inferInstance (ε⁻¹?)
+  -- have : ∃n: ℕ, ((2: ℕ) ^? (-n): ℚ) < ε ∧ s n a = s n b := by
+  --   have : 0 < nε := by
+  --     rw [←natCast_lt_natCast (α := ℚ), natCast_zero]
+  --     apply lt_trans (pos_inv? _ εpos)
+  --     assumption
+  --   refine ⟨na ⊔ nb ⊔ nε, ?_, ?_⟩
+  --   · rw [←inv?_zpow? _ _ (by decide), zpow?_ofNat]
+  --     apply flip <| lt_of_le_of_lt (b := (nε: ℚ)⁻¹?)
+  --     have := inv?_lt_inv? (pos_inv? _ εpos) hnε
+  --     rwa [inv?_inv?] at this
+  --     rw [inv?_npow]; apply inv?_le_inv?
+  --     rwa [←natCast_zero, natCast_lt_natCast]
+  --     rw [←natCast_npow, natCast_le_natCast]
+  --     apply le_trans
+  --     show nε ≤ 2 ^ nε
+  --     exact nat_le_two_pow nε
+  --     refine Nat.pow_le_pow_right ?_ ?_
+  --     decide
+  --     apply right_le_max
+  --   · unfold s
+  --     have := h (na ⊔ nb ⊔ nε)
+  --     replace :
+  --       (a /? ↑((2: ℕ) ^? (na ⊔ nb ⊔ nε: ℕ): ℚ)).floor % 2 =
+  --       (b /? ↑((2: ℕ) ^? (na ⊔ nb ⊔ nε: ℕ): ℚ)).floor % 2 := by
+  --       sorry
+  --     unfold testBit at this
+
+
+  --     -- simp only [Int.max_assoc, decide_eq_decide] at this
+
+  --     sorry
+  -- clear na nb nε hna hnb hnε
+
+  -- let I : Set ℝ := Set.Ico (S )
+  sorry
+
 def bit_sum_true_eq_one : (bit_sum fun  _=> true) = 1 := by
   apply sound
   intro ε εpos
@@ -696,19 +766,25 @@ def bit_sum_spec (r: ℝ) : r ∈ Set.Icc 0 1 ↔ r ∈ Set.range bit_sum := by
       show bit_sum_seq f 1 i ≤ 1
       apply le_of_lt
       apply bit_sum_seq_lt
-  · intro h
+  · intro r_mem
     by_cases hr:r = 1
-    · subst r; clear h
+    · subst r; clear r_mem
       exists fun _ => true
       rw [bit_sum_true_eq_one]
-    · replace h : r ∈ Set.Ico 0 1 := by
-        apply And.intro h.left
+    · replace r_mem : r ∈ Set.Ico 0 1 := by
+        apply And.intro r_mem.left
         apply lt_of_le_of_ne
-        exact h.right; assumption
+        exact r_mem.right; assumption
       clear hr
       exists fun i => testBit r i
-
       sorry
+      -- rcases (lt_trichotomy (bit_sum (fun i => r.testBit i)) r) with h | h | h
+      -- · exfalso
+      --   have ⟨q, lt_rat, _⟩ := exists_rat_between.mp h
+      --   sorry
+      -- · assumption
+      -- · exfalso
+      --   sorry
 
 -- noncomputable def exists_monotone_decreasing_eqv (r: ℝ) : ℕ -> ℚ
 -- | 0 => sorry

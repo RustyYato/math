@@ -1,7 +1,11 @@
 import LeanMath.Data.Rational.Archimedean
 import LeanMath.Data.Real.Char0Field
 
-instance [LEM] : IsArchimedean ℝ := by
+namespace Real
+
+variable [LEM]
+
+instance : IsArchimedean ℝ := by
   apply archimedean_iff_rat_le.mpr
   intro r
   cases r using Real.cau_ind with | _ r =>
@@ -18,3 +22,5 @@ instance [LEM] : IsArchimedean ℝ := by
   rw [←zero_add ‖r i‖] at this
   have := add_lt_iff_lt_sub.mp this
   apply le_of_lt; assumption
+
+end Real
