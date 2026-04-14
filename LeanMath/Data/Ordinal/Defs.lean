@@ -209,7 +209,7 @@ def rank_lt_rank_iff [LEM] {r: α -> α -> Prop} [Relation.IsWellOrder r] {a b: 
 
 def rank_inj [LEM] {r: α -> α -> Prop} [Relation.IsWellOrder r] : Function.Injective (rank r) := by
   intro a b eq
-  rcases Relation.trichotomous r a b with h | h | h
+  rcases Relation.connected r a b with h | h | h
   · rw [rank_lt_rank_iff (r := r), eq, ←rank_lt_rank_iff] at h
     nomatch Relation.irrefl h
   · assumption
@@ -349,13 +349,13 @@ private instance [Relation.IsWellOrder r] : Relation.IsWellOrder (succ_rel r) wh
     apply Relation.trans
     assumption
     assumption
-  trichotomous := by
+  connected := by
     intro a b
     rcases a with _ | a <;> rcases b with _ | b
     right; left; rfl
     right; right; apply succ_rel.some_lt_none
     left; apply succ_rel.some_lt_none
-    rcases Relation.trichotomous r a b with h | h | h
+    rcases Relation.connected r a b with h | h | h
     left; apply succ_rel.some_lt_some; assumption
     right; left; congr
     right; right; apply succ_rel.some_lt_some; assumption
@@ -464,9 +464,9 @@ instance [Relation.IsWellOrder r] [Relation.IsWellOrder s] : Relation.IsWellOrde
       assumption
       assumption
     · apply Sum.Lex.sep
-  trichotomous {a b} := by
+  connected {a b} := by
     rcases a with a | a <;> rcases b with b | b
-    · rcases Relation.trichotomous r a b with h | h | h
+    · rcases Relation.connected r a b with h | h | h
       · left; apply Sum.Lex.inl
         assumption
       · right; left; congr
@@ -474,7 +474,7 @@ instance [Relation.IsWellOrder r] [Relation.IsWellOrder s] : Relation.IsWellOrde
         assumption
     · left; apply Sum.Lex.sep
     · right; right; apply Sum.Lex.sep
-    · rcases Relation.trichotomous s a b with h | h | h
+    · rcases Relation.connected s a b with h | h | h
       · left; apply Sum.Lex.inr
         assumption
       · right; left; congr
@@ -527,7 +527,7 @@ private def lt_trichotomy_of_le [LEM] (o: Ordinal) : ∀{a b: Ordinal}, a ≤ o 
     obtain ⟨a, rfl⟩ := of_lt_type ha
     obtain ⟨b, rfl⟩ := of_lt_type hb
     simp [←rank_lt_rank_iff]
-    rcases Relation.trichotomous r a b with h | h | h
+    rcases Relation.connected r a b with h | h | h
     · left; assumption
     · right; left; congr
     · right; right; assumption
@@ -561,8 +561,8 @@ def le_add_right [LEM] (a b: Ordinal.{u}) : b ≤ a + b := by
     map_rel := by simp
   }
 
-instance [LEM] : @Relation.IsTrichotomous Ordinal (· < ·) (· = ·) where
-  trichotomous := by
+instance [LEM] : @Relation.IsConnected Ordinal (· < ·) (· = ·) where
+  connected := by
     intro a b
     apply lt_trichotomy_of_le (a + b)
     apply le_add_left

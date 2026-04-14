@@ -20,7 +20,7 @@ def Set.arb_min_minimal : ∀x ∈ U, ¬r x (arb_min r h) := (choose_spec (Set.e
 
 end
 
-variable [Relation.IsTrichotomous r (· = ·)]
+variable [Relation.IsConnected r (· = ·)]
 
 def Set.exists_unique_min [LEM] : existsUnique fun x => x ∈ U ∧ ∀y ∈ U, ¬r y x := by
   have ⟨a, ⟨mem, min⟩, unique⟩ := Relation.exists_unique_min (α := α) (R := r) (P := (· ∈ U)) (by
@@ -45,18 +45,18 @@ def Set.min_minimal : ∀x ∈ U, ¬r x (min r h) := (Classical.choose_unique_sp
 
 end
 
-instance (s: Set α) [Relation.IsTrichotomous r r']  : Relation.IsTrichotomous (s.Induced r) (s.Induced r') where
-  trichotomous := by
+instance (s: Set α) [Relation.IsConnected r r']  : Relation.IsConnected (s.Induced r) (s.Induced r') where
+  connected := by
     intro a b
-    rcases Relation.trichotomous r a.val b.val with h | h | h
+    rcases Relation.connected r a.val b.val with h | h | h
     · left; assumption
     · right; left; assumption
     · right; right; assumption
 
-instance (s: Set α) [Relation.IsTrichotomous r (· = ·)]  : Relation.IsTrichotomous (s.Induced r) (· = ·) where
-  trichotomous := by
+instance (s: Set α) [Relation.IsConnected r (· = ·)]  : Relation.IsConnected (s.Induced r) (· = ·) where
+  connected := by
     intro a b
-    rcases Relation.trichotomous r a.val b.val with h | h | h
+    rcases Relation.connected r a.val b.val with h | h | h
     · left; assumption
     · right; left; ext; assumption
     · right; right; assumption

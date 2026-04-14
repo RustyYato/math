@@ -52,7 +52,7 @@ private def well_order_finite_iso (r: Fin n -> Fin n -> Prop) [Relation.IsWellOr
           Equiv.symm_fin_erase_none, Equiv.apply_toFun, Fin.not_lt_zero]
         · apply Relation.irrefl
         · rename_i a
-          rcases Relation.trichotomous r i (if ↑(eqv.symm a) < i.val then (eqv.symm a).castSucc else (eqv.symm a).succ) with h | h | h
+          rcases Relation.connected r i (if ↑(eqv.symm a) < i.val then (eqv.symm a).castSucc else (eqv.symm a).succ) with h | h | h
           · assumption
           · split at h <;> rename_i g
             rw [h] at g
@@ -71,7 +71,7 @@ private def well_order_finite_iso (r: Fin n -> Fin n -> Prop) [Relation.IsWellOr
 
 def finite {α: Type*} [hfinite: Finite α] (r: α -> α -> Prop)
   [Relation.IsTrans r]
-  [Relation.IsTrichotomous r (· = ·)]
+  [Relation.IsConnected r (· = ·)]
   [Relation.IsIrrefl r] : ∃n: ℕ, type r = n := by
   have ⟨card, ⟨bij⟩⟩ := Finite.finBij α
   have eqv := Equiv.ofBij bij
@@ -86,8 +86,8 @@ def finite {α: Type*} [hfinite: Finite α] (r: α -> α -> Prop)
 private def nonMin (r: α -> α -> Prop) : Set α where
   Mem a := ∃x, r x a
 
-private def not_notMin_unqique {r: α -> α -> Prop} [Relation.IsTrichotomous r (· = ·)] (a b: α) (ha: ¬a ∈ nonMin r) (hb: ¬b ∈ nonMin r) : a = b := by
-  rcases Relation.trichotomous r a b with h | h | h
+private def not_notMin_unqique {r: α -> α -> Prop} [Relation.IsConnected r (· = ·)] (a b: α) (ha: ¬a ∈ nonMin r) (hb: ¬b ∈ nonMin r) : a = b := by
+  rcases Relation.connected r a b with h | h | h
   nomatch hb ⟨a, h⟩
   assumption
   nomatch ha ⟨b, h⟩
@@ -146,11 +146,11 @@ private def pow_rel_of_small [Relation.IsWellOrder r] [Relation.IsWellOrder s] (
   exists a'
   apply And.intro sa'
   intro x hx
-  rcases Relation.trichotomous s (f.val x) (g.val x) with h | h | h
+  rcases Relation.connected s (f.val x) (g.val x) with h | h | h
   nomatch ha' _ ⟨_, h⟩ hx h
   assumption; exfalso
   refine hle _ ?_ h
-  rcases Relation.trichotomous r a a' with h | h | h
+  rcases Relation.connected r a a' with h | h | h
   exact Relation.trans h hx
   subst a'; assumption
   nomatch ha' _ ⟨_, ha⟩ h ha
@@ -159,7 +159,7 @@ instance {r: α -> α -> Prop} {s: β -> β -> Prop} [Relation.IsWellOrder r] [R
   trans {a b c} h g := by
     obtain ⟨x, h, heq⟩ := h
     obtain ⟨y, g, geq⟩ := g
-    rcases Relation.trichotomous r x y with rxy | rfl | rxy
+    rcases Relation.connected r x y with rxy | rfl | rxy
     · exists y
       apply And.intro
       rwa [heq y rxy]
@@ -181,8 +181,8 @@ instance {r: α -> α -> Prop} {s: β -> β -> Prop} [Relation.IsWellOrder r] [R
       apply Relation.trans <;> assumption
       assumption
 
-instance {r: α -> α -> Prop} {s: β -> β -> Prop} [Relation.IsWellOrder r] [Relation.IsWellOrder s] : Relation.IsTrichotomous (pow_rel r s) (· = ·) where
-  trichotomous (f g) := by
+instance {r: α -> α -> Prop} {s: β -> β -> Prop} [Relation.IsWellOrder r] [Relation.IsWellOrder s] : Relation.IsConnected (pow_rel r s) (· = ·) where
+  connected (f g) := by
     rcases Or.symm (em (∃x, f.val x ≠ g.val x)) with h | h
     · simp only [ne_eq, not_exists, LEM.not_not] at h
       right; left; ext; apply h
@@ -216,7 +216,7 @@ instance {r: α -> α -> Prop} {s: β -> β -> Prop} [Relation.IsWellOrder r] [R
         intro g; apply h
         right; assumption
       dsimp at hi
-      rcases Relation.trichotomous s (f.val i) (g.val i) with h | h | h
+      rcases Relation.connected s (f.val i) (g.val i) with h | h | h
       · left; exists i
       · contradiction
       · right; right; exists i
@@ -303,7 +303,7 @@ instance {r: α -> α -> Prop} {s: β -> β -> Prop} [Relation.IsWellOrder r] [R
           intro ⟨f₀, hf₀⟩ ⟨f₁, hf₁⟩ h
           dsimp at h
           congr; ext x
-          rcases Relation.trichotomous r x a₀ with h₀ | h₀ | h₀
+          rcases Relation.connected r x a₀ with h₀ | h₀ | h₀
           exact congrFun (Subtype.mk.inj h) ⟨x, h₀⟩
           subst x
           rw [hf₀.right, hf₁.right]
@@ -420,7 +420,7 @@ instance {r: α -> α -> Prop} {s: β -> β -> Prop} [Relation.IsWellOrder r] [R
             apply hprotof _ g'_in_U
             have ⟨a, g_lt_f, g_eq_f⟩ := hg
             have : r a a₀ := by
-              rcases Relation.trichotomous r a a₀ with h | h | h
+              rcases Relation.connected r a a₀ with h | h | h
               assumption
               · subst a
                 rw [g_mem_X₁.right, f_mem.right] at g_lt_f
@@ -443,7 +443,7 @@ instance {r: α -> α -> Prop} {s: β -> β -> Prop} [Relation.IsWellOrder r] [R
           · simp only [Set.mem_sep, Set.mem_inter, g_mem_S, Set.ofMem_mem,
               true_and, X₁, X₀] at g_not_mem_X₁
             rw [and_comm, not_and] at g_not_mem_X₁
-            rcases Relation.trichotomous s (g.val a₀) b₀ with h₁ | h₁ | h₁
+            rcases Relation.connected s (g.val a₀) b₀ with h₁ | h₁ | h₁
             · rcases em (g ∈ X₀) with h₂ | h₂
               · apply hb₀ _ _ h₁
                 apply Set.mem_image'
@@ -454,7 +454,7 @@ instance {r: α -> α -> Prop} {s: β -> β -> Prop} [Relation.IsWellOrder r] [R
                 apply Relation.asymm hg
                 apply pow_rel_of_small _ _ a'
                 have := (f_mem.left.right a' · ha')
-                rcases Relation.trichotomous s (f.val a') (g.val a') with h₂ | h₂ | h₂
+                rcases Relation.connected s (f.val a') (g.val a') with h₂ | h₂ | h₂
                 assumption
                 obtain ⟨b, hb⟩ := a'_mem
                 rw [←h₂] at hb
@@ -468,7 +468,7 @@ instance {r: α -> α -> Prop} {s: β -> β -> Prop} [Relation.IsWellOrder r] [R
               apply Relation.asymm hg
               apply pow_rel_of_small _ _ a'
               have := (f_mem.left.right a' · ha')
-              rcases Relation.trichotomous s (f.val a') (g.val a') with h₂ | h₂ | h₂
+              rcases Relation.connected s (f.val a') (g.val a') with h₂ | h₂ | h₂
               assumption
               obtain ⟨b, hb⟩ := a'_mem
               rw [←h₂] at hb
@@ -497,7 +497,7 @@ instance {r: α -> α -> Prop} {s: β -> β -> Prop} [Relation.IsWellOrder r] [R
         obtain ⟨a₁, g_lt_f, g_eq_f⟩ := g_lt_f
         -- have := hf
         have : a₁ = a₀ := by
-          rcases Relation.trichotomous r a₁ a₀ with ha | ha | ha
+          rcases Relation.connected r a₁ a₀ with ha | ha | ha
           · rw [←feq _ ha] at g_lt_f
             nomatch hf _ ⟨_, g_lt_f⟩
           · assumption

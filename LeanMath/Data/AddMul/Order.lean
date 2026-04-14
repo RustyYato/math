@@ -71,13 +71,13 @@ instance [IsPartialOrder α] : IsPartialOrder (MulOpp α) where
 instance [IsPartialOrder α] : IsPartialOrder (AddOpp α) where
   antisymm := le_antisymm (α := α)
 instance [IsLinearOrder α] : IsLinearOrder (AddOfMul α) where
-  trichotomous := lt_trichotomy (α := α)
+  connected := lt_trichotomy (α := α)
 instance [IsLinearOrder α] : IsLinearOrder (MulOfAdd α) where
-  trichotomous := lt_trichotomy (α := α)
+  connected := lt_trichotomy (α := α)
 instance [IsLinearOrder α] : IsLinearOrder (MulOpp α) where
-  trichotomous := lt_trichotomy (α := α)
+  connected := lt_trichotomy (α := α)
 instance [IsLinearOrder α] : IsLinearOrder (AddOpp α) where
-  trichotomous := lt_trichotomy (α := α)
+  connected := lt_trichotomy (α := α)
 instance [IsSemiLatticeMax α] : IsSemiLatticeMax (AddOfMul α) where
   left_le_max := left_le_max (α := α)
   right_le_max := right_le_max (α := α)

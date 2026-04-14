@@ -32,11 +32,11 @@ instance : IsRelHom (r ≺r s) r s where
 
 def InitialSegment.IsInitial (f: r ≼r s) : Relation.IsInitial s f := f.isInitial
 def PrincipalSegment.IsPrincipal (f: r ≺r s) : ∃top, Relation.IsPrincipal s f top := f.isPrincipal
-def PrincipalSegment.IsUniquePrincipal [Relation.IsIrrefl s] [Relation.IsTrichotomous s (· = ·)] (f: r ≺r s) : existsUnique fun top => Relation.IsPrincipal s f top := by
+def PrincipalSegment.IsUniquePrincipal [Relation.IsIrrefl s] [Relation.IsConnected s (· = ·)] (f: r ≺r s) : existsUnique fun top => Relation.IsPrincipal s f top := by
   have ⟨top, htop⟩ := f.IsPrincipal
   refine ⟨top, htop, ?_⟩
   intro b hb
-  rcases Relation.trichotomous s top b with h | h | h
+  rcases Relation.connected s top b with h | h | h
   · have := Relation.irrefl ((htop top).mpr ((hb top).mp h))
     contradiction
   · assumption
@@ -96,14 +96,14 @@ def PrincipalSegment.trans [Relation.IsTrans t] (f: r ≺r s) (g: s ≺r t) : r 
       apply (htop _).mpr
       apply Set.mem_range'
 
-instance [Relation.IsWelFounded s] [Relation.IsTrichotomous s (· = ·)] : Subsingleton (r ≼r s) where
+instance [Relation.IsWelFounded s] [Relation.IsConnected s (· = ·)] : Subsingleton (r ≼r s) where
   allEq a b := by
     have := a.toRelEmbedding.liftWellfounded
     apply DFunLike.ext
     intro  x
     induction x using (Relation.wf r).induction with
     | h x ih =>
-    rcases Relation.trichotomous s (a x) (b x) with h | h | h
+    rcases Relation.connected s (a x) (b x) with h | h | h
     · have ⟨y, g⟩ := b.IsInitial x (a x) h
       rw [←g] at h
       have := ih y (map_rel_rev _ h)
@@ -126,7 +126,7 @@ instance [Relation.IsWellOrder s] : Subsingleton (r ≺r s) where
     cases h
     rfl
 
-def InitialSegment.eq [Relation.IsWelFounded s] [Relation.IsTrichotomous s (· = ·)] (f g: r ≼r s) : ∀x, f x = g x := by
+def InitialSegment.eq [Relation.IsWelFounded s] [Relation.IsConnected s (· = ·)] (f g: r ≼r s) : ∀x, f x = g x := by
   apply congrFun
   congr; apply Subsingleton.allEq
 
@@ -172,7 +172,7 @@ def InitialSegment.principal_or_eqv [LEM] [Relation.IsWellOrder s] (f: r ≼r s)
       nomatch ha _ rfl
     · simp only [sab, false_iff, not_exists, LEM.not_forall, LEM.not_not] at ha
       obtain ⟨a, rfl⟩ := ha
-      rcases Relation.trichotomous s (f a) b with g | g | g
+      rcases Relation.connected s (f a) b with g | g | g
       contradiction
       exists a
       have := f.IsInitial a b g
@@ -222,7 +222,7 @@ def InitialSegment.trans_princ [LEM] [Relation.IsWellOrder t] (f: r ≼r s) (g: 
       have a_min : ∀x, r x a -> _ := Relation.min_minimal r this
       simp only [LEM.not_not] at a_min
       exists a
-      rcases Relation.trichotomous t (g (f a)) b with h | h | h
+      rcases Relation.connected t (g (f a)) b with h | h | h
       · nomatch ha h
       · show g (f a) = b
         assumption
@@ -284,7 +284,7 @@ def Relation.IsPrincipal.unique (s: β -> β -> Prop) [Relation.IsWellOrder s] (
   Relation.IsPrincipal s f b ->
   a = b := by
   intro ha hb
-  rcases Relation.trichotomous s a b with h | h | h
+  rcases Relation.connected s a b with h | h | h
   · nomatch unique' s f ha hb h
   · assumption
   · nomatch unique' s f hb ha h
@@ -314,7 +314,7 @@ private noncomputable def collapse_helper [LEM] [Relation.IsWellOrder r] (f: r �
   have : U.Nonempty := by
     exists f a
     · intro x hx'
-      rcases Relation.trichotomous s (collapse_helper f x).val (f x) with hx | hx | hx
+      rcases Relation.connected s (collapse_helper f x).val (f x) with hx | hx | hx
       · apply Relation.trans hx (map_rel_fwd f hx')
       · rw [hx]; exact map_rel_fwd f hx'
       · have := (collapse_helper f x).property
@@ -322,7 +322,7 @@ private noncomputable def collapse_helper [LEM] [Relation.IsWellOrder r] (f: r �
   ⟨Set.min s this, by
     apply Set.min_minimal
     intro x rxa
-    rcases Relation.trichotomous s (collapse_helper f x).val (f x) with hx | hx | hx
+    rcases Relation.connected s (collapse_helper f x).val (f x) with hx | hx | hx
     · apply Relation.trans hx
       apply map_rel_fwd
       assumption
@@ -351,7 +351,7 @@ noncomputable def collapse [LEM] (f: r ↪r s) : r ≼r s where
   inj := by
     intro a b h
     dsimp at h
-    rcases Relation.trichotomous r a b with g | g | g
+    rcases Relation.connected r a b with g | g | g
     · have := collapse_helper_lt f _ _ g
       rw [h] at this
       nomatch Relation.irrefl this
@@ -364,7 +364,7 @@ noncomputable def collapse [LEM] (f: r ↪r s) : r ≼r s where
     apply Iff.intro
     apply collapse_helper_lt
     intro h
-    rcases Relation.trichotomous r a b with g | rfl | g
+    rcases Relation.connected r a b with g | rfl | g
     assumption
     nomatch Relation.irrefl h
     nomatch Relation.asymm (collapse_helper_lt f _ _ g) h
@@ -376,7 +376,7 @@ noncomputable def collapse [LEM] (f: r ↪r s) : r ≼r s where
     let S := Set.ofMem fun a => ¬s (collapse_helper f a).val b
     have : S.Nonempty := ⟨_, Relation.asymm h⟩
     exists S.min r this
-    rcases Relation.trichotomous s (collapse_helper f (Set.min r this)).val b with g | g | g
+    rcases Relation.connected s (collapse_helper f (Set.min r this)).val b with g | g | g
     · exfalso
       have := Set.min_mem r this
       contradiction

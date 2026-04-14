@@ -1174,8 +1174,8 @@ protected def Completion.pos_add (a b: Completion γ γ) : a.IsPos -> b.IsPos ->
   induction b
   apply CauchySeq.pos_add
 
-instance [LEM] : Relation.IsTrichotomous (α := Completion γ γ) (fun a b => (b - a).IsPos) (· = ·) where
-  trichotomous a b := by
+instance [LEM] : Relation.IsConnected (α := Completion γ γ) (fun a b => (b - a).IsPos) (· = ·) where
+  connected a b := by
     rcases em (a = b) with h | h
     right; left; assumption
     rw [sub_eq_zero] at h
@@ -1228,7 +1228,7 @@ instance : IsPartialOrder (Completion γ γ) where
 
 instance [LEM] : Relation.IsTotal (α := Completion γ γ) (· ≤ ·) where
   total a b := by
-    rcases Relation.trichotomous (fun a b => (b - a).IsPos) a b with h | h | h
+    rcases Relation.connected (fun a b => (b - a).IsPos) a b with h | h | h
     · left
       cases a using ind with | _ a =>
       cases b using ind with | _ b =>

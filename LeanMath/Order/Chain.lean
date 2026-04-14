@@ -27,7 +27,7 @@ def Induced.embedSInter {s: Set α} {t: Set (Set α)} (h: s ∈ t) : (⋂t).Indu
     apply h
     assumption
 
-abbrev IsChain (U: Set α) := Relation.IsTrichotomous (U.Induced r) (· = ·)
+abbrev IsChain (U: Set α) := Relation.IsConnected (U.Induced r) (· = ·)
 
 instance {U: Set α} [Relation.IsRefl r] : Relation.IsRefl (U.Induced r) where
   refl _ := Relation.refl (R := r) _
@@ -49,23 +49,23 @@ namespace IsChain
 
 @[implicit_reducible]
 def empty : IsChain R ∅ where
-  trichotomous := nofun
+  connected := nofun
 
 @[implicit_reducible]
-def univ [Relation.IsTrichotomous R (· = ·)] : IsChain R ⊤ where
-  trichotomous x y := by
-    rcases Relation.trichotomous R x.val y.val with h | h | h
+def univ [Relation.IsConnected R (· = ·)] : IsChain R ⊤ where
+  connected x y := by
+    rcases Relation.connected R x.val y.val with h | h | h
     left; assumption
     right; left; apply Subtype.val_inj; assumption
     right; right; assumption
 
 @[implicit_reducible]
 def ofSubset (h: s ⊆ t) (c: IsChain r t) : IsChain r s :=
-  (Induced.embedSub r h).liftTrichotomous
+  (Induced.embedSub r h).liftConnected
 
 @[implicit_reducible]
 def insert (c: IsChain r s) (x: α) (h: ∀y ∈ s, r x y ∨ x = y ∨ r y x) : IsChain r (insert x s) where
-  trichotomous := by
+  connected := by
     intro ⟨a, ha⟩ ⟨b, hb⟩
     simp [Induced]
     simp at ha hb
@@ -77,7 +77,7 @@ def insert (c: IsChain r s) (x: α) (h: ∀y ∈ s, r x y ∨ x = y ∨ r y x) :
     right; right; assumption
     right; left; symm; assumption
     left; assumption
-    rcases Relation.trichotomous (s.Induced r) ⟨_, ha⟩ ⟨_, hb⟩ with h | h | h
+    rcases Relation.connected (s.Induced r) ⟨_, ha⟩ ⟨_, hb⟩ with h | h | h
     left; assumption
     right; left; exact Subtype.mk.inj h
     right; right; assumption
@@ -86,7 +86,7 @@ def insert (c: IsChain r s) (x: α) (h: ∀y ∈ s, r x y ∨ x = y ∨ r y x) :
 def sInter {t: Set (Set α)} (h: t.Nonempty) (c: ∀s ∈ t, IsChain r s) : IsChain r (⋂ t) :=
   have ⟨s, mem⟩ := h
   have := c s mem
-  (Induced.embedSInter r mem).liftTrichotomous
+  (Induced.embedSInter r mem).liftConnected
 
 @[implicit_reducible]
 def inter (cs: IsChain r s) (ct: IsChain r t) : IsChain r (s ∩ t) := by
@@ -271,7 +271,7 @@ def IsChain (c: ChainClosure r s) : IsChain r s := by
   induction c with
   | succ c ih => exact ih.succ
   | union c ih =>
-    apply Relation.IsTrichotomous.mk
+    apply Relation.IsConnected.mk
     intro ⟨a, amem⟩ ⟨b, bmem⟩
     unfold Induced; dsimp
     rw [Set.mem_sUnion] at amem bmem
@@ -280,11 +280,11 @@ def IsChain (c: ChainClosure r s) : IsChain r s := by
     have sa_chain := ih sa sa_in_s
     have sb_chain := ih sb sb_in_s
     rcases total (c _ sa_in_s) (c _ sb_in_s) with sa_sub_sb | sb_sub_sa
-    rcases sb_chain.trichotomous ⟨_, sa_sub_sb _ a_in_sa⟩ ⟨_, b_in_sb⟩ with h | h | h
+    rcases sb_chain.connected ⟨_, sa_sub_sb _ a_in_sa⟩ ⟨_, b_in_sb⟩ with h | h | h
     left; assumption
     right; left; cases h; congr
     right; right; assumption
-    rcases sa_chain.trichotomous ⟨_, a_in_sa⟩ ⟨_, sb_sub_sa _ b_in_sb⟩ with h | h | h
+    rcases sa_chain.connected ⟨_, a_in_sa⟩ ⟨_, sb_sub_sa _ b_in_sb⟩ with h | h | h
     left; assumption
     right; left; cases h; congr
     right; right; assumption

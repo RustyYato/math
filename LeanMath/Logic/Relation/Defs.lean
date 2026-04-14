@@ -136,8 +136,8 @@ class IsAntisymm (R: α -> α -> Prop) (E: outParam (α -> α -> Prop)) where
 class IsTotal (R: α -> α -> Prop) where
   protected total (a b: α) : R a b ∨ R b a
 
-class IsTrichotomous (R: α -> α -> Prop) (E: outParam (α -> α -> Prop)) where
-  protected trichotomous (a b: α) : R a b ∨ E a b ∨ R b a
+class IsConnected (R: α -> α -> Prop) (E: outParam (α -> α -> Prop)) where
+  protected connected (a b: α) : R a b ∨ E a b ∨ R b a
 
 class IsIrrefl (R: α -> α -> Prop) where
   protected irrefl {a: α} : ¬R a a
@@ -149,10 +149,10 @@ class IsWelFounded (R: α -> α -> Prop) where
   protected wf : WellFounded R
 
 class IsWellOrder (R: α -> α -> Prop) extends
-  Relation.IsTrans R, Relation.IsWelFounded R, Relation.IsTrichotomous R (· = ·)
+  Relation.IsTrans R, Relation.IsWelFounded R, Relation.IsConnected R (· = ·)
 
 
-instance[Relation.IsTrans R] [Relation.IsWelFounded R] [Relation.IsTrichotomous R (· = ·)] : IsWellOrder R where
+instance[Relation.IsTrans R] [Relation.IsWelFounded R] [Relation.IsConnected R (· = ·)] : IsWellOrder R where
 
 @[refl] def refl {R: α -> α -> Prop} [IsRefl R] (a: α) : R a a := IsRefl.refl _
 def symm {R: α -> α -> Prop} [IsSymm R] {a b: α} : R a b -> R b a := IsSymm.symm
@@ -160,7 +160,7 @@ def trans {R: α -> α -> Prop} [IsTrans R] {a b c: α} : R a b -> R b c -> R a 
 
 def antisymm {R E: α -> α -> Prop} [IsAntisymm R E] {a b: α} : R a b -> R b a -> E a b := IsAntisymm.antisymm
 def total (R: α -> α -> Prop) [IsTotal R]  (a b: α) : R a b ∨ R b a := IsTotal.total a b
-def trichotomous (R: α -> α -> Prop) {E: outParam <| α -> α -> Prop} (a b: α) [IsTrichotomous R E] : R a b ∨ E a b ∨ R b a := IsTrichotomous.trichotomous a b
+def connected (R: α -> α -> Prop) {E: outParam <| α -> α -> Prop} (a b: α) [IsConnected R E] : R a b ∨ E a b ∨ R b a := IsConnected.connected a b
 def irrefl {R: α -> α -> Prop} [IsIrrefl R] {a: α} : ¬R a a := IsIrrefl.irrefl
 def asymm {R: α -> α -> Prop} [IsAsymm R] {a b: α} : R a b -> R b a -> False := IsAsymm.asymm
 def wf (R: α -> α -> Prop) [IsWelFounded R] : WellFounded R := IsWelFounded.wf
@@ -169,14 +169,14 @@ def wf (R: α -> α -> Prop) [IsWelFounded R] : WellFounded R := IsWelFounded.wf
 def IsAntisymm.ofAsymm [IsAsymm R] : IsAntisymm R E where
   antisymm r s := nomatch asymm r s
 @[implicit_reducible]
-def IsTrichotomous.ofTotal [IsTotal R] : IsTrichotomous R E where
-  trichotomous a b :=
+def IsConnected.ofTotal [IsTotal R] : IsConnected R E where
+  connected a b :=
     match total R a b with
     | .inl x => .inl x
     | .inr x => .inr (.inr x)
-instance [IsTrichotomous R (· = ·)] [IsRefl R] : IsTotal R where
+instance [IsConnected R (· = ·)] [IsRefl R] : IsTotal R where
   total a b := by
-    rcases trichotomous R a b with h | rfl | h
+    rcases connected R a b with h | rfl | h
     · left; assumption
     · left; rfl
     · right; assumption
@@ -360,7 +360,7 @@ def arb_min_minimal : ∀a, R a (arb_min R h) -> ¬P a := (choose_spec (exists_m
 attribute [irreducible] arb_min
 end
 
-variable [Relation.IsTrichotomous R (· = ·)]
+variable [Relation.IsConnected R (· = ·)]
 
 variable [LEM]
 
@@ -368,7 +368,7 @@ def exists_unique_min : existsUnique (fun a => P a ∧ ∀b, R b a -> ¬P b) := 
   obtain ⟨x, Px, hx⟩ := exists_min R h
   refine ⟨x, ⟨Px, hx⟩, ?_⟩
   intro y ⟨Py, hy⟩
-  rcases Relation.trichotomous R x y with h | h | h
+  rcases Relation.connected R x y with h | h | h
   · have := hy _ h
     contradiction
   · assumption
@@ -406,15 +406,15 @@ def RelHom.liftWellfounded (f: r →r s) [Relation.IsWelFounded s] : Relation.Is
     intro b h
     exact ih _ (map_rel_fwd f h) _ rfl
 @[implicit_reducible]
-def RelEmbedding.liftTrichotomous (f: r ↪r s) [Relation.IsTrichotomous s (· = ·)] : Relation.IsTrichotomous r (· = ·) where
-  trichotomous a b := by
-    rcases trichotomous s (f a) (f b) with h | h | h
+def RelEmbedding.liftConnected (f: r ↪r s) [Relation.IsConnected s (· = ·)] : Relation.IsConnected r (· = ·) where
+  connected a b := by
+    rcases connected s (f a) (f b) with h | h | h
     · exact .inl <| map_rel_rev f h
     · exact .inr <| .inl <| f.inj h
     · exact .inr <| .inr <| map_rel_rev f h
 @[implicit_reducible]
 def RelEmbedding.liftWellOrder (f: r ↪r s) [Relation.IsWellOrder s] : Relation.IsWellOrder r := {
-  f.toRelHom.liftTrans, f.toRelHom.liftWellfounded, f.liftTrichotomous with
+  f.toRelHom.liftTrans, f.toRelHom.liftWellfounded, f.liftConnected with
 }
 @[implicit_reducible]
 def RelEmbedding.liftTotal (f: r ↪r s) [Relation.IsTotal s] : Relation.IsTotal r where
@@ -425,7 +425,7 @@ def RelEmbedding.liftTotal (f: r ↪r s) [Relation.IsTotal s] : Relation.IsTotal
 
 instance : @Relation.IsWellOrder ℕ (· < ·) where
   trans := Nat.lt_trans
-  trichotomous := Nat.lt_trichotomy
+  connected := Nat.lt_trichotomy
   wf := Nat.lt_wfRel.wf
 
 def Fin.relEmb : (fun a b: Fin n => a < b) ↪r (fun a b: Nat => a < b) where
@@ -459,7 +459,7 @@ instance [Subsingleton α] [Relation.IsIrrefl r] : Relation.IsWellOrder r where
     cases Subsingleton.allEq a b
     intro h
     nomatch Relation.irrefl h
-  trichotomous _ _ := by
+  connected _ _ := by
     right; left
     apply Subsingleton.allEq
   wf := by
@@ -510,11 +510,11 @@ instance [EmbeddingLike F α β] (r: α -> α -> Prop) [Relation.IsWelFounded r]
     apply ih
     assumption
     assumption
-instance [FunLike F α β] (r: α -> α -> Prop) [Relation.IsTrichotomous r (· = ·)] (f: F) (hf: Function.Surjective f) : Relation.IsTrichotomous (pushfwd_rel r f hf) (· = ·) where
-  trichotomous a b := by
+instance [FunLike F α β] (r: α -> α -> Prop) [Relation.IsConnected r (· = ·)] (f: F) (hf: Function.Surjective f) : Relation.IsConnected (pushfwd_rel r f hf) (· = ·) where
+  connected a b := by
     obtain ⟨a, rfl⟩ := hf a
     obtain ⟨b, rfl⟩ := hf b
-    rcases Relation.trichotomous r a b with h | h | h
+    rcases Relation.connected r a b with h | h | h
     · left; exact ⟨a, b, rfl, rfl, h⟩
     · right; left; congr
     · right; right; exact ⟨b, a, rfl, rfl, h⟩
@@ -525,9 +525,9 @@ instance [EmbeddingLike F α β] (r: β -> β -> Prop) [Relation.IsTrans r] (f: 
   inferInstanceAs (Relation.IsTrans (fun a b => r (f a) (f b)))
 instance [EmbeddingLike F α β] (r: β -> β -> Prop) [Relation.IsWelFounded r] (f: F) : Relation.IsWelFounded (pullback_rel r f) :=
   inferInstanceAs (Relation.IsWelFounded (fun a b => r (f a) (f b)))
-instance [EmbeddingLike F α β] (r: β -> β -> Prop) [Relation.IsTrichotomous r (· = ·)] (f: F) : Relation.IsTrichotomous (pullback_rel r f) (· = ·) where
-  trichotomous a b := by
-    rcases Relation.trichotomous r (f a) (f b) with h | h | h
+instance [EmbeddingLike F α β] (r: β -> β -> Prop) [Relation.IsConnected r (· = ·)] (f: F) : Relation.IsConnected (pullback_rel r f) (· = ·) where
+  connected a b := by
+    rcases Relation.connected r (f a) (f b) with h | h | h
     · left; assumption
     · right; left; exact inj f h
     · right; right; assumption
@@ -547,9 +547,9 @@ instance [Relation.IsAsymm r] : Relation.IsAsymm (flip r) where
 instance [Relation.IsIrrefl r] : Relation.IsIrrefl (flip r) where
   irrefl h := Relation.irrefl (R := r) h
 
-instance [Relation.IsTrichotomous r r'] : Relation.IsTrichotomous (flip r) r' where
-  trichotomous a b := by
-    rcases Relation.trichotomous r a b with h | h | h
+instance [Relation.IsConnected r r'] : Relation.IsConnected (flip r) r' where
+  connected a b := by
+    rcases Relation.connected r a b with h | h | h
     · right; right; assumption
     · right; left; assumption
     · left; assumption

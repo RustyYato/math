@@ -208,12 +208,12 @@ noncomputable def to_initial_ord_lt : (· < ·: Cardinal -> Cardinal -> Prop) �
     rfl
 
 instance : @Relation.IsTotal Cardinal (· ≤ ·) := equiv_initial_ord.toRelEmbedding.liftTotal
-instance : @Relation.IsTrichotomous Cardinal (· < ·) (· = ·) := inferInstance
+instance : @Relation.IsConnected Cardinal (· < ·) (· = ·) := inferInstance
 instance : @Relation.IsWelFounded Cardinal (· < ·) := to_initial_ord_lt.liftWellfounded
 instance : IsLinearOrder Cardinal where
 
 instance : @Relation.IsWellOrder Cardinal (· < ·) where
-  trichotomous := by
+  connected := by
     intro a b; classical
     rcases Relation.total (α := Cardinal) (· ≤ ·) a b with h | h
     all_goals rcases lt_or_eq_of_le h with h | rfl
@@ -400,7 +400,7 @@ def succ_lt_succ {a b: Cardinal} : a.succ < b.succ ↔ a < b := by
 
 def succ_inj : Function.Injective succ := by
   intro a b eq
-  rcases Relation.trichotomous (· < ·) a b with h | h | h
+  rcases Relation.connected (· < ·) a b with h | h | h
   rw [←succ_lt_succ, eq] at h
   nomatch Relation.irrefl h
   assumption

@@ -62,7 +62,7 @@ def CauchySeq.forall_gt_neg_of_nonneg (c: CauchySeq ℝ ℝ) : c.IsNonneg -> ∀
 
 def CauchySeq.exists_lt_neg_of_neg (c: CauchySeq ℝ ℝ) : ¬c.IsNonneg -> ∃ε, 0 < ε ∧ CauchySeq.Eventually fun i => c i < -ε := by
   intro c_nonneg
-  rcases Relation.trichotomous (fun a b => (b - a).IsPos) 0 c.ofSeq with h | h | h
+  rcases Relation.connected (fun a b => (b - a).IsPos) 0 c.ofSeq with h | h | h
   rw [sub_zero] at h
   have := CauchySeq.nonneg_of_pos _ h; contradiction
   have : CauchySeq.Completion.IsNonneg (γ := ℝ) 0 := CauchySeq.nonneg_of_zero (γ := ℝ)

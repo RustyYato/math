@@ -59,10 +59,10 @@ class IsPartialOrder (α: Type*) [LE α] [LT α] : Prop
   extends IsPreorder α, Relation.IsAntisymm (α := α) (· ≤ ·) (· = ·) where
 
 abbrev IsLETotal (α: Type*) [LE α] := @Relation.IsTotal α (· ≤ ·)
-abbrev IsLTTrichotomous (α: Type*) [LT α] := @Relation.IsTrichotomous α (· < ·) (· = ·)
+abbrev IsLTConnected (α: Type*) [LT α] := @Relation.IsConnected α (· < ·) (· = ·)
 
 class IsLinearOrder (α: Type*) [LE α] [LT α] : Prop
-  extends IsPartialOrder α, IsLTTrichotomous α where
+  extends IsPartialOrder α, IsLTConnected α where
 
 class IsLawfulMax (α: Type*) [LE α] [Max α] : Prop where
   protected left_le_max {a b: α} : a ≤ a ⊔ b
@@ -162,17 +162,17 @@ def not_le_of_lt (h: a < b) : ¬b ≤ a := (lt_iff_le_and_not_ge.mp h).right
 instance [@Relation.IsRefl α (· ≤ ·)] : @Relation.IsIrrefl α (· < ·) where
   irrefl h := (not_le_of_lt h) (Relation.refl _)
 
-instance (priority := 900) [@Relation.IsRefl α (· ≤ ·)] [IsLTTrichotomous α] : IsLETotal α where
+instance (priority := 900) [@Relation.IsRefl α (· ≤ ·)] [IsLTConnected α] : IsLETotal α where
   total a b := by
-    rcases trichotomous (· < ·) a b with h | rfl | h
+    rcases connected (· < ·) a b with h | rfl | h
     · left; apply le_of_lt
       assumption
     · left; rfl
     · right; apply le_of_lt
       assumption
 
-instance (priority := 900) [LemLE α] [@Relation.IsAntisymm α (· ≤ ·) (· = ·)] [IsLETotal α] : IsLTTrichotomous α where
-  trichotomous a b := by
+instance (priority := 900) [LemLE α] [@Relation.IsAntisymm α (· ≤ ·) (· = ·)] [IsLETotal α] : IsLTConnected α where
+  connected a b := by
     rcases total (· ≤ ·) a b with g | g
     rcases le_or_not_le b a with h | h
     · right; left
@@ -190,21 +190,21 @@ instance : IsLinearOrder Nat where
   refl := Nat.le_refl
   trans := Nat.le_trans
   antisymm := Nat.le_antisymm
-  trichotomous := Nat.lt_trichotomy
+  connected := Nat.lt_trichotomy
 
 instance : IsLinearOrder Int where
   lt_iff_le_and_not_ge := Int.lt_iff_le_and_not_ge
   refl := Int.le_refl
   trans := Int.le_trans
   antisymm := Int.le_antisymm
-  trichotomous := Int.lt_trichotomy
+  connected := Int.lt_trichotomy
 
 instance : IsLinearOrder Bool where
   lt_iff_le_and_not_ge := by decide
   refl := by decide
   trans := by decide
   antisymm := by decide
-  trichotomous := by decide
+  connected := by decide
 
 instance : IsLattice Bool where
   left_le_max := by decide
@@ -238,7 +238,7 @@ instance : IsLinearOrder PEmpty where
   refl := nofun
   trans := nofun
   antisymm := nofun
-  trichotomous := nofun
+  connected := nofun
 
 instance : IsLattice PEmpty where
   left_le_max := nofun
@@ -324,7 +324,7 @@ instance [IsPreorder α] : @Relation.IsTrans α (· < ·) where
   trans h g := lt_of_lt_of_le h (le_of_lt g)
 
 def le_total [IsLinearOrder α] (a b: α) : a ≤ b ∨ b ≤ a := total (· ≤ ·) a b
-def lt_trichotomy [IsLTTrichotomous α] (a b: α) : a < b ∨ a = b ∨ b < a := trichotomous (· < ·) a b
+def lt_trichotomy [IsLTConnected α] (a b: α) : a < b ∨ a = b ∨ b < a := connected (· < ·) a b
 
 def lt_trans [IsPreorder α] {a b c: α} : a < b -> b < c -> a < c := Relation.trans
 def le_antisymm [IsPartialOrder α] {a b: α} : a ≤ b -> b ≤ a -> a = b := Relation.antisymm
@@ -371,7 +371,7 @@ def min_assoc [IsSemiLatticeMin α] (a b c: α) : a ⊓ b ⊓ c = a ⊓ (b ⊓ c
 
 def le_of_not_lt [IsLinearOrder α] {a b: α} : ¬b < a -> a ≤ b := by
   intro h
-  rcases Relation.trichotomous (α := α) (· < ·) a b with _ | rfl | _
+  rcases Relation.connected (α := α) (· < ·) a b with _ | rfl | _
   apply le_of_lt
   assumption
   rfl
@@ -430,13 +430,13 @@ def min_eq_right [IsSemiLatticeMin α] {a b: α} (h: b ≤ a) : a ⊓ b = b :=
   max_eq_right (α := αᵒᵖ) h
 
 def le_or_lt [IsLinearOrder α] (a b: α) : a ≤ b ∨ b < a := by
-  rcases Relation.trichotomous (α := α) (· < ·) a b with h | h | h
+  rcases Relation.connected (α := α) (· < ·) a b with h | h | h
   left; apply le_of_lt; assumption
   left; rw [h]
   right; assumption
 
 def lt_or_le [IsLinearOrder α] (a b: α) : a < b ∨ b ≤ a := by
-  rcases Relation.trichotomous (α := α) (· < ·) a b with h | h | h
+  rcases Relation.connected (α := α) (· < ·) a b with h | h | h
   left; assumption
   right; rw [h]
   right; apply le_of_lt; assumption
@@ -504,8 +504,8 @@ instance [IsPreorder α] {P: α -> Prop} : IsPreorder (Subtype P) where
 instance [IsPartialOrder α] {P: α -> Prop} : IsPartialOrder (Subtype P) where
   antisymm h g := Subtype.ext (le_antisymm h g)
 instance [IsLinearOrder α] {P: α -> Prop} : IsLinearOrder (Subtype P) where
-  trichotomous a b := by
-    rcases Relation.trichotomous (α := α) (· < ·) a.val b.val with h | h | h
+  connected a b := by
+    rcases Relation.connected (α := α) (· < ·) a.val b.val with h | h | h
     · left; assumption
     · right; left; ext; assumption
     · right; right; assumption
@@ -517,8 +517,8 @@ instance [@Relation.IsTotal α (· ≤ ·)] {P: α -> Prop} : Relation.IsTotal (
   OrderEmbedding.subtype_val.liftTotal
 
 def order_emb_of_map_rel
-  [LE α] [LT α] [IsPreorder α] [Relation.IsTrichotomous (α := α) (· < ·) (· = ·)]
-  [LE β] [LT β] [IsPreorder β] [Relation.IsTrichotomous (α := β) (· < ·) (· = ·)]
+  [LE α] [LT α] [IsPreorder α] [Relation.IsConnected (α := α) (· < ·) (· = ·)]
+  [LE β] [LT β] [IsPreorder β] [Relation.IsConnected (α := β) (· < ·) (· = ·)]
   (f: α -> β) (h: ∀x y: α, x ≤ y ↔ f x ≤ f y) : α ↪o β where
   toFun := f
   inj {a b} heq := by
@@ -532,12 +532,12 @@ def order_emb_of_map_rel
 
 def rel_emb_of_map_rel
   {r: α -> α -> Prop} {s: β -> β -> Prop}
-  [Relation.IsTrichotomous r (· = ·)] [Relation.IsIrrefl r]
-  [Relation.IsTrichotomous s (· = ·)] [Relation.IsIrrefl s]
+  [Relation.IsConnected r (· = ·)] [Relation.IsIrrefl r]
+  [Relation.IsConnected s (· = ·)] [Relation.IsIrrefl s]
   (f: α -> β) (h: ∀x y: α, r x y ↔ s (f x) (f y)) : r ↪r s where
   toFun := f
   inj {a b} heq := by
-    rcases Relation.trichotomous r a b with h₀ | h₀ | h₀
+    rcases Relation.connected r a b with h₀ | h₀ | h₀
     · have : s (f a) (f b) := by rwa [←h]
       rw [heq] at this; nomatch Relation.irrefl this
     · assumption
@@ -578,8 +578,8 @@ protected scoped instance [IsPreorder β] : IsPreorder (OfEquiv f) where
   trans := le_trans (α := β)
 protected scoped instance [IsPartialOrder β] : IsPartialOrder (OfEquiv f) where
   antisymm h g := inj f (le_antisymm h g)
-protected scoped instance [IsLTTrichotomous β] : IsLTTrichotomous (OfEquiv f) :=
-  inferInstanceAs (Relation.IsTrichotomous (pullback_rel (· < ·) f) (· = ·))
+protected scoped instance [IsLTConnected β] : IsLTConnected (OfEquiv f) :=
+  inferInstanceAs (Relation.IsConnected (pullback_rel (· < ·) f) (· = ·))
 protected scoped instance [IsLinearOrder β] : IsLinearOrder (OfEquiv f) where
 
 protected scoped instance [Min β] [IsLawfulMin β] : IsLawfulMin (OfEquiv f) where

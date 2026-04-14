@@ -58,7 +58,7 @@ def preorder_in [IsPreorder α] (U: Set α) (h : ∀c ⊆ U, Set.IsChain (· ≤
         subst eqa; subst eqb
         unfold Set.Induced
         dsimp
-        rcases c.trichotomous ⟨_, mema⟩ ⟨_, memb⟩ with lt | eq | gt
+        rcases c.connected ⟨_, mema⟩ ⟨_, memb⟩ with lt | eq | gt
         left; assumption
         right; left
         cases eq; congr

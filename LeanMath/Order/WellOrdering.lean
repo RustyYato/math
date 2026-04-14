@@ -151,7 +151,7 @@ protected def IsSubwellorder.small (a b: α) (h: a ≠ b) : IsSubwellorder (smal
     apply Acc.intro
     intro y h; cases h
     contradiction
-  trichotomous := by
+  connected := by
     intro ⟨x, hx⟩ ⟨y, hy⟩
     replace hx := of_defined_small hx
     replace hy := of_defined_small hy
@@ -194,7 +194,7 @@ protected def IsSubwellorder.insert [IsSubwellorder r] (hx: x ∉ defined r) : I
     apply ih
     assumption
     exists y; left; assumption
-  trichotomous := by
+  connected := by
     intro ⟨a, ha⟩ ⟨b, hb⟩
     simp [Set.Induced]
     replace ha := of_defined_insert ha
@@ -205,7 +205,7 @@ protected def IsSubwellorder.insert [IsSubwellorder r] (hx: x ∉ defined r) : I
     assumption
     left; apply insert.lt_top
     assumption
-    rcases Relation.trichotomous ((defined r).Induced r) ⟨_, ha⟩ ⟨_, hb⟩ with h | h | h
+    rcases Relation.connected ((defined r).Induced r) ⟨_, ha⟩ ⟨_, hb⟩ with h | h | h
     left; apply insert.of; assumption
     right; left; exact Subtype.mk.inj h
     right; right; apply insert.of; assumption
@@ -245,14 +245,14 @@ protected def IsSubwellorder.sSup (U: Set (α -> α -> Prop)) [U.IsChain (· ≤
     apply (left_le_max r s U hr hs).initial
     assumption
     right; assumption
-  trichotomous := by
+  connected := by
     intro ⟨a, ha⟩ ⟨b, hb⟩
     simp [Set.Induced]
     replace ⟨r, hr, ha⟩ := of_defined_sSup ha
     replace ⟨s, hs, hb⟩ := of_defined_sSup hb
     have := max_mem _ _ _ hr hs
     have := hU _ this
-    have := Relation.trichotomous ((defined (r ⊔ s)).Induced (r ⊔ s)) ⟨a, by
+    have := Relation.connected ((defined (r ⊔ s)).Induced (r ⊔ s)) ⟨a, by
       apply defined_of_le
       assumption
       apply left_le_max _ _ U
@@ -298,7 +298,7 @@ def exists_well_ordering (α: Type*) : ∃r: α -> α -> Prop, Relation.IsWellOr
   have ⟨r, hr, rmax⟩ := Zorn.partialorder_in (α := α -> α -> Prop) (Set.ofMem IsSubwellorder) ?_
   · exists r
     simp at hr
-    suffices Relation.IsTrichotomous r (· = ·) from inferInstance
+    suffices Relation.IsConnected r (· = ·) from inferInstance
     have rdef : (defined r).Nonempty := by
       apply Classical.byContradiction
       intro g
@@ -330,7 +330,7 @@ def exists_well_ordering (α: Type*) : ∃r: α -> α -> Prop, Relation.IsWellOr
       rw [insert_eq] at this
       contradiction
     intro a b
-    have := Relation.trichotomous ((defined r).Induced r) ⟨a, by
+    have := Relation.connected ((defined r).Induced r) ⟨a, by
       rw [this]; trivial⟩ ⟨b, by
       rw [this]; trivial⟩
     rcases this with h | h | h
