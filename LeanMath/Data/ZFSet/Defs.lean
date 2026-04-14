@@ -220,7 +220,7 @@ instance : EmptyCollection ZFSet where
   induction s with | _ s =>
   nofun
 
-def Pre.union (a b: Pre) : Pre := .intro (a.Type ⊕ b.Type) (fun
+def Pre.union (a b: Pre.{u}) : Pre := .intro (a.Type ⊕ b.Type) (fun
   | .inl x => a.Mem x
   | .inr x => b.Mem x)
 
@@ -361,7 +361,7 @@ def powerset : ZFSet -> ZFSet :=
       have ⟨a, ha⟩ := sub (ofPre (X.Mem x)) ⟨x, Pre.Equiv.refl _⟩
       exists ⟨a, x, ha⟩
 
-def Pre.singleton (a: Pre) : Pre := .intro Unit (fun _ => a)
+def Pre.singleton (a: Pre) : Pre := .intro PUnit (fun _ => a)
 
 instance : Singleton ZFSet ZFSet where
   singleton := lift (ofPre ∘ Pre.singleton) <| by
@@ -387,5 +387,56 @@ instance : Insert ZFSet ZFSet where
   insert x a := {x} ∪ a
 
 @[simp] def mem_insert {a b: ZFSet} : ∀{x}, x ∈ insert b a ↔ x = b ∨ x ∈ a := by simp [insert]
+
+protected def Nonempty (a: ZFSet) : Prop := ∃x, x ∈ a
+
+def Pre.sUnion (A: Pre) : Pre :=
+  .intro (Σa: A.Type, (A.Mem a).Type) fun x =>
+    (A.Mem x.fst).Mem x.snd
+
+def sUnion : ZFSet -> ZFSet :=
+  lift (ofPre ∘ Pre.sUnion) <| by
+    intro a b h
+    apply sound
+    apply Pre.Equiv.intro
+    · intro ⟨i, i'⟩
+      have ⟨j, h⟩ := h.fwd i
+      have ⟨j', h⟩ := h.fwd i'
+      exists ⟨j, j'⟩
+    · intro ⟨i, i'⟩
+      have ⟨j, h⟩ := h.rev i
+      have ⟨j', h⟩ := h.rev i'
+      exists ⟨j, j'⟩
+
+@[simp] def mem_sUnion {a: ZFSet} : ∀{x}, x ∈ a.sUnion ↔ ∃a' ∈ a, x ∈ a' := by
+  intro x
+  induction a with | _ A =>
+  induction x with | _ X =>
+  apply Iff.intro
+  · intro h
+    obtain ⟨⟨i, i'⟩, h⟩ := h
+    refine ⟨ofPre (A.Mem i), ?_, ?_⟩
+    exists i; apply Pre.Equiv.refl
+    exists i'
+  · intro ⟨B, hB, h⟩
+    induction B with | _ B =>
+    obtain ⟨a, ha⟩ := hB
+    obtain ⟨b, hb⟩ := h
+    have ⟨a', ha'⟩ := ha.rev b
+    refine ⟨⟨a, a'⟩, ?_⟩
+    apply Pre.Equiv.trans _ hb
+    assumption
+
+def sInter (a: ZFSet) : ZFSet := a.sUnion.sep (fun x => ∀b ∈ a, x ∈ b)
+
+def mem_sInter {a: ZFSet} (ha: a.Nonempty) : ∀{x}, x ∈ a.sInter ↔ ∀b ∈ a, x ∈ b := by
+  obtain ⟨b, hb⟩ := ha
+  intro x
+  simp [sInter]
+  intro h
+  exists b; apply And.intro
+  assumption
+  apply h
+  assumption
 
 end ZFSet
