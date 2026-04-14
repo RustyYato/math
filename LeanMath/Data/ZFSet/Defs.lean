@@ -554,4 +554,12 @@ def range (f: ZFSet) : ZFSet := f.sUnion.sUnion.sep fun r => ∃d, pair d r ∈ 
   simp [pair]
   simp
 
+def image (f: ZFSet) (s: ZFSet) : ZFSet := f.range.sep fun r => ∃d ∈ s, pair d r ∈ f
+
+@[simp] def mem_image {f: ZFSet} {s: ZFSet} : ∀{x}, x ∈ f.image s ↔ ∃d ∈ s, pair d x ∈ f := by
+  intro x
+  simp [image]
+  intro d hd h
+  exists d
+
 end ZFSet
