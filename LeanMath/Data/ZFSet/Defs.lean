@@ -562,4 +562,21 @@ def image (f: ZFSet) (s: ZFSet) : ZFSet := f.range.sep fun r => ∃d ∈ s, pair
   intro d hd h
   exists d
 
+private noncomputable def reify' (f: ZFSet) (hf: IsFunction f) : ∀d ∈ f.domain, { s // pair d s ∈ f } :=
+  fun d hd =>
+    have : existsUnique fun r => pair d r ∈ f := by
+      have ⟨r, hr⟩ := ZFSet.mem_domain.mp hd
+      exists r; dsimp
+      apply And.intro hr
+      intro r' hr'
+      exact hf.right _ _ _ hr hr'
+    {
+      val := Classical.choose_unique this
+      property := Classical.choose_unique_spec this
+    }
+
+noncomputable def reify (f: ZFSet) (hf: IsFunction f) : ∀d ∈ f.domain, ZFSet := fun d hd => (reify' f hf d hd).val
+
+def reify_spec (f: ZFSet) (hf: IsFunction f) : ∀d hd, pair d (reify f hf d hd) ∈ f := fun _ _ => (reify' _ _ _ _).property
+
 end ZFSet
