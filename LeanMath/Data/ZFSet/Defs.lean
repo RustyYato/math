@@ -214,8 +214,11 @@ instance : HasSubset ZFSet where
     have ⟨j, hj⟩ := (h (fb i)).mpr ⟨i, by dsimp; apply Pre.Equiv.refl⟩
     exists j
 
+instance : EmptyCollection Pre where
+  emptyCollection := Pre.intro PEmpty nofun
+
 instance : EmptyCollection ZFSet where
-  emptyCollection := ofPre (Pre.intro PEmpty nofun)
+  emptyCollection := ofPre ∅
 
 @[simp] def not_mem_empty (s: ZFSet) : ¬s ∈ (∅: ZFSet) := by
   induction s with | _ s =>
@@ -370,6 +373,9 @@ def powerset : ZFSet -> ZFSet :=
 
 def Pre.singleton (a: Pre) : Pre := .intro PUnit (fun _ => a)
 
+instance : Singleton Pre.{u} Pre.{u} where
+  singleton := .singleton
+
 instance : Singleton ZFSet.{u} ZFSet.{u} where
   singleton := lift (ofPre ∘ Pre.singleton) <| by
     intro a b h; apply sound
@@ -397,6 +403,9 @@ def eq_singleton {a: ZFSet} : ∀x: ZFSet, x = {a} ↔ ∀y, y ∈ x ↔ y = a :
   intro h
   ext y; simp
   apply Iff.intro <;> simp [h]
+
+instance : Insert Pre Pre where
+  insert x a := {x} ∪ a
 
 instance : Insert ZFSet ZFSet where
   insert x a := {x} ∪ a
@@ -645,5 +654,90 @@ def ulift : ZFSet.{u} -> ZFSet.{max u v} :=
     show (ofPre _).ulift = (ofPre _).ulift
     congr 1; apply sound
     assumption
+
+def Pre.succ (s: Pre) : Pre := insert s s
+def succ (s: ZFSet) : ZFSet := insert s s
+
+@[simp] def mem_succ (s: ZFSet) : ∀{x}, x ∈ succ s ↔ x = s ∨ x ∈ s := mem_insert
+
+def Pre.ofNat : ℕ -> Pre
+| 0 => ∅
+| n + 1 => succ (ofNat n)
+
+def ofNat (n: ℕ) := ofPre (Pre.ofNat n)
+
+def Pre.omega : Pre := .intro (ULift ℕ) (Pre.ofNat ∘ ULift.down)
+def omega : ZFSet.{u} := ofPre .omega
+
+instance : NatCast Pre where
+  natCast := Pre.ofNat
+instance : OfNat Pre n := ⟨n⟩
+
+instance : NatCast ZFSet where
+  natCast := ofNat
+instance : OfNat ZFSet n := ⟨n⟩
+
+@[simp] def Pre.OfNat_eq_natCast (n: ℕ) : OfNat.ofNat n = (n: ZFSet) := rfl
+@[simp] def OfNat_eq_natCast (n: ℕ) : OfNat.ofNat n = (n: ZFSet) := rfl
+
+@[simp] def natCast_succ (n: ℕ) : (n + 1: ℕ) = succ n := rfl
+@[simp] def natCast_zero : (0: ℕ) = (∅: ZFSet) := rfl
+
+@[simp] def mem_natCast {n: ℕ} : ∀{x}, x ∈ (n: ZFSet) ↔ ∃m < n, x = m := by
+  intro x
+  induction n with
+  | zero =>
+    apply Iff.intro ?_ nofun
+    simp
+  | succ n ih =>
+    simp
+    apply Iff.intro
+    intro h; rcases h with rfl | h
+    exists n; apply And.intro _ rfl
+    apply Nat.lt_succ_self
+    rw [ih] at h; obtain ⟨m, lt, eq⟩ := h
+    refine ⟨_, ?_, eq⟩
+    apply Nat.lt_trans lt
+    apply Nat.lt_succ_self
+    intro ⟨m, lt, eq⟩
+    rw [Nat.lt_succ_iff, Nat.le_iff_lt_or_eq] at lt
+    rcases lt with lt | rfl
+    right; apply ih.mpr
+    exists m
+    left; assumption
+
+@[simp] def mem_omega : ∀{x}, x ∈ omega ↔ ∃m: ℕ, x = m := by
+  intro x
+  induction x with | _ X =>
+  apply Iff.intro
+  · intro ⟨⟨n⟩, _⟩
+    exists n
+    symm; apply sound
+    assumption
+  · intro ⟨n, h⟩
+    exists ⟨n⟩
+    exact exact h.symm
+
+@[simp] def natCast_mem_omega (n: ℕ) : (n: ZFSet) ∈ omega := by
+  apply mem_omega.mpr
+  exists n
+
+def natCast_inj : Function.Injective fun n: ℕ => (n: ZFSet.{u}) := by
+  intro a b h
+  dsimp at h
+  rcases Nat.lt_trichotomy a b with g | g | g
+  · have : (a: ZFSet.{u}) ∈ (b: ZFSet) := mem_natCast.mpr ⟨_, g, rfl⟩
+    simp [h] at this
+  · assumption
+  · have : (b: ZFSet.{u}) ∈ (a: ZFSet) := mem_natCast.mpr ⟨_, g, rfl⟩
+    simp [h] at this
+
+@[simp] def natCast_mem_natCast {n m: ℕ} : (n: ZFSet) ∈ (m: ZFSet) ↔ n < m := by
+  apply Iff.trans mem_natCast
+  apply Iff.intro
+  intro ⟨k, k_lt_m, eq⟩
+  rwa [natCast_inj eq]
+  intro h
+  exists n
 
 end ZFSet
