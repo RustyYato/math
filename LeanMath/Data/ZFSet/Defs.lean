@@ -220,6 +220,12 @@ instance : EmptyCollection ZFSet where
   induction s with | _ s =>
   nofun
 
+def eq_empty {s: ZFSet} : s = ∅ ↔ ∀x, x ∉ s := by
+  apply Iff.intro
+  intro rfl; simp
+  intro h
+  ext; simp ; apply h
+
 def Pre.union (a b: Pre.{u}) : Pre := .intro (a.Type ⊕ b.Type) (fun
   | .inl x => a.Mem x
   | .inr x => b.Mem x)
@@ -363,12 +369,12 @@ def powerset : ZFSet -> ZFSet :=
 
 def Pre.singleton (a: Pre) : Pre := .intro PUnit (fun _ => a)
 
-instance : Singleton ZFSet ZFSet where
+instance : Singleton ZFSet.{u} ZFSet.{u} where
   singleton := lift (ofPre ∘ Pre.singleton) <| by
     intro a b h; apply sound
     apply Pre.Equiv.intro
-    intro i; exists ()
-    intro i; exists ()
+    intro i; exists PUnit.unit
+    intro i; exists PUnit.unit
 
 @[simp] def mem_singleton {a: ZFSet} : ∀{x}, x ∈ ({a}: ZFSet) ↔ x = a := by
   intro x
@@ -380,8 +386,16 @@ instance : Singleton ZFSet ZFSet where
     assumption
   · intro h
     have := exact h
-    exists ()
+    exists PUnit.unit
     symm; assumption
+
+def eq_singleton {a: ZFSet} : ∀x: ZFSet, x = {a} ↔ ∀y, y ∈ x ↔ y = a := by
+  intro x
+  apply Iff.intro
+  intro rfl; simp
+  intro h
+  ext y; simp
+  apply Iff.intro <;> simp [h]
 
 instance : Insert ZFSet ZFSet where
   insert x a := {x} ∪ a
@@ -438,5 +452,106 @@ def mem_sInter {a: ZFSet} (ha: a.Nonempty) : ∀{x}, x ∈ a.sInter ↔ ∀b ∈
   assumption
   apply h
   assumption
+
+@[simp] def upair_copy (a: ZFSet) : {a, a} = ({a}: ZFSet) := by ext x; simp
+
+@[simp] def singleton_ne_empty (a: ZFSet) : {a} ≠ (∅: ZFSet) := by
+  intro h
+  have : a ∈ (∅: ZFSet) := by simp [←h]
+  simp at this
+
+@[simp] def insert_ne_empty (a b: ZFSet) : insert a b ≠ ∅ := by
+  intro h
+  have : a ∈ (∅: ZFSet) := by simp [←h]
+  simp at this
+
+@[simp] def singleton_inj (a b: ZFSet) : {a} = ({b}: ZFSet) ↔ a = b := by
+  apply flip Iff.intro; intro rfl; rfl
+  intro h
+  have : a ∈ ({b}: ZFSet) := by simp [←h]
+  simpa using this
+
+@[simp] def insert_eq_singleton (a b c: ZFSet) : insert a b = {c} ↔ a = c ∧ b ⊆ {c} := by
+  apply Iff.intro
+  intro h
+  have : a ∈ ({c}: ZFSet) := by simp [←h]
+  simp at this; apply And.intro this
+  intro x hx
+  rw[←h]
+  simp [hx]
+  intro ⟨rfl, hb⟩
+  ext x; simp
+  rw [←mem_singleton]
+  apply hb
+
+def pair (l r: ZFSet.{u}) : ZFSet := {{{}, l}, {r}}
+
+def pair_inj {a b c d: ZFSet} : pair a b = pair c d -> a = c ∧ b = d := by
+  intro hpair; unfold pair at hpair
+  suffices a = c by
+    apply And.intro this; subst c
+    have h₀ : {d} ∈ ({{∅, a}, {b}}: ZFSet) := by simp [hpair]
+    have h₁ : {b} ∈ ({{∅, a}, {d}}: ZFSet) := by simp [←hpair]
+    simp at h₀; rcases h₀ with this | this
+    simp [Eq.comm] at this
+    obtain ⟨rfl, this⟩ := this
+    simp at h₁; rcases h₁ with this | this
+    simp [Eq.comm] at this
+    exact this.left
+    simpa using this
+    exact this.symm
+  have h₀ : {{}, a} ∈ ({{∅, c}, {d}}: ZFSet) := by simp [←hpair]
+  have h₁ : {{}, c} ∈ ({{∅, a}, {b}}: ZFSet) := by simp [hpair]
+  simp at h₀; rcases h₀ with h | h
+  have : a ∈ ({{}, c}: ZFSet) := by simp [←h]
+  simp at this; rcases this with rfl | rfl
+  simp [Eq.comm] at h
+  symm; simpa using h c
+  rfl
+  have := h.right a
+  simp at this; subst d
+  cases h.left
+  simp at h₁; rcases h₁ with h₁ | h₁
+  symm; simpa using h₁ c
+  cases h₁.left
+  symm; simpa using h₁.right c
+
+def IsUnorderedPair (f: ZFSet) : Prop := ∃l r, f = {l, r}
+def IsOrderedPair (f: ZFSet) : Prop := ∃l r, f = pair l r
+
+def IsMapping (f: ZFSet) : Prop := ∀x ∈ f, x.IsOrderedPair
+def IsFunction (f: ZFSet) : Prop :=
+  f.IsMapping ∧
+  -- each input has at most one output
+  ∀d r₀ r₁, pair d r₀ ∈ f -> pair d r₁ ∈ f -> r₀ = r₁
+
+def IsInjection (f: ZFSet) : Prop :=
+  f.IsMapping ∧
+  -- each output has at most one input
+  ∀d₀ d₁ r, pair d₀ r ∈ f -> pair d₁ r ∈ f -> d₀ = d₁
+
+def domain (f: ZFSet) : ZFSet := f.sUnion.sUnion.sep fun d => ∃r, pair d r ∈ f
+
+def range (f: ZFSet) : ZFSet := f.sUnion.sUnion.sep fun r => ∃d, pair d r ∈ f
+
+@[simp] def mem_domain {f: ZFSet} : ∀{x}, x ∈ f.domain ↔ ∃r, pair x r ∈ f := by
+  intro x
+  simp [domain]
+  intro r h
+  exists {{}, x}; simp
+  exists pair x r
+  apply And.intro h
+  simp [pair]
+
+@[simp] def mem_range {f: ZFSet} : ∀{x}, x ∈ f.range ↔ ∃d, pair d x ∈ f := by
+  intro x
+  simp [range]
+  intro d hd
+  exists {x}
+  apply And.intro
+  exists pair d x
+  apply And.intro hd
+  simp [pair]
+  simp
 
 end ZFSet
