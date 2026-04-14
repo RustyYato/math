@@ -213,4 +213,179 @@ instance : HasSubset ZFSet where
     have ⟨j, hj⟩ := (h (fb i)).mpr ⟨i, by dsimp; apply Pre.Equiv.refl⟩
     exists j
 
+instance : EmptyCollection ZFSet where
+  emptyCollection := ofPre (Pre.intro PEmpty nofun)
+
+@[simp] def not_mem_empty (s: ZFSet) : ¬s ∈ (∅: ZFSet) := by
+  induction s with | _ s =>
+  nofun
+
+def Pre.union (a b: Pre) : Pre := .intro (a.Type ⊕ b.Type) (fun
+  | .inl x => a.Mem x
+  | .inr x => b.Mem x)
+
+instance : Union Pre where
+  union := .union
+
+instance : Union ZFSet where
+  union := lift₂ (fun a b => ofPre (a ∪ b)) <| by
+    intro a b c d ac bd
+    apply sound
+    cases ac with | _ _ _ ac ca =>
+    cases bd with | _ _ _ bd db =>
+    apply Pre.Equiv.intro
+    · intro i
+      rcases i with i | i
+      have ⟨j, _⟩ := ac i
+      exists .inl j
+      have ⟨j, _⟩ := bd i
+      exists .inr j
+    · intro i
+      rcases i with i | i
+      have ⟨j, _⟩ := ca i
+      exists .inl j
+      have ⟨j, _⟩ := db i
+      exists .inr j
+
+@[simp] def mem_union {a b: ZFSet} : ∀{x}, x ∈ a ∪ b ↔ x ∈ a ∨ x ∈ b := by
+  intro x
+  induction a with | _ a =>
+  induction b with | _ b =>
+  induction x with | _ x =>
+  apply Iff.intro
+  · intro h
+    obtain ⟨i, h⟩ := h
+    rcases i with i | i
+    left; exists i
+    right; exists i
+  · intro h
+    rcases h with ⟨i, h⟩ | ⟨i, h⟩
+    exists .inl i
+    exists .inr i
+
+def Pre.sep (P: Pre -> Prop) (a: Pre) : Pre :=
+  .intro { x // P (a.Mem x) } (fun x => a.Mem x)
+
+def sep (P: ZFSet -> Prop) : ZFSet -> ZFSet :=
+  lift (fun p => ofPre <| p.sep (P ∘ ofPre)) <| by
+    intro a b h
+    apply sound
+    apply Pre.Equiv.intro
+    · intro ⟨i, hi⟩
+      have ⟨j, hj⟩ := h.fwd i
+      dsimp at hi
+      rw [sound hj] at hi
+      exists ⟨j, hi⟩
+    · intro ⟨i, hi⟩
+      have ⟨j, hj⟩ := h.rev i
+      dsimp at hi
+      rw [←sound hj] at hi
+      exists ⟨j, hi⟩
+
+@[simp] def mem_sep {P: ZFSet -> Prop} {a: ZFSet} : ∀{x}, x ∈ a.sep P ↔ x ∈ a ∧ P x := by
+  intro x
+  induction a with | _ a =>
+  induction x with | _ x =>
+  apply Iff.intro
+  · intro ⟨⟨j, hj⟩, h⟩
+    apply And.intro
+    exists j
+    rw [←sound h]
+    assumption
+  · intro ⟨⟨j, hj⟩, h⟩
+    rw [←sound hj] at h
+    exists ⟨j, h⟩
+
+instance : Inter ZFSet where
+  inter a b := a.sep (· ∈ b)
+
+@[simp] def mem_inter {a b: ZFSet} : ∀{x}, x ∈ a ∩ b ↔ x ∈ a ∧ x ∈ b := mem_sep
+
+instance : SDiff ZFSet where
+  sdiff a b := a.sep (· ∉ b)
+
+@[simp] def mem_sdiff {a b: ZFSet} : ∀{x}, x ∈ a \ b ↔ x ∈ a ∧ x ∉ b := mem_sep
+
+def Pre.powerset (p: Pre.{u}) : Pre.{u} :=
+  .intro (p.Type -> Prop) fun P =>
+    .intro { i // P i } fun x => p.Mem x.val
+
+def powerset : ZFSet -> ZFSet :=
+  lift (ofPre ∘ Pre.powerset) <| by
+    intro a b h; apply sound
+    apply Pre.Equiv.intro
+    · intro P
+      refine ⟨?_, ?_⟩
+      intro x; exact (∃i: a.Type, P i ∧ a.Mem i ≈ b.Mem x)
+      apply Pre.Equiv.intro
+      · intro ⟨i, hi⟩
+        have ⟨j, h⟩ := h.fwd i
+        exists ⟨j, ?_⟩
+        dsimp; exists i
+        assumption
+      · intro ⟨j, i, _, hi⟩
+        exists ⟨i, ?_⟩
+        assumption
+    · intro P
+      refine ⟨?_, ?_⟩
+      intro x; exact (∃j: b.Type, P j ∧ a.Mem x ≈ b.Mem j)
+      apply Pre.Equiv.intro
+      · intro ⟨j, i, _, hi⟩
+        exists ⟨i, ?_⟩
+        assumption
+      · intro ⟨i, hi⟩
+        have ⟨j, h⟩ := h.rev i
+        exists ⟨j, ?_⟩
+        dsimp; exists i
+        assumption
+
+@[simp] def mem_powerset {a: ZFSet} : ∀{x}, x ∈ a.powerset ↔ x ⊆ a := by
+  intro x
+  induction a with | _ A =>
+  induction x with | _ X =>
+  apply Iff.intro
+  · intro h z hz
+    induction z with | _ Z =>
+    have ⟨x, hx⟩ := hz
+    have ⟨P, hP⟩ := h
+    have ⟨⟨a, Pa⟩, ha⟩ := hP.rev x
+    exists a
+    apply Pre.Equiv.trans ha
+    assumption
+  · intro sub
+    refine ⟨fun a => ∃x: X.Type, A.Mem a ≈ X.Mem x, ?_⟩
+    apply Pre.Equiv.intro
+    · intro ⟨a, x, ha⟩
+      exists x
+    · intro x
+      have ⟨a, ha⟩ := sub (ofPre (X.Mem x)) ⟨x, Pre.Equiv.refl _⟩
+      exists ⟨a, x, ha⟩
+
+def Pre.singleton (a: Pre) : Pre := .intro Unit (fun _ => a)
+
+instance : Singleton ZFSet ZFSet where
+  singleton := lift (ofPre ∘ Pre.singleton) <| by
+    intro a b h; apply sound
+    apply Pre.Equiv.intro
+    intro i; exists ()
+    intro i; exists ()
+
+@[simp] def mem_singleton {a: ZFSet} : ∀{x}, x ∈ ({a}: ZFSet) ↔ x = a := by
+  intro x
+  induction a with | _ A =>
+  induction x with | _ X =>
+  apply Iff.intro
+  · intro ⟨_, _⟩
+    symm; apply sound
+    assumption
+  · intro h
+    have := exact h
+    exists ()
+    symm; assumption
+
+instance : Insert ZFSet ZFSet where
+  insert x a := {x} ∪ a
+
+@[simp] def mem_insert {a b: ZFSet} : ∀{x}, x ∈ insert b a ↔ x = b ∨ x ∈ a := by simp [insert]
+
 end ZFSet
