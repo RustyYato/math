@@ -1,4 +1,5 @@
 import LeanMath.Data.Equiv.Basic
+import LeanMath.Logic.Relation.Defs
 import LeanMath.Tactic.PPWithUniv
 
 @[pp_with_univ]
@@ -578,5 +579,25 @@ private noncomputable def reify' (f: ZFSet) (hf: IsFunction f) : ∀d ∈ f.doma
 noncomputable def reify (f: ZFSet) (hf: IsFunction f) : ∀d ∈ f.domain, ZFSet := fun d hd => (reify' f hf d hd).val
 
 def reify_spec (f: ZFSet) (hf: IsFunction f) : ∀d hd, pair d (reify f hf d hd) ∈ f := fun _ _ => (reify' _ _ _ _).property
+
+instance : @Relation.IsWelFounded ZFSet (· ∈ ·) where
+  wf := by
+    apply WellFounded.intro
+    intro a
+    induction a with | _ a =>
+    induction a with | _ α αmem ih =>
+    apply Acc.intro
+    intro b hb
+    induction b with | _ b =>
+    obtain ⟨i, hi⟩ := hb
+    dsimp at hi
+    rw [←sound hi]
+    apply ih
+
+instance : @Relation.IsIrrefl ZFSet (· ∈ ·) := inferInstance
+
+def mem_wf : @WellFounded ZFSet (· ∈ ·) := Relation.wf _
+@[simp] def mem_irrefl (a: ZFSet) : a ∉ a := Relation.irrefl (R := (· ∈ ·))
+@[simp] def mem_asymm (a b: ZFSet) : a ∈ b -> b ∉ a := Relation.asymm (R := (· ∈ ·))
 
 end ZFSet
