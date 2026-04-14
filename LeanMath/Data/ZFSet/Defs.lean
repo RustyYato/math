@@ -453,6 +453,19 @@ def sUnion : ZFSet -> ZFSet :=
 
 def sInter (a: ZFSet) : ZFSet := a.sUnion.sep (fun x => ∀b ∈ a, x ∈ b)
 
+def mem_sInter' {a: ZFSet} : ∀{x}, x ∈ a.sInter ↔ a.Nonempty ∧ ∀b ∈ a, x ∈ b := by
+  intro x
+  simp [sInter]
+  intro h
+  apply Iff.intro
+  intro ⟨x, _, _⟩
+  exists x
+  intro ⟨x, hx⟩
+  exists x; apply And.intro
+  assumption
+  apply h
+  assumption
+
 def mem_sInter {a: ZFSet} (ha: a.Nonempty) : ∀{x}, x ∈ a.sInter ↔ ∀b ∈ a, x ∈ b := by
   obtain ⟨b, hb⟩ := ha
   intro x
