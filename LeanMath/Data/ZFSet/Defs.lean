@@ -600,4 +600,50 @@ def mem_wf : @WellFounded ZFSet (· ∈ ·) := Relation.wf _
 @[simp] def mem_irrefl (a: ZFSet) : a ∉ a := Relation.irrefl (R := (· ∈ ·))
 @[simp] def mem_asymm (a b: ZFSet) : a ∈ b -> b ∉ a := Relation.asymm (R := (· ∈ ·))
 
+def Pre.ulift : Pre.{u} -> Pre.{max u v}
+| .intro a mem => .intro (ULift a) (fun x => (mem x.down).ulift)
+
+def ulift : ZFSet.{u} -> ZFSet.{max u v} :=
+  lift (ofPre ∘ Pre.ulift) <| by
+    intro a b h
+    induction h with
+    | intro a b fwd rev =>
+    cases a with | _ a amem =>
+    cases b with | _ b bmem =>
+    dsimp; apply sound
+    apply Pre.Equiv.intro <;> dsimp [Pre.ulift] at *
+    · intro ⟨i⟩
+      have ⟨j, hj, _⟩ := fwd i
+      exists ⟨j⟩
+      dsimp; apply exact
+      assumption
+    · intro ⟨i⟩
+      have ⟨j, hj, _⟩ := rev i
+      exists ⟨j⟩
+      dsimp; apply exact
+      assumption
+
+@[simp] def mem_ulift {s: ZFSet.{u}} : ∀{x: ZFSet.{max u v}}, x ∈ s.ulift ↔ ∃y: ZFSet.{u}, y ∈ s ∧ y.ulift = x := by
+  intro x
+  induction s with | _ A =>
+  induction x with | _ X =>
+  cases A with | _ A Amem =>
+  apply Iff.intro
+  · intro h
+    obtain ⟨⟨a⟩, h⟩  := h
+    dsimp [Pre.ulift] at h
+    exists ofPre (Amem a)
+    apply And.intro
+    exists a; apply Pre.Equiv.refl
+    apply sound; assumption
+  · intro ⟨y, hy, yeq⟩
+    induction y with | _ B =>
+    obtain ⟨a, ha⟩ := hy
+    exists ⟨a⟩
+    apply Pre.Equiv.trans _ (exact yeq)
+    apply exact
+    show (ofPre _).ulift = (ofPre _).ulift
+    congr 1; apply sound
+    assumption
+
 end ZFSet
