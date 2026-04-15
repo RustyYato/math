@@ -259,6 +259,53 @@ def sqrt_approx_monotone (i: ℕ) : Monotone (sqrt_approx · i) := by
       rw [zero_add]
       assumption
 
+def sqrt_approx_nonneg (i: ℕ) : 0 ≤ sqrt_approx a i := by
+  rcases lt_or_le a 0 with _ | ha
+  rwa [sqrt_approx_neg]
+  apply le_of_lt; apply sqrt_approx_pos
+  assumption
+
+def sqrt_approx_lower_bound (a b q: ℚ) (hq: 0 ≤ q) (ha: a ≤ q) (hb: q ≤ b) :
+  (1 /? 2) ⊓ (a /? 2) < sqrt_approx q i := by
+  induction i with
+  | zero =>
+    rw [sqrt_approx_zero _ hq]
+    apply lt_of_le_of_lt
+    apply min_le_left
+    decide
+  | succ i ih =>
+    rw [sqrt_approx_succ _ _ hq]
+    apply lt_of_mul_lt_mul_of_pos_right
+    apply pos_natCast 1
+    show _ * _ < _ * 2
+    dsimp; rw [div?_mul_cancel]
+    rw [mul_comm, two_mul]
+    apply add_lt_add
+    apply ih
+    apply lt_of_mul_lt_mul_of_pos_right
+    apply sqrt_approx_pos _ hq i
+    rw [div?_mul_cancel]
+    sorry
+
+-- def q: ℚ := 1 /? 1000000
+-- def a := q
+-- def b := q
+-- def s: ℚ := (1 /? 2) ⊓ (a /? 2)
+
+-- #eval 0 < s ^ 2
+-- #eval s ^ 2 < a
+-- #eval s < 1
+-- #eval 0 < a
+-- #eval a ≤ q
+-- #eval q ≤ b
+
+-- #eval s * Rational.sqrt_approx q 0 < q
+-- #eval s * Rational.sqrt_approx q 0 < q
+-- #eval s * Rational.sqrt_approx q 1 < q
+-- #eval s * Rational.sqrt_approx q 2 < q
+-- #eval s * Rational.sqrt_approx q 3 < q
+-- #eval s * Rational.sqrt_approx q 4 < q
+
 -- def sqrt_approx_lower_bound (a b q: ℚ) (hq: 0 ≤ q) (ha: a ≤ q) (hb: q ≤ b) :
 --   1 ⊓ (a /? 2) < sqrt_approx q i ∧
 --   sqrt_approx q i ≤ 1 ⊔ ((1 + b) /? 2) := by
@@ -274,88 +321,137 @@ def sqrt_approx_monotone (i: ℕ) : Monotone (sqrt_approx · i) := by
 
 -- #print axioms sqrt_approx_monotone
 
+def sqrt_approx_uniform_continuous {q: ℚ}
+   : is_cauchy_eqv (Rational.sqrt_approx q) (Rational.sqrt_approx q) := by
+  intro ε εpos
+  show CauchySeq.Eventually₂ fun i j => ‖Rational.sqrt_approx q i - Rational.sqrt_approx q j‖ < ε
+  rcases lt_or_le q 0 with hq | hq
+  · simp [sqrt_approx_neg _ hq, sub_zero]
+    exists 0; intros; assumption
+  have a := ε
+  let s: ℚ := 1 ⊓ (a /? ((2: ℕ): ℚ))
+  sorry
+
 end Rational
 
 namespace Real
 
 def sqrt_func (f: CauchySeq ℚ ℚ) (i: ℕ) : ℚ := (f i).sqrt_approx i
 
-def sqrt_func_is_cauchy_of_pos {f g: CauchySeq ℚ ℚ} (h: f ≈ g)
-  (hf: CauchySeq.IsPos f)
-  (hg: CauchySeq.IsPos g) : is_cauchy_eqv (sqrt_func f) (sqrt_func g) := by
+def sqrt_func_is_cauchy_of_const {q: ℚ}
+   : is_cauchy_eqv (sqrt_func (CauchySeq.const q)) (sqrt_func (CauchySeq.const q)) := by
   intro ε εpos
-  sorry
-
-def sqrt_func_is_cauchy_of_eq_zero' {f: CauchySeq ℚ ℚ} (hf: f ≈ 0)
-   : is_cauchy_eqv (sqrt_func f) (fun _ => 0) := by
-  intro ε εpos
-  have ε2_pos : 0 < (ε /? 2) ^ 2 := by
-    rw (occs := [1]) [npow_two, ←mul_zero (ε /? 2)];
-    apply mul_lt_mul_of_pos_left
-    apply pos_div?_natCast
-    assumption
-    apply pos_div?_natCast
-    assumption
-  have ⟨k, hk⟩ := hf ((ε /? 2) ^ 2) ε2_pos
-  exists k; intro i j hi hj
-  replace hk : ‖f i - 0‖ < _ := hk i j hi hj
-  simp [sub_zero] at *
-  unfold sqrt_func
-  by_cases h₀:f i < 0
-  rwa [Rational.sqrt_approx_neg, norm_zero]
-  assumption
-  replace h₀ := not_lt.mp h₀
+  show CauchySeq.Eventually₂ fun i j => ‖Rational.sqrt_approx q i - Rational.sqrt_approx q j‖ < ε
 
   sorry
 
-def sqrt_func_is_cauchy_of_eq_zero {f g: CauchySeq ℚ ℚ} (hf: f ≈ 0) (hg: g ≈ 0)
-   : is_cauchy_eqv (sqrt_func f) (sqrt_func g) := by
-  apply CauchySeq.trans (b := fun _ => 0)
-  apply (CauchySeq.const _).is_cauchy
-  apply sqrt_func_is_cauchy_of_eq_zero' hf
-  apply CauchySeq.symm
-  apply sqrt_func_is_cauchy_of_eq_zero' hg
+-- def sqrt_func_is_cauchy_of_pos {f g: CauchySeq ℚ ℚ} (h: f ≈ g)
+--   (hf: CauchySeq.IsPos f)
+--   (hg: CauchySeq.IsPos g) : is_cauchy_eqv (sqrt_func f) (sqrt_func g) := by
+--   intro ε εpos
+--   sorry
 
-def sqrt_func_is_cauchy {f g: CauchySeq ℚ ℚ} (h: f ≈ g) : is_cauchy_eqv (sqrt_func f) (sqrt_func g) := by
-  rcases em (f ≈ 0) with hf | hf
-  · have hg := CauchySeq.setoid.trans (CauchySeq.setoid.symm h) hf
-    apply sqrt_func_is_cauchy_of_eq_zero
-    assumption
-    assumption
-  have := (CauchySeq.norm_pos_of_ne_zero _ hf)
-  rcases CauchySeq.of_norm_pos _ this with hf | hf
-  · have hg := (CauchySeq.is_cauchy_eqv.IsPos _ _ h).mp hf
-    apply sqrt_func_is_cauchy_of_pos
-    assumption
-    assumption
-    assumption
-  · have := is_cauchy_eqv.neg h
-    have hg := (CauchySeq.is_cauchy_eqv.IsPos (-f) (-g) this).mp hf
-    obtain ⟨B₀, hB₀, hf⟩ := hf
-    obtain ⟨B₁, hB₁, hg⟩ := hg
-    have ⟨k, hk⟩ := hf.merge hg
-    intro ε εpos
-    exists k; intro i j hi hj
-    have ⟨hai, hbi⟩ := hk i hi
-    have ⟨haj, hbj⟩ := hk j hj
-    unfold sqrt_func
-    rwa [Rational.sqrt_approx_neg, Rational.sqrt_approx_neg, sub_zero, norm_zero]
-    rw [←neg_lt_neg_iff, neg_zero]
-    apply flip lt_trans <;> assumption
-    rw [←neg_lt_neg_iff, neg_zero]
-    apply flip lt_trans <;> assumption
+-- def sqrt_func_is_cauchy_of_eq_zero' {f: CauchySeq ℚ ℚ} (hf: f ≈ 0)
+--    : is_cauchy_eqv (sqrt_func f) (fun _ => 0) := by
+--   intro ε εpos
+--   have ε2_pos : 0 < (ε /? 2) ^ 2 := by
+--     rw (occs := [1]) [npow_two, ←mul_zero (ε /? 2)];
+--     apply mul_lt_mul_of_pos_left
+--     apply pos_div?_natCast
+--     assumption
+--     apply pos_div?_natCast
+--     assumption
+--   have ⟨k, hk⟩ := hf ((ε /? 2) ^ 2) ε2_pos
+--   exists k; intro i j hi hj
+--   dsimp; rw [sub_zero]
+--   dsimp at hk
+--   replace hk (i: ℕ) (hi: k ≤ i) : ‖f i‖ < (ε /? 2) ^ 2 := by
+--     have := hk i i hi hi
+--     have : ‖f i - 0‖ < _ := this
+--     rwa [sub_zero] at this
+--   unfold sqrt_func
+--   apply lt_of_le_of_lt
+--   show ‖_‖ ≤ ‖Rational.sqrt_approx ((ε /? 2) ^ 2) i‖
+--   rw [abs_eq_of_nonneg, abs_eq_of_nonneg]
+--   apply Rational.sqrt_approx_monotone
+--   apply le_trans
+--   show f i ≤ ‖f i‖
+--   rw [abs_eq_max]; apply left_le_max
+--   apply le_of_lt
+--   apply hk
+--   assumption
+--   apply Rational.sqrt_approx_nonneg
+--   apply Rational.sqrt_approx_nonneg
+--   rw (occs:= [2]) [←half_add_half ε]
+--   rw [←two_mul]; generalize ε /? 2 = ε
+--   clear hk hj hi k j hf f
+--   -- induction i with
+--   -- | zero =>
+--   --   rw [Rational.sqrt_approx_zero, abs_one]
+--   --   sorry
+--   -- | succ i ih =>
+--   --   sorry
 
-def sqrt : ℝ -> ℝ :=
-  Real.lift (fun q => Real.ringEquivCauchySeq.symm <| CauchySeq.ofSeq <| {
-    toFun := sqrt_func q
-    is_cauchy' := by apply sqrt_func_is_cauchy; rfl
-  }) <| by
-    intro a b h;
-    apply sound
-    apply sqrt_func_is_cauchy
-    assumption
+--   -- apply Rational.le_sqrt_approx_sq
 
-open Classical Real.Repr.Float  in
-#eval! (sqrt <| Real.ofRat (1 /? 2: ℚ)).offset 0
+
+--   -- replace hk : ‖f i - 0‖ < _ := hk i j hi hj
+--   -- simp [sub_zero] at *
+--   -- unfold sqrt_func
+--   -- by_cases h₀:f i < 0
+--   -- rwa [Rational.sqrt_approx_neg, norm_zero]
+--   -- assumption
+--   -- replace h₀ := not_lt.mp h₀
+--   sorry
+
+-- def sqrt_func_is_cauchy_of_eq_zero {f g: CauchySeq ℚ ℚ} (hf: f ≈ 0) (hg: g ≈ 0)
+--    : is_cauchy_eqv (sqrt_func f) (sqrt_func g) := by
+--   apply CauchySeq.trans (b := fun _ => 0)
+--   apply (CauchySeq.const _).is_cauchy
+--   apply sqrt_func_is_cauchy_of_eq_zero' hf
+--   apply CauchySeq.symm
+--   apply sqrt_func_is_cauchy_of_eq_zero' hg
+
+-- def sqrt_func_is_cauchy {f g: CauchySeq ℚ ℚ} (h: f ≈ g) : is_cauchy_eqv (sqrt_func f) (sqrt_func g) := by
+--   rcases em (f ≈ 0) with hf | hf
+--   · have hg := CauchySeq.setoid.trans (CauchySeq.setoid.symm h) hf
+--     apply sqrt_func_is_cauchy_of_eq_zero
+--     assumption
+--     assumption
+--   have := (CauchySeq.norm_pos_of_ne_zero _ hf)
+--   rcases CauchySeq.of_norm_pos _ this with hf | hf
+--   · have hg := (CauchySeq.is_cauchy_eqv.IsPos _ _ h).mp hf
+--     apply sqrt_func_is_cauchy_of_pos
+--     assumption
+--     assumption
+--     assumption
+--   · have := is_cauchy_eqv.neg h
+--     have hg := (CauchySeq.is_cauchy_eqv.IsPos (-f) (-g) this).mp hf
+--     obtain ⟨B₀, hB₀, hf⟩ := hf
+--     obtain ⟨B₁, hB₁, hg⟩ := hg
+--     have ⟨k, hk⟩ := hf.merge hg
+--     intro ε εpos
+--     exists k; intro i j hi hj
+--     have ⟨hai, hbi⟩ := hk i hi
+--     have ⟨haj, hbj⟩ := hk j hj
+--     unfold sqrt_func
+--     rwa [Rational.sqrt_approx_neg, Rational.sqrt_approx_neg, sub_zero, norm_zero]
+--     rw [←neg_lt_neg_iff, neg_zero]
+--     apply flip lt_trans <;> assumption
+--     rw [←neg_lt_neg_iff, neg_zero]
+--     apply flip lt_trans <;> assumption
+
+-- def sqrt : ℝ -> ℝ :=
+--   Real.lift (fun q => Real.ringEquivCauchySeq.symm <| CauchySeq.ofSeq <| {
+--     toFun := sqrt_func q
+--     is_cauchy' := by apply sqrt_func_is_cauchy; rfl
+--   }) <| by
+--     intro a b h;
+--     apply sound
+--     apply sqrt_func_is_cauchy
+--     assumption
+
+-- open Classical Real.Repr.Float  in
+-- #eval! (sqrt <| Real.ofRat (1 /? 2: ℚ)).offset 0
 
 end Real
