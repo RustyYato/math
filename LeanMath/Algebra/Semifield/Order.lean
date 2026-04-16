@@ -82,6 +82,28 @@ def mul_le_mul_of_pos_right: ∀(a b c : α), 0 < c → a * c ≤ b * c -> a ≤
   apply pos_inv?
   assumption
 
+def mul_le_mul₀ {a b c d: α} : 0 ≤ a -> 0 ≤ d -> a ≤ c -> b ≤ d -> a * b ≤ c * d := by
+  intro apos dpos ac bd; apply le_trans
+  apply mul_le_mul_of_nonneg_left
+  assumption; assumption
+  apply mul_le_mul_of_nonneg_right
+  assumption; assumption
+
+def mul_lt_mul₀ {a b c d: α} : 0 < a -> 0 < d -> a < c -> b < d -> a * b < c * d := by
+  intro apos dpos ac bd; apply lt_trans
+  apply mul_lt_mul_of_pos_left
+  assumption; assumption
+  apply mul_lt_mul_of_pos_right
+  assumption; assumption
+
+def mul_lt_mul₀_of_le_of_lt {a b c d: α} : 0 ≤ b -> 0 < c -> a ≤ c -> b < d -> a * b < c * d := by
+  intro apos dpos ac bd; apply lt_of_le_of_lt
+  apply mul_le_mul_of_nonneg_right
+  assumption; assumption
+  apply mul_lt_mul_of_pos_left
+  assumption; assumption
+
+
 local macro_rules
 | `(tactic|invert_tactic_trivial) => `(tactic|apply natCast_ne_zero)
 
