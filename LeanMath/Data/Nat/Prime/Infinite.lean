@@ -37,7 +37,7 @@ def dvd_fact_of_le {n m: ℕ} : 0 < m -> m ≤ n -> m ∣ fact n := by
 
 def prime_larger_than (n: ℕ) : ℕ := (fact n + 1).minFact
 
-def prime_larger_spec (n: ℕ) : IsPrime (prime_larger_than n) := by
+instance prime_larger_spec (n: ℕ) : IsPrime (prime_larger_than n) := by
   apply Nat.minFact_prime
   intro h
   replace h := Nat.succ.inj h
@@ -50,7 +50,6 @@ def lt_prime_larger_than (n: ℕ) : n < prime_larger_than n := by
     apply dvd_fact_of_le
     apply Nat.pos_of_ne_zero
     apply IsPrime.ne_zero
-    apply prime_larger_spec
     assumption
   have h₁: n.prime_larger_than ∣ fact n + 1 := Nat.minFact_dvd (n.fact + 1)
   have := Nat.dvd_sub h₁ h₀
@@ -150,7 +149,7 @@ private def prime_of_le_prime_counting (i p: ℕ) (hp: IsPrime p) : p ≤ prime_
   assumption
   exists i
 
-private def prime_counting_is_prime (i: ℕ): IsPrime (prime_counting' i) := by
+private instance prime_counting_is_prime (i: ℕ): IsPrime (prime_counting' i) := by
   unfold prime_counting'
   have := Nat.find_spec (prime_counting'_next i)
   exact this.left
@@ -197,7 +196,7 @@ def Nat.le_of_strict_monotone (f: ℕ -> ℕ) (hf: StrictMonotone f) : i ≤ f i
   | succ i ih => exact Nat.succ_le_of_lt (Nat.lt_of_le_of_lt ih (hf (Nat.lt_succ_self i)))
 
 protected def Nat.prime_counting : ℕ -> ℕ := prime_counting.val
-def Nat.prime_counting_is_prime (n: ℕ) : IsPrime (Nat.prime_counting n) := prime_counting.property.all_primes _
+instance Nat.prime_counting_is_prime (n: ℕ) : IsPrime (Nat.prime_counting n) := prime_counting.property.all_primes _
 def Nat.prime_counting_strict_mono : StrictMonotone Nat.prime_counting := by
   intro i j h
   apply ((prime_counting.property).strict_monotone j (prime_counting.property.all_primes i)).mpr

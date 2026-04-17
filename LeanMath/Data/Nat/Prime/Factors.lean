@@ -260,8 +260,8 @@ private def simple_factors_rep (n k: ℕ) (hn: 1 < n) (h: n.minFact ^ k ∣ n) :
             assumption
             apply Nat.dvd_mul_left
       · apply Nat.pos_of_ne_zero
-        apply IsPrime.ne_zero
-        apply Nat.minFact_prime
+        have := Nat.minFact_prime n ?_
+        apply IsPrime.ne_zero (a := n.minFact)
         apply Nat.ne_of_gt
         assumption
     conv => { rhs; lhs; arg 1; arg 1; rw [h₁] }
@@ -289,8 +289,8 @@ private def simple_factors_rep (n k: ℕ) (hn: 1 < n) (h: n.minFact ^ k ∣ n) :
       assumption
       apply Nat.minFact_dvd
       apply Nat.pos_of_ne_zero
+      have := Nat.minFact_prime n ?_
       apply IsPrime.ne_zero
-      apply Nat.minFact_prime
       apply Nat.ne_of_gt
       assumption
     · rw [←h₁]

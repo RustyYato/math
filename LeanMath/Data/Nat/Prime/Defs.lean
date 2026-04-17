@@ -103,6 +103,7 @@ def minFact_ne_zero (n: ℕ) : n.minFact ≠ 0 := by
     apply Nat.lt_trans _ this.right
     decide
 
+@[reducible]
 def minFact_prime (n: ℕ) (hn: n ≠ 1) : IsPrime (Nat.minFact n) where
   irreducible := by
     apply (semiprime_iff.mpr _).left
@@ -140,6 +141,9 @@ def minFact_prime (n: ℕ) (hn: n ≠ 1) : IsPrime (Nat.minFact n) where
       have : 1 < (n + 2).minFact := (Nat.find_spec (minFac_exists _ hn)).right
       rw [h] at this
       contradiction
+
+instance : IsPrime (Nat.minFact 0) := minFact_prime _ nofun
+instance : IsPrime (Nat.minFact (n + 2)) := minFact_prime _ nofun
 
 def two_le_prime (n: ℕ) (h: IsPrime n) : 2 ≤ n := by
   match n with
@@ -198,8 +202,8 @@ def classify (n: ℕ) : Classify n :=
           have := Nat.mul_div_cancel' (n := p) (m := n) (Nat.minFact_dvd _)
           refine ⟨p, n / p, ?_, ?_, this⟩
           · intro h
-            apply IsPrime.not_unit (α := ℕ)
-            apply minFact_prime n h₀
+            have := minFact_prime n h₀
+            apply IsPrime.not_unit (α := ℕ) (a := n.minFact)
             assumption
           · intro h
             rw [Nat.is_unit_iff] at h
