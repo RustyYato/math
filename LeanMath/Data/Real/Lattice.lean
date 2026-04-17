@@ -1051,4 +1051,9 @@ def sqrt_strictMono : StrictMonotone (α := { x: ℝ // 0 ≤ x }) (fun x => x.v
   have := Relation.irrefl h
   contradiction
 
+def sqrt_neg (r: ℝ) : sqrt (-r) = sqrt r := by
+  unfold sqrt sqrt_set
+  congr ; ext x
+  rw [neg_norm]
+
 end Real
