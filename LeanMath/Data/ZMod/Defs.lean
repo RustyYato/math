@@ -4,6 +4,7 @@ import LeanMath.Tactic.TypeStar
 structure ZMod (n: ℕ) where
   val: ℤ
   mod_eq_self: val % n = val := by exact Int.emod_emod _ _
+deriving DecidableEq
 
 instance : Zero (ZMod n) where
   zero := {

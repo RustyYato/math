@@ -12,7 +12,30 @@ def minFact_dvd (z: ℤ) : (z.minFact: ℤ) ∣ z := by
   rw [←Int.dvd_natAbs, Int.natCast_dvd_natCast']
   apply Nat.minFact_dvd
 
-def natCast_is_prime (n: ℕ) (hz: IsPrime n) : IsPrime (n: ℤ) where
+instance natAbs_is_prime (n: ℤ) [hz: IsPrime n] : IsPrime n.natAbs where
+  ne_zero := by
+    intro h
+    rw [Int.natAbs_eq_zero] at h; subst n
+    exact hz.ne_zero rfl
+  not_unit := by
+    rw [Nat.is_unit_iff]
+    intro h
+    rw [Int.natAbs_eq_iff] at h
+    rcases h with rfl | rfl
+    apply hz.not_unit
+    apply Int.is_unit_iff.mpr; left; rfl
+    apply hz.not_unit
+    apply Int.is_unit_iff.mpr; right; rfl
+  irreducible := by
+    intro a b ha
+    rw [←Int.natCast_dvd_natCast', Int.natAbs_dvd, natCast_mul] at ha
+    rcases hz.irreducible ha with ha | ha
+    all_goals
+      rw [←Int.natAbs_dvd, Int.natCast_dvd_natCast'] at ha
+    left; assumption
+    right; assumption
+
+instance natCast_is_prime (n: ℕ) [hz: IsPrime n] : IsPrime (n: ℤ) where
   ne_zero h := hz.ne_zero (Int.ofNat.inj h)
   not_unit := by
     intro h
@@ -31,7 +54,7 @@ def natCast_is_prime (n: ℕ) (hz: IsPrime n) : IsPrime (n: ℤ) where
     right; assumption
 
 def minFact_prime (z: ℤ) (hz: ¬IsUnit z) : IsPrime (z.minFact: ℤ) := by
-  apply natCast_is_prime
+  apply @natCast_is_prime _ ?_
   apply Nat.minFact_prime
   intro h
   rw [Int.natAbs_eq_iff] at h
@@ -110,7 +133,7 @@ def gcd_eq_one_iff_no_common_prime_factors {a b: ℤ} : Int.gcd a b = 1 ↔ ∀k
   · intro hk
     apply Decidable.byContradiction
     intro h
-    refine hk (Nat.minFact (a.gcd b)) (natCast_is_prime _ (Nat.minFact_prime _ h)) ?_ ?_
+    refine hk (Nat.minFact (a.gcd b)) (@natCast_is_prime _ (Nat.minFact_prime _ h)) ?_ ?_
     apply Int.dvd_trans
     apply Int.natCast_dvd_natCast'.mpr
     apply Nat.minFact_dvd

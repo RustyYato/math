@@ -242,4 +242,7 @@ instance (n: ℕ) : Decidable (IsComposite n) :=
     apply h.not_composite; assumption
     apply Iff.intro <;> (intro; trivial)
 
+instance (priority := 900) (n: ℕ) [IsPrime n] : NeZero n where
+  out := by intro rfl; contradiction
+
 end Nat
