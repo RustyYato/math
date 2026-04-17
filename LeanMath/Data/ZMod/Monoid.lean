@@ -2,6 +2,23 @@ import LeanMath.Algebra.Monoid.Defs
 import LeanMath.Data.ZMod.Semigroup
 import LeanMath.Algebra.Monoid.Char
 
+instance : IsLawfulOneMul (ZMod n) where
+  one_mul a := by
+    apply ZMod.val_inj.mp; simp
+    rw [
+        Int.mul_emod, Int.emod_emod,
+        ←Int.mul_emod, one_mul, a.mod_eq_self]
+  mul_one a := by
+    apply ZMod.val_inj.mp; simp
+    rw [Int.mul_emod, Int.emod_emod,
+        ←Int.mul_emod, mul_one, a.mod_eq_self]
+
+-- use the default which optimizes to pown by squaring, which is very fast
+-- even for 1000 bit powers. This method also ensures that we don't
+-- overflow the limit, which could happen if we naively just did pow n
+-- by lowering to nat pow n
+instance : Pow (ZMod n) ℕ := defaultPowN
+
 instance : IsAddMonoid (ZMod n) where
   zero_add a := by
     apply ZMod.val_inj.mp; dsimp
@@ -18,25 +35,8 @@ instance : IsAddMonoid (ZMod n) where
       Int.add_emod, a.mod_eq_self]
 
 instance : IsMonoid (ZMod n) where
-  one_mul a := by
-    apply ZMod.val_inj.mp; simp
-    rw [
-        Int.mul_emod, Int.emod_emod,
-        ←Int.mul_emod, one_mul, a.mod_eq_self]
-  mul_one a := by
-    apply ZMod.val_inj.mp; simp
-    rw [Int.mul_emod, Int.emod_emod,
-        ←Int.mul_emod, mul_one, a.mod_eq_self]
-  npow_zero a := by
-    apply ZMod.val_inj.mp; simp
-  npow_succ n a := by
-    apply ZMod.val_inj.mp; dsimp
-    rw [
-      Int.pow_succ,
-      Int.mul_emod (_ % _),
-      Int.emod_emod,
-      ←Int.mul_emod
-    ]
+  npow_zero _ := rfl
+  npow_succ _ _ := rfl
 
 instance : IsLawfulZeroMul (ZMod n) where
   zero_mul a := by

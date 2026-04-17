@@ -20,11 +20,11 @@ def defaultSMulZ [SMul ℕ α] [Neg α] : SMul ℤ α where
 
 instance (priority := 100) [GroupOps α] : Pow α ℤ := GroupOps.toPowZ
 
-instance (priority := 1100) [One α] [Mul α] [Pow α ℕ] [Inv α] [Div α] [Pow α ℤ] : GroupOps α where
+instance (priority := 900) [One α] [Mul α] [Pow α ℕ] [Inv α] [Div α] [Pow α ℤ] : GroupOps α where
 
 instance (priority := 100) [AddGroupOps α] : SMul ℤ α := AddGroupOps.toZSMul
 
-instance (priority := 1100) [Zero α] [Add α] [SMul ℕ α] [Neg α] [Sub α] [SMul ℤ α] : AddGroupOps α where
+instance (priority := 900) [Zero α] [Add α] [SMul ℕ α] [Neg α] [Sub α] [SMul ℤ α] : AddGroupOps α where
 
 class IsLawfulInvRight (α: Type*) [Mul α] [Inv α] [One α] where
   protected mul_inv_cancel (a: α) : a * a⁻¹ = 1

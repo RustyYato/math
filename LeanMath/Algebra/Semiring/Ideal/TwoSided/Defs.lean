@@ -186,6 +186,78 @@ instance : Mul (Ideal α) where
 instance : SMul ℕ (Ideal α) where
   smul n A := n * A
 
+instance : IsSemigroup (Ideal α) where
+  mul_assoc A B C := by
+    ext x
+    apply Iff.intro
+    · intro h
+      induction h with
+      | add =>
+        apply Ideal.Mul.add
+        assumption
+        assumption
+      | mul a b ha hb =>
+        induction ha  with
+        | add _ _ _ _ iha ihb =>
+          rw [add_mul]
+          apply Ideal.Mul.add
+          assumption
+          assumption
+        | mul =>
+          rw [mul_assoc]
+          apply Ideal.Mul.mul
+          assumption
+          apply Ideal.Mul.mul
+          assumption
+          assumption
+    · intro h
+      induction h with
+      | add a b _ _ iha ihb =>
+         apply Ideal.Mul.add
+         assumption
+         assumption
+      | mul a b ha hb =>
+        induction hb with
+        | add _ _ _ _ iha ihb =>
+          rw [mul_add]
+          apply Ideal.Mul.add
+          assumption
+          assumption
+        | mul =>
+          rw [←mul_assoc]
+          apply Ideal.Mul.mul
+          apply Ideal.Mul.mul
+          iterate 3 assumption
+instance : IsLawfulOneMul (Ideal α) where
+  one_mul A := by
+    symm; ext x
+    apply Iff.intro
+    intro h
+    rw [←one_mul x]
+    apply Ideal.Mul.mul
+    trivial
+    assumption
+    intro h
+    induction h with
+    | add a b _ _ iha ihb => apply mem_add A <;> assumption
+    | mul =>
+      apply mem_left_mul A
+      assumption
+  mul_one A := by
+    symm; ext x
+    apply Iff.intro
+    intro h
+    rw [←mul_one x]
+    apply Ideal.Mul.mul
+    assumption
+    trivial
+    intro h
+    induction h with
+    | add a b _ _ iha ihb => apply mem_add A <;> assumption
+    | mul =>
+      apply mem_right_mul A
+      assumption
+
 instance : Pow (Ideal α) ℕ := defaultPowN
 
 instance : IsLawfulZeroAdd (Ideal α) where
@@ -262,75 +334,6 @@ instance [IsComm α] : IsComm (Ideal α) where
         assumption
 
 instance : IsMonoid (Ideal α) where
-  mul_assoc A B C := by
-    ext x
-    apply Iff.intro
-    · intro h
-      induction h with
-      | add =>
-        apply Ideal.Mul.add
-        assumption
-        assumption
-      | mul a b ha hb =>
-        induction ha  with
-        | add _ _ _ _ iha ihb =>
-          rw [add_mul]
-          apply Ideal.Mul.add
-          assumption
-          assumption
-        | mul =>
-          rw [mul_assoc]
-          apply Ideal.Mul.mul
-          assumption
-          apply Ideal.Mul.mul
-          assumption
-          assumption
-    · intro h
-      induction h with
-      | add a b _ _ iha ihb =>
-         apply Ideal.Mul.add
-         assumption
-         assumption
-      | mul a b ha hb =>
-        induction hb with
-        | add _ _ _ _ iha ihb =>
-          rw [mul_add]
-          apply Ideal.Mul.add
-          assumption
-          assumption
-        | mul =>
-          rw [←mul_assoc]
-          apply Ideal.Mul.mul
-          apply Ideal.Mul.mul
-          iterate 3 assumption
-  one_mul A := by
-    symm; ext x
-    apply Iff.intro
-    intro h
-    rw [←one_mul x]
-    apply Ideal.Mul.mul
-    trivial
-    assumption
-    intro h
-    induction h with
-    | add a b _ _ iha ihb => apply mem_add A <;> assumption
-    | mul =>
-      apply mem_left_mul A
-      assumption
-  mul_one A := by
-    symm; ext x
-    apply Iff.intro
-    intro h
-    rw [←mul_one x]
-    apply Ideal.Mul.mul
-    assumption
-    trivial
-    intro h
-    induction h with
-    | add a b _ _ iha ihb => apply mem_add A <;> assumption
-    | mul =>
-      apply mem_right_mul A
-      assumption
 
 instance : IsLeftDistrib (Ideal α) where
   mul_add K A B := by

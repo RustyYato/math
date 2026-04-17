@@ -4,17 +4,14 @@ import LeanMath.Algebra.Algebra.Defs
 namespace RsqrtD
 
 variable (r: R)
-
--- [SemiringOps α] [IsSemiring α] [SemiringOps R] [IsSemiring R] [AlgebraMap R α] [SMul R α] [IsAlgebra R α]
+  [SemiringOps α] [IsSemiring α] [SemiringOps R] [IsSemiring R] [AlgebraMap R α] [SMul R α] [IsAlgebra R α]
 
 -- instance [SemiringOps α] : MonoidOps (RsqrtD α r) := instMonoidOpsOfOneOfMulOfPowNat
 -- instance [SemiringOps α] : SemiringOps (RsqrtD α r) := instSemiringOpsOfAddMonoidWithOneOpsOfMonoidOps
 
 section
 
-variable [SemiringOps S] [SemiringOps α] [IsSemiring α] [SMul R α]
-  [IsLawfulSMulZero R α] [IsLawfulZeroAdd α] [IsLawfulZeroMul α]
-  [AlgebraMap S α]
+variable [SemiringOps S] [SMul R α] [IsLawfulSMulZero R α] [AlgebraMap S α] [IsAlgebra R α]
 
 instance : AlgebraMap S (RsqrtD α r) where
   toAlgebraMap := {
@@ -36,9 +33,7 @@ instance : AlgebraMap S (RsqrtD α r) where
 
 end
 
-instance
-  [SemiringOps α] [IsSemiring α] [SemiringOps R] [IsSemiring R] [AlgebraMap R α] [SMul R α] [IsAlgebra R α]
-  [SemiringOps S] [IsSemiring S] [SMul S α] [AlgebraMap S α] [IsAlgebra S α]
+instance [SemiringOps S] [IsSemiring S] [SMul S α] [AlgebraMap S α] [IsAlgebra S α]
   : IsAlgebra S (RsqrtD α r) where
   commutes s x := by
     ext <;> dsimp

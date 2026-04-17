@@ -103,7 +103,7 @@ instance : IsGroup (FreeGroup α) where
       apply Rel.intro
     | mul a b iha ihb =>
       rw [map_mul, map_mul, MulOpp.mul_get, map_mul]
-      rw [←mul_assoc, mul_assoc (GroupQuot.mk _ _), ihb, mul_one, iha]
+      rw [←mul_assoc, mul_assoc (GroupQuot.mk (Rel _) _), ihb, mul_one, iha]
 
 private def inv_toFreeGroup (x: α) : (toFreeGroup x)⁻¹ = ofQuot (GroupQuot.mk _ (FreeMonoid.ι (true, x))) := by
   show MulOpp.get (MulOpp.mk _) = _

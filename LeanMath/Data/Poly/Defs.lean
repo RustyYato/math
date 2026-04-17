@@ -370,21 +370,6 @@ instance : NatCast P[X] where
 
 def natCast_eq_C (n: ℕ) : (n: P[X]) = C (n: P) := rfl
 
-instance : Pow P[X] ℕ := defaultPowN
-
-instance : IsLawfulPowN P[X] where
-
-def term_pow (n d: ℕ) (p: P) : (term d p) ^ n = term (d * n) (p ^ n) := by
-  induction n generalizing d p with
-  | zero => rw [npow_zero, mul_zero, npow_zero]; rfl
-  | succ n ih => rw [npow_succ, npow_succ, Nat.mul_succ, ih, term_mul_term]
-
-def term_def (n: ℕ) (p: P) : term n p = p • ((X: P[X]) ^ n) := by
-  show term _ _ = p • term _ _ ^ _
-  rw [term_pow, one_npow, one_mul, smul_term]
-  show _ = term _ (p * 1)
-  rw [mul_one]
-
 def C_mul_eq_smul (p: P) (ps: P[X]) : C p * ps = p • ps := by
   induction ps with
   | add a b iha ihb => rw [smul_add, mul_add, iha, ihb]
@@ -393,20 +378,13 @@ def C_mul_eq_smul (p: P) (ps: P[X]) : C p * ps = p • ps := by
     show term _ _ * _ = _
     rw [term_mul_term, zero_add]; rfl
 
-def mul_C_eq_smul [IsComm P] (p: P) (ps: P[X]) : ps * C p = p • ps := by
+def mul_C_eq_smul (p: P) [∀a: P, IsCommAt a p] (ps: P[X]) : ps * C p = p • ps := by
   induction ps with
   | add a b iha ihb => rw [smul_add, add_mul, iha, ihb]
   | term p' n =>
     rw [smul_term]
     show _  * term _ _ = _
     rw [term_mul_term, add_zero, mul_comm]; rfl
-
-instance : SemiringOps P[X] := inferInstance
-
-instance : IsLawfulNatCast P[X] where
-  natCast_zero := by rw [natCast_eq_C, natCast_zero, map_zero]
-  natCast_one := by rw [natCast_eq_C, natCast_one, map_one]
-  natCast_succ n := by rw [natCast_eq_C, natCast_eq_C, natCast_succ, map_add, map_one]
 
 instance : IsSemigroup P[X] where
   mul_assoc a b c := by
@@ -428,7 +406,7 @@ instance : IsSemigroup P[X] where
       simp [term_mul_term]
       rw [add_assoc, mul_assoc]
 
-instance [IsComm P] : IsLawfulOneMul P[X] where
+instance : IsLawfulOneMul P[X] where
   one_mul a := by
     induction a with
     | add a b iha ihb => simp [mul_add, iha, ihb]
@@ -438,7 +416,29 @@ instance [IsComm P] : IsLawfulOneMul P[X] where
     | add a b iha ihb => simp [add_mul, iha, ihb]
     | term p n => rw [←map_one C, mul_C_eq_smul, one_smul]
 
-instance [IsComm P] : IsSemiring P[X] where
+instance : Pow P[X] ℕ := defaultPowN
+
+instance : IsLawfulPowN P[X] where
+
+def term_pow (n d: ℕ) (p: P) : (term d p) ^ n = term (d * n) (p ^ n) := by
+  induction n generalizing d p with
+  | zero => rw [npow_zero, mul_zero, npow_zero]; rfl
+  | succ n ih => rw [npow_succ, npow_succ, Nat.mul_succ, ih, term_mul_term]
+
+def term_def (n: ℕ) (p: P) : term n p = p • ((X: P[X]) ^ n) := by
+  show term _ _ = p • term _ _ ^ _
+  rw [term_pow, one_npow, one_mul, smul_term]
+  show _ = term _ (p * 1)
+  rw [mul_one]
+
+instance : SemiringOps P[X] := inferInstance
+
+instance : IsLawfulNatCast P[X] where
+  natCast_zero := by rw [natCast_eq_C, natCast_zero, map_zero]
+  natCast_one := by rw [natCast_eq_C, natCast_one, map_one]
+  natCast_succ n := by rw [natCast_eq_C, natCast_eq_C, natCast_succ, map_add, map_one]
+
+instance : IsSemiring P[X] where
 instance [IsComm P] : IsComm P[X] where
   mul_comm a b := by
     induction a generalizing b with
@@ -448,7 +448,7 @@ instance [IsComm P] : IsComm P[X] where
     | add a₀ a₁ ih₀ ih₁ => rw [mul_add, add_mul, ih₀, ih₁]
     | term p₁ n₁ => rw [term_mul_term, term_mul_term, mul_comm, add_comm]
 
-instance [IsComm P] [HasChar P n] : HasChar P[X] n :=
+instance [HasChar P n] : HasChar P[X] n :=
   HasChar.of_ring_emb (α := P) (β := P[X]) C
 
 instance : AlgebraMap P P[X] where
@@ -459,7 +459,7 @@ instance [IsComm P] : IsAlgebra P P[X] where
     show C p * ps = ps * C p
     rw [mul_comm]
 
-variable [SemiringOps S] [IsSemiring S] [IsComm S]
+variable [SemiringOps S] [IsSemiring S]
   [SMul P S] [AlgebraMap P S] [IsAlgebra P S]
 
 private def preEval (x: S) : P[X] →+ S :=
@@ -488,7 +488,7 @@ def eval
     | term =>
       simp [liftAdd_term, term_mul_term, smul_def]
       rw [npow_add, map_mul]
-      ac_rfl
+      rw [mul_assoc, mul_left_comm _ (_ ^ _), ←mul_assoc]
   map_smul r p := by
     show preEval _ (r • p) = r • preEval _ p
     induction p with

@@ -3,7 +3,7 @@ import LeanMath.Algebra.AddGroupWithOne.Defs
 
 class RingOps (α: Type*) extends SemiringOps α, AddGroupWithOneOps α where
 
-instance (priority := 1100) [MonoidOps α] [AddGroupWithOneOps α] : RingOps α where
+instance (priority := 900) instRingOps [MonoidOps α] [AddGroupWithOneOps α] : RingOps α where
 
 class IsNonUnitalNonAssocRing (α: Type*)
   [AddGroupOps α] [Mul α] extends

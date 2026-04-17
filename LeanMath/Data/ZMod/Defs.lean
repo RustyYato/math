@@ -44,9 +44,6 @@ instance : SMul ℕ (ZMod n) where
 instance : SMul ℤ (ZMod n) where
   smul a b := { val := (a * b.val) % n }
 
-instance : Pow (ZMod n) ℕ where
-  pow a b := { val := (a.val ^ b) % n }
-
 namespace ZMod
 
 variable {n: ℕ}
@@ -62,7 +59,6 @@ variable {n: ℕ}
 @[simp] def sub_val (a b: ZMod n) : (a - b).val = (a.val - b.val) % n := rfl
 @[simp] def nsmul_val (a: ℕ) (b: ZMod n) : (a • b).val = (a * b.val) % n := rfl
 @[simp] def zsmul_val (a: ℤ) (b: ZMod n) : (a • b).val = (a * b.val) % n := rfl
-@[simp] def npow_val (a: ℕ) (b: ZMod n) : (b ^ a).val = (b.val ^ a) % n := rfl
 
 @[simp] def val_inj {a b: ZMod n} : a.val = b.val ↔ a = b := by
   apply Iff.intro

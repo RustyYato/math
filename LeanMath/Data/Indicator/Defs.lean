@@ -24,12 +24,6 @@ instance : Mul Indicator where
 instance : Inv Indicator where
   inv := id
 
-instance : MonoidOps Indicator where
-  toPowN := defaultPowN
-instance : GroupOps Indicator where
-  toPowZ := defaultPowZ
-  div a b := a * b⁻¹
-
 instance {P: Indicator -> Prop} [∀x, Decidable (P x)] : Decidable (∃x, P x) :=
   if h:P 1 then
     .isTrue ⟨_, h⟩
@@ -42,6 +36,18 @@ instance {P: Indicator -> Prop} [∀x, Decidable (P x)] : Decidable (∃x, P x) 
 
 instance {P: Indicator -> Prop} [∀x, Decidable (P x)] : Decidable (∀x, P x) :=
   decidable_of_decidable_of_iff (p := ¬∃x, ¬P x) <| Decidable.not_exists_not'
+
+instance : IsSemigroup Indicator where
+  mul_assoc := of_decide_eq_true rfl
+instance : IsLawfulOneMul Indicator where
+  one_mul := of_decide_eq_true rfl
+  mul_one := of_decide_eq_true rfl
+
+instance : MonoidOps Indicator where
+  toPowN := defaultPowN
+instance : GroupOps Indicator where
+  toPowZ := defaultPowZ
+  div a b := a * b⁻¹
 
 instance : IsGroup Indicator where
   mul_assoc := of_decide_eq_true rfl

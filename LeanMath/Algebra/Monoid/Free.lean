@@ -14,7 +14,6 @@ instance : One (FreeMonoid α) where
   one := .ofList []
 instance : Mul (FreeMonoid α) where
   mul a b := .ofList <| a.toList ++ b.toList
-instance : Pow (FreeMonoid α) ℕ := defaultPowN
 
 def ι : α ↪ FreeMonoid α where
   toFun x := .ofList [x]
@@ -35,6 +34,8 @@ instance : IsLawfulOneMul (FreeMonoid α) where
     cases a with | ofList a =>
     show FreeMonoid.ofList (a ++ []) = FreeMonoid.ofList a
     rw [List.append_nil]
+
+instance : Pow (FreeMonoid α) ℕ := defaultPowN
 
 instance : IsMonoid (FreeMonoid α) where
 

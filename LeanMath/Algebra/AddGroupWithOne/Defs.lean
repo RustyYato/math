@@ -9,7 +9,7 @@ def defaultIntCast (α: Type*) [Neg α] [NatCast α] : IntCast α where
 
 class AddGroupWithOneOps (α: Type*) extends AddMonoidWithOneOps α, AddGroupOps α, IntCast α where
 
-instance (priority := 1100)
+instance (priority := 900)
   [AddMonoidWithOneOps α] [AddGroupOps α] [IntCast α]
   : AddGroupWithOneOps α where
 

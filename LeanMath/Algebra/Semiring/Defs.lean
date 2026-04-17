@@ -3,7 +3,7 @@ import LeanMath.Algebra.MonoidWithZero.Defs
 
 class SemiringOps (α: Type*) extends AddMonoidWithOneOps α, MonoidOps α where
 
-instance (priority := 1100) [AddMonoidWithOneOps α] [MonoidOps α] : SemiringOps α where
+instance (priority := 900) [AddMonoidWithOneOps α] [MonoidOps α] : SemiringOps α where
 
 class IsLeftDistrib (α: Type*) [Mul α] [Add α] : Prop where
   protected mul_add (k a b: α) : k * (a + b) = k * a + k * b
@@ -303,9 +303,11 @@ end
 
 section
 
-variable [SemiringOps α] [IsSemiring α]
+variable [RelLike R α] [IsCon R] (r: R)
 
-variable [RelLike R α] [IsCon R] [IsAddCon R] [IsMulCon R] (r: R)
+instance [SemiringOps α] [IsLawfulPowN α] [IsAddMonoidWithOne α] [IsAddCon R] [IsMulCon R] : SemiringOps (AlgQuot r) := inferInstance
+
+variable [SemiringOps α] [IsSemiring α] [IsAddCon R] [IsMulCon R]
 
 instance : IsSemiring (AlgQuot r) where
 

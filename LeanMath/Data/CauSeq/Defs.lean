@@ -99,13 +99,13 @@ protected class CauchySeq.IsMetricField (γ: Type*)
   where
 
 instance
-  (priority := 100)
+  (priority := 1)
   CauchySeq.isntMetricFieldOps
   [LE γ] [LT γ] [FieldOps γ] [Norm γ γ] [Max γ]
   : CauchySeq.MetricFieldOps γ where
 
 instance
-  (priority := 100)
+  (priority := 1)
   CauchySeq.instIsMetricField
   [CauchySeq.MetricFieldOps γ]
   [IsLinearOrder γ] [IsField γ]
@@ -123,13 +123,13 @@ protected class CauchySeq.IsVectorSpace (α γ: Type*) [CauchySeq.MetricFieldOps
   : Prop extends IsLawfulNorm α γ, IsDistributiveAction γ α, IsLeftDistribSMul γ α, IsLawfulZeroSMul γ α where
 
 instance
-  (priority := 100)
+  (priority := 1)
   CauchySeq.instVectorSpaceOps
   [CauchySeq.MetricFieldOps γ] [FieldOps α]
   [Norm α γ] [SMul γ α] : CauchySeq.VectorSpaceOps α γ where
 
 instance
-  (priority := 100)
+  (priority := 1)
   CauchySeq.instIsVectorSpace
   [CauchySeq.MetricFieldOps γ] [CauchySeq.IsMetricField γ] [FieldOps α] [IsField α]
   [CauchySeq.VectorSpaceOps α γ]

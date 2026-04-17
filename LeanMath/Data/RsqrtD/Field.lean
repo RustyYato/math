@@ -100,6 +100,7 @@ instance : ExcludedMiddleEq (RsqrtD α r) := by
   have ⟨_, _⟩ := mk.inj h
   apply And.intro <;> assumption
 
+instance : GroupWithZeroOps (RsqrtD α r) := inferInstance
 instance : FieldOps (RsqrtD α r) := inferInstance
 instance : IsField (RsqrtD α r) where
 

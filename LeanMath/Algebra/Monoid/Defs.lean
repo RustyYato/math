@@ -5,32 +5,13 @@ class MonoidOps (α: Type*) extends One α, Mul α where
 class AddMonoidOps (α: Type*) extends Zero α, Add α where
   toNSMul : SMul ℕ α := by infer_instance
 
-@[implicit_reducible]
-def defaultPowN [One α] [Mul α] : Pow α ℕ where
-  pow a n := n.rec 1 (fun _ acc => acc * a)
-@[implicit_reducible]
-def defaultSMulN [o: Zero α] [Add α] : SMul ℕ α where
-  smul n a := n.rec 0 (fun _ acc => acc + a)
-
-section
-
-attribute [local instance] defaultPowN defaultSMulN
-
-def default_npow_zero [One α] [Mul α] (a: α) : a ^ 0 = 1 := rfl
-def default_npow_succ [One α] [Mul α] (a: α) (n: ℕ) : a ^ (n + 1) = a ^ n * a := rfl
-
-def default_zero_nsmul [Zero α] [Add α] (a: α) : 0 • a = 0 := rfl
-def default_succ_nsmul [Zero α] [Add α] (a: α) (n: ℕ) : (n + 1) • a = n • a + a := rfl
-
-end
-
 instance (priority := 100) [MonoidOps α] : Pow α ℕ := MonoidOps.toPowN
 
-instance (priority := 1100) [One α] [Mul α] [Pow α ℕ] : MonoidOps α where
+instance (priority := 900) [One α] [Mul α] [Pow α ℕ] : MonoidOps α where
 
 instance (priority := 100) [AddMonoidOps α] : SMul ℕ α := AddMonoidOps.toNSMul
 
-instance (priority := 1100) [Zero α] [Add α] [SMul ℕ α] : AddMonoidOps α where
+instance (priority := 900) [Zero α] [Add α] [SMul ℕ α] : AddMonoidOps α where
 
 class IsLawfulOneMul (α: Type*) [One α] [Mul α] where
   protected one_mul (a: α) : 1 * a = a
@@ -699,6 +680,15 @@ instance [IsMonoid α] : IsAddMonoid (AddOfMul α) where
 instance [IsLawfulOneMul α] : IsLawfulOneMul (MulOpp α) where
   one_mul := mul_one (α := α)
   mul_one := one_mul (α := α)
+
+instance [IsLawfulOneMul α] (a: α) : IsCommAt a 1 where
+  mul_comm := by rw [mul_one, one_mul]
+
+instance [IsLawfulZeroMul α] (a: α) : IsCommAt a 0 where
+  mul_comm := by rw [mul_zero, zero_mul]
+
+instance [IsLawfulZeroAdd α] (a: α) : IsAddCommAt a 0 where
+  add_comm := by rw [add_zero, zero_add]
 
 variable [IsMonoid α] [IsAddMonoid α]
 
@@ -1492,3 +1482,106 @@ def groupEquiv [One β] [Mul β] : OfEquiv f ≃* β where
   map_mul _ _ := by dsimp; rw [Equiv.symm_coe]
 
 end OfEquiv
+
+section
+
+@[implicit_reducible]
+noncomputable def defaultPowN [One α] [Mul α] [IsSemigroup α] [IsLawfulOneMul α] : Pow α ℕ where
+  pow a n := n.rec 1 (fun _ acc => acc * a)
+@[implicit_reducible]
+noncomputable def defaultSMulN [o: Zero α] [Add α] [IsAddSemigroup α] [IsLawfulZeroAdd α] : SMul ℕ α where
+  smul n a := n.rec 0 (fun _ acc => acc + a)
+
+private def fast_pown [One α] [Mul α] (a: α) (n: ℕ) : α :=
+  if n = 0 then
+    1
+  else
+    let x := fast_pown a (n / 2)
+    let xsq := x * x
+    bif n % 2 == 0 then
+      xsq
+    else
+      xsq * a
+
+@[implicit_reducible]
+private def fastPowN [One α] [Mul α] [IsSemigroup α] [IsLawfulOneMul α] : Pow α ℕ where
+  pow := fast_pown
+@[implicit_reducible]
+private def fastSMulN [o: Zero α] [Add α] [IsAddSemigroup α] [IsLawfulZeroAdd α] : SMul ℕ α where
+  smul := flip fast_pown (α := MulOfAdd α)
+
+private instance [One α] [Mul α] [IsSemigroup α] [IsLawfulOneMul α] (a b: α) [IsCommAt a b] : IsCommAt (fast_pown a n) b where
+  mul_comm := by
+    induction n using Nat.strongRecOn with
+    | _ n ih =>
+    unfold fast_pown
+    split <;> rename_i h
+    subst n; rw [one_mul, mul_one]
+    dsimp
+    have : n / 2 < n := Nat.bitwise_rec_lemma h
+    unfold cond; split
+    rw [mul_assoc, ih _ this, ←mul_assoc,
+      ih _ this, mul_assoc]
+    rw [mul_assoc, mul_comm a, ←mul_assoc,
+      mul_assoc _ _ b,
+      ih _ this, ←mul_assoc,
+      ih _ this]
+    repeat rw [mul_assoc]
+
+private def fast_pown_zero [One α] [Mul α] (a: α) : fast_pown a 0 = 1 := by
+  unfold fast_pown
+  dsimp
+
+private def fast_pown_succ [One α] [Mul α] [IsSemigroup α] [IsLawfulOneMul α] (a: α) (n: ℕ) : fast_pown a (n + 1) = fast_pown a n * a := by
+  induction n using Nat.strongRecOn with
+  | _ n ih =>
+  unfold fast_pown
+  dsimp
+  rw [Nat.add_mod]
+  rcases Nat.mod_two_eq_zero_or_one n with h | h
+  rw [h]
+  dsimp
+  rw [Nat.add_div, h]
+  dsimp
+  split <;> rename_i hn
+  subst n; simp [one_mul, fast_pown]
+  rfl; decide
+  rw [h]; dsimp
+  rw [Nat.add_div, h]; dsimp
+  rw [if_neg, ih]
+  rw [mul_assoc, ←mul_assoc a, mul_comm a]
+  repeat rw [mul_assoc]
+  refine Nat.bitwise_rec_lemma ?_
+  intro rfl; contradiction
+  intro rfl; contradiction
+  decide
+
+@[csimp]
+def default_pown_eq_fast_pown : @defaultPowN = @fastPowN := by
+  ext α
+  unfold defaultPowN fastPowN
+  congr; ext a n
+  induction n with
+  | zero => rw [fast_pown_zero]; rfl
+  | succ n ih =>
+    show _ * a = _
+    rw [fast_pown_succ, ih]
+
+@[reducible]
+private def smul_of_pow (h: Pow (MulOfAdd α) ℕ)  : SMul ℕ (AddOfMul (MulOfAdd α)) := inferInstance
+
+@[csimp]
+def default_nsmul_eq_fast_nsmul : @defaultSMulN = @fastSMulN := by
+  ext α
+  show smul_of_pow (defaultPowN (α := MulOfAdd α)) = smul_of_pow (fastPowN (α := MulOfAdd α))
+  rw [default_pown_eq_fast_pown]
+
+attribute [local instance] defaultPowN defaultSMulN
+
+def default_npow_zero [One α] [Mul α] [IsSemigroup α] [IsLawfulOneMul α] (a: α) : a ^ 0 = 1 := rfl
+def default_npow_succ [One α] [Mul α] [IsSemigroup α] [IsLawfulOneMul α] (a: α) (n: ℕ) : a ^ (n + 1) = a ^ n * a := rfl
+
+def default_zero_nsmul [Zero α] [Add α] [IsAddSemigroup α] [IsLawfulZeroAdd α] (a: α) : 0 • a = 0 := rfl
+def default_succ_nsmul [Zero α] [Add α] [IsAddSemigroup α] [IsLawfulZeroAdd α] (a: α) (n: ℕ) : (n + 1) • a = n • a + a := rfl
+
+end

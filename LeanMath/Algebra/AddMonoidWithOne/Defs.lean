@@ -50,7 +50,7 @@ def defaultNatCast (α: Type*) [AddMonoidOps α] [IsAddMonoid α] [One α] : Nat
 
 class AddMonoidWithOneOps (α: Type*) extends AddMonoidOps α, One α, NatCast α where
 
-instance (priority := 1100) [AddMonoidOps α] [One α] [NatCast α] : AddMonoidWithOneOps α where
+instance (priority := 900) [AddMonoidOps α] [One α] [NatCast α] : AddMonoidWithOneOps α where
 
 class IsLawfulNatCast (α: Type*) [Add α] [Zero α] [One α] [NatCast α] where
   protected natCast_zero : (0: ℕ) = (0: α)

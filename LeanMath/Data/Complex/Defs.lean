@@ -1,6 +1,7 @@
 import LeanMath.Data.Real.Defs
 import LeanMath.Data.RsqrtD.Field
 import LeanMath.Data.RsqrtD.Algebra
+import LeanMath.Tactic.DefEqAbuse
 
 abbrev Complex := RsqrtD ℝ (-1: ℤ)
 

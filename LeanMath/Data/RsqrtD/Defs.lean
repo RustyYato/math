@@ -66,14 +66,14 @@ instance [SMul S α] : SMul S (RsqrtD α r) where
 @[simp] def smul_real [SMul S α] (s: S) (x: RsqrtD α r) : (s • x).real = s • x.real := rfl
 @[simp] def smul_imag [SMul S α] (s: S) (x: RsqrtD α r) : (s • x).imag = s • x.imag := rfl
 
-instance [AddMonoidOps α] [IsAddMonoid α] : IsAddMonoid (RsqrtD α r) where
+instance instIsAddMonoid [AddMonoidOps α] [IsAddMonoid α] : IsAddMonoid (RsqrtD α r) where
   add_assoc _ _ _ := by ext <;> apply add_assoc
   zero_add _ := by ext <;> apply zero_add
   add_zero _ := by ext <;> apply add_zero
   zero_nsmul _ := by ext <;> apply zero_nsmul
   succ_nsmul _ _ := by ext <;> apply succ_nsmul
 
-instance [Mul α] [Add α] [SMul R α] : Mul (RsqrtD α r) where
+instance instMul [Mul α] [Add α] [SMul R α] : Mul (RsqrtD α r) where
   mul x y := {
     real := x.real * y.real + r • (x.imag * y.imag)
     imag := x.real * y.imag + x.imag * y.real
@@ -82,7 +82,18 @@ instance [Mul α] [Add α] [SMul R α] : Mul (RsqrtD α r) where
 @[simp] def mul_real [Mul α] [Add α] [SMul R α] (x y: RsqrtD α r) : (x * y).real = x.real * y.real + r • (x.imag * y.imag) := rfl
 @[simp] def mul_imag [Mul α] [Add α] [SMul R α] (x y: RsqrtD α r) : (x * y).imag = x.real * y.imag + x.imag * y.real := rfl
 
-instance [Zero α] [One α] [Mul α] [Add α] [SMul R α] : Pow (RsqrtD α r) ℕ := defaultPowN
+instance [SemiringOps α] [IsSemiring α] [SemiringOps R] [IsSemiring R] [AlgebraMap R α] [SMul R α] [IsAlgebra R α] : IsSemigroup (RsqrtD α r) where
+  mul_assoc a b c := by
+    ext
+    all_goals simp [mul_add, add_mul, mul_assoc, smul_def]
+    all_goals repeat first|rw [←mul_comm _ (algebraMap R r)]|rw [←mul_assoc]
+    ac_rfl
+    ac_rfl
+instance [SemiringOps α] [IsSemiring α] [SemiringOps R] [IsSemiring R] [AlgebraMap R α] [SMul R α] [IsAlgebra R α] : IsLawfulOneMul (RsqrtD α r) where
+  one_mul a := by ext <;> simp [one_mul, zero_mul, smul_zero, add_zero]
+  mul_one a := by ext <;> simp [mul_one, mul_zero, smul_zero, zero_add, add_zero]
+
+instance [SemiringOps α] [IsSemiring α] [SemiringOps R] [IsSemiring R] [AlgebraMap R α] [SMul R α] [IsAlgebra R α] : Pow (RsqrtD α r) ℕ := defaultPowN
 
 instance  [Add α] [IsAddComm α] : IsAddComm (RsqrtD α r) where
   add_comm _ _ := by ext <;> apply add_comm
@@ -95,14 +106,6 @@ instance [Zero α] [One α] [Mul α] [Add α] [SMul R α] [IsAddComm α] [IsComm
     congr 1 <;> rw [mul_comm]
 
 instance [SemiringOps α] [IsSemiring α] [SemiringOps R] [IsSemiring R] [AlgebraMap R α] [SMul R α] [IsAlgebra R α] : IsSemiring (RsqrtD α r) where
-  mul_assoc a b c := by
-    ext
-    all_goals simp [mul_add, add_mul, mul_assoc, smul_def]
-    all_goals repeat first|rw [←mul_comm _ (algebraMap R r)]|rw [←mul_assoc]
-    ac_rfl
-    ac_rfl
-  one_mul a := by ext <;> simp [one_mul, zero_mul, smul_zero, add_zero]
-  mul_one a := by ext <;> simp [mul_one, mul_zero, smul_zero, zero_add, add_zero]
   natCast_zero := by ext; apply natCast_zero; rfl
   natCast_one := by ext; apply natCast_one; rfl
   natCast_succ _ := by ext; apply natCast_succ; symm; apply add_zero
@@ -131,5 +134,9 @@ def of_real [Zero α] [One α] [Mul α] [Add α] [SMul R α]
   map_one := rfl
   map_add _ _ := by ext; rfl; symm; apply add_zero
   map_mul a b := by ext <;> simp [add_zero, mul_zero, smul_zero, zero_mul]
+
+@[reducible]
+instance instSemiringOps [SemiringOps α] [IsSemiring α] [SemiringOps R] [IsSemiring R] [AlgebraMap R α] [SMul R α] [IsAlgebra R α] :
+   SemiringOps (RsqrtD α r) := inferInstance
 
 end RsqrtD
