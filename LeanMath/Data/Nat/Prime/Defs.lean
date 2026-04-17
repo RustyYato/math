@@ -7,6 +7,83 @@ import LeanMath.Tactic.AxiomBlame
 
 namespace Nat
 
+@[reducible]
+def find_minFact (n i: ℕ) : ℕ:=
+  if n ≤ i then
+    n
+  else if n % i == 0 then
+    i
+  else
+    find_minFact n (i + 1)
+
+def find_minFact_ge (n i: ℕ) (hi: i ≤ n) : i ≤ find_minFact n i := by
+  induction i using find_minFact.induct (n := n) with
+  | case1 =>
+    unfold find_minFact
+    rw [if_pos]; assumption
+    assumption
+  | case2 =>
+    unfold find_minFact
+    rw [if_neg, if_pos]
+    apply Nat.le_refl
+    assumption
+    assumption
+  | case3 i i_lt_n i_not_dvd_n ih =>
+    unfold find_minFact
+    rw [if_neg i_lt_n, if_neg i_not_dvd_n]
+    apply Nat.le_trans _ (ih _)
+    apply Nat.le_succ
+    rwa [Nat.succ_le_iff, ←Nat.not_le]
+
+def find_minFact_spec (n i: ℕ) (hi: ∀j, 2 ≤ j -> j < i -> ¬n % j == 0) : n % (find_minFact n i) == 0 := by
+  induction i using find_minFact.induct (n := n) with
+  | case1 =>
+    unfold find_minFact
+    rw [if_pos, Nat.mod_self]; rfl
+    assumption
+  | case2 =>
+    unfold find_minFact
+    rw [if_neg, if_pos]
+    assumption
+    assumption
+    assumption
+  | case3 i i_lt_n i_not_dvd_n ih =>
+    unfold find_minFact
+    rw [if_neg i_lt_n, if_neg i_not_dvd_n, ih]
+    intro j two_le_j j_lt_i
+    rw [Nat.lt_succ_iff, Nat.le_iff_lt_or_eq] at j_lt_i
+    rcases j_lt_i with j_lt_i | rfl
+    apply hi; assumption; assumption
+    assumption
+
+def find_minFact_minimal (n i: ℕ) (hi: ∀j, 2 ≤ j -> j < i -> ¬n % j == 0) : (∀j, 2 ≤ j -> j < (find_minFact n i) -> ¬n % j == 0) := by
+  induction i using find_minFact.induct (n := n) with
+  | case1 =>
+    unfold find_minFact
+    rw [if_pos]
+    intro j _ j_lt_n
+    apply hi
+    assumption
+    apply Nat.lt_of_lt_of_le
+    assumption
+    assumption
+    assumption
+  | case2 =>
+    unfold find_minFact
+    rw [if_neg, if_pos]
+    assumption
+    assumption
+    assumption
+  | case3 i i_lt_n i_not_dvd_n ih =>
+    unfold find_minFact
+    rw [if_neg i_lt_n, if_neg i_not_dvd_n]
+    apply ih
+    intro j _ j_lt_i
+    rw [Nat.lt_succ_iff, Nat.le_iff_lt_or_eq] at j_lt_i
+    rcases j_lt_i with j_lt_i | rfl
+    apply hi; assumption; assumption
+    assumption
+
 private def minFac_exists (n: ℕ) (hn: n ≠ 1) : ∃m, m ∣ n ∧ 1 < m :=
   match n with
   | 0 => ⟨2, Nat.dvd_zero _,  by decide⟩
@@ -15,14 +92,15 @@ private def minFac_exists (n: ℕ) (hn: n ≠ 1) : ∃m, m ∣ n ∧ 1 < m :=
 def minFact (n: ℕ) :=
   match n with
   | 0 => 2 | 1 => 1
-  | n + 2 => Nat.find (minFac_exists (n + 2) nofun)
+  | n + 2 => find_minFact (n + 2) 2
 
 def minFact_dvd (n: ℕ) : Nat.minFact n ∣ n := by
   match n with
   | 0 | 1 => decide
   | n + 2 =>
-    have := Nat.find_spec (minFac_exists (n + 2) nofun)
-    exact this.left
+    have := find_minFact_spec (n + 2) 2 (fun _ h g _ => Nat.not_lt_of_le h g)
+    rw [Nat.beq_eq_true_eq, ←Nat.dvd_iff_mod_eq_zero] at this
+    assumption
 
 def one_lt_prime (p: ℕ) (hp: IsPrime p) : 1 < p := by
   match p with
@@ -46,9 +124,13 @@ def minFact_minimal (n: ℕ) : ∀p, 1 < p -> p ∣ n -> Nat.minFact n ≤ p := 
     apply Nat.le_refl
   | n + 2 =>
     intro p hp h
-    refine Nat.not_lt.mp <| (Nat.find_minimal (minFac_exists (n + 2) nofun) p · ⟨?_, ?_⟩)
+    rw [←Nat.not_lt]; intro g
+    apply find_minFact_minimal (n + 2) 2 _ p
+    apply Nat.succ_le_of_lt; assumption
     assumption
-    assumption
+    rwa [Nat.beq_eq_true_eq, ←Nat.dvd_iff_mod_eq_zero]
+    intro _ h g _
+    exact  Nat.not_lt_of_le h g
 
 private def semiprime_iff {n: ℕ} : (∀⦃x y: ℕ⦄, n ∣ x * y -> n ∣ x ∨ n ∣ y) ∧ n ≠ 0 ↔ ∀x, x ∣ n -> x = n ∨ x = 1 := by
   apply Iff.intro
@@ -98,10 +180,10 @@ def minFact_ne_zero (n: ℕ) : n.minFact ≠ 0 := by
   match n with
   | 0 | 1 => decide
   | n + 2 =>
-    have := Nat.find_spec (minFac_exists (n + 2) nofun)
-    apply Nat.ne_of_gt
-    apply Nat.lt_trans _ this.right
-    decide
+    intro h
+    have := minFact_dvd (n + 2)
+    rw [h, Nat.zero_dvd] at this
+    contradiction
 
 @[reducible]
 def minFact_prime (n: ℕ) (hn: n ≠ 1) : IsPrime (Nat.minFact n) where
@@ -119,16 +201,22 @@ def minFact_prime (n: ℕ) (hn: n ≠ 1) : IsPrime (Nat.minFact n) where
       | 1 => rfl
       | 0 => contradiction
     | n + 2 =>
-      have := Nat.find_minimal (Nat.minFac_exists (n + 2) nofun) x h
-      simp at this
-      replace := this (Nat.dvd_trans hx (Nat.minFact_dvd _))
+      apply Decidable.byContradiction
+      intro
+      replace := Nat.dvd_trans hx (Nat.minFact_dvd _)
+      have := minFact_minimal (n + 2) x ?_ this
+      have := Nat.not_le_of_lt h
+      contradiction
       match x with
       | 0 =>
         rw [Nat.zero_dvd] at hx
-        rw [hx] at h
+        have := minFact_dvd (n + 2)
+        rw [hx, Nat.zero_dvd] at this
         contradiction
-      | 1 =>
-        rfl
+      | 1 => contradiction
+      | n + 2 =>
+        apply Nat.succ_lt_succ
+        apply Nat.zero_lt_succ
   ne_zero := minFact_ne_zero _
   not_unit := by
     intro h
@@ -138,9 +226,8 @@ def minFact_prime (n: ℕ) (hn: n ≠ 1) : IsPrime (Nat.minFact n) where
     match n with
     | 0 => contradiction
     | n + 2 =>
-      have : 1 < (n + 2).minFact := (Nat.find_spec (minFac_exists _ hn)).right
-      rw [h] at this
-      contradiction
+      have : 2 ≤ (n + 2).minFact := find_minFact_ge (n + 2) 2 (Nat.le_add_left _ _)
+      rw [h] at this; contradiction
 
 instance : IsPrime (Nat.minFact 0) := minFact_prime _ nofun
 instance : IsPrime (Nat.minFact (n + 2)) := minFact_prime _ nofun
@@ -187,6 +274,7 @@ instance : Subsingleton (Classify n) where
 instance : DecidableEq (Classify n) :=
   fun _ _ => .isTrue (Subsingleton.allEq _ _)
 
+@[reducible]
 def classify (n: ℕ) : Classify n :=
   if h₀:n = 1 then
     h₀ ▸ .unit
