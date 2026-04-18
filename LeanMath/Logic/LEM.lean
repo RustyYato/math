@@ -79,6 +79,30 @@ def not_not [ExcludedMiddle P] : ¬¬P ↔ P := by
   intro p np
   exact np p
 
+def iff_iff_and_or_not_and_not {a b : Prop} [ExcludedMiddle b] :
+    (a ↔ b) ↔ (a ∧ b) ∨ (¬a ∧ ¬b) := by
+    apply Iff.intro
+    · intro h
+      rcases em b with x | x
+      left; exact And.intro (h.mpr x) x
+      right; apply And.intro _ x
+      intro y
+      exact x (h.mp y)
+    · intro h
+      rcases h with ⟨_, _⟩ | ⟨_, _⟩
+      apply Iff.intro <;> (intro; assumption)
+      apply Iff.intro <;> (intro; contradiction)
+
+def not_and {P Q: Prop} [ExcludedMiddle P] : ¬(P ∧ Q) ↔ ¬P ∨ ¬Q := by
+  apply Iff.intro
+  · intro h
+    rcases em P with p | p
+    right; intro q
+    exact h ⟨p, q⟩
+    left; assumption
+  · intro h ⟨_, _⟩
+    rcases h <;> contradiction
+
 end LEM
 
 instance {α: Type u} (x: α) [∀b: α, ExcludedMiddle (x = b)] (as: List α) : ExcludedMiddle (x ∈ as) := by
