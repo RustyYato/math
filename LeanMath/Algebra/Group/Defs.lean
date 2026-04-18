@@ -531,6 +531,27 @@ def div_eq_one (a b: α) : a = b ↔ a / b = 1:= by
   rw [←one_mul b, ←h, div_eq_mul_inv a b,
     mul_assoc, inv_mul_cancel, mul_one]
 
+def conj (a: α) : α ≃* α where
+  toFun x := a * x * a⁻¹
+  invFun x := a⁻¹ * x * a
+  leftInv x := by
+    dsimp; rw [←mul_assoc, ←mul_assoc, mul_inv_cancel, mul_assoc,
+      mul_inv_cancel, mul_one, one_mul]
+  rightInv x := by
+    dsimp; rw [←mul_assoc, ←mul_assoc, inv_mul_cancel, mul_assoc,
+      inv_mul_cancel, mul_one, one_mul]
+  map_one := by rw [mul_one, mul_inv_cancel]
+  map_mul x y := by
+    rw [mul_assoc a x, mul_assoc a (_ * a⁻¹),
+      mul_assoc x a⁻¹, ←mul_assoc a⁻¹, ←mul_assoc a⁻¹,
+      inv_mul_cancel, one_mul, mul_assoc, mul_assoc]
+
+@[simp] def apply_conj (a: α) (x: α) : conj a x = a * x * a⁻¹ := rfl
+@[simp] def symm_apply_conj (a: α) (x: α) : (conj a).symm x = a⁻¹ * x * a := rfl
+@[simp] def inv_conj (a: α) : conj a⁻¹ = (conj a).symm := by
+  apply DFunLike.ext; intro x
+  dsimp; rw [inv_inv]
+
 end
 
 section
@@ -646,6 +667,20 @@ def negHom [IsAddComm α] : α →+ α where
   map_add a b := by rw [add_comm, neg_add_rev]
 
 @[simp] def apply_negHom [IsAddComm α] (a: α) : negHom a = -a := rfl
+
+def add_conj (a: α) : α ≃+ α where
+  toFun x := a + x + -a
+  invFun x := -a + x + a
+  leftInv := (conj (MulOfAdd.mk a)).leftInv
+  rightInv:= (conj (MulOfAdd.mk a)).rightInv
+  map_zero := (conj (MulOfAdd.mk a)).map_one
+  map_add := (conj (MulOfAdd.mk a)).map_mul
+
+@[simp] def apply_add_conj (a: α) (x: α) : add_conj a x = a + x + -a := rfl
+@[simp] def symm_apply_add_conj (a: α) (x: α) : (add_conj a).symm x = -a + x + a := rfl
+@[simp] def neg_add_conj (a: α) : add_conj (-a) = (add_conj a).symm := by
+  apply DFunLike.ext; intro x
+  dsimp; rw [neg_neg]
 
 end
 
