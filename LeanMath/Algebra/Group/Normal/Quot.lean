@@ -157,3 +157,29 @@ def eqv : NormalAddSubgroup α ≃ AddCon α where
     rw [sub_zero]
 
 end NormalAddSubgroup
+
+namespace MulCon
+
+variable [GroupOps α] [IsGroup α] [GroupOps β] [IsGroup β]
+  [FunLike F α β] [IsOneHom F α β] [IsMulHom F α β]
+
+def kernel (f: F) : MulCon α := NormalSubgroup.eqv (NormalSubgroup.kernel f)
+
+@[simp] def apply_kernel (f: F) (a b) : kernel f a b ↔ f a = f b := by
+  show 1 = f (b / a) ↔ f a = f b
+  rw [Eq.comm, map_div, ←div_eq_one, Eq.comm]
+
+end MulCon
+
+namespace AddCon
+
+variable [AddGroupOps α] [IsAddGroup α] [AddGroupOps β] [IsAddGroup β]
+  [FunLike F α β] [IsZeroHom F α β] [IsAddHom F α β]
+
+def kernel (f: F) : AddCon α := NormalAddSubgroup.eqv (NormalAddSubgroup.kernel f)
+
+@[simp] def apply_kernel (f: F) (a b) : kernel f a b ↔ f a = f b := by
+  show 0 = f (b - a) ↔ f a = f b
+  rw [Eq.comm, map_sub, ←sub_eq_zero, Eq.comm]
+
+end AddCon
