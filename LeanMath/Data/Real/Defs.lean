@@ -166,6 +166,29 @@ unsafe scoped instance Repr.Rat.instRepr : Repr ℝ where
 def lift (f: CauchySeq ℚ ℚ -> α) (hf: ∀a b, a ≈ b -> f a = f b) : ℝ -> α :=
   fun r => CauchySeq.lift f hf (Real.ringEquivCauchySeq r)
 
+def recSeq
+  {motive: ℝ -> Sort u}
+  (f: ∀s: CauchySeq ℚ ℚ, motive (ofCauchySeq s.ofSeq))
+  (hf: ∀a b, a ≈ b -> HEq (f a) (f b)) (r: ℝ) : motive r :=
+   r.toCauchySeq.toQuot.hrecOn
+    (motive := fun q => motive (ofCauchySeq (CauchySeq.Completion.ofQuot q)))
+    (fun x => f x) hf
+
+def lift_with
+  (r: ℝ)
+  (f: ∀s: CauchySeq ℚ ℚ, r = ofCauchySeq s.ofSeq -> α)
+  (hf: ∀a b ha hb, f a ha = f b hb) : α :=
+   r.recSeq (motive := fun s => r = s -> α)
+    (fun s hs => f s hs)
+    (by
+      intro a b h; dsimp
+      apply Function.hfunext
+      congr 1; rw [CauchySeq.sound h]
+      intro ha hb heq
+      apply heq_of_eq
+      apply hf)
+    rfl
+
 def sound (a b: CauchySeq ℚ ℚ) : a ≈ b -> Real.ringEquivCauchySeq.symm a.ofSeq = Real.ringEquivCauchySeq.symm b.ofSeq := by
   intro h; rw [CauchySeq.sound h]
 

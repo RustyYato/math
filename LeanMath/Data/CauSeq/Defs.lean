@@ -1528,6 +1528,23 @@ protected def Completion.mul_nonneg {a b: Completion γ γ} (ha: 0 ≤ a) (hb: 0
   assumption
   assumption
 
+protected def Completion.lt_of_pos [LEM] {a b: Completion γ γ} (ha: Completion.IsPos (b - a)) : a < b := by
+  cases a using ind with | _ a =>
+  cases b using ind with | _ b =>
+  rw [←not_le]; intro ⟨s, s_eqv, hs⟩
+  replace s_eqv : -(a - b) ≈ (-s) := is_cauchy_eqv.neg s_eqv
+  rw [←neg_sub] at ha
+  replace ha : Completion.IsPos (ofSeq (-(a - b))) := ha
+  rw [sound s_eqv] at ha
+  clear s_eqv a b
+  obtain ⟨B, Bpos, hs'⟩ := ha
+  replace hs := hs.merge hs'
+  obtain ⟨k, hs⟩ := hs
+  replace ⟨hs, hs'⟩ := hs k (le_refl _)
+  rw [←neg_le_neg_iff, neg_zero] at hs
+  replace hs := lt_of_lt_of_le hs' hs
+  exact Relation.asymm hs Bpos
+
 protected def Completion.mul_le_mul_of_nonneg_left {a b: Completion γ γ} : a ≤ b → ∀ (c : Completion γ γ), 0 ≤ c → c * a ≤ c * b := by
   intro h c hc
   show Completion.IsNonneg _

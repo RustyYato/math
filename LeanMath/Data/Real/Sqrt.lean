@@ -441,17 +441,44 @@ def sqrt_func_is_cauchy_of_const {q: ℚ}
 --     rw [←neg_lt_neg_iff, neg_zero]
 --     apply flip lt_trans <;> assumption
 
--- def sqrt : ℝ -> ℝ :=
+-- def computable_sqrt : ℝ -> ℝ :=
 --   Real.lift (fun q => Real.ringEquivCauchySeq.symm <| CauchySeq.ofSeq <| {
 --     toFun := sqrt_func q
 --     is_cauchy' := by apply sqrt_func_is_cauchy; rfl
 --   }) <| by
---     intro a b h;
+--     intro a b h
 --     apply sound
 --     apply sqrt_func_is_cauchy
 --     assumption
 
 -- open Classical Real.Repr.Float  in
--- #eval! (sqrt <| Real.ofRat (1 /? 2: ℚ)).offset 0
+-- #eval! (computable_sqrt <| Real.ofRat (1 /? 2: ℚ)).offset 3
+
+-- def sqrt_eqv (s: CauchySeq ℚ ℚ) (r: ℝ) (h: r = Real.equivCauchySeq.symm s.ofSeq) :
+--   is_cauchy_eqv (fun i => (sqrt_func s i: ℝ)) fun x => r.sqrt := by
+--   rcases lt_trichotomy r 0 with rneg | rfl | rpos
+--   · let r' := CauchySeq.Completion.const r
+--     let s' := castCauchy s.ofSeq
+--     have : r' = s' := by unfold r' s'; rw [h, castCauchy_eq]; rfl
+--     replace h := CauchySeq.exact this; clear this
+--     intro ε εpos; dsimp; clear r' s'
+--     sorry
+--   · simp
+--     sorry
+--   · let r' := CauchySeq.Completion.const r
+--     let s' := castCauchy s.ofSeq
+--     have : r' = s' := by unfold r' s'; rw [h, castCauchy_eq]; rfl
+--     replace h := CauchySeq.exact this; clear this
+--     intro ε εpos; dsimp; clear r' s'
+--     sorry
+
+-- def sqrt' (r: ℝ) : ℝ := r.lift_with (fun s hs => Real.of_seq_converges_to (fun i => sqrt_func s i) ⟨r.sqrt, by
+--   apply sqrt_eqv
+--   assumption⟩) (by
+--     intro a b ha hb
+--     dsimp
+--     rw [of_seq_converges_to_eq _ r.sqrt, of_seq_converges_to_eq _ r.sqrt]
+--     apply sqrt_eqv; assumption
+--     apply sqrt_eqv; assumption)
 
 end Real
