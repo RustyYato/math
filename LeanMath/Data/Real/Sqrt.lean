@@ -959,4 +959,23 @@ unsafe def computable_sqrt' [LEM] : ℝ -> ℝ :=
 
 attribute [implemented_by computable_sqrt'] sqrt
 
+def square_monotone : ∀{a b: ℝ}, 0 ≤ a -> a ≤ b -> a ^ 2 ≤ b ^ 2 := by
+  intro a b ha h
+  have := mul_le_mul_of_nonneg_left h a ha
+  have := le_trans this (mul_le_mul_of_nonneg_right h b (le_trans ha h))
+  rwa [npow_two, npow_two]
+def square_strict_monotone : ∀{a b: ℝ}, 0 ≤ a -> a < b -> a ^ 2 < b ^ 2 := by
+  intro a b ha h
+  have := mul_le_mul_of_nonneg_left (le_of_lt h) _ ha
+  replace hb : 0 < b := lt_of_le_of_lt ha h
+  have := lt_of_le_of_lt this (mul_lt_mul_of_pos_right _ _ h _ hb)
+  rwa [npow_two, npow_two]
+def of_square_monotone : ∀{a b: ℝ}, 0 ≤ b -> a ^ 2 ≤ b ^ 2 -> a ≤ b := by
+  intro a b hb h
+  rw [←not_lt]; rw [←not_lt] at h
+  intro g; apply h
+  apply square_strict_monotone
+  assumption
+  assumption
+
 end Real
