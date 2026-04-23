@@ -693,6 +693,22 @@ def sqrt_mul (a b: ℝ) : (a * b).sqrt = a.sqrt * b.sqrt := by
   apply nonneg_sqrt
   rw [mul_npow, sq_sqrt, sq_sqrt, sq_sqrt, norm_mul]
 
+@[simp]
+def of_sqrt_eq_zero (x: ℝ) : sqrt x = 0 -> x = 0 := by
+  intro h
+  have : x.sqrt ^ 2  = 0 := by rw [h, zero_npow_succ]
+  rw [Real.sq_sqrt] at this
+  apply of_norm_eq_zero
+  assumption
+
+@[simp]
+def sqrt_ne_zero (x: ℝ) (hx: x ≠ 0) : sqrt x ≠ 0 := by
+  intro h; apply hx; apply of_sqrt_eq_zero
+  assumption
+
+macro_rules
+| `(tactic|invert_tactic_trivial) => `(tactic|apply sqrt_ne_zero <;> invert_tactic)
+
 end Real
 
 namespace Real

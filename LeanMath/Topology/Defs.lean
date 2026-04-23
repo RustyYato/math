@@ -31,6 +31,12 @@ def OpenSets.empty : ⊥ ∈ t.OpenSets := by
   apply sUnion
   nofun
 
+@[ext]
+def ext (a b: Topology α) : a.OpenSets = b.OpenSets -> a = b := by
+  intro h
+  have := (Set.ofMem.inj h)
+  cases a; cases b; congr
+
 def ClosedSets : Set (Set α) where
   Mem s := sᶜ ∈ t.OpenSets
 def ClosedSets.univ : ⊤ ∈ t.ClosedSets := by
