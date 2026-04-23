@@ -778,8 +778,10 @@ variable [LE α] [LT α] [IsPartialOrder α]
 def IsPos (c: CauchySeq γ γ) : Prop :=
   ∃B, 0 < B ∧ Eventually fun i => B < c i
 
-def IsNonneg (c: CauchySeq γ γ) : Prop :=
-  ∃c': CauchySeq γ γ, c ≈ c' ∧ Eventually fun i => 0 ≤ c' i
+def IsNonneg' (c: ℕ -> γ) : Prop :=
+  ∃c': CauchySeq γ γ, is_cauchy_eqv c c' ∧ Eventually fun i => 0 ≤ c' i
+
+def IsNonneg (c: CauchySeq γ γ) : Prop := IsNonneg' c
 
 private def is_cauchy_eqv.IsPos' (a b: CauchySeq γ γ) (h: a ≈ b) : a.IsPos -> b.IsPos := by
   intro ⟨B, Bpos, hB⟩
@@ -816,6 +818,7 @@ protected def is_cauchy_eqv.IsPos (a b: CauchySeq γ γ) (h: a ≈ b) : a.IsPos 
 private def is_cauchy_eqv.IsNonneg' (a b: CauchySeq γ γ) (h: a ≈ b) : a.IsNonneg -> b.IsNonneg := by
   intro ⟨x, ha, hx⟩
   refine ⟨x, ?_, hx⟩
+  show _ ≈ x
   apply Relation.trans
   apply Relation.symm
   assumption
@@ -1084,13 +1087,13 @@ instance : LT (Completion γ γ) where
 
 def nonneg_of_pos (c: CauchySeq γ γ) : c.IsPos -> c.IsNonneg := by
   intro ⟨B, Bpos, k, hk⟩
-  refine ⟨c, Relation.refl _, k, ?_⟩
+  refine ⟨c, c.is_cauchy, k, ?_⟩
   intro i hi
   apply le_of_lt; apply lt_trans Bpos
   apply hk; assumption
 
 def nonneg_of_zero : IsNonneg (.const (0: γ)) := by
-  refine ⟨_, Relation.refl _, 0, ?_⟩
+  refine ⟨_, CauchySeq.is_cauchy _, 0, ?_⟩
   intro i hi
   apply le_refl
 
@@ -1119,12 +1122,12 @@ protected def nonneg_add (a b: CauchySeq γ γ) : a.IsNonneg -> b.IsNonneg -> (a
   exact (hk i hi).left
   exact (hk i hi).right
 
-def eqv_zero_of_nonneg_and_nonpos (a: CauchySeq γ γ) : a.IsNonneg -> (-a).IsNonneg -> a ≈ 0 := by
+def eqv_zero_of_nonneg_and_nonpos' (a: ℕ -> γ) : IsNonneg' a -> IsNonneg' (fun i => -a i) -> is_cauchy_eqv a (fun _ => 0) := by
   intro ⟨x, hpa, hx⟩ ⟨u, hna, hu⟩
-  have : a + -a ≈ x + u := is_cauchy_eqv.add hpa hna
-  replace := Relation.symm this
-  rw [show a + -a = 0 by ext; apply add_neg_cancel] at this
-  apply Relation.trans hpa
+  have : is_cauchy_eqv (fun i => a i + -a i) (x + u) := is_cauchy_eqv.add hpa hna
+  replace := symm this
+  rw [show (fun i => a i + -a i) = (fun i => 0) by ext; apply add_neg_cancel] at this
+  apply trans x.is_cauchy hpa
   intro ε εpos
   have ⟨k, hk⟩ := (this ε εpos).merge (hx.merge hu)
   exists k; intro i j hi hj
@@ -1140,6 +1143,16 @@ def eqv_zero_of_nonneg_and_nonpos (a: CauchySeq γ γ) : a.IsNonneg -> (-a).IsNo
   assumption
   assumption
   assumption
+
+def eqv_of_antisymm' (a: ℕ -> γ) (b: CauchySeq γ γ) : IsNonneg' (fun i => a i - b i) -> IsNonneg' (fun i => b i - a i) -> is_cauchy_eqv a b := by
+  intro h g
+  conv at g => { rhs; intro i; rw [←neg_sub] }
+  have := eqv_zero_of_nonneg_and_nonpos' _ h g
+  have := is_cauchy_eqv.add this b.is_cauchy
+  simpa [zero_add, sub_add_assoc, neg_add_cancel, add_zero] using this
+
+def eqv_zero_of_nonneg_and_nonpos (a: CauchySeq γ γ) : a.IsNonneg -> (-a).IsNonneg -> a ≈ 0 := by
+  apply eqv_zero_of_nonneg_and_nonpos'
 
 def not_pos_and_neg (c: CauchySeq γ γ) : c.IsPos -> (-c).IsPos -> False := by
   intro ⟨A, Apos, hA⟩ ⟨B, Bpos, hB⟩
@@ -1247,7 +1260,7 @@ def le_of_eventually_le (a b: CauchySeq γ γ) : (Eventually fun i => a i ≤ b 
   intro h
   show IsNonneg (b - a)
   exists b - a
-  apply And.intro (Relation.refl _)
+  apply And.intro (CauchySeq.is_cauchy _)
   obtain ⟨k, hk⟩ := h
   exists k; intro i hi
   replace hk := hk i hi
@@ -1499,7 +1512,7 @@ instance : IsZeroLEOne (Completion γ γ) where
   zero_le_one := by
     show (1 - 0: CauchySeq.Completion γ γ).IsNonneg
     rw [sub_zero]
-    exists 1; apply And.intro (Relation.refl _)
+    exists 1; apply And.intro (CauchySeq.is_cauchy _)
     exists 0; intro i hi
     apply zero_le_one
 

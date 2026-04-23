@@ -801,369 +801,93 @@ def bit_sum_spec (r: ℝ) : r ∈ Set.Icc 0 1 ↔ r ∈ Set.range bit_sum := by
 --       rfl
 --   · sorry
 
-noncomputable def sqrt_set (r: ℝ) : Set ℝ where
-  Mem x := x ^ 2 ≤ ‖r‖
+-- def is_cauchy_eqv.cast (a b: ℕ -> ℚ) (h: is_cauchy_eqv a b) : is_cauchy_eqv (fun i => (a i: ℝ)) (fun i => (b i: ℝ)) := by
+--   intro ε εpos
+--   have ⟨ε', ε'_pos, ε'_lt_ε⟩ := exists_rat_between.mp εpos
+--   replace ε'_pos : 0 < ε' := by rwa [←ratCast_lt_ratCast (α := ℝ), ratCast_zero]
+--   have ⟨k, hk⟩ := h ε' ε'_pos
+--   exists k; intro i j hi hj
+--   dsimp; rw [←apply_ratCastHom (a i), ←apply_ratCastHom (b j), ←map_sub,
+--     apply_ratCastHom]
+--   apply lt_trans _ ε'_lt_ε
+--   show Rational.cast (α := ℝ) ‖a i - b j‖ < ε'
+--   apply ratCast_lt_ratCast.mpr
+--   apply hk <;> assumption
 
-def mem_sqrt_set (r: ℝ) : ∀{x}, x ∈ sqrt_set r ↔ x ^ 2 ≤ ‖r‖ := Iff.rfl
+-- def is_cauchy_eqv.of_cast (a b: ℕ -> ℚ) (h: is_cauchy_eqv (fun i => (a i: ℝ)) (fun i => (b i: ℝ))) : is_cauchy_eqv a b := by
+--   intro ε εpos
+--   have ⟨k, hk⟩ := h ε (ratCast_lt_ratCast.mpr εpos)
+--   exists k; intro i j hi hj
+--   replace hk := hk i j hi hj
+--   dsimp at hk
+--   rw [←apply_ratCastHom (a i), ←apply_ratCastHom (b j), ←map_sub,
+--     apply_ratCastHom] at hk
+--   exact ratCast_lt_ratCast.mp hk
 
-@[implicit_reducible]
-def sqrt_set_nonempty (r: ℝ) : (sqrt_set r).Nonempty := by
-  exists 0;
-  unfold sqrt_set; dsimp
-  rw [zero_npow]; apply norm_nonneg
-  decide
+-- def castCauchySeq (s: CauchySeq ℚ ℚ) : CauchySeq ℝ ℝ where
+--   toFun i := s i
+--   is_cauchy' := by
+--     apply is_cauchy_eqv.cast
+--     exact s.is_cauchy
 
-@[implicit_reducible]
-def sqrt_set_bounded (r: ℝ) : (sqrt_set r).BoundedAbove := by
-  exists 1 ⊔ ‖r‖
-  intro x hx
-  replace hx : x ^ 2 ≤ ‖r‖ := hx
-  rcases le_total 1 ‖r‖ with h | h
-  · rw [max_eq_right h]
-    rcases Or.symm (lt_or_le 1 x) with hx' | hx'
-    apply le_trans hx'; assumption
-    rw [←not_lt]
-    intro g
-    have := mul_lt_mul₀ ?_ ?_ g hx'
-    rw [mul_one, ←npow_two] at this
-    exact not_le_of_lt this hx
-    apply lt_of_lt_of_le _ h
-    apply zero_lt_one
-    apply lt_trans _ hx'
-    apply zero_lt_one
-  · rw [max_eq_left h]
-    replace hx := le_trans hx h
-    rcases Or.symm (lt_or_le 0 x) with hx' | hx'
-    apply le_trans hx'; apply zero_le_one
-    rw [←not_lt]; intro g
-    have := mul_lt_mul₀ ?_ ?_ g g
-    rw [mul_one, ←npow_two] at this
-    exact not_le_of_lt this hx
-    apply zero_lt_one
-    assumption
+-- private def castCauchy' : CauchySeq.Completion ℚ ℚ -> CauchySeq.Completion ℝ ℝ :=
+--   CauchySeq.lift (CauchySeq.ofSeq ∘ castCauchySeq) <| by
+--     intro a b h
+--     apply CauchySeq.sound
+--     apply is_cauchy_eqv.cast
+--     assumption
 
-noncomputable def sqrt (r: ℝ) : ℝ := ⨆ (sqrt_set r)
+-- def castCauchy : CauchySeq.Completion ℚ ℚ ↪ CauchySeq.Completion ℝ ℝ where
+--   toFun := castCauchy'
+--   inj := by
+--     intro a b h
+--     induction a with | _ a =>
+--     induction b with | _ b =>
+--     replace h := CauchySeq.exact h
+--     replace h := is_cauchy_eqv.of_cast a b h
+--     exact CauchySeq.sound h
 
-@[simp]
-def sqrt_sq (r: ℝ) : sqrt (r ^ 2) = ‖r‖ := by
-  apply le_antisymm
-  · apply csSup_le
-    apply sqrt_set_nonempty
-    intro x hx
-    replace hx : x ^ 2 ≤ ‖r ^ 2‖ := hx
-    rcases em (r = 0) with rfl | h
-    rw [zero_npow, norm_zero] at hx
-    rw [norm_zero]
-    · rw [←not_lt]
-      intro h
-      have := mul_lt_mul₀_of_le_of_lt (le_refl _) h (le_of_lt h) h
-      rw [mul_zero, ←npow_two] at this
-      exact not_le_of_lt this hx
-    decide
-    rw [←not_lt]; intro h
-    have := mul_lt_mul₀ ?_ ?_ h h
-    rw [←norm_mul, ←npow_two, ←npow_two] at this
-    exact not_le_of_lt this hx
-    apply lt_of_le_of_ne
-    apply norm_nonneg
-    intro g
-    have := of_norm_eq_zero g.symm
-    contradiction
-    apply lt_of_le_of_lt _ h
-    apply norm_nonneg
-  · apply le_csSup
-    apply sqrt_set_bounded
-    show ‖r‖ ^ 2 ≤ _
-    rw [npow_two, ←norm_mul,  ←npow_two]
+-- def castCauchy_eq (r: CauchySeq.Completion ℚ ℚ) : castCauchy r = CauchySeq.Completion.const (Real.ofCauchySeq r) := by
+--   induction r with | _ r =>
+--   show CauchySeq.ofSeq (castCauchySeq r) = _
+--   apply CauchySeq.sound
+--   intro ε εpos
+--   dsimp
+--   have ⟨ε', ε'_pos, ε'_lt_ε⟩ := exists_rat_between.mp εpos
+--   replace ε'_pos : 0 < ε' := by rwa [←ratCast_lt_ratCast (α := ℝ), ratCast_zero]
+--   have ⟨k, hk⟩ := r.is_cauchy _ (pos_div?_natCast ε'_pos 1)
+--   exists k; intro i j hi hj; dsimp at hk
+--   show ‖(r i: ℝ) - _‖ < ε
+--   apply lt_trans _ ε'_lt_ε
+--   show ‖(Real.ofCauchySeq ((CauchySeq.const (r i) - r).ofSeq))‖ < _
+--   apply CauchySeq.Completion.lt_of_pos
+--   show CauchySeq.IsPos _; dsimp
+--   refine ⟨ε' /? (2: ℕ), ?_, ?_⟩
+--   apply pos_div?_natCast; assumption
+--   exists k; intro j hj
+--   show ε' /? (2: ℕ) < ε' - ‖r i - r j‖
+--   rw [lt_sub_iff_add_lt]; rw (occs := [2]) [←half_add_half ε']
+--   apply add_lt_add_left
+--   apply hk <;> assumption
 
-def sqrt_nonneg (r: ℝ) : 0 ≤ sqrt r := by
-  apply le_csSup
-  apply sqrt_set_bounded
-  show _ ≤ ‖r‖
-  rw [npow_two, mul_zero]
-  apply norm_nonneg
+-- def of_seq_converges_to (f: ℕ -> ℚ) (h: ∃r, is_cauchy_eqv (fun i => (f i: ℝ)) (fun _ => r)) : ℝ :=
+--   Real.ofCauchySeq <| CauchySeq.ofSeq <| {
+--     toFun := f
+--     is_cauchy' := by
+--       replace ⟨r, h⟩ := h
+--       have := CauchySeq.trans (CauchySeq.const r).is_cauchy h (CauchySeq.symm h)
+--       exact is_cauchy_eqv.of_cast _ _ this
+--   }
 
-@[simp]
-def sq_sqrt (r: ℝ) : (sqrt r) ^ 2 = ‖r‖ := by
-  apply le_antisymm
-  · rw [←not_lt]; intro h
-    have _ : 0 < r.sqrt := by
-      apply lt_of_le_of_ne
-      apply sqrt_nonneg
-      symm; intro g
-      rw [g, npow_two, mul_zero] at h
-      exact not_le.mpr h (norm_nonneg _)
-    let _ : 0 < (2: ℕ) * r.sqrt := by
-      apply pos_mul_of_pos
-      apply pos_natCast
-      assumption
-    let ε := (r.sqrt ^ 2 - ‖r‖) /? ((2: ℕ) * r.sqrt)
-    have εpos : 0 < ε := by
-      unfold ε
-      apply pos_div?
-      rw [lt_sub_iff_add_lt, zero_add]
-      assumption
-      apply mul_pos
-      apply pos_natCast
-      assumption
-    have pos_rsqrt_sub_ε : 0 < r.sqrt - ε := by
-      rw [←mul_one r.sqrt, ←div?_self ((2: ℕ) * r.sqrt)]
-      unfold ε
-      rw [←mul_div?_assoc, ←sub_div?]
-      apply pos_div?
-      · rw [sub_eq_add_neg _ ‖r‖, sub_add, sub_eq_add_neg _ (-‖r‖), neg_neg,
-          mul_comm, mul_assoc, npow_two, add_comm,
-          two_mul, add_sub_assoc,add_sub_assoc, sub_self,
-            add_zero, add_comm, lt_add_iff_sub_lt, zero_sub,
-            ←npow_two]
-        apply lt_of_le_of_lt
-        show -‖r‖ ≤ ‖r‖
-        refine neg_le_of_nonneg ?_
-        apply norm_nonneg
-        assumption
-      · assumption
-      · apply ne_of_gt
-        assumption
-    have ⟨x, hx, lt_x⟩ := lt_mem_of_lt_csSup _ (sqrt_set_nonempty r) (a := r.sqrt - ε) (by
-      show r.sqrt - ε < r.sqrt
-      rw [sub_eq_add_neg]
-      rw (occs := [2]) [←add_zero r.sqrt]
-      apply add_lt_add_left
-      rwa [←neg_lt_neg_iff, neg_neg, neg_zero])
-    have upos := lt_trans pos_rsqrt_sub_ε lt_x
-    have := mul_lt_mul₀ ?_ ?_ lt_x lt_x
-    rw [←npow_two, ←npow_two, sub_sq] at this
-    rw [←mul_assoc, mul_comm, div?_mul_cancel,
-      sub_eq_add_neg _ (_ - _), neg_sub,
-      add_comm (r.sqrt ^ 2), sub_add_assoc,
-      neg_add_cancel, add_zero] at this
-    have := lt_of_le_of_lt (a := ‖r‖) ?_ this
-    apply not_le_of_lt this
-    assumption
-    rw (occs := [1]) [←add_zero ‖r‖]
-    apply add_le_add_left
-    · rw [npow_two]
-      apply le_of_lt
-      apply mul_pos
-      assumption
-      assumption
-    assumption
-    assumption
-  · rw [←not_lt]; intro h
-    let ε := ‖r‖ - r.sqrt ^ 2
-    have : 0 < r.sqrt := by
-      rw [←not_le]; intro g
-      have := le_antisymm g (sqrt_nonneg r)
-      rw [this, zero_npow _ (by decide)] at h
-      have : ∃x, 0 < x ∧ x ∈ sqrt_set r := by
-        exists 1 ⊓ ‖r‖
-        apply And.intro
-        · rcases min_eq 1 ‖r‖ with h₀ | h₀
-          rw [h₀]; apply zero_lt_one
-          rwa [h₀]
-        rw [mem_sqrt_set]
-        rcases le_total 1 ‖r‖ with h₀ | h₀
-        rwa [min_eq_left h₀, one_npow]
-        rw [min_eq_right]
-        rw [←not_lt]; intro g
-        have := mul_lt_mul₀_of_le_of_lt ?_ ?_ h₀ g
-        rw [←npow_two, one_mul] at this
-        exact Relation.irrefl this
-        apply norm_nonneg
-        apply zero_lt_one
-        assumption
-      obtain ⟨x, xpos, hx⟩ := this
-      have := lt_of_lt_of_le xpos (le_csSup (sqrt_set_bounded _) hx)
-      exact not_le_of_lt this g
-    have ε_pos : 0 < ε := by rwa [lt_sub_iff_add_lt, zero_add]
-    have _ : 0 < (2: ℕ) * r.sqrt + 1 := by
-      apply pos_add
-      apply pos_mul_of_pos
-      apply pos_natCast
-      assumption
-      apply zero_lt_one
-    let δ := 1 ⊓ (ε /? ((2: ℕ) * r.sqrt + 1))
-    have δ_mem : δ ∈ Set.Ioc 0 1 := by
-      apply And.intro
-      · apply lt_min
-        apply zero_lt_one
-        apply pos_div?
-        assumption
-        apply pos_add
-        apply mul_pos
-        apply pos_natCast
-        assumption
-        apply zero_lt_one
-      · apply min_le_left
-    have : (r.sqrt + δ) ∈ sqrt_set r := by
-      rw [mem_sqrt_set]
-      apply le_trans (b := r.sqrt ^ 2 + (2: ℕ) * r.sqrt * δ + δ)
-      rw [add_sq, add_assoc, add_assoc]
-      apply add_le_add_left
-      rw [mul_assoc]
-      apply add_le_add_left
-      obtain ⟨δ_pos, δ_le_one⟩ := δ_mem
-      rw [←not_lt]; intro h
-      have := mul_le_mul₀ (le_of_lt δ_pos) (le_of_lt δ_pos) δ_le_one (le_refl δ)
-      rw [←npow_two, one_mul] at this
-      apply not_le_of_lt h
-      assumption
-      let δ' := (ε /? ((2: ℕ) * r.sqrt + 1))
-      apply le_trans
-      show _ ≤ r.sqrt ^ 2 + (2: ℕ) * r.sqrt * δ' + δ'
-      · rw [add_assoc, add_assoc]
-        apply add_le_add_left
-        apply add_le_add
-        apply mul_le_mul_of_nonneg_left
-        apply min_le_right
-        apply le_of_lt; apply mul_pos
-        apply pos_natCast
-        assumption
-        apply min_le_right
-      rw (occs := [2]) [←one_mul δ']
-      rw [add_assoc, ←add_mul, mul_comm, div?_mul_cancel,
-        add_comm, sub_add_assoc, neg_add_cancel, add_zero]
-    have : r.sqrt + δ ≤ r.sqrt := le_csSup (sqrt_set_bounded _) this
-    apply not_lt.mpr this
-    rw (occs := [1]) [←add_zero r.sqrt]
-    apply add_lt_add_left
-    exact δ_mem.left
-
-def sqrt_mono : Monotone (α := { x: ℝ // 0 ≤ x }) (fun x => x.val.sqrt) := by
-  intro ⟨a, ha⟩ ⟨b, hb⟩ h
-  replace h : a ≤ b := h
-  dsimp
-  apply le_csSup
-  apply sqrt_set_bounded
-  rwa [mem_sqrt_set, sq_sqrt, abs_eq_of_nonneg, abs_eq_of_nonneg]
-  assumption
-  assumption
-
-def sqrt_strictMono : StrictMonotone (α := { x: ℝ // 0 ≤ x }) (fun x => x.val.sqrt) := by
-  intro ⟨a, ha⟩ ⟨b, hb⟩ h
-  replace h : a < b := h
-  dsimp; apply lt_of_le_of_ne
-  apply sqrt_mono (a := ⟨a, ha⟩) (b := ⟨b, hb⟩)
-  apply le_of_lt; assumption
-  intro eq
-  have : a.sqrt ^ 2 = b.sqrt ^ 2 := by rw [eq]
-  rw [sq_sqrt, sq_sqrt, abs_eq_of_nonneg _ ha,
-    abs_eq_of_nonneg _ hb] at this
-  subst b
-  have := Relation.irrefl h
-  contradiction
-
-@[simp]
-def sqrt_neg (r: ℝ) : sqrt (-r) = sqrt r := by
-  unfold sqrt sqrt_set
-  congr ; ext x
-  rw [neg_norm]
-
-@[simp]
-def sqrt_zero : sqrt 0 = 0 := by
-  apply flip le_antisymm
-  apply sqrt_nonneg
-  apply csSup_le; apply sqrt_set_nonempty
-  intro x hx
-  rw [mem_sqrt_set, norm_zero] at hx
-  rcases lt_trichotomy x 0 with h | h | h
-  · rw [←neg_lt_neg_iff] at h
-    have := mul_lt_mul_of_pos_left _ _ h _ h
-    rw [neg_zero, mul_zero, ←neg_mul_left,
-      ←neg_mul_right, neg_neg, ←npow_two] at this
-    nomatch not_le_of_lt this hx
-  · rw [h]
-  · have := mul_lt_mul_of_pos_left _ _ h _ h
-    rw [mul_zero, ←npow_two] at this
-    nomatch not_le_of_lt this hx
-
-def is_cauchy_eqv.cast (a b: ℕ -> ℚ) (h: is_cauchy_eqv a b) : is_cauchy_eqv (fun i => (a i: ℝ)) (fun i => (b i: ℝ)) := by
-  intro ε εpos
-  have ⟨ε', ε'_pos, ε'_lt_ε⟩ := exists_rat_between.mp εpos
-  replace ε'_pos : 0 < ε' := by rwa [←ratCast_lt_ratCast (α := ℝ), ratCast_zero]
-  have ⟨k, hk⟩ := h ε' ε'_pos
-  exists k; intro i j hi hj
-  dsimp; rw [←apply_ratCastHom (a i), ←apply_ratCastHom (b j), ←map_sub,
-    apply_ratCastHom]
-  apply lt_trans _ ε'_lt_ε
-  show Rational.cast (α := ℝ) ‖a i - b j‖ < ε'
-  apply ratCast_lt_ratCast.mpr
-  apply hk <;> assumption
-
-def is_cauchy_eqv.of_cast (a b: ℕ -> ℚ) (h: is_cauchy_eqv (fun i => (a i: ℝ)) (fun i => (b i: ℝ))) : is_cauchy_eqv a b := by
-  intro ε εpos
-  have ⟨k, hk⟩ := h ε (ratCast_lt_ratCast.mpr εpos)
-  exists k; intro i j hi hj
-  replace hk := hk i j hi hj
-  dsimp at hk
-  rw [←apply_ratCastHom (a i), ←apply_ratCastHom (b j), ←map_sub,
-    apply_ratCastHom] at hk
-  exact ratCast_lt_ratCast.mp hk
-
-def castCauchySeq (s: CauchySeq ℚ ℚ) : CauchySeq ℝ ℝ where
-  toFun i := s i
-  is_cauchy' := by
-    apply is_cauchy_eqv.cast
-    exact s.is_cauchy
-
-private def castCauchy' : CauchySeq.Completion ℚ ℚ -> CauchySeq.Completion ℝ ℝ :=
-  CauchySeq.lift (CauchySeq.ofSeq ∘ castCauchySeq) <| by
-    intro a b h
-    apply CauchySeq.sound
-    apply is_cauchy_eqv.cast
-    assumption
-
-def castCauchy : CauchySeq.Completion ℚ ℚ ↪ CauchySeq.Completion ℝ ℝ where
-  toFun := castCauchy'
-  inj := by
-    intro a b h
-    induction a with | _ a =>
-    induction b with | _ b =>
-    replace h := CauchySeq.exact h
-    replace h := is_cauchy_eqv.of_cast a b h
-    exact CauchySeq.sound h
-
-def castCauchy_eq (r: CauchySeq.Completion ℚ ℚ) : castCauchy r = CauchySeq.Completion.const (Real.ofCauchySeq r) := by
-  induction r with | _ r =>
-  show CauchySeq.ofSeq (castCauchySeq r) = _
-  apply CauchySeq.sound
-  intro ε εpos
-  dsimp
-  have ⟨ε', ε'_pos, ε'_lt_ε⟩ := exists_rat_between.mp εpos
-  replace ε'_pos : 0 < ε' := by rwa [←ratCast_lt_ratCast (α := ℝ), ratCast_zero]
-  have ⟨k, hk⟩ := r.is_cauchy _ (pos_div?_natCast ε'_pos 1)
-  exists k; intro i j hi hj; dsimp at hk
-  show ‖(r i: ℝ) - _‖ < ε
-  apply lt_trans _ ε'_lt_ε
-  show ‖(Real.ofCauchySeq ((CauchySeq.const (r i) - r).ofSeq))‖ < _
-  apply CauchySeq.Completion.lt_of_pos
-  show CauchySeq.IsPos _; dsimp
-  refine ⟨ε' /? (2: ℕ), ?_, ?_⟩
-  apply pos_div?_natCast; assumption
-  exists k; intro j hj
-  show ε' /? (2: ℕ) < ε' - ‖r i - r j‖
-  rw [lt_sub_iff_add_lt]; rw (occs := [2]) [←half_add_half ε']
-  apply add_lt_add_left
-  apply hk <;> assumption
-
-def of_seq_converges_to (f: ℕ -> ℚ) (h: ∃r, is_cauchy_eqv (fun i => (f i: ℝ)) (fun _ => r)) : ℝ :=
-  Real.ofCauchySeq <| CauchySeq.ofSeq <| {
-    toFun := f
-    is_cauchy' := by
-      replace ⟨r, h⟩ := h
-      have := CauchySeq.trans (CauchySeq.const r).is_cauchy h (CauchySeq.symm h)
-      exact is_cauchy_eqv.of_cast _ _ this
-  }
-
-def of_seq_converges_to_eq (f: ℕ -> ℚ) (r: ℝ) (h: is_cauchy_eqv (fun i => (f i: ℝ)) (fun _ => r)) : of_seq_converges_to f ⟨r, h⟩ = r := by
-  induction r using cau_ind with | _ r =>
-  apply sound
-  show is_cauchy_eqv f r
-  apply is_cauchy_eqv.of_cast
-  apply CauchySeq.trans (CauchySeq.const _).is_cauchy h
-  dsimp
-  show is_cauchy_eqv _ (castCauchySeq r)
-  apply CauchySeq.exact
-  symm; apply castCauchy_eq r.ofSeq
+-- def of_seq_converges_to_eq (f: ℕ -> ℚ) (r: ℝ) (h: is_cauchy_eqv (fun i => (f i: ℝ)) (fun _ => r)) : of_seq_converges_to f ⟨r, h⟩ = r := by
+--   induction r using cau_ind with | _ r =>
+--   apply sound
+--   show is_cauchy_eqv f r
+--   apply is_cauchy_eqv.of_cast
+--   apply CauchySeq.trans (CauchySeq.const _).is_cauchy h
+--   dsimp
+--   show is_cauchy_eqv _ (castCauchySeq r)
+--   apply CauchySeq.exact
+--   symm; apply castCauchy_eq r.ofSeq
 
 end Real

@@ -27,6 +27,20 @@ def mul_nonpos_of_nonneg_of_nonpos: ∀{a b: α}, 0 ≤ a -> b ≤ 0 -> a * b �
   apply neg_le_neg
   assumption
 
+def nonneg_sq [IsLinearOrder α] (a: α) : 0 ≤ a ^ 2 := by
+  rcases le_total 0 a
+  rw [npow_two, ←mul_zero a]
+  apply mul_le_mul_of_nonneg_left
+  assumption
+  assumption
+  rw [←neg_sq, npow_two, ←mul_zero (-a)]
+  have : 0 ≤ -a := by
+    rw [←neg_zero]; apply neg_le_neg
+    assumption
+  apply mul_le_mul_of_nonneg_left
+  assumption
+  assumption
+
 end
 
 section IsStrictOrderedSemiring

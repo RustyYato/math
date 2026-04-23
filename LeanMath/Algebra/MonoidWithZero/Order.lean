@@ -33,6 +33,12 @@ def mul_nonneg: ∀{a b: α}, 0 ≤ a -> 0 ≤ b -> 0 ≤ a * b := IsOrderedZero
 def mul_le_mul_of_nonneg_left: ∀{a b: α}, a ≤ b -> ∀c, 0 ≤ c -> c * a ≤ c * b := IsOrderedZeroMul.mul_le_mul_of_nonneg_left
 def mul_le_mul_of_nonneg_right: ∀{a b: α}, a ≤ b -> ∀c, 0 ≤ c -> a * c ≤ b * c := IsOrderedZeroMul.mul_le_mul_of_nonneg_right
 
+def nonneg_mul [IsPreorder α] {a b: α} (ha: 0 ≤ a) (hb: 0 ≤ b) : 0 ≤ a * b := by
+  apply flip le_trans
+  apply mul_le_mul_of_nonneg_left
+  assumption; assumption
+  rw [mul_zero]
+
 end
 
 namespace OfEquiv
