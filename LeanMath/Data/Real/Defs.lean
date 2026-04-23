@@ -206,4 +206,6 @@ noncomputable instance (a b: ℝ) : Decidable (a < b) :=
 noncomputable instance (a b: ℝ) : Decidable (a = b) :=
   open UniqueChoice in inferInstance
 
+attribute [irreducible] Real.instMin Real.instMax
+
 end Real
