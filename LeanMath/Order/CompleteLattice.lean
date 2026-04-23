@@ -29,11 +29,6 @@ def sSup_empty : ⨆ ⊥ = (⊥: α) := by
   apply sSup_le
   intro u hu; contradiction
 
-def sSup_univ : ⨆ ⊤ = (⊤: α) := by
-  apply le_antisymm (le_top _)
-  apply le_sSup
-  trivial
-
 end IsCompleteSemilatticeSup
 
 section IsCompleteSemilatticeInf
@@ -44,11 +39,6 @@ def sInf_empty : ⨅ ⊥ = (⊤: α) := by
   apply le_antisymm (le_top _)
   apply le_sInf
   intro u hu; contradiction
-
-def sInf_univ : ⨅ ⊤ = (⊥: α) := by
-  apply le_antisymm _ (bot_le _)
-  apply sInf_le
-  trivial
 
 end IsCompleteSemilatticeInf
 
