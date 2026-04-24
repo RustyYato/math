@@ -25,6 +25,9 @@ class IsLawfulSemiNorm (α γ: Type*) [Norm α γ] [Norm γ γ] [SMul γ α] [Ad
 class IsLawfulNorm (α γ: Type*) [Norm α γ] [Norm γ γ] [SMul γ α] [Add α] [Zero α] [LE γ] [Mul γ] [Add γ] [Zero γ] [IsLawfulAbs γ] extends IsLawfulSemiNorm α γ where
   protected norm_eq_zero {a: α} : ‖a‖ = 0 ↔ a = 0
 
+class IsLawfulSubMulNorm (α γ: Type*) [Norm α γ] [Norm γ γ] [SMul γ α] [Add α] [Mul α] [LE γ] [Mul γ] [Add γ] [Zero γ] [IsLawfulSemiAbs γ] extends IsLawfulSemiNorm α γ where
+  protected norm_mul_le_mul_norm (a b: α) : ‖a * b‖ ≤ ‖a‖ * ‖b‖
+
 class IsLawfulMulNorm (α γ: Type*) [Norm α γ] [Norm γ γ] [SMul γ α] [Add α] [Mul α] [LE γ] [Mul γ] [Add γ] [Zero γ] [IsLawfulSemiAbs γ] extends IsLawfulSemiNorm α γ where
   protected norm_mul (a b: α) : ‖a * b‖ = ‖a‖ * ‖b‖
 
@@ -75,7 +78,7 @@ section
 
 variable [Norm α γ] [Norm γ γ] [SMul γ α] [Add α] [LE γ] [Mul γ] [Add γ] [Zero γ] [One γ]
 
--- def abs_one [IsLawfulSemiAbs γ] : ‖(1: γ)‖ = 1 := IsLawfulSemiAbs.abs_one
+def norm_mul_le_mul_norm [Mul α] [IsLawfulSemiAbs γ] [IsLawfulSubMulNorm α γ] (a b: α) : ‖a * b‖ ≤ ‖a‖ * ‖b‖ := IsLawfulSubMulNorm.norm_mul_le_mul_norm _ _
 def norm_mul [Mul α] [IsLawfulSemiAbs γ] [IsLawfulMulNorm α γ] (a b: α) : ‖a * b‖ = ‖a‖ * ‖b‖ := IsLawfulMulNorm.norm_mul _ _
 
 def norm_nonneg [IsLawfulSemiAbs γ] [IsLawfulSemiNorm α γ] (a: α): (0: γ) ≤ ‖a‖ := IsLawfulSemiNorm.norm_nonneg _

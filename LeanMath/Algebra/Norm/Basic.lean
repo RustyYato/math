@@ -108,6 +108,9 @@ variable
   [IsOrderedAddCommMonoid γ]
   [IsLawfulMulNorm α γ]
 
+instance : IsLawfulSubMulNorm α γ where
+  norm_mul_le_mul_norm a b := by rw [norm_mul]
+
 @[simp]
 def norm_one [hα: Nontrivial α] : ‖(1: α)‖ = 1 := by
   have : ‖(1: α)‖ = ‖(1: α)‖ * ‖(1: α)‖ := by

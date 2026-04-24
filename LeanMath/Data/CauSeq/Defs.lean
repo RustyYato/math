@@ -327,7 +327,7 @@ def bounded_with (c: CauchySeq α γ) (lb: γ) : ∃B, lb < B ∧ ∀i, ‖c i�
   apply hB
 
 def _root_.is_cauchy_eqv.mul
-  [IsLawfulMulNorm α γ]
+  [IsLawfulSubMulNorm α γ]
   (a b c d: CauchySeq α γ)
   (ac: a ≈ c)
   (bd: b ≈ d) :
@@ -358,7 +358,8 @@ def _root_.is_cauchy_eqv.mul
   apply lt_of_le_of_lt
   apply norm_add_le_add_norm
   apply add_lt_add
-  · rw [norm_mul]
+  · apply lt_of_le_of_lt
+    apply norm_mul_le_mul_norm
     apply lt_of_le_of_lt
     apply mul_le_mul_of_nonneg_right
     apply le_of_lt; apply hBa
@@ -367,7 +368,8 @@ def _root_.is_cauchy_eqv.mul
     exact pos_inv? _ Ba_pos
     rw [←mul_assoc, inv?_mul_cancel, one_mul, mul_comm _, ←div?_eq_mul_inv?]
     assumption
-  · rw [norm_mul]
+  · apply lt_of_le_of_lt
+    apply norm_mul_le_mul_norm
     apply lt_of_le_of_lt
     apply mul_le_mul_of_nonneg_left
     apply le_of_lt; apply hBd
@@ -531,7 +533,9 @@ instance : Norm (Completion α γ) (Completion γ γ) where
     apply is_cauchy_eqv.norm
     assumption
 
-variable [IsLawfulMulNorm α γ]
+section
+
+variable [IsLawfulSubMulNorm α γ]
 
 instance : Mul (CauchySeq α γ) where
   mul a b := {
@@ -866,6 +870,10 @@ def Completion.of_eventually_pointwise (a b: CauchySeq α γ) (h: Eventually fun
   apply sound
   apply CauchySeq.of_eventually_pointwise
   assumption
+
+end
+
+variable [IsLawfulMulNorm α γ]
 
 instance : IsZeroNeOne (CauchySeq.Completion α γ) where
   zero_ne_one := by
