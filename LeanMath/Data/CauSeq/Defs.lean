@@ -773,6 +773,15 @@ instance : IsRing (Completion α γ) where
     show Completion.const (Int.negSucc n: α) = -(Completion.const (_))
     rw [intCast_negSucc]; rfl
 
+def constHom : α →+* CauchySeq.Completion α γ where
+  toFun := CauchySeq.Completion.const
+  map_zero := rfl
+  map_one := rfl
+  map_add _ _ := rfl
+  map_mul _ _ := rfl
+
+@[simp] def apply_constHom (a: α) : constHom a = CauchySeq.Completion.const a := rfl
+
 variable [LE α] [LT α] [IsPartialOrder α]
 
 def IsPos (c: CauchySeq γ γ) : Prop :=

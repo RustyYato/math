@@ -993,5 +993,16 @@ def of_square_monotone : ∀{a b: ℝ}, 0 ≤ b -> a ^ 2 ≤ b ^ 2 -> a ≤ b :=
   apply square_strict_monotone
   assumption
   assumption
+def of_square_strict_monotone : ∀{a b: ℝ}, 0 ≤ b -> a ^ 2 < b ^ 2 -> a < b := by
+  intro a b ha h
+  rw [←not_le] at *; intro g; apply h
+  apply square_monotone
+  assumption
+  assumption
+
+  -- have := mul_le_mul_of_nonneg_left (le_of_lt h) _ ha
+  -- replace hb : 0 < b := lt_of_le_of_lt ha h
+  -- have := lt_of_le_of_lt this (mul_lt_mul_of_pos_right _ _ h _ hb)
+  -- rwa [npow_two, npow_two]
 
 end Real

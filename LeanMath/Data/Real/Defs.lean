@@ -166,6 +166,9 @@ unsafe scoped instance Repr.Rat.instRepr : Repr ℝ where
 def lift (f: CauchySeq ℚ ℚ -> α) (hf: ∀a b, a ≈ b -> f a = f b) : ℝ -> α :=
   fun r => CauchySeq.lift f hf (Real.ringEquivCauchySeq r)
 
+def lift₂ (f: CauchySeq ℚ ℚ -> CauchySeq ℚ ℚ -> α) (hf: ∀a b c d, a ≈ c -> b ≈ d -> f a b = f c d) : ℝ -> ℝ -> α :=
+  fun r₁ r₂ => CauchySeq.lift₂ f hf (Real.ringEquivCauchySeq r₁) (Real.ringEquivCauchySeq r₂)
+
 def recSeq
   {motive: ℝ -> Sort u}
   (f: ∀s: CauchySeq ℚ ℚ, motive (ofCauchySeq s.ofSeq))

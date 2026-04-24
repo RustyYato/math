@@ -155,4 +155,20 @@ instance : IsLawfulNorm ℂ ℝ where
       apply nonneg_sq
       apply nonneg_sq
 
+instance : IsLawfulMulNorm ℂ ℝ where
+  norm_mul a b := by
+    simp [norm_def, ←Real.sqrt_mul]
+    congr 1
+    rw [neg_zsmul, one_smul, ←sub_eq_add_neg,
+      sub_sq, add_sq,
+      sub_eq_add_neg,
+      neg_mul_left]
+    ac_nf
+    rw [←add_assoc, ←neg_mul_left, neg_add_cancel, zero_add]
+    simp [mul_npow, add_mul, mul_add]
+    ac_nf
+    congr 1
+    rw [add_left_comm]
+    congr 1; rw [add_comm]
+
 end Complex

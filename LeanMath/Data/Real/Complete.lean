@@ -120,17 +120,11 @@ def complete (c: CauchySeq.Completion ℝ ℝ) : ∃r: ℝ, c = .const r := by
   rwa [max_eq_right h, ←neg_lt_neg_iff, neg_neg]
   rwa [max_eq_left h]
 
-def CauchySeq.constHom : ℝ →+* CauchySeq.Completion ℝ ℝ where
-  toFun := CauchySeq.Completion.const
-  map_zero := rfl
-  map_one := rfl
-  map_add _ _ := rfl
-  map_mul _ _ := rfl
-
 private def complete' (c: CauchySeq.Completion ℝ ℝ) : existsUnique fun r: ℝ => c = .const r := by
   obtain ⟨r, hr⟩ := complete c
   refine ⟨r, hr, ?_⟩
   intro s hs; rw [hs] at hr; clear hs
+  rw [←CauchySeq.apply_constHom, ←CauchySeq.apply_constHom] at hr
   exact (inj CauchySeq.constHom hr).symm
 
 noncomputable section
@@ -139,6 +133,7 @@ private def lim' (c: CauchySeq.Completion ℝ ℝ) : ℝ := Classical.choose_uni
 
 private def lim'_const (r: ℝ) : lim' (CauchySeq.Completion.const r) = r := by
   have := Classical.choose_unique_spec (complete' (CauchySeq.Completion.const r))
+  rw [←CauchySeq.apply_constHom, ←CauchySeq.apply_constHom] at this
   exact (inj CauchySeq.constHom this).symm
 
 @[irreducible]
