@@ -84,17 +84,6 @@ attribute [local irreducible] Rational.lift Rational.lift₂ Rational.lift_with
 
 variable [LEM]
 
-private def CauchySeq.Eventually₂_of_le (P: ℕ -> ℕ -> Prop) :
-  Relation.IsSymm P ->
-  (CauchySeq.Eventually₂ fun i j => i ≤ j -> P i j) ->
-  (CauchySeq.Eventually₂ fun i j => P i j) := by
-  intro symm ⟨k, hk⟩
-  exists k; intro i j hi hj
-  rcases le_total i j with h | h
-  apply hk; assumption; assumption; assumption
-  apply symm.symm
-  apply hk; assumption; assumption; assumption
-
 private def nat_le_two_pow (n: ℕ) : n ≤ 2 ^ n := by
   induction n with
   | zero => decide

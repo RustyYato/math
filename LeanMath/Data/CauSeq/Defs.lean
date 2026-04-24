@@ -65,6 +65,17 @@ def Eventually₂.merge
   apply le_trans _ hi
   apply right_le_max
 
+def Eventually₂_of_le (P: ℕ -> ℕ -> Prop) :
+  Relation.IsSymm P ->
+  (CauchySeq.Eventually₂ fun i j => i ≤ j -> P i j) ->
+  (CauchySeq.Eventually₂ fun i j => P i j) := by
+  intro symm ⟨k, hk⟩
+  exists k; intro i j hi hj
+  rcases le_total i j with h | h
+  apply hk; assumption; assumption; assumption
+  apply symm.symm
+  apply hk; assumption; assumption; assumption
+
 end CauchySeq
 
 section
