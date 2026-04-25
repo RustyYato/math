@@ -6,7 +6,6 @@ def ne_zero_of_pos [LE α] [LT α] [IsPreorder α] [Zero α] (a: α) (ha: 0 < a)
   exact Relation.irrefl ha
 
 variable [SemifieldOps α] [IsDivisionSemiring α] [LE α] [LT α] [IsOrderedSemiring α]
-  -- [IsORCanMo]
 
 macro_rules
 | `(tactic|invert_tactic_trivial) => `(tactic|apply ne_zero_of_pos; assumption)
@@ -103,6 +102,27 @@ def mul_lt_mul₀_of_le_of_lt {a b c d: α} : 0 ≤ b -> 0 < c -> a ≤ c -> b <
   apply mul_lt_mul_of_pos_left
   assumption; assumption
 
+def zero_lt_two [NotChar2 α] : 0 < ((2: ℕ): α) := by
+  apply lt_of_le_of_ne
+  · apply nonneg_natCast
+  · symm; apply natCast_two_ne_zero
+
+def lt_midpoint [IsLeftAddCancel α] [NotChar2 α] {a b: α} (h: a < b) : a < midpoint a b := by
+  unfold midpoint
+  apply lt_of_mul_lt_mul_of_pos_right
+  apply zero_lt_two
+  rw [div?_mul_cancel]
+  rw [mul_comm, two_mul]
+  apply add_lt_add_left
+  assumption
+def midpoint_lt [IsRightAddCancel α] [NotChar2 α] {a b: α} (h: a < b) : midpoint a b < b := by
+  unfold midpoint
+  apply lt_of_mul_lt_mul_of_pos_right
+  apply zero_lt_two
+  rw [div?_mul_cancel]
+  rw [mul_comm, two_mul]
+  apply add_lt_add_right
+  assumption
 
 local macro_rules
 | `(tactic|invert_tactic_trivial) => `(tactic|apply natCast_ne_zero)

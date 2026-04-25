@@ -25,7 +25,7 @@ section IsStrictOrderedSemiring
 variable [LE α] [LT α] [AddMonoidWithOneOps α] [IsAddMonoidWithOne α] [IsOrderedCancelAddCommMonoid α]
   [IsZeroLEOne α] [IsZeroNeOne α]
 
-def nonneg_natCast (n: ℕ) : 0 ≤ (n: α) := by
+def nonneg_natCast [IsOrderedAddCommMonoid α] (n: ℕ) : 0 ≤ (n: α) := by
   induction n with
   | zero => rw [natCast_zero]
   | succ n ih =>

@@ -57,6 +57,40 @@ def lt_mem_of_lt_csSup [LEM] [IsLinearOrder α] (U: Set α) (h: Nonempty U) : �
   assumption
   apply g
 
+def csSup_lub (U: Set α) (h: Nonempty U) (hU: U.BoundedAbove) : U.IsLUB (⨆ U) := by
+  apply And.intro
+  · intro a
+    apply le_csSup
+    assumption
+  · intro a
+    apply csSup_le
+    assumption
+
+def csInf_glb (U: Set α) (h: Nonempty U) (hU: U.BoundedBelow) : U.IsGLB (⨅ U) := by
+  apply And.intro
+  · intro a
+    apply csInf_le
+    assumption
+  · intro a
+    apply le_csInf
+    assumption
+
+def csSup_eq (U: Set α) (h: Nonempty U) (a: α) (ha: U.IsLUB a) : (⨆ U) = a := by
+  have := csSup_lub U h ⟨a, ha.left⟩
+  apply le_antisymm
+  apply this.right
+  exact ha.left
+  apply ha.right
+  exact this.left
+
+def csInf_eq (U: Set α) (h: Nonempty U) (a: α) (ha: U.IsGLB a) : (⨅ U) = a := by
+  have := csInf_glb U h ⟨a, ha.left⟩
+  apply le_antisymm
+  apply ha.right
+  exact this.left
+  apply this.right
+  exact ha.left
+
 end
 
 noncomputable instance [LEM] : InfSet ℕ where

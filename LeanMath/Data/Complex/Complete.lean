@@ -160,7 +160,7 @@ private def complete' (c: CauchySeq.Completion ℂ ℝ) : existsUnique fun r: �
   refine ⟨r, hr, ?_⟩
   intro s hs; rw [hs] at hr; clear hs
   rw [←CauchySeq.apply_constHom, ←CauchySeq.apply_constHom] at hr
-  exact (inj (CauchySeq.constHom (α := ℂ) (γ := ℝ)) hr).symm
+  exact (inj (RingEmbedding.ofFieldHom CauchySeq.constHom) hr).symm
 
 noncomputable section
 
@@ -169,7 +169,7 @@ private def lim' (c: CauchySeq.Completion ℂ ℝ) : ℂ := Classical.choose_uni
 private def lim'_const (r: ℂ) : lim' (CauchySeq.Completion.const r) = r := by
   have := Classical.choose_unique_spec (complete' (CauchySeq.Completion.const r))
   rw [←CauchySeq.apply_constHom, ←CauchySeq.apply_constHom] at this
-  exact (inj (CauchySeq.constHom (α := ℂ) (γ := ℝ)) this).symm
+  exact (inj (RingEmbedding.ofFieldHom CauchySeq.constHom) this).symm
 
 @[irreducible]
 def lim : CauchySeq.Completion ℂ ℝ ≃+* ℂ := RingEquiv.symm {

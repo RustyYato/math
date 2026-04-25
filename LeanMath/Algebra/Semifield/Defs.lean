@@ -1,5 +1,27 @@
 import LeanMath.Algebra.Semiring.Defs
 import LeanMath.Algebra.GroupWithZero.Defs
+import LeanMath.Algebra.Semiring.Char
+
+class inductive NotChar2 (α: Type*) [AddMonoidOps α] [IsAddMonoid α] where
+| intro (n: ℕ) : HasChar α n -> ¬n ∣ 2 -> NotChar2 α
+
+instance [AddMonoidOps α] [IsAddMonoid α] [HasChar α 0] : NotChar2 α :=
+  .intro 0 inferInstance (by decide)
+instance [AddMonoidOps α] [IsAddMonoid α] [HasChar α (n + 3)] : NotChar2 α :=
+  .intro (n + 3) inferInstance <| by
+    intro h
+    have := Nat.le_of_dvd (by decide) h
+    have := Nat.le_of_succ_le_succ (Nat.le_of_succ_le_succ this)
+    contradiction
+
+def natCast_two_ne_zero [SemiringOps α] [IsSemiring α] [ha: NotChar2 α] : ((2: ℕ): α) ≠ 0 := by
+  intro h
+  obtain ⟨_, _, _⟩ := ha
+  have dvd := HasChar.dvd_of_natCast_eq_zero _ h
+  contradiction
+
+macro_rules
+| `(tactic|invert_tactic_trivial) => `(tactic|apply natCast_two_ne_zero)
 
 class SemifieldOps (α: Type*) extends GroupWithZeroOps α, SemiringOps α where
 
@@ -41,6 +63,11 @@ def add_div? (a b k: α) (hk: k ≠ 0) : (a + b) /? k = a /? k + b /? k := by
 def npow_div? (a b: α) [IsCommAt a b] (hb: b ≠ 0) (n: ℕ) : (a /? b) ^ n = a ^ n /? (b ^ n) := by
   apply (eq_div_iff_mul_eq _ _ _ _).mpr
   rw [←mul_npow, div?_mul_cancel]
+
+def midpoint [NotChar2 α] (a b: α) : α := (a + b) /? (2: ℕ)
+
+def midpoint_comm [NotChar2 α] (a b: α) : midpoint a b = midpoint b a := by
+  unfold midpoint; rw [add_comm]
 
 end
 

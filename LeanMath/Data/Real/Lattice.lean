@@ -879,4 +879,75 @@ def bit_sum_spec (r: ℝ) : r ∈ Set.Icc 0 1 ↔ r ∈ Set.range bit_sum := by
 --   apply CauchySeq.exact
 --   symm; apply castCauchy_eq r.ofSeq
 
+variable (F: Type*) [FieldOps F] [RatCast F] [LT F] [LE F]
+  [IsChar0Field F] [IsOrderedSemiring F] [IsZeroLEOne F] [IsLinearOrder F] [IsArchimedean F]
+
+private def embSet (f: F) : Set ℝ := { Mem r := ∃q: ℚ, q < f ∧ r ≤ q }
+
+def csSup_Iio (a: ℝ) : (⨆ Set.Iio a) = a := by
+  apply csSup_eq
+  · exists a - 1
+    show a - 1 < a
+    rw (occs := [1]) [←neg_lt_neg_iff, neg_sub,
+      sub_eq_add_neg, ←zero_add (-a)]
+    apply add_lt_add_right
+    exact zero_lt_one _
+  apply And.intro
+  · intro x hx
+    apply le_of_lt
+    assumption
+  · intro x hx
+    replace hx : ∀y, y < a -> y ≤ x := hx
+    rw [←not_lt]; intro h
+    have := hx (midpoint x a) (midpoint_lt h)
+    have := not_le_of_lt (lt_midpoint h)
+    contradiction
+
+def embSet_ratCast (q: ℚ) : embSet F q = Set.Iio (q: ℝ) := by
+  ext r
+  simp [embSet, Set.Iio]
+  apply Iff.intro
+  intro ⟨q, h, g⟩
+  rw [ratCast_lt_ratCast,
+    ←ratCast_lt_ratCast (α := ℝ)] at h
+  exact lt_of_le_of_lt g h
+  intro h
+  have ⟨q, hq, g⟩ := exists_rat_between.mp h
+  exists q
+  apply And.intro
+  rwa [ratCast_lt_ratCast,
+    ←ratCast_lt_ratCast (α := ℝ)]
+  apply le_of_lt
+  assumption
+
+noncomputable def ofArchimedianOrderedField : F →+* ℝ where
+  toFun f := (⨆ embSet F f)
+  map_zero := by
+    rw [show embSet F 0 = Set.Iio 0 from ?_, csSup_Iio]
+    rw [←ratCast_zero, embSet_ratCast, ratCast_zero]
+  map_one := by
+    rw [show embSet F 1 = Set.Iio 1 from ?_, csSup_Iio]
+    rw [←ratCast_one, embSet_ratCast, ratCast_one]
+  map_add a b := by
+    apply le_antisymm
+    · apply csSup_le
+      have ⟨q, hq⟩ := archimedean_iff_rat_lt.mp inferInstance (-(a + b))
+      rw [←neg_lt_neg_iff, neg_neg] at hq
+      exists -q
+      exists -q; apply And.intro
+      rw [←apply_ratCastHom, map_neg]
+      assumption
+      rfl
+      intro x hx
+      obtain ⟨q, q_le_add, x_le_q⟩ := hx
+      obtain ⟨q₀, q₁, hq⟩ : ∃q₀ q₁: ℚ, q = q₀ + q₁ ∧ q₀ < a ∧ q₁ < b := by
+        rcases em (q < a) with h₀ | h₀
+        ·
+          sorry
+        · sorry
+      sorry
+    · sorry
+  map_mul a b := by
+    sorry
+
 end Real
