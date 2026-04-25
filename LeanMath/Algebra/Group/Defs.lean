@@ -405,6 +405,9 @@ def div_mul (a b c: α) : a / (b * c) = a / c / b := by
   rw [div_eq_mul_inv, div_eq_mul_inv, div_eq_mul_inv,
     inv_mul_rev, mul_assoc]
 
+def div_mul_cancel (a b: α) : a / b * b = a := by
+  rw [div_eq_mul_inv, mul_assoc, inv_mul_cancel, mul_one]
+
 def mul_div_comm (a b c: α) [IsCommAt b c] : a * c / b = a / b * c := by
   rw [div_eq_mul_inv, div_eq_mul_inv,
     mul_assoc, mul_assoc, mul_comm _ c]
@@ -592,6 +595,9 @@ def sub_add_assoc (a b c: α) : (a - b) + c = a + (-b + c) :=
 
 def sub_add (a b c: α) : a - (b + c) = a - c - b :=
     div_mul (α := MulOfAdd α) _ _ _
+
+def sub_add_cancel (a b: α) : a - b + b = a :=
+  div_mul_cancel (α := MulOfAdd α) _ _
 
 def add_sub_comm (a b c: α) [IsAddCommAt b c] : a + c - b = a - b + c :=
   mul_div_comm (α := MulOfAdd α) (MulOfAdd.mkHomₙ a) (MulOfAdd.mkHomₙ b) (MulOfAdd.mkHomₙ c)

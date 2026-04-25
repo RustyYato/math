@@ -939,10 +939,14 @@ noncomputable def ofArchimedianOrderedField : F →+* ℝ where
       assumption
       rfl
       intro x hx
-      obtain ⟨q, q_le_add, x_le_q⟩ := hx
+      obtain ⟨q, q_lt_add, x_le_q⟩ := hx
       obtain ⟨q₀, q₁, hq⟩ : ∃q₀ q₁: ℚ, q = q₀ + q₁ ∧ q₀ < a ∧ q₁ < b := by
         rcases em (q < a) with h₀ | h₀
-        ·
+        · rw [lt_add_iff_sub_lt] at q_lt_add
+          have ⟨q₀, h₀, h₁⟩ := exists_rat_between.mp q_lt_add
+          exists q₀
+          exists q - q₀
+          rw [add_comm, sub_add_cancel]
           sorry
         · sorry
       sorry
