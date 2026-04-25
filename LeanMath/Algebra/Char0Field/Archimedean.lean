@@ -51,7 +51,6 @@ def exists_rat_between {a b: F} : a < b ↔ ∃q: ℚ, a < q ∧ q < b := by
     rw [mul_comm]
     unfold n; rw [intCast_add, intCast_one]
     apply lt_floor_succ
-    apply le_refl
   · rw [ratCast_mk]; dsimp
     apply lt_of_le_of_lt _ a_add_ninv_lt_b
     unfold n

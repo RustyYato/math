@@ -72,22 +72,20 @@ def ceil_min (r: F) : ∀x: ℤ, r ≤ x -> ceil r ≤ x := by
 
 variable [IsLinearOrder F]
 
-def lt_floor_succ (a r: F) : a ≤ r -> a < floor r + 1 := by
-  intro h
+def lt_floor_succ (r: F) : r < floor r + 1 := by
   rw [←intCast_one, ←intCast_add, ←not_le]
   intro g
   have : floor r + 1 ≤ floor r := le_csSup (s := floorSet r) (a := floor r + 1) floorSet_bounded ?_
   rw [←not_lt] at this; apply this
   exact Int.lt_succ (floor r)
-  exact le_trans g h
+  assumption
 
-def ceil_pred_lt (a r: F) : r ≤ a -> ceil r - 1 < a := by
-  intro h
+def ceil_pred_lt (r: F) : ceil r - 1 < r := by
   rw [←intCast_one, ←intCast_sub, ←not_le]
   intro g
   have : ceil r ≤ ceil r - 1 := by
     apply csInf_le
     apply ceilSet_bounded
-    exact le_trans h g
+    assumption
   rw [←not_lt] at this; apply this
   refine Int.sub_one_lt_of_le ?_; rfl
