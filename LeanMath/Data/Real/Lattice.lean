@@ -122,7 +122,7 @@ def nonneg_of_forall_gt (r: ℝ) : (∀ε: ℚ, 0 < ε -> -ε ≤ r) -> 0 ≤ r 
   have := h (-q) (by
     rw [←neg_zero, neg_lt_neg_iff]
     rwa [←ratCast_zero, ratCast_lt_ratCast] at q_lt_zero)
-  rw [←apply_ratCastHom, map_neg, neg_neg, apply_ratCastHom] at this
+  rw [ratCast_neg, neg_neg] at this
   exact not_le_of_lt r_lt_q this
 
 def eventually_two_pow_inv_lt_rat (q: ℚ) (hq: 0 < q) : CauchySeq.Eventually fun i: ℕ => ((2: ℕ) ^ i: ℚ)⁻¹? < q := by
@@ -329,8 +329,7 @@ private def lub_of_ub (U: Set ℝ) (h: U.Nonempty) (hU: U.BoundedAbove) : exists
       dsimp at diff_ge_ε
       rw [abs_eq_max] at diff_ge_ε
       have := le_trans left_le_max (le_of_lt diff_ge_ε)
-      rwa [←neg_le_neg_iff,
-        ←apply_ratCastHom, ←map_neg, apply_ratCastHom,
+      rwa [←neg_le_neg_iff, ←ratCast_neg,
         neg_sub, neg_div?_left] at this
     have lt : (a i - ((1: ℚ) /? (2: ℕ) ^ i): ℚ) < u := by
       rw [←not_le]
@@ -338,18 +337,16 @@ private def lub_of_ub (U: Set ℝ) (h: U.Nonempty) (hU: U.BoundedAbove) : exists
       assumption
     rw [←add_zero u, ←neg_add_cancel (a i: ℝ),
       ←add_assoc, ←sub_eq_add_neg, add_sub_assoc]
-    rw [←apply_ratCastHom, map_sub, apply_ratCastHom, apply_ratCastHom,
-      sub_lt_iff_lt_add, add_comm, ←sub_lt_iff_lt_add,
+    rw [ratCast_sub, sub_lt_iff_lt_add, add_comm, ←sub_lt_iff_lt_add,
       ←neg_lt_neg_iff, neg_sub, one_div?] at lt
     rw [←ratCast_lt_ratCast (α := ℝ), ←neg_lt_neg_iff] at inv_lt_ε
     replace lt := lt_trans inv_lt_ε lt; clear inv_lt_ε
     apply flip le_trans; apply add_le_add
     exact le_of_lt lt
     exact diff_ge_ε
-    rw [←apply_ratCastHom, ←apply_ratCastHom, ←apply_ratCastHom,
-      ←map_neg, ←map_neg, neg_div?_left,
-      map_div?]
-    simp only [map_natCast, half_add_half]
+    rw [←ratCast_neg, ←ratCast_neg, neg_div?_left,
+      ratCast_div?]
+    simp only [ratCast_natCast, half_add_half]
     rfl
 
 noncomputable instance : SupSet ℝ where
@@ -935,7 +932,7 @@ noncomputable def ofArchimedianOrderedField : F →+* ℝ where
       rw [←neg_lt_neg_iff, neg_neg] at hq
       exists -q
       exists -q; apply And.intro
-      rw [←apply_ratCastHom, map_neg]
+      rw [ratCast_neg]
       assumption
       rfl
       intro x hx
@@ -947,6 +944,10 @@ noncomputable def ofArchimedianOrderedField : F →+* ℝ where
           exists q₀
           exists q - q₀
           rw [add_comm, sub_add_cancel]
+          apply And.intro rfl
+          apply And.intro
+          assumption
+          rw [ratCast_sub]
           sorry
         · sorry
       sorry

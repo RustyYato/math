@@ -54,15 +54,17 @@ instance : IsChar0Field ℚ where
     simp [←Rational.mk_intCast, ←Rational.mk_natCast, Rational.mk_mul]
     apply Rational.sound; show _ = _; simp
 
-def ratCast_zero [FieldOps α] [RatCast α] [IsChar0Field α] : Rational.cast 0 = (0: α) := by
+variable [FieldOps α] [RatCast α] [IsChar0Field α]
+
+def ratCast_zero : Rational.cast 0 = (0: α) := by
   rw [ratCast_def]
   simp [defaultRatCast, Rational.mk_zero]
   rw [intCast_zero, div?_eq_mul_inv?, zero_mul]
-def ratCast_one [FieldOps α] [RatCast α] [IsChar0Field α] : Rational.cast 1 = (1: α) := by
+def ratCast_one : Rational.cast 1 = (1: α) := by
   rw [ratCast_def]
   simp [defaultRatCast, Rational.mk_one]
   symm; rw [intCast_one, eq_div_iff_mul_eq, natCast_one, one_mul]
-def ratCast_add [FieldOps α] [RatCast α] [IsChar0Field α] (a b: ℚ) : Rational.cast (a + b) = (a + b: α) := by
+def ratCast_add (a b: ℚ) : Rational.cast (a + b) = (a + b: α) := by
   induction a with | mk a =>
   induction b with | mk b =>
   simp [ratCast_def, defaultRatCast]
@@ -70,7 +72,7 @@ def ratCast_add [FieldOps α] [RatCast α] [IsChar0Field α] (a b: ℚ) : Ration
   congr
   simp [intCast_add, intCast_mul, intCast_ofNat]
   rw [natCast_mul]
-def ratCast_mul [FieldOps α] [RatCast α] [IsChar0Field α] (a b: ℚ) : Rational.cast (a * b) = (a * b: α) := by
+def ratCast_mul (a b: ℚ) : Rational.cast (a * b) = (a * b: α) := by
   induction a with | mk a =>
   induction b with | mk b =>
   simp [ratCast_def, defaultRatCast]
@@ -79,16 +81,41 @@ def ratCast_mul [FieldOps α] [RatCast α] [IsChar0Field α] (a b: ℚ) : Ration
   simp [intCast_mul]
   rw [natCast_mul]
 
-def ratCastHom [FieldOps α] [RatCast α] [IsChar0Field α] : ℚ →+* α where
+def ratCastHom : ℚ →+* α where
   toFun := Rational.cast
   map_zero := ratCast_zero
   map_one := ratCast_one
   map_add := ratCast_add
   map_mul := ratCast_mul
 
-@[simp] def apply_ratCastHom [FieldOps α] [RatCast α] [IsChar0Field α] (q: ℚ) : ratCastHom q = (q: α) := rfl
+@[simp] def apply_ratCastHom (q: ℚ) : ratCastHom q = (q: α) := rfl
 
-def ratCast_intCast [FieldOps α] [RatCast α] [IsChar0Field α] (a: ℤ) : Rational.cast (Int.cast a) = (Int.cast a: α) := by
+def ratCast_intCast (a: ℤ) : Rational.cast (Int.cast a) = (Int.cast a: α) := by
   show ratCastHom _ = _; rw [map_intCast]
-def ratCast_natCast [FieldOps α] [RatCast α] [IsChar0Field α] (a: ℕ) : Rational.cast (Nat.cast a) = (Nat.cast a: α) := by
+def ratCast_natCast (a: ℕ) : Rational.cast (Nat.cast a) = (Nat.cast a: α) := by
   show ratCastHom _ = _; rw [map_natCast]
+
+def ratCast_ne_zero (q: ℚ) : q ≠ 0 -> (q: α) ≠ 0 := by
+  intro h g
+  rw [←ratCast_zero] at g
+  exact h (inj (ratCastHom (α := α)) g)
+
+macro_rules
+| `(tactic|invert_tactic_trivial_low_priority) => `(tactic|apply ratCast_ne_zero <;> invert_tactic)
+
+def ratCast_neg (q: ℚ) : (-q: ℚ) = (-q: α) := by
+  rw [←apply_ratCastHom, map_neg]; rfl
+def ratCast_sub (a b: ℚ) : (a - b: ℚ) = (a - b: α) := by
+  rw [←apply_ratCastHom, map_sub]; rfl
+def ratCast_inv? (a: ℚ) (h: a ≠ 0) : (a⁻¹?: ℚ) = (a⁻¹?: α) := by
+  rw [←apply_ratCastHom, map_inv?]; rfl
+def ratCast_div? (a b: ℚ) (h: b ≠ 0) : (a /? b: ℚ) = (a /? b: α) := by
+  rw [←apply_ratCastHom, map_div?]; rfl
+def ratCast_npow (a: ℚ) (n: ℕ) : (a ^ n: ℚ) = (a ^ n: α) := by
+  rw [←apply_ratCastHom, map_npow]; rfl
+def ratCast_zpow (a: ℚ) (n: ℤ) (h: 0 ≤ n ∨ a ≠ 0) : (a ^? n: ℚ) = (a ^? n: α) := by
+  rw [←apply_ratCastHom, map_zpow?]; rfl
+def ratCast_nsmul (a: ℚ) (n: ℕ) : (n • a: ℚ) = (n • a: α) := by
+  rw [←apply_ratCastHom, map_nsmul]; rfl
+def ratCast_zsmul (a: ℚ) (n: ℤ) : (n • a: ℚ) = (n • a: α) := by
+  rw [←apply_ratCastHom, map_zsmul]; rfl

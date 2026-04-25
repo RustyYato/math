@@ -15,8 +15,7 @@ def of_norm_lt_all_pos_rat (a: ℝ) : (∀ε: ℚ, 0 < ε -> ‖a‖ < ε) -> a 
     have := ha (-q) (by
       rwa [←neg_zero, neg_lt_neg_iff, ←ratCast_lt_ratCast (α := ℝ),
         ratCast_zero])
-    rw [←neg_norm, abs_eq_of_nonneg,
-      ←apply_ratCastHom, map_neg, apply_ratCastHom,
+    rw [←neg_norm, abs_eq_of_nonneg, ratCast_neg,
       neg_lt_neg_iff] at this
     nomatch Relation.asymm a_lt_q this
     rw [←neg_zero, neg_le_neg_iff]; apply le_of_lt
