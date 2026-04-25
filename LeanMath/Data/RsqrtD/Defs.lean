@@ -7,6 +7,7 @@ import LeanMath.Algebra.Algebra.Defs
 structure RsqrtD {R: Type*} (α: Type*) (r: R) where
   real: α
   imag: α
+deriving DecidableEq
 
 namespace RsqrtD
 
