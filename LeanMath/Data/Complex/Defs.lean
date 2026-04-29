@@ -136,7 +136,7 @@ instance : IsLawfulNorm ℂ ℝ where
   norm_eq_zero := by
     intro c
     apply flip Iff.intro
-    intro rfl; simp [norm_def, zero_npow, add_zero]
+    intro rfl; simp [norm_def, add_zero]
     intro h
     have := Real.sqrt_strictMono.inj
     replace := fun x y h => @this x y h
@@ -155,7 +155,7 @@ instance : IsLawfulNorm ℂ ℝ where
       apply nonneg_sq
       apply nonneg_sq
 
-instance : IsLawfulMulNorm ℂ ℝ where
+instance : IsNormMul ℂ ℝ where
   norm_mul a b := by
     simp [norm_def, ←Real.sqrt_mul]
     congr 1

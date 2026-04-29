@@ -61,7 +61,7 @@ instance : IsLawfulNorm ComplexRational ℚ where
     rw [h] at this
     contradiction
 
-instance : IsLawfulSubMulNorm ComplexRational ℚ where
+instance : IsNormSubMul ComplexRational ℚ where
   norm_mul_le_mul_norm a b := by
     dsimp [norm_def]
     apply le_trans

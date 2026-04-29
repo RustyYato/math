@@ -338,7 +338,7 @@ def bounded_with (c: CauchySeq α γ) (lb: γ) : ∃B, lb < B ∧ ∀i, ‖c i�
   apply hB
 
 def _root_.is_cauchy_eqv.mul
-  [IsLawfulSubMulNorm α γ]
+  [IsLawfulSemiNorm α γ] [IsNormSubMul α γ]
   (a b c d: CauchySeq α γ)
   (ac: a ≈ c)
   (bd: b ≈ d) :
@@ -546,7 +546,7 @@ instance : Norm (Completion α γ) (Completion γ γ) where
 
 section
 
-variable [IsLawfulSubMulNorm α γ]
+variable [IsNormSubMul α γ]
 
 instance : Mul (CauchySeq α γ) where
   mul a b := {
@@ -884,7 +884,7 @@ def Completion.of_eventually_pointwise (a b: CauchySeq α γ) (h: Eventually fun
 
 end
 
-variable [IsLawfulMulNorm α γ]
+variable [IsNormMul α γ]
 
 instance : IsZeroNeOne (CauchySeq.Completion α γ) where
   zero_ne_one := by
@@ -954,7 +954,7 @@ instance : @Relation.IsIrrefl γ (· < ·) := inferInstance
 instance : @Relation.IsAsymm γ (· < ·) := inferInstance
 
 protected def is_cauchy_eqv.safe_inv
-  [IsLawfulMulNorm α γ] [DecidableEq α] [LEM]
+  [IsNormMul α γ] [DecidableEq α] [LEM]
   {a b: CauchySeq α γ}
   (h: a ≈ b) (ha: ¬a ≈ 0) :
   is_cauchy_eqv (safe_inv a) (safe_inv b) := by
@@ -1430,7 +1430,7 @@ def offset (c: CauchySeq α γ) (n: ℕ) : CauchySeq α γ where
     apply c.is_cauchy
 
 protected def is_cauchy_eqv.inv
-  [IsLawfulMulNorm α γ] [LEM]
+  [IsNormMul α γ] [LEM]
   {a b: CauchySeq α γ}
   (h: a ≈ b) (ha: ¬a ≈ 0) (ha': ∀i, a i ≠ 0) (hb': ∀i, b i ≠ 0) :
   is_cauchy_eqv (fun i => (a i)⁻¹?~(ha' _)) (fun i => (b i)⁻¹?~(hb' _)) := by
@@ -1675,7 +1675,7 @@ variable
   [CauchySeq.VectorSpaceOps α γ] [CauchySeq.VectorSpaceOps β γ]
   [CauchySeq.IsVectorSpace α γ] [CauchySeq.IsVectorSpace β γ]
   [SMul α γ] [IsScalarTower α γ α]
-  [IsLawfulNorm α γ] [IsLawfulMulNorm α γ]
+  [IsLawfulNorm α γ] [IsNormMul α γ]
 
 instance : AlgebraMap α (Completion α γ) where
   toAlgebraMap := {

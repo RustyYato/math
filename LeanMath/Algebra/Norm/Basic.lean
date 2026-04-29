@@ -106,9 +106,9 @@ variable
   [IsZeroLEOne γ]
   [IsZeroNeOne γ]
   [IsOrderedAddCommMonoid γ]
-  [IsLawfulMulNorm α γ]
+  [IsLawfulNorm α γ] [IsNormMul α γ]
 
-instance : IsLawfulSubMulNorm α γ where
+instance : IsNormSubMul α γ where
   norm_mul_le_mul_norm a b := by rw [norm_mul]
 
 @[simp]
