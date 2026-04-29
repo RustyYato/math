@@ -191,18 +191,17 @@ instance [Subsingleton α] : IsComm (FreeGroup α) where
       rw [mul_comm]
     | mul a₀ a₁ ih₀ ih₁ => rw [mul_assoc, ih₁, ←mul_assoc, ih₀, mul_assoc]
 
-private def toFreeGroup_inj : Function.Injective (toFreeGroup (α := α)) := by
+private def toFreeGroup_inj [DecidableEq α] : Function.Injective (toFreeGroup (α := α)) := by
   intro a b h
-  classical
   let f := lift (G := Indicator) (fun x => if x = b then 1 else .flip)
   have : f (toFreeGroup b) = 1 := by rw [lift_toFreeGroup, if_pos rfl]
   have : f (toFreeGroup a) = 1 := by rw [h, this]
   simpa [f] using this
 
-def ι : α ↪ FreeGroup α where
+def ι [DecidableEq α] : α ↪ FreeGroup α where
   toFun := toFreeGroup
   inj := toFreeGroup_inj
 
-def lift_ι (f: α -> G) (x: α) : lift f (ι x) = f x := lift_toFreeGroup f x
+def lift_ι [DecidableEq α] (f: α -> G) (x: α) : lift f (ι x) = f x := lift_toFreeGroup f x
 
 end FreeGroup
