@@ -900,6 +900,27 @@ def csSup_Iio (a: ℝ) : (⨆ Set.Iio a) = a := by
     have := not_le_of_lt (lt_midpoint h)
     contradiction
 
+@[implicit_reducible]
+def embSet_nonempty (f: F) : (embSet F f).Nonempty := by
+  have ⟨q, hq⟩ := archimedean_iff_rat_lt.mp inferInstance (-f)
+  rw [←neg_lt_neg_iff, neg_neg] at hq
+  exists -q
+  exists -q
+  apply And.intro
+  rw [ratCast_neg]
+  assumption
+  rfl
+
+def embSet_bounded (f: F) : (embSet F f).BoundedAbove := by
+  have ⟨q, hq⟩ := archimedean_iff_rat_le.mp inferInstance f
+  exists q
+  intro x hx
+  have ⟨q',q'_lt_f, x_le_q'⟩ := hx
+  have q'_lt_q := ratCast_lt_ratCast.mp (lt_of_lt_of_le q'_lt_f hq)
+  rw [←ratCast_lt_ratCast (α := ℝ)] at q'_lt_q
+  apply le_trans _ (le_of_lt q'_lt_q)
+  assumption
+
 def embSet_ratCast (q: ℚ) : embSet F q = Set.Iio (q: ℝ) := by
   ext r
   simp [embSet, Set.Iio]
@@ -917,42 +938,165 @@ def embSet_ratCast (q: ℚ) : embSet F q = Set.Iio (q: ℝ) := by
   apply le_of_lt
   assumption
 
-noncomputable def ofArchimedianOrderedField : F →+* ℝ where
-  toFun f := (⨆ embSet F f)
-  map_zero := by
-    rw [show embSet F 0 = Set.Iio 0 from ?_, csSup_Iio]
-    rw [←ratCast_zero, embSet_ratCast, ratCast_zero]
-  map_one := by
-    rw [show embSet F 1 = Set.Iio 1 from ?_, csSup_Iio]
-    rw [←ratCast_one, embSet_ratCast, ratCast_one]
-  map_add a b := by
-    apply le_antisymm
-    · apply csSup_le
-      have ⟨q, hq⟩ := archimedean_iff_rat_lt.mp inferInstance (-(a + b))
-      rw [←neg_lt_neg_iff, neg_neg] at hq
-      exists -q
-      exists -q; apply And.intro
-      rw [ratCast_neg]
-      assumption
-      rfl
-      intro x hx
-      obtain ⟨q, q_lt_add, x_le_q⟩ := hx
-      obtain ⟨q₀, q₁, hq⟩ : ∃q₀ q₁: ℚ, q = q₀ + q₁ ∧ q₀ < a ∧ q₁ < b := by
-        rcases em (q < a) with h₀ | h₀
-        · rw [lt_add_iff_sub_lt] at q_lt_add
-          have ⟨q₀, h₀, h₁⟩ := exists_rat_between.mp q_lt_add
-          exists q₀
-          exists q - q₀
-          rw [add_comm, sub_add_cancel]
-          apply And.intro rfl
-          apply And.intro
-          assumption
-          rw [ratCast_sub]
-          sorry
-        · sorry
-      sorry
-    · sorry
-  map_mul a b := by
-    sorry
+-- def csSup_embSet_neg (a: F) : (⨆ embSet F (-a)) = -⨆ embSet F a := by
+--   apply csSup_eq
+--   apply embSet_nonempty
+--   apply And.intro
+--   · intro x hx
+--     obtain ⟨q₀, q₀_lt_neg_a, x_le_q₀⟩ := hx
+--     rw [←neg_le_neg_iff, neg_neg]
+--     apply csSup_le
+--     apply embSet_nonempty
+--     intro y hy
+--     obtain ⟨q₁, q₁_lt_neg_a, y_le_q₁⟩ := hy
+--     apply le_trans y_le_q₁
+--     rw [←neg_le_neg_iff, neg_neg]
+--     apply le_trans x_le_q₀
+--     rw [←ratCast_neg, ratCast_le_ratCast, ←ratCast_le_ratCast (α := F)]
+--     apply le_trans (le_of_lt q₀_lt_neg_a)
+--     rw [ratCast_neg, neg_le_neg_iff]
+--     apply le_of_lt
+--     assumption
+--   · intro x hx
+--     rw [←neg_le_neg_iff, neg_neg]
+--     apply le_csSup
+--     apply embSet_bounded
+--     have ⟨q, hq⟩ := archimedean_iff_rat_lt.mp inferInstance (-a)
+--     rw [←neg_lt_neg_iff, neg_neg] at hq
+--     have := hx q ⟨q, by
+--       rw [←neg_lt_neg_iff, neg_neg]
+--       sorry, by
+--       rfl⟩
+--     refine ⟨?_, ?_, ?_⟩
+--     · sorry
+--     · sorry
+--     · sorry
+
+-- noncomputable def ofArchimedianOrderedField : F →+* ℝ where
+--   toFun f := (⨆ embSet F f)
+--   map_zero := by
+--     rw [show embSet F 0 = Set.Iio 0 from ?_, csSup_Iio]
+--     rw [←ratCast_zero, embSet_ratCast, ratCast_zero]
+--   map_one := by
+--     rw [show embSet F 1 = Set.Iio 1 from ?_, csSup_Iio]
+--     rw [←ratCast_one, embSet_ratCast, ratCast_one]
+--   map_add a b := by
+--     apply csSup_eq
+--     apply embSet_nonempty
+--     refine ⟨?_, ?_⟩
+--     · intro x hx
+--       obtain ⟨q, q_lt_add, x_le_q⟩ := hx
+--       obtain ⟨q₀, q₁, rfl, hq₀, hq₁⟩ : ∃q₀ q₁: ℚ, q = q₀ + q₁ ∧ q₀ < a ∧ q₁ < b := by
+--         rw [lt_add_iff_sub_lt] at q_lt_add
+--         have ⟨q₀, h₀, h₁⟩ := exists_rat_between.mp q_lt_add
+--         exists q₀
+--         exists q - q₀
+--         rw [add_comm, sub_add_cancel]
+--         apply And.intro rfl
+--         apply And.intro
+--         assumption
+--         rwa [ratCast_sub, sub_lt_iff_lt_add, add_comm,
+--           lt_add_iff_sub_lt]
+--       replace x_le_q := Or.symm (lt_or_eq_of_le x_le_q)
+--       rcases x_le_q with rfl | x_lt_q
+--       rw [ratCast_add]
+--       · apply add_le_add
+--         · apply le_csSup
+--           apply embSet_bounded
+--           exists q₀
+--         · apply le_csSup
+--           apply embSet_bounded
+--           exists q₁
+--       obtain ⟨x₀, x₁, rfl, hx₀, hx₁⟩ : ∃x₀ x₁: ℝ, x = x₀ + x₁ ∧ x₀ < q₀ ∧ x₁ < q₁ := by
+--         rw [ratCast_add, lt_add_iff_sub_lt] at x_lt_q
+--         have ⟨x₀, h₀, h₁⟩ := exists_rat_between.mp x_lt_q
+--         exists x₀
+--         exists x - x₀
+--         rw [add_comm, sub_add_cancel]
+--         apply And.intro rfl
+--         apply And.intro
+--         assumption
+--         rwa [sub_lt_iff_lt_add, add_comm,
+--           lt_add_iff_sub_lt]
+--       · apply add_le_add
+--         · apply le_trans
+--           apply le_of_lt hx₀
+--           apply le_csSup
+--           apply embSet_bounded
+--           exists q₀
+--         · apply le_trans
+--           apply le_of_lt hx₁
+--           apply le_csSup
+--           apply embSet_bounded
+--           exists q₁
+--     · intro ub hub
+--       rw [←sub_add_cancel ub (⨆ embSet F b)]
+--       apply add_le_add_right
+--       apply csSup_le
+--       apply embSet_nonempty
+--       intro x hx
+--       rw [le_sub_iff_add_le, add_comm,
+--         add_le_iff_le_sub]
+--       apply csSup_le
+--       apply embSet_nonempty
+--       intro y hy
+--       rw [le_sub_iff_add_le, add_comm]
+--       apply hub
+--       obtain ⟨q₀, h₀, g₀⟩ := hx
+--       obtain ⟨q₁, h₁, g₁⟩ := hy
+--       refine ⟨q₀ + q₁, ?_, ?_⟩
+--       rw [ratCast_add]; apply add_lt_add
+--       assumption
+--       assumption
+--       rw [ratCast_add]; apply add_le_add
+--       assumption
+--       assumption
+--   map_mul a b := by
+--     apply csSup_eq
+--     apply embSet_nonempty
+--     apply And.intro
+--     · intro r hr
+--       rcases lt_trichotomy a 0 with ha | rfl | ha
+--       · rcases lt_trichotomy b 0 with hb | rfl | hb
+--         · sorry
+--         · rw [←ratCast_zero, embSet_ratCast, ratCast_zero,
+--             csSup_Iio, mul_zero]
+--           rw [mul_zero, ←ratCast_zero, embSet_ratCast, ratCast_zero] at hr
+--           apply le_of_lt; assumption
+--         · sorry
+--       · rw [←ratCast_zero, embSet_ratCast, ratCast_zero,
+--           csSup_Iio, zero_mul]
+--         rw [zero_mul, ←ratCast_zero, embSet_ratCast, ratCast_zero] at hr
+--         apply le_of_lt; assumption
+--       · rcases lt_trichotomy b 0 with hb | rfl | hb
+--         · sorry
+--         · rw [←ratCast_zero, embSet_ratCast, ratCast_zero,
+--             csSup_Iio, mul_zero]
+--           rw [mul_zero, ←ratCast_zero, embSet_ratCast, ratCast_zero] at hr
+--           apply le_of_lt; assumption
+--         · sorry
+--     · sorry
+--       -- intro ub hub
+--       -- rw [←sub_add_cancel ub (⨆ embSet F b)]
+--       -- apply mul_le_mul_of_nonneg_right
+--       -- apply csSup_le
+--       -- apply embSet_nonempty
+--       -- intro x hx
+--       -- rw [le_sub_iff_add_le, add_comm,
+--       --   add_le_iff_le_sub]
+--       -- apply csSup_le
+--       -- apply embSet_nonempty
+--       -- intro y hy
+--       -- rw [le_sub_iff_add_le, add_comm]
+--       -- apply hub
+--       -- obtain ⟨q₀, h₀, g₀⟩ := hx
+--       -- obtain ⟨q₁, h₁, g₁⟩ := hy
+--       -- refine ⟨q₀ + q₁, ?_, ?_⟩
+--       -- rw [ratCast_add]; apply add_lt_add
+--       -- assumption
+--       -- assumption
+--       -- rw [ratCast_add]; apply add_le_add
+--       -- assumption
+--       -- assumption
 
 end Real
