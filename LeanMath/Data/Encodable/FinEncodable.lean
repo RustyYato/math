@@ -1,6 +1,5 @@
 import LeanMath.Data.Encodable.Defs
-import LeanMath.Data.FinEncodable.Pairing
-import LeanMath.Data.Fintype.Defs
+import LeanMath.Data.FinEncodable.Defs
 
 namespace FinEncodable
 
