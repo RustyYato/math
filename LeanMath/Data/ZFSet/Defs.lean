@@ -753,4 +753,85 @@ def natCast_inj : Function.Injective fun n: ℕ => (n: ZFSet.{u}) := by
   intro h
   exists n
 
+inductive HeredFinite : ZFSet -> Prop where
+| empty : HeredFinite ∅
+| insert {a b: ZFSet} :
+  HeredFinite a -> HeredFinite b ->
+  HeredFinite (insert a b)
+
+def ofNat_hered_finite (n: ℕ) : HeredFinite n := by
+  induction n with
+  | zero => apply HeredFinite.empty
+  | succ n ih =>
+    show HeredFinite (succ n)
+    apply HeredFinite.insert
+    assumption
+    assumption
+
+def Pre.von_neumann_k : ℕ -> Pre
+| 0 => ∅
+| n + 1 => Pre.powerset (Pre.von_neumann_k n)
+
+def von_neumann_k : ℕ -> ZFSet
+| 0 => ∅
+| n + 1 => powerset (von_neumann_k n)
+
+def mk_von_neumann_k (n: ℕ) : ofPre (Pre.von_neumann_k n) = von_neumann_k n := by
+  induction n with
+  | zero => rfl
+  | succ n ih =>
+    show powerset (ofPre (Pre.von_neumann_k n)) = powerset _
+    congr
+
+def von_neumann := sUnion (ZFSet.ofPre <| Pre.intro (ULift ℕ) (Pre.von_neumann_k ∘ ULift.down))
+
+def mem_von_neumann : ∀{x}, x ∈ von_neumann ↔ ∃n, x ∈ von_neumann_k n := by
+  intro x; apply Iff.intro
+  · intro h
+    replace ⟨y, y_in_von, x_in_y⟩ := mem_sUnion.mp h
+    clear h
+    induction x with | _ x =>
+    induction y with | _ y =>
+    obtain ⟨n, hn⟩ := y_in_von
+    dsimp at n
+    exists n.down
+    dsimp at hn
+    rwa [←mk_von_neumann_k, sound hn]
+  · intro ⟨n, hn⟩
+    apply mem_sUnion.mpr
+    refine ⟨von_neumann_k n, ?_, ?_⟩
+    rw [←mk_von_neumann_k]
+    exists ⟨n⟩
+    dsimp; apply Pre.Equiv.refl
+    assumption
+
+def Pre.trans_closure_k (s: Pre) : ℕ -> Pre
+| 0 => s
+| n + 1 => sUnion (trans_closure_k s n)
+
+def trans_closure_k (s: ZFSet) : ℕ -> ZFSet
+| 0 => s
+| n + 1 => sUnion (trans_closure_k s n)
+
+def mk_trans_closure_k (s: Pre) (k: ℕ) :  ofPre (Pre.trans_closure_k s k) = trans_closure_k (ofPre s) k := by
+  induction k with
+  | zero => rfl
+  | succ k ih =>
+    show sUnion (ofPre (s.trans_closure_k k)) = _
+    rw [ih]; rfl
+
+private def trans_closure' : ZFSet -> ZFSet :=
+  lift (fun s => ofPre (Pre.intro (ULift ℕ) (Pre.trans_closure_k s ∘ ULift.down))) <| by
+    intro a b h; dsimp
+    apply sound
+    apply ZFSet.Pre.Equiv.intro
+    · intro i; exists i
+      dsimp; apply exact
+      rw [mk_trans_closure_k, mk_trans_closure_k, sound h]
+    · intro i; exists i
+      dsimp; apply exact
+      rw [mk_trans_closure_k, mk_trans_closure_k, sound h]
+
+def trans_closure (s: ZFSet) : ZFSet := sUnion (trans_closure' s)
+
 end ZFSet
