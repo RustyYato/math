@@ -5,27 +5,7 @@ import LeanMath.Tactic.AxiomBlame
 import LeanMath.Logic.IsEmpty
 import LeanMath.Data.Nat.Find
 import LeanMath.Data.POption.Defs
-
-def Bijection.finsucc_poption (f: Fin n ↭ α) : Fin (n + 1) ↭ POption α where
-  toFun
-  | ⟨0, _⟩ => .none
-  | ⟨n + 1, h⟩ => .some (f ⟨n, Nat.lt_of_succ_lt_succ h⟩)
-  inj' := by
-    intro i j h
-    simp at h
-    cases i using Fin.cases <;> cases j using Fin.cases
-    · rfl
-    · nomatch h
-    · nomatch h
-    · rw [Fin.val_inj.mp <| Fin.mk.inj <| f.inj (POption.some.inj h)]
-  surj' := by
-    intro x; cases x
-    exists 0
-    rename_i x
-    have ⟨i, hi⟩ := f.surj x
-    exists i.succ
-    show POption.some _ = .some _
-    congr
+import LeanMath.Data.FinEncodable.Defs
 
 structure Fintype.Repr (α: Sort u) (n: Nat) where
   bij: Fin n ↭ α
@@ -41,118 +21,59 @@ instance [Fintype α] : Finite α := ⟨inferInstance⟩
 
 namespace Fintype
 
-def card_eq (fa fb: Fintype α) : fa.card = fb.card := by
+@[implicit_reducible]
+def Repr.toFinEncodable (r: Fintype.Repr α n) : FinEncodable α where
+  card := n
+  bij := r.bij
+  try_decode := r.try_decode
+
+private def toTruncFinEncodable (f: Fintype α) : Trunc (FinEncodable α) :=
+  f.repr.map fun r => {
+    card := f.card
+    bij := r.bij
+    try_decode := r.try_decode
+  }
+
+def truncFinEncodable : Fintype α ≃ Trunc (FinEncodable α) where
+  toFun := toTruncFinEncodable
+  invFun x := x.lift (fun x => {
+    card := x.card
+    repr := Trunc.mk {
+      bij := x.bij
+      try_decode := x.try_decode
+    }
+  }) <| by
+    intro a b
+    dsimp
+    suffices h:a.card = b.card by
+      obtain ⟨ ⟩ := a
+      obtain ⟨ ⟩ := b
+      dsimp; subst h
+      congr 1; apply Subsingleton.allEq
+    apply FinEncodable.card_eq
+  leftInv x := by
+    induction x with | _ =>
+    rfl
+  rightInv x := by
+    obtain ⟨c, x⟩ := x
+    induction x with | _ =>
+    rfl
+
+def card_eq_finencodable (α: Sort*) [FinEncodable α] [fa: Fintype α] :
+  Fintype.card α = FinEncodable.card α := by
   obtain ⟨ca, fa⟩ := fa
-  obtain ⟨cb, fb⟩ := fb
   induction fa with | mk fa =>
-  induction fb with | mk fb =>
-  show ca = cb
-  obtain ⟨⟨fa, fainj, fasurj⟩, ha⟩ := fa
-  obtain ⟨⟨fb, fbinj, fbsurj⟩, hb⟩ := fb
-  clear ha hb
-  have eqv : ∀a: α, (∃i, fa i = a) ↔ (∃i, fb i = a) := by
-    intro a
-    apply Iff.intro <;> intro
-    apply fbsurj
-    apply fasurj
-  clear fasurj fbsurj
-  induction ca generalizing cb with
-  | zero =>
-    cases cb with
-    | zero => rfl
-    | succ cb =>
-      have ⟨i, _⟩ := (eqv (fb ⟨0, Nat.zero_lt_succ _⟩)).mpr ⟨_, rfl⟩
-      exact i.elim0
-  | succ ca ih =>
-    have ⟨i, hi⟩ := (eqv (fa ⟨0, Nat.zero_lt_succ _⟩)).mp ⟨_, rfl⟩
-    replace hi := hi.symm
-    cases cb with
-    | zero => exact i.elim0
-    | succ cb =>
-      congr
-      refine ih ?_ ?_ ?_ ?_ ?_ ?_
-      · exact fa ∘ Fin.succ
-      · apply Function.Injective.comp
-        assumption
-        intro _ _
-        apply Fin.succ_inj.mp
-      · refine fun x => fb <| if hx:x.val < i.val then ⟨x.val, ?_⟩ else ⟨x.val + 1, ?_⟩
-        · apply Nat.lt_trans hx
-          exact i.isLt
-        · apply Nat.succ_lt_succ
-          exact x.isLt
-      · apply Function.Injective.comp
-        assumption
-        intro a b h
-        dsimp at h
-        split at h <;> split at h
-        · exact Fin.val_inj.mp (Fin.mk.inj h)
-        · rename_i ha hb
-          replace hb := Nat.le_of_not_lt hb
-          replace h := Fin.mk.inj h
-          rw [h] at ha
-          have := Nat.not_le_of_lt (Nat.lt_of_lt_of_le ha hb) (Nat.le_succ _)
-          contradiction
-        · rename_i ha hb
-          replace ha := Nat.le_of_not_lt ha
-          replace h := Fin.mk.inj h
-          rw [←h] at hb
-          have := Nat.not_le_of_lt (Nat.lt_of_lt_of_le hb ha) (Nat.le_succ _)
-          contradiction
-        · exact Fin.val_inj.mp (Nat.succ.inj (Fin.mk.inj h))
-      · intro a
-        apply Iff.intro
-        · intro ⟨x, hx⟩
-          have ⟨y, hy⟩ := (eqv a).mp ⟨_, hx⟩
-          refine if g:y.val < i.val then ?_ else ?_
-          · exists ⟨y.val, ?_⟩
-            apply Nat.lt_of_lt_of_le
-            assumption
-            apply Nat.le_of_lt_succ
-            exact i.isLt
-            dsimp
-            rwa [if_pos g]
-          · have : i.val < y.val := by
-              apply Nat.lt_of_le_of_ne
-              · apply Nat.le_of_not_lt
-                assumption
-              · intro h
-                cases Fin.val_inj.mp h
-                rw [←hi] at hy
-                rw [←hy] at hx
-                nomatch (Fin.mk.inj (fainj hx))
-            match y with
-            | ⟨y + 1, ylt⟩ =>
-            exists ⟨y, ?_⟩
-            · show y < cb
-              apply Nat.lt_of_succ_lt_succ
-              assumption
-            · dsimp
-              rw [dif_neg]
-              apply Eq.trans _ hy
-              congr
-              apply Nat.not_lt_of_le
-              apply Nat.le_of_lt_succ
-              assumption
-        · intro ⟨x, hx⟩
-          have ⟨y, hy⟩ := (eqv a).mpr ⟨_, hx⟩
-          match y with
-          | ⟨0, _⟩ =>
-            replace hy := hi.symm.trans hy
-            replace hx := fbinj (hx.trans hy.symm)
-            exfalso
-            split at hx
-            rename_i h
-            rw [←hx] at h
-            exact Nat.lt_irrefl _ h
-            rename_i h
-            rw [←hx] at h
-            exact h (Nat.lt_succ_self _)
-          | ⟨y + 1, hy⟩ =>
-            exists ⟨y, ?_⟩
-            apply Nat.lt_of_succ_lt_succ
-            assumption
-            assumption
+  let f : FinEncodable α := {
+    card := ca
+    bij := fa.bij
+    try_decode := fa.try_decode
+  }
+  show f.card = _
+  apply FinEncodable.card_eq
+
+def card_eq (fa fb: Fintype α) : fa.card = fb.card := by
+  induction truncFinEncodable fa with | _ =>
+  rw [card_eq_finencodable, card_eq_finencodable]
 
 instance : Subsingleton (Fintype α) where
   allEq a b := by
@@ -163,106 +84,26 @@ instance : Subsingleton (Fintype α) where
     congr
     apply Subsingleton.allEq
 
-instance : Fintype (Fin n) where
-  card := n
+instance [f: FinEncodable α] : Fintype α where
+  card := FinEncodable.card α
   repr := Trunc.mk {
-    bij := Bijection.id _
-    try_decode := .some <| {
-      val := id
-      property _ := rfl
-    }
+    bij := f.bij
+    try_decode := f.try_decode
   }
+
+instance : Fintype (Fin n) := inferInstance
 
 def card_fin {f: Fintype (Fin n)} : f.card = n := by
   rw [Fintype.card_eq f instFin]
   rfl
 
-private def cases_fin2 (motive: Fin 2 -> Sort u)
-  (zero: motive ⟨0, by decide⟩)
-  (one: motive ⟨1, by decide⟩) (x: Fin 2) : motive x :=
-  match x with
-  | ⟨0, _⟩ => zero
-  | ⟨1, _⟩ => one
-  | ⟨n + 2, g⟩ => by
-    nomatch Nat.lt_of_succ_lt_succ (Nat.lt_of_succ_lt_succ g)
+instance : Fintype Bool := inferInstance
 
-instance : Fintype Bool where
-  card := 2
-  repr := Trunc.mk {
-    bij := {
-      toFun
-      | ⟨0, _⟩ => false
-      | ⟨1, _⟩ => true
-      | ⟨n + 2, h⟩ => by
-        replace h := Nat.lt_of_succ_lt_succ (Nat.lt_of_succ_lt_succ h)
-        contradiction
-      inj' := by
-        intro a b h
-        cases a using cases_fin2 <;>
-        cases b using cases_fin2
-        any_goals rfl
-        all_goals contradiction
-      surj' := by
-        intro b
-        cases b
-        exact ⟨⟨0, by decide⟩, rfl⟩
-        exact ⟨⟨1, by decide⟩, rfl⟩
-    }
-    try_decode := .some {
-      val
-      | false => ⟨0, by decide⟩
-      | true => ⟨1, by decide⟩
-      property := by
-        intro x
-        cases x using cases_fin2
-        rfl
-        rfl
-    }
-  }
+instance (priority := 100) instUnique [Subsingleton α] [Inhabited α] : Fintype α :=
+  inferInstance
 
-instance (priority := 100) instUnique [Subsingleton α] [Inhabited α] : Fintype α where
-  card := 1
-  repr := Trunc.mk {
-    bij := {
-      toFun _ := default
-      inj' := by
-        intro a b h
-        match a with
-        | ⟨_ + 1, h⟩ => nomatch Nat.lt_of_succ_lt_succ h
-        | ⟨0, h⟩ =>
-        match b with
-        | ⟨_ + 1, h⟩ => nomatch Nat.lt_of_succ_lt_succ h
-        | ⟨0, h⟩ =>
-        rfl
-      surj' := by
-        intro
-        exists ⟨0, Nat.zero_lt_succ _⟩
-        apply Subsingleton.allEq
-    }
-    try_decode := .some <| {
-      val _ := ⟨0, by decide⟩
-      property := by
-        intro x
-        match x with
-        | ⟨_ + 1, h⟩ => nomatch Nat.lt_of_succ_lt_succ h
-        | ⟨0, h⟩ =>
-        rfl
-    }
-  }
-
-instance (priority := 100) [IsEmpty α] : Fintype α where
-  card := 0
-  repr := Trunc.mk {
-    bij := {
-      toFun := elim_empty
-      inj' := rec_elim_empty
-      surj' := rec_elim_empty
-    }
-    try_decode := .some <| {
-      val := rec_elim_empty
-      property := rec_elim_empty
-    }
-  }
+instance (priority := 100) [IsEmpty α] : Fintype α :=
+  inferInstance
 
 @[implicit_reducible]
 def ofBij [ft: Fintype α] (f: α ↭ β) : Fintype β where
@@ -274,47 +115,18 @@ def ofBij [ft: Fintype α] (f: α ↭ β) : Fintype β where
     }
 
 @[implicit_reducible]
-def ofEquiv [ft: Fintype α] (f: α ≃ β) : Fintype β where
-  card := card α
-  repr :=
-    ft.repr.map <| fun r => {
-      bij := f.toBij.comp r.bij
-      try_decode :=
-        match r.try_decode with
-        | .none => .none
-        | .some d => .some {
-          val b := d.val (f.symm b)
-          property := by
-            intro x
-            dsimp
-            show d.val (f.symm (f _)) = _
-            rw [f.coe_symm, d.property]
-        }
-    }
+def ofEquiv [ft: Fintype α] (f: α ≃ β) : Fintype β :=
+  ft.repr.recOnSubsingleton fun r =>
+  let := r.toFinEncodable
+  let := FinEncodable.ofEquiv f
+  inferInstance
 
-instance : Fintype Prop :=
-  ofBij (α := Bool) {
-    toFun b := b
-    inj' := by
-      intro a b h
-      cases a <;> cases b
-      rfl; contradiction
-      contradiction; rfl
-    surj' := by
-      intro P
-      by_cases P
-      exists true
-      simpa
-      exists false
-      simpa
-  }
+instance : Fintype Prop := inferInstance
 
-instance [ft: Fintype ι] : Fintype (POption ι) where
-  card := card ι + 1
-  repr := ft.repr.map fun rι => {
-    bij := Bijection.finsucc_poption rι.bij
-    try_decode := .none -- FIXME
-  }
+instance [ft: Fintype ι] : Fintype (POption ι) :=
+  ft.repr.recOnSubsingleton fun r =>
+    let := r.toFinEncodable
+    inferInstance
 
 def fin_foldr_eq_list_foldr
   {ι α: Type*}
@@ -473,59 +285,11 @@ def finBij (ι: Sort*) [Fintype ι] : Trunc (Fin (card ι) ↭ ι) :=
 
 def finEquiv (ι: Sort*) [Fintype ι] [DecidableEq ι] : Trunc (Fin (card ι) ≃ ι) :=
   Fintype.repr.map fun repr =>
-  match repr.try_decode with
-  | .some ⟨invFun, invFun_spec⟩ =>
-    {
-      toFun := repr.bij
-      invFun := invFun
-      rightInv := invFun_spec
-      leftInv := by
-        intro x
-        obtain ⟨i, rfl⟩ := repr.bij.surj x
-        rw [invFun_spec i]
-    }
-  | .none =>
-    let card :=  Fintype.card ι
-    have spec (x: ι) : ∃(n: ℕ) (hn: n < card), x = repr.bij ⟨n, hn⟩ := by
-      have ⟨i, hi⟩ := repr.bij.surj x
-      refine ⟨_, i.isLt, hi.symm⟩
-    {
-      toFun := repr.bij
-      invFun x := {
-        val := Nat.find (spec x)
-        isLt := (Nat.find_spec (spec x)).1
-      }
-      leftInv := by
-        intro x
-        obtain ⟨hn, h⟩ := Nat.find_spec (spec x)
-        exact h.symm
-      rightInv := by
-        intro i
-        apply repr.bij.inj
-        dsimp
-        have ⟨_, h⟩ := Nat.find_spec (spec (repr.bij i))
-        exact h.symm
-    }
+  repr.toFinEncodable.eqv
 
 def finBijOrEquiv (ι: Sort*) [Fintype ι] : Trunc ((Fin (card ι) ↭ ι) ⊕' (Fin (card ι) ≃ ι)) :=
   Fintype.repr.map fun repr =>
-  match repr.try_decode with
-  | .some ⟨invFun, invFun_spec⟩ =>
-    .inr {
-      toFun := repr.bij
-      invFun := invFun
-      rightInv := invFun_spec
-      leftInv := by
-        intro x
-        obtain ⟨i, rfl⟩ := repr.bij.surj x
-        rw [invFun_spec i]
-    }
-  | .none =>
-    let card :=  Fintype.card ι
-    have spec (x: ι) : ∃(n: ℕ) (hn: n < card), x = repr.bij ⟨n, hn⟩ := by
-      have ⟨i, hi⟩ := repr.bij.surj x
-      refine ⟨_, i.isLt, hi.symm⟩
-    .inl repr.bij
+  repr.toFinEncodable.bij_or_eqv
 
 @[simp] def fold_zero (f: Fin 0 -> α -> α) : fold f nofun = id := rfl
 

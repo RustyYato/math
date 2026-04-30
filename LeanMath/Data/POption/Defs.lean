@@ -40,4 +40,6 @@ instance: Monad POption where
   pure := .some
   bind := flip and_then
 
+def map (f: α -> β) := and_then (.some ∘ f)
+
 end POption

@@ -105,4 +105,28 @@ def bij_congr
   {α₀ α₁ β₀ β₁} (ha: α₁ ↭ α₀) (hb: β₀ ↭ β₁)
   : (α₀ ↭ β₀) -> (α₁ ↭ β₁) := fun f => hb.comp (f.comp ha)
 
+def finsucc_poption (f: Fin n ↭ α) : Fin (n + 1) ↭ POption α where
+  toFun
+  | ⟨0, _⟩ => .none
+  | ⟨n + 1, h⟩ => .some (f ⟨n, Nat.lt_of_succ_lt_succ h⟩)
+  inj' := by
+    intro i j h
+    simp at h
+    cases i using Fin.cases <;> cases j using Fin.cases
+    · rfl
+    · nomatch h
+    · nomatch h
+    · rw [Fin.val_inj.mp <| Fin.mk.inj <| f.inj (POption.some.inj h)]
+  surj' := by
+    intro x; cases x
+    exists 0
+    rename_i x
+    have ⟨i, hi⟩ := f.surj x
+    exists i.succ
+    show POption.some _ = .some _
+    congr
+
+@[simp] def apply_finsucc_poption_zero (f: Fin n ↭ α) : finsucc_poption f 0 = .none := rfl
+@[simp] def apply_finsucc_poption_succ (f: Fin n ↭ α) (i: Fin n) : finsucc_poption f i.succ = .some (f i) := rfl
+
 end Bijection

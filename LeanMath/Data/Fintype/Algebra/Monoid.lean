@@ -71,7 +71,7 @@ def prod_reindex (bij: ι ↭ ι') (f: ι' -> α) : ∏i, f i = ∏i, f (bij i) 
 @[simp] def sum_poption (f: POption ι -> α) : (∑i, f i) = f .none + ∑i, f (.some i) := by
   induction Fintype.finBij ι with | mk bij =>
   rw [sum_reindex (Bijection.finsucc_poption bij), sum_reindex bij]
-  simp; rfl
+  simp
 
 @[simp] def prod_poption (f: POption ι -> α) : (∏i, f i) = f .none * ∏i, f (.some i) :=
   sum_poption (α := AddOfMul α) _
