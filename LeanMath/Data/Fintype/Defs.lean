@@ -27,6 +27,11 @@ def Repr.toFinEncodable (r: Fintype.Repr α n) : FinEncodable α where
   bij := r.bij
   try_decode := r.try_decode
 
+@[implicit_reducible]
+def Repr.ofFinEncodable (α: Sort*) [f: FinEncodable α]: Fintype.Repr α f.card where
+  bij := f.bij
+  try_decode := f.try_decode
+
 private def toTruncFinEncodable (f: Fintype α) : Trunc (FinEncodable α) :=
   f.repr.map fun r => {
     card := f.card
