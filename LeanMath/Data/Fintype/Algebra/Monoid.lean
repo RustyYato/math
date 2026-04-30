@@ -62,7 +62,7 @@ def prod_reindex (bij: ι ↭ ι') (f: ι' -> α) : ∏i, f i = ∏i, f (bij i) 
 
 @[simp] def sum_empty [IsEmpty ι] (f: ι -> α) : ∑i, f i = 0 := by
   rename Fintype ι => ft
-  rw [show ft = Fintype.instOfIsEmpty from Subsingleton.allEq _ _]
+  rw [show ft = Fintype.instIsEmpty from Subsingleton.allEq _ _]
   rfl
 
 @[simp] def prod_empty [IsEmpty ι] (f: ι -> α) : ∏i, f i = 1 :=

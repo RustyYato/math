@@ -104,11 +104,23 @@ def card_fin {f: Fintype (Fin n)} : f.card = n := by
 
 instance : Fintype Bool := inferInstance
 
+def card_bool {f: Fintype Bool} : f.card = 2 := by
+  rw [Fintype.card_eq f instBool]
+  rfl
+
 instance (priority := 100) instUnique [Subsingleton α] [Inhabited α] : Fintype α :=
   inferInstance
 
-instance (priority := 100) [IsEmpty α] : Fintype α :=
+def card_unique [Subsingleton α] [Inhabited α] {f: Fintype α} : f.card = 1 := by
+  rw [Fintype.card_eq f instUnique]
+  rfl
+
+instance (priority := 100) instIsEmpty [IsEmpty α] : Fintype α :=
   inferInstance
+
+def card_empty [IsEmpty α] {f: Fintype α} : f.card = 0 := by
+  rw [Fintype.card_eq f instIsEmpty]
+  rfl
 
 @[implicit_reducible]
 def ofBij [ft: Fintype α] (f: α ↭ β) : Fintype β where
@@ -120,18 +132,31 @@ def ofBij [ft: Fintype α] (f: α ↭ β) : Fintype β where
     }
 
 @[implicit_reducible]
-def ofEquiv [ft: Fintype α] (f: α ≃ β) : Fintype β :=
-  ft.repr.recOnSubsingleton fun r =>
-  let := r.toFinEncodable
-  let := FinEncodable.ofEquiv f
-  inferInstance
+def ofEquiv [ft: Fintype α] (f: α ≃ β) : Fintype β where
+  card := card α
+  repr :=
+    ft.repr.map <| fun r =>
+    let := r.toFinEncodable
+    let := @FinEncodable.ofEquiv _ _ r.toFinEncodable f
+    Repr.ofFinEncodable _
 
 instance : Fintype Prop := inferInstance
 
-instance [ft: Fintype ι] : Fintype (POption ι) :=
-  ft.repr.recOnSubsingleton fun r =>
-    let := r.toFinEncodable
-    inferInstance
+def card_prop {f: Fintype Prop} : f.card = 2 := by
+  rw [Fintype.card_eq f instProp]
+  rfl
+
+instance [ft: Fintype ι] : Fintype (POption ι) where
+  card := ft.card + 1
+  repr :=
+    ft.repr.map fun r =>
+      let := @FinEncodable.instPOption ι r.toFinEncodable
+      let x := Repr.ofFinEncodable (POption ι)
+      x
+
+def card_poption {f: Fintype (POption α)} [Fintype α] : f.card = Fintype.card α + 1 := by
+  rw [Fintype.card_eq f instPOption]
+  rfl
 
 def fin_foldr_eq_list_foldr
   {ι α: Type*}
@@ -354,11 +379,23 @@ def all_spec [Fintype ι] (f: ι -> Bool) : all f ↔ ∀i, f i := by
 instance [Fintype α] : Fintype (ULift α) :=
   ofEquiv (Equiv.ulift _)
 
+def card_ulift {f: Fintype (ULift α)} [Fintype α] : f.card = Fintype.card α := by
+  rw [Fintype.card_eq f instULift]
+  rfl
+
 instance [Fintype α] : Fintype (PLift α) :=
   ofEquiv (Equiv.plift _)
 
+def card_plift {f: Fintype (PLift α)} [Fintype α] : f.card = Fintype.card α := by
+  rw [Fintype.card_eq f instPLift]
+  rfl
+
 instance [Fintype α] : Fintype (Option α) :=
   ofEquiv Equiv.poption_eq_option
+
+def card_option {f: Fintype (Option α)} [Fintype α] : f.card = Fintype.card α + 1 := by
+  rw [Fintype.card_eq f instOption]
+  rfl
 
 end Fintype
 

@@ -138,7 +138,7 @@ instance : FinEncodable Prop :=
       simpa
   }
 
-instance [ft: FinEncodable ι] : FinEncodable (POption ι) where
+instance instPOption [ft: FinEncodable ι] : FinEncodable (POption ι) where
   card := card ι + 1
   bij := Bijection.finsucc_poption ft.bij
   try_decode := ft.try_decode.map fun r => {
