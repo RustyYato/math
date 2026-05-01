@@ -136,6 +136,43 @@ def ofBij [ft: Fintype α] (f: α ↭ β) : Fintype β where
     }
 
 @[implicit_reducible]
+def ofList (list: List α) (ha: list.Nodup) (hb: ∀x, x ∈ list) : Fintype α where
+  card := list.length
+  repr := Trunc.mk {
+    try_decode := .none
+    bij := {
+      toFun i := list[i]
+      surj' := by
+        intro x
+        have ⟨i, h, hi⟩ := List.getElem_of_mem (hb x)
+        exists ⟨i, h⟩
+      inj' := by
+        have hx := ha
+        clear ha hb
+        intro ⟨a, ha⟩ ⟨b, hb⟩ h
+        dsimp at h; congr
+        induction list generalizing a b with
+        | nil => contradiction
+        | cons x xs ih =>
+          rcases a with _ | a <;> rcases b with _ | b
+          · rfl
+          · dsimp at h
+            exfalso; apply (List.nodup_cons.mp hx).left
+            rw [h]; apply List.getElem_mem
+          · dsimp at h
+            exfalso; apply (List.nodup_cons.mp hx).left
+            rw [←h]; apply List.getElem_mem
+          · congr; apply ih
+            exact hx.tail
+            assumption
+            apply Nat.lt_of_succ_lt_succ
+            assumption
+            apply Nat.lt_of_succ_lt_succ
+            assumption
+    }
+  }
+
+@[implicit_reducible]
 def ofEquiv [ft: Fintype α] (f: α ≃ β) : Fintype β where
   card := card α
   repr :=

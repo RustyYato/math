@@ -12,6 +12,11 @@ structure Encoding (α: Sort*) [Encodable α] : Type where
   encoding: ℕ
   spec: ∃a: α, Encodable.encode a = encoding
 
+instance [Encodable α] : DecidableEq (Encoding α) :=
+  fun a b => decidable_of_iff (a.encoding = b.encoding) <| by
+    apply Function.Injective.eq_iff; clear a b
+    intro ⟨x, _⟩ ⟨y, _⟩ h; congr
+
 variable {α β: Sort*} [Encodable α]
 
 def Encoding.val (a: Encoding α) : α :=

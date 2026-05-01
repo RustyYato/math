@@ -227,33 +227,28 @@ def eqv (ι: Sort*) [repr: FinEncodable ι] [DecidableEq ι] : Fin (card ι) ≃
         exact h.symm
     }
 
-def card_eq (fa fb: FinEncodable α) : fa.card = fb.card := by
+def card_le (fa: FinEncodable α) (fb: FinEncodable β) (f: α ↪ β) : fa.card ≤ fb.card := by
   obtain ⟨ca, fa, ga⟩ := fa
   obtain ⟨cb, fb, gb⟩ := fb
-  show ca = cb
+  show ca ≤ cb
   clear ga gb
   obtain ⟨fa, fainj, fasurj⟩ := fa
   obtain ⟨fb, fbinj, fbsurj⟩ := fb
-  have eqv : ∀a: α, (∃i, fa i = a) ↔ (∃i, fb i = a) := by
+  have eqv : ∀a: α, (∃i, fa i = a) ↔ (∃i, fb i = f a) := by
     intro a
     apply Iff.intro <;> intro
     apply fbsurj
     apply fasurj
   clear fasurj fbsurj
   induction ca generalizing cb with
-  | zero =>
-    cases cb with
-    | zero => rfl
-    | succ cb =>
-      have ⟨i, _⟩ := (eqv (fb ⟨0, Nat.zero_lt_succ _⟩)).mpr ⟨_, rfl⟩
-      exact i.elim0
+  | zero => apply Nat.zero_le
   | succ ca ih =>
     have ⟨i, hi⟩ := (eqv (fa ⟨0, Nat.zero_lt_succ _⟩)).mp ⟨_, rfl⟩
     replace hi := hi.symm
     cases cb with
     | zero => exact i.elim0
     | succ cb =>
-      congr
+      apply Nat.succ_le_succ
       refine ih ?_ ?_ ?_ ?_ ?_ ?_
       · exact fa ∘ Fin.succ
       · apply Function.Injective.comp
@@ -303,7 +298,7 @@ def card_eq (fa fb: FinEncodable α) : fa.card = fb.card := by
               · intro h
                 cases Fin.val_inj.mp h
                 rw [←hi] at hy
-                rw [←hy] at hx
+                rw [←inj f hy] at hx
                 nomatch (Fin.mk.inj (fainj hx))
             match y with
             | ⟨y + 1, ylt⟩ =>
@@ -318,24 +313,31 @@ def card_eq (fa fb: FinEncodable α) : fa.card = fb.card := by
               apply Nat.not_lt_of_le
               apply Nat.le_of_lt_succ
               assumption
-        · intro ⟨x, hx⟩
+        · intro ⟨x, hx⟩; dsimp
           have ⟨y, hy⟩ := (eqv a).mpr ⟨_, hx⟩
+          rw [←hy] at hx
           match y with
           | ⟨0, _⟩ =>
-            replace hy := hi.symm.trans hy
-            replace hx := fbinj (hx.trans hy.symm)
-            exfalso
+            rw [hi] at hx
+            replace hx := fbinj hx
             split at hx
-            rename_i h
-            rw [←hx] at h
-            exact Nat.lt_irrefl _ h
-            rename_i h
-            rw [←hx] at h
-            exact h (Nat.lt_succ_self _)
+            · rename_i g
+              rw [←hx] at g
+              dsimp at g
+              nomatch Nat.lt_irrefl _ g
+            · rename_i g
+              rw [←hx] at g
+              exfalso; apply g
+              apply Nat.lt_succ_self
           | ⟨y + 1, hy⟩ =>
             exists ⟨y, ?_⟩
             apply Nat.lt_of_succ_lt_succ
             assumption
             assumption
+
+def card_eq (fa fb: FinEncodable α) : fa.card = fb.card := by
+  apply Nat.le_antisymm
+  apply card_le _ _ (Embedding.id _)
+  apply card_le _ _ (Embedding.id _)
 
 end FinEncodable
