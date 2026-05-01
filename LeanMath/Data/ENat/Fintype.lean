@@ -15,6 +15,9 @@ def card_eq_fintype_card (α: Sort u) [LEM] [Fintype α] : ENat.card α = Fintyp
   exists Fintype.card α
   exact ⟨eqv⟩
 
+def card_eq_finencodable_card (α: Sort u) [LEM] [FinEncodable α] : ENat.card α = FinEncodable.card α := by
+  apply card_eq_fintype_card
+
 def card_eq_inf_of_not_finite (α: Sort u) (h: ¬Finite α) [LEM] : ENat.card α = ∞ := by
   unfold card; rw [dif_neg]
   intro ⟨n, ⟨eqv⟩⟩
