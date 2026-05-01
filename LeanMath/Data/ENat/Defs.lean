@@ -176,4 +176,23 @@ def card_spec [LEM] (h: Fin n ≃ α) : ENat.card α = n := by
   apply Equiv.trans spec
   exact h.symm
 
+def card_eq_of_eqv [LEM] : α ≃ β -> ENat.card α = ENat.card β := by
+  intro h
+  unfold card
+  split <;> rename_i g
+  · have : ∃n, Nonempty (Fin n ≃ β) := by
+      obtain ⟨n, ⟨g⟩⟩ := g
+      exists n; refine ⟨?_⟩
+      exact g.trans h
+    rw [dif_pos this]
+    congr 1
+    apply Classical.choose_unique_spec_unique
+    have ⟨eqv⟩ := Classical.choose_unique_spec (card_unique this)
+    exact ⟨eqv.trans h.symm⟩
+  · rw [dif_neg]
+    intro g'; apply g
+    obtain ⟨n, ⟨g⟩⟩ := g'
+    exists n; refine ⟨?_⟩
+    exact g.trans h.symm
+
 end ENat

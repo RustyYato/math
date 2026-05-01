@@ -16,6 +16,10 @@ class Fintype (α: Sort u) : Sort (max u 1) where
   repr: Trunc (Fintype.Repr α card)
 
 abbrev Finite (α: Sort u) : Prop := Nonempty (Fintype α)
+class Infinite (α: Sort u) : Prop where
+  protected notFinite: ¬Finite α
+
+def notFinite (α: Sort*) [Infinite α] : ¬Finite α := Infinite.notFinite
 
 instance [Fintype α] : Finite α := ⟨inferInstance⟩
 
@@ -538,3 +542,28 @@ instance (priority := 900) [Finite ι] {P: ι -> Prop} [ExcludedMiddlePred P] : 
   inferInstance
 
 end Finite
+
+namespace Infinite
+
+@[implicit_reducible]
+def ofBij [Infinite β] (f: α ↭ β) : Infinite α where
+  notFinite := by
+    intro h;
+    apply notFinite β
+    apply Finite.ofBij f
+
+@[implicit_reducible]
+def ofEmbed [Infinite α] [LEM] (f: α ↪ β) : Infinite β where
+  notFinite := by
+    intro h;
+    apply notFinite α
+    apply Finite.ofEmbed (β := PLift β)
+    apply f.trans
+    apply (Equiv.plift _).toEmbedding
+
+instance [Infinite α] : Infinite (ULift α) :=
+  ofBij (Equiv.ulift _).symm.toBij
+instance [Infinite α] : Infinite (PLift α) :=
+  ofBij (Equiv.plift _).symm.toBij
+
+end Infinite

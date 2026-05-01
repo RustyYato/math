@@ -93,3 +93,10 @@ def le_max_of_range (i: ι) (f: ι -> α) : f i ≤ max_of_range f := by
   rw [max_of_range_reindex e]
   obtain ⟨i, rfl⟩ := e.surj i
   apply le_max_of_range_with' _ (f ∘ e)
+
+instance Nat.infinite : Infinite ℕ where
+  notFinite := by
+    intro ⟨f⟩
+    let m := max_of_range (ι := ℕ) id
+    have : m + 1 ≤ m := le_max_of_range (m + 1) id
+    exact Nat.not_lt_of_le this (Nat.lt_succ_self _)
