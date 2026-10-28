@@ -1,0 +1,27 @@
+name = "Math"
+version = "0.1.0"
+defaultTargets = ["math"]
+
+[[lean_lib]]
+name = "Math"
+globs = [
+    "Math.Algebra.+",
+    "Math.Data.+",
+    "Math.Logic.+",
+    "Math.Order.+",
+    "Math.Tactic.+",
+    "Math.Topology.+",
+    "Math.TypeTheory.+",
+    # "Math.CategoryTheory.+",
+    # "Math.Function.+",
+    # "Math.Ops.+",
+    # "Math.Relation.+",
+    # "Math.Type.+",
+    # "Math.Language.+",
+    # "Math.Game.+",
+    # "Math.AxiomBlame",
+]
+
+[[lean_exe]]
+name = "math"
+root = "Main"
