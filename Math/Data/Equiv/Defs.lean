@@ -79,3 +79,5 @@ variable {α β γ: Sort*}
 
 public theorem inj (f: α ≃ β) : Function.Injective f := f.rightInv.injective
 public theorem surj (f: α ≃ β) : Function.Surjective f := f.symm.rightInv.surjective
+
+@[simp] public theorem normalize_toFun (f: α ≃ β) : f.toFun = f := rfl
