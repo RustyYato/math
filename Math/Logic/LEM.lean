@@ -77,20 +77,20 @@ public theorem not_and {P Q: Prop} [ExcludedMiddle P] : ¬(P ∧ Q) ↔ ¬P ∨ 
   · intro h ⟨_, _⟩
     rcases h <;> contradiction
 
-instance (P: Prop) [dec: Decidable P] : ExcludedMiddle P where
+public instance (P: Prop) [dec: Decidable P] : ExcludedMiddle P where
   excluded_middle := dec.em
 
 section
 
 variable (P Q: Prop) [ExcludedMiddle P] [ExcludedMiddle Q]
 
-instance [ExcludedMiddle P] : ExcludedMiddle (¬P) where
+public instance [ExcludedMiddle P] : ExcludedMiddle (¬P) where
   excluded_middle := by
     rcases em P with h | h
     right; intro g; exact g h
     left; assumption
 
-instance : ExcludedMiddle (P ∧ Q) where
+public instance : ExcludedMiddle (P ∧ Q) where
   excluded_middle := by
     rcases em P with p | np
     rcases em Q with q | nq
@@ -98,7 +98,7 @@ instance : ExcludedMiddle (P ∧ Q) where
     iterate 2
     right; intro ⟨_, _⟩; contradiction
 
-instance : ExcludedMiddle (P ∨ Q) where
+public instance : ExcludedMiddle (P ∨ Q) where
   excluded_middle := by
     rcases em P with p | np
     left; left; assumption
@@ -106,7 +106,7 @@ instance : ExcludedMiddle (P ∨ Q) where
     left; right; assumption
     right; intro h; cases h <;> contradiction
 
-instance {α: Type u} (x: α) [∀b: α, ExcludedMiddle (x = b)] (as: List α) : ExcludedMiddle (x ∈ as) := by
+public instance {α: Type u} (x: α) [∀b: α, ExcludedMiddle (x = b)] (as: List α) : ExcludedMiddle (x ∈ as) := by
   induction as with
   | nil =>
     apply ExcludedMiddle.mk
@@ -120,7 +120,7 @@ instance {α: Type u} (x: α) [∀b: α, ExcludedMiddle (x = b)] (as: List α) :
     · right; intro g
       cases g <;> contradiction
 
-instance (priority := 500) {P: α -> Prop} [ExcludedMiddlePred P] [ExcludedMiddle (∃a, ¬P a)] : ExcludedMiddle (∀a, P a) where
+public instance (priority := 500) {P: α -> Prop} [ExcludedMiddlePred P] [ExcludedMiddle (∃a, ¬P a)] : ExcludedMiddle (∀a, P a) where
   excluded_middle := by
     rcases em (∃a, ¬P a) with ⟨a, pa⟩ | h
     · right; intro h; exact pa (h _)

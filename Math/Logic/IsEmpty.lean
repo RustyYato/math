@@ -7,42 +7,42 @@ public def rec_elim_empty {motive: α -> Sort _} [IsEmpty α] : ∀x, motive x :
   fun a => nomatch IsEmpty.elim a
 public def elim_empty [IsEmpty α] : α -> β := rec_elim_empty
 
-instance : IsEmpty False where
+public instance : IsEmpty False where
   elim := id
-instance : IsEmpty Empty where
+public instance : IsEmpty Empty where
   elim := nofun
-instance : IsEmpty PEmpty where
+public instance : IsEmpty PEmpty where
   elim := nofun
-instance [IsEmpty α] : IsEmpty (α ×' β) where
+public instance [IsEmpty α] : IsEmpty (α ×' β) where
   elim x := elim_empty x.1
-instance [IsEmpty β] : IsEmpty (α ×' β) where
+public instance [IsEmpty β] : IsEmpty (α ×' β) where
   elim x := elim_empty x.2
-instance [IsEmpty α] : IsEmpty (α × β) where
+public instance [IsEmpty α] : IsEmpty (α × β) where
   elim x := elim_empty x.1
-instance [IsEmpty β] : IsEmpty (α × β) where
+public instance [IsEmpty β] : IsEmpty (α × β) where
   elim x := elim_empty x.2
-instance [IsEmpty α] [IsEmpty β] : IsEmpty (α ⊕' β) where
+public instance [IsEmpty α] [IsEmpty β] : IsEmpty (α ⊕' β) where
   elim
   | .inl x => elim_empty x
   | .inr x => elim_empty x
-instance [IsEmpty α] [IsEmpty β] : IsEmpty (α ⊕ β) where
+public instance [IsEmpty α] [IsEmpty β] : IsEmpty (α ⊕ β) where
   elim
   | .inl x => elim_empty x
   | .inr x => elim_empty x
-instance {β: α -> Sort _} [Nonempty α] [∀x, IsEmpty (β x)] : IsEmpty (∀x, β x) where
+public instance {β: α -> Sort _} [Nonempty α] [∀x, IsEmpty (β x)] : IsEmpty (∀x, β x) where
   elim f := by
     have ⟨x⟩ : Nonempty α := inferInstance
     exact elim_empty (f x)
-instance [Nonempty α] [IsEmpty β] : IsEmpty (α -> β) := inferInstance
-instance [IsEmpty α] : Subsingleton α where
+public instance [Nonempty α] [IsEmpty β] : IsEmpty (α -> β) := inferInstance
+public instance [IsEmpty α] : Subsingleton α where
   allEq := rec_elim_empty
-instance : IsEmpty (Fin 0) where
+public instance : IsEmpty (Fin 0) where
   elim := Fin.elim0
-instance [IsEmpty α] : IsEmpty (ULift α) where
+public instance [IsEmpty α] : IsEmpty (ULift α) where
   elim x := elim_empty x.down
 
-instance [IsEmpty ι] {α: ι -> Sort u} : Subsingleton (∀i, α i) where
+public instance [IsEmpty ι] {α: ι -> Sort u} : Subsingleton (∀i, α i) where
   allEq f g := by ext i; exact elim_empty i
 
-instance [IsEmpty ι] {α: ι -> Sort u} : Inhabited (∀i, α i) where
+public instance [IsEmpty ι] {α: ι -> Sort u} : Inhabited (∀i, α i) where
   default := rec_elim_empty
