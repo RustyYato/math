@@ -4,7 +4,7 @@ public import Math.Data.Hom.Defs
 public import Math.Data.Embedding.Defs
 public import Math.Data.Equiv.Defs
 public import Math.Logic.UniqueChoice
-import Math.Logic.LEM
+public import Math.Logic.LEM
 import Math.Tactic.Basic
 
 namespace Math
@@ -493,3 +493,47 @@ variable [IsRefl s] [IsSymm s] [IsTrans s]
 end ofEquivGen
 
 end Maps
+
+section Min
+
+variable (r: α -> α -> Prop) [IsWelFounded r] {P: α -> Prop}
+
+public theorem exists_min [LEM] (h: ∃a, P a) : ∃a, P a ∧ ∀b, P b -> ¬r b a := by
+  obtain ⟨a, pa⟩ := h
+  induction a using wf_induction r with
+  | _ a ih =>
+  rcases em (∃b, P b ∧ r b a) with ⟨b, h, pb⟩ | ne
+  exact ih b pb h
+  refine ⟨a, pa, ?_⟩
+  intro b pb h
+  exact ne ⟨b, pb, h⟩
+
+public theorem exists_unique_min [LEM] [IsConnected r (· = ·)] (h: ∃a, P a) : exists_unique (fun a => P a ∧ ∀b, P b -> ¬r b a) := by
+  obtain ⟨a, pa⟩ := h
+  induction a using wf_induction r with
+  | _ a ih =>
+  rcases em (∃b, P b ∧ r b a) with ⟨b, h, pb⟩ | ne
+  exact ih b pb h
+  refine ⟨a, ⟨pa, ?_⟩, ?_⟩
+  intro b pb h
+  exact ne ⟨b, pb, h⟩
+  intro x ⟨px, h⟩
+  have : ¬r x a := (ne ⟨x, px, ·⟩)
+  have : ¬r a x := h a pa
+  rcases connected (R := r) a x with _ | _ | _
+  contradiction; assumption; contradiction
+
+open Classical
+
+public noncomputable def arb_min (h: ∃a, P a) : α := Classical.choose (exists_min r h)
+public theorem arb_min_spec (h: ∃a, P a) : P (arb_min r h) := (Classical.choose_spec (exists_min r h)).left
+public theorem not_lt_arb_min (h: ∃a, P a) : ∀a, P a -> ¬r a (arb_min r h) := (Classical.choose_spec (exists_min r h)).right
+
+variable [IsConnected r (· = ·)]
+
+public noncomputable def min (h: ∃a, P a) : α := Classical.unique_choose (exists_unique_min r h)
+public theorem min_spec (h: ∃a, P a) : P (min r h) := (Classical.unique_choose_spec (exists_unique_min r h)).left
+public theorem not_lt_min (h: ∃a, P a) : ∀a, P a -> ¬r a (min r h) := (Classical.unique_choose_spec (exists_unique_min r h)).right
+public theorem min_unique (h: ∃a, P a) (x: α) (px: P x) (not_lt: ∀a, P a -> ¬r a x) : min r h = x := Classical.unique_choose_unique (exists_unique_min r h) x ⟨px, not_lt⟩
+
+end Min
