@@ -537,3 +537,43 @@ public theorem not_lt_min (h: ∃a, P a) : ∀a, P a -> ¬r a (min r h) := (Clas
 public theorem min_unique (h: ∃a, P a) (x: α) (px: P x) (not_lt: ∀a, P a -> ¬r a x) : min r h = x := Classical.unique_choose_unique (exists_unique_min r h) x ⟨px, not_lt⟩
 
 end Min
+
+section Lift
+
+theorem lift_trans [Funlike F α β] [IsRelHom F r s] [IsTrans s] (f: F) : IsTrans r where
+  htrans h g := map_rel_rev f <| trans (map_rel f h) (map_rel f g)
+
+theorem lift_symm [Funlike F α β] [IsRelHom F r s] [IsSymm s] (f: F) : IsSymm r where
+  symm h := map_rel_rev f <| symm (map_rel f h)
+
+theorem lift_refl [Funlike F α β] [IsRelHom F r s] [IsRefl s] (f: F) : IsRefl r where
+  refl _ := map_rel_rev f (refl _)
+
+theorem lift_wf [Funlike F α β] [IsRelMap F r s] [IsWelFounded s] (f: F) : IsWelFounded r where
+  wf := by
+    apply WellFounded.intro
+    intro a
+    induction h:f a using wf_induction s generalizing a with
+    | _ b ih =>
+    subst b
+    apply Acc.intro
+    intro b h
+    exact ih (f b) (map_rel f h) _ rfl
+
+theorem lift_connected [EmbeddingLike F α β] [IsRelHom F r s] [IsConnected s (· = ·)] (f: F) : IsConnected r (· = ·) where
+  connected a b := by
+    rcases connected (R := s) (f a) (f b) with h | h | h
+    left; apply map_rel_rev f; assumption
+    right; left; apply Embedding.inj (f: α ↪ β) h
+    right; right; apply map_rel_rev f; assumption
+theorem RelEmbedding.liftWellOrder (f: r ↪r s) [IsWellOrder s] : IsWellOrder r := {
+  lift_trans f.toRelHom, lift_wf f.toRelHom, lift_connected f with
+}
+
+theorem lift_total [EmbeddingLike F α β] [IsRelHom F r s] [IsTotal s] (f: F) : IsTotal r where
+  total a b := by
+    rcases total (R := s) (f a) (f b) with h | h
+    · exact .inl <| map_rel_rev f h
+    · exact .inr <| map_rel_rev f h
+
+end Lift
