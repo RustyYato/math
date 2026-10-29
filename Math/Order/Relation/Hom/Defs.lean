@@ -50,7 +50,6 @@ infixr:80 " →r " => RelHom
 infixr:80 " ↪r " => RelEmbedding
 infixr:80 " ≃r " => RelEquiv
 
-
 @[expose] public protected def RelMap.id (r: α -> α -> Prop) : r →r₀ r where
   toFun := id
   map_rel := id
@@ -165,3 +164,157 @@ public theorem surj (f: r ≃r s) : Function.Surjective f := f.symm.rightInv.sur
 end RelEquiv
 
 end Hom
+
+section Property
+
+public class IsRefl (r: α -> α -> Prop) where
+  refl (a: α): r a a
+
+export IsRefl (refl)
+
+public class IsSymm (r: α -> α -> Prop) where
+  symm : r a b -> r b a
+
+export IsSymm (symm)
+
+public class IsTrans (r: α -> α -> Prop) where
+  htrans : r a b -> r b c -> r a c
+
+export IsTrans (htrans)
+
+public instance [IsTrans r] : Trans r r r where
+  trans := htrans
+
+public class IsSetoid (r: α -> α -> Prop) extends IsRefl r, IsSymm r, IsTrans r where
+
+public class IsConnected (R: α -> α -> Prop) (E: outParam <| α -> α -> Prop) where
+  connected (a b: α) : R a b ∨ E a b ∨ R b a
+
+export IsConnected (connected)
+
+public class IsTotal (R: α -> α -> Prop) where
+  total (a b: α) : R a b ∨ R b a
+
+export IsTotal (total)
+
+public class IsIrrefl (R: α -> α -> Prop) where
+  irrefl {a: α} : ¬R a a
+
+export IsIrrefl (irrefl)
+
+public class IsAsymm (R: α -> α -> Prop) where
+  asymm {a b: α} : R a b -> R b a -> False
+
+export IsAsymm (asymm)
+
+public class IsWelFounded (R: α -> α -> Prop) where
+  wf : WellFounded R
+
+export IsWelFounded (wf)
+
+public class IsWellOrder (R: α -> α -> Prop) extends
+  IsTrans R, IsWelFounded R, IsConnected R (· = ·)
+
+public instance (priority := 500) [IsAsymm R] : IsIrrefl R where
+  irrefl h := asymm h h
+public instance (priority := 500) [IsIrrefl R] [IsTrans R] : IsAsymm R where
+  asymm h g := irrefl (trans h g)
+public instance [IsWelFounded R] : IsIrrefl R where
+  irrefl := by
+    intro a h
+    induction a using (wf (R := R)).induction with
+    | _ a ih =>
+    exact ih a h h
+public instance : IsTrans (Relation.TransGen r) where
+  htrans := Relation.TransGen.trans
+public instance [IsWelFounded R] : IsWelFounded (Relation.TransGen R) where
+  wf := WellFounded.transGen wf
+public instance [IsWelFounded R] : IsAsymm R where
+  asymm h g := asymm (Relation.TransGen.single h) (Relation.TransGen.single g)
+
+public instance : IsSetoid (α := α) (· = ·) where
+  refl := Eq.refl
+  symm := Eq.symm
+  htrans := Eq.trans
+
+public instance [s: Setoid α] : IsSetoid s.r where
+  refl := s.refl
+  symm := s.symm
+  htrans := s.trans
+
+public instance [s: Setoid α] : IsSetoid (α := α) (· ≈ ·) where
+  refl := s.refl
+  symm := s.symm
+  htrans := s.trans
+
+public instance (f: α -> β) (s: β -> β -> Prop) [IsRefl s] [IsSymm s] [IsTrans s] : IsSetoid (fun a b: α => s (f a) (f b)) where
+  refl _ := refl _
+  symm := symm
+  htrans := trans
+
+public theorem eqv (r: α -> α -> Prop) [IsRefl r] [IsSymm r] [IsTrans r] : Equivalence r where
+  refl := refl
+  symm := symm
+  trans := trans
+
+public abbrev setoid (r: α -> α -> Prop) [IsRefl r] [IsSymm r] [IsTrans r] : Setoid α where
+  r := _
+  iseqv := eqv r
+
+end Property
+
+section Generator
+
+public inductive Relation.ReflGen (r: α -> α -> Prop) : α -> α -> Prop where
+| refl (a: α) : ReflGen r a a
+| of : r a b -> ReflGen r a b
+
+public instance : IsRefl (Relation.ReflGen r) where
+  refl := .refl
+
+public inductive Relation.SymmGen (r: α -> α -> Prop) : α -> α -> Prop where
+| of : r a b -> SymmGen r a b
+| symm : r a b -> SymmGen r b a
+
+public instance [IsRefl r] : IsRefl (Relation.SymmGen r) where
+  refl h := .of (refl h)
+
+public instance : IsSymm (Relation.SymmGen r) where
+  symm
+  | .of h => .symm h
+  | .symm h => .of h
+
+public inductive Relation.ReflTransGen (r: α -> α -> Prop) : α -> α -> Prop where
+| refl (a: α) : ReflTransGen r a a
+| cons : r a b -> ReflTransGen r b c -> ReflTransGen r a c
+
+instance : IsRefl (Relation.ReflTransGen r) where
+  refl := .refl
+instance : IsTrans (Relation.ReflTransGen r) where
+  htrans := by
+    intro a b c ab bc
+    induction ab with
+    | refl => assumption
+    | cons _ _ ih =>
+      apply Relation.ReflTransGen.cons
+      assumption
+      apply ih
+      assumption
+
+public instance : IsRefl (Relation.ReflGen r) where
+  refl := .refl
+
+public inductive Relation.EquivGen (r: α -> α -> Prop) : α -> α -> Prop where
+| refl (a: α) : EquivGen r a a
+| symm : EquivGen r a b -> EquivGen r b a
+| trans : EquivGen r a b -> EquivGen r b c -> EquivGen r a c
+| of : r a b -> EquivGen r a b
+
+public instance : IsRefl (Relation.EquivGen r) where
+  refl := .refl
+public instance : IsSymm (Relation.EquivGen r) where
+  symm := .symm
+public instance : IsTrans (Relation.EquivGen r) where
+  htrans := .trans
+
+end Generator
