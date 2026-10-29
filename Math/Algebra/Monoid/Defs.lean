@@ -306,6 +306,15 @@ public instance : IsLogHom (GroupLogEquiv α β) α β where
 
 end Impls
 
+section AddMul
+
+public instance [Funlike F α β] [Zero α] [Zero β] [IsZeroHom F α β] : IsOneHom (MulOfAdd F) (MulOfAdd α) (MulOfAdd β) where
+  map_one := map_zero (F := F) (α := α) (β := β)
+public instance [Funlike F α β] [One α] [One β] [IsOneHom F α β] : IsZeroHom (AddOfMul F) (AddOfMul α) (AddOfMul β) where
+  map_zero := map_one (F := F) (α := α) (β := β)
+
+end AddMul
+
 section Theorems.One
 
 variable {α β γ: Type*} [One α] [One β] [One γ]
@@ -640,6 +649,15 @@ end Hom
 
 section Basic
 
+public instance [AddMonoidOps α] [IsLawfulNSMul α] : IsLawfulPowN (MulOfAdd α) where
+  pown_zero := zero_nsmul (α := α)
+  pown_succ := succ_nsmul (α := α)
+public instance [MonoidOps α] [IsLawfulPowN α] : IsLawfulNSMul (AddOfMul α) where
+  zero_nsmul := pown_zero (α := α)
+  succ_nsmul := pown_succ (α := α)
+public instance [MonoidOps α] [IsMonoid α] : IsAddMonoid (AddOfMul α) where
+public instance [AddMonoidOps α] [IsAddMonoid α] : IsMonoid (MulOfAdd α) where
+
 public instance : IsLawfulZeroMul ℕ where
   zero_mul := Nat.zero_mul
   mul_zero := Nat.mul_zero
@@ -660,6 +678,21 @@ public instance : IsLawfulZero ℤ where
   add_zero := Int.add_zero
 public instance : NoZeroDivisors ℕ := inferInstance
 public instance : NoZeroDivisors ℤ := inferInstance
+
+public instance : IsAddMonoid ℕ where
+  zero_nsmul := Nat.zero_mul
+  succ_nsmul n m := Nat.succ_mul m n
+public instance : IsMonoid ℕ where
+  pown_zero _ := rfl
+  pown_succ _ _ := rfl
+public instance : IsAddMonoid ℤ where
+  zero_nsmul := Int.zero_mul
+  succ_nsmul n m := by
+    show (m + 1: ℤ) * n = m * n + n
+    rw [Int.add_mul, one_mul]
+public instance : IsMonoid ℤ where
+  pown_zero := Int.pow_zero
+  pown_succ := Int.pow_succ
 
 end Basic
 
@@ -686,6 +719,85 @@ macro_rules
 | `(tactic|contradiction) => `(tactic|nomatch zero_ne_one _ (by assumption))
 macro_rules
 | `(tactic|contradiction) => `(tactic|nomatch zero_ne_one _ (Eq.symm (by assumption)))
+
+public theorem map_pown [Funlike F α β]
+  [MonoidOps α] [MonoidOps β]
+  [IsLawfulPowN α] [IsLawfulPowN β]
+  [IsMulHom F α β] [IsOneHom F α β]
+  (f: F) (a: α) (n: ℕ) : f (a ^ n) = f a ^ n := by
+  induction n with
+  | zero => rw [pown_zero, pown_zero, map_one]
+  | succ n ih => rw [pown_succ, pown_succ, map_mul, ih]
+
+public theorem map_nsmul [Funlike F α β]
+  [AddMonoidOps α] [AddMonoidOps β]
+  [IsLawfulNSMul α] [IsLawfulNSMul β]
+  [IsAddHom F α β] [IsZeroHom F α β]
+  (f: F) (a: α) (n: ℕ) : f (n • a) = n • f a :=
+  map_pown (MulOfAdd.mk f) (MulOfAdd.mk a) n
+
+public theorem smul_eq_mul [Mul α] (a b: α) : a • b = a * b := rfl
+
+public instance [MonoidOps α] [IsMonoid α] (a b: α) [IsCommAt a b] (n: ℕ) : IsCommAt a (b ^ n) where
+  mul_comm := by
+    induction n with
+    | zero => rw [pown_zero, mul_one, one_mul]
+    | succ n ih => rw [pown_succ, ←mul_assoc, ih, mul_assoc, mul_assoc, mul_comm a]
+
+public instance [AddMonoidOps α] [IsAddMonoid α] (a b: α) [IsAddCommAt a b] (n: ℕ) : IsAddCommAt a (n • b) where
+  add_comm := mul_comm (MulOfAdd.mk a) (MulOfAdd.mk b ^ n)
+
+public theorem pown_succ_left [MonoidOps α] [IsMonoid α] (a: α) (n: ℕ) : a ^ (n + 1) = a * a ^ n := by
+  rw [mul_comm a, pown_succ]
+
+public theorem nsmul_succ_left [AddMonoidOps α] [IsAddMonoid α] (a: α) (n: ℕ) : (n + 1) • a = a + n • a :=
+  pown_succ_left (α := MulOfAdd α) a n
+
+@[expose] public def nsmul_hom [AddMonoidOps α] [IsAddMonoid α] (a: α) : ℕ →+ α where
+  toFun n := n • a
+  map_zero := by rw [zero_nsmul]
+  map_add n m := by
+    induction m with
+    | zero => rw [add_zero, zero_nsmul, add_zero]
+    | succ m ih => rw [Nat.add_succ, succ_nsmul, succ_nsmul, ←add_assoc, ih]
+
+@[expose] public def pown_hom [MonoidOps α] [IsMonoid α] (a: α) : ℕ →ₘ+ α where
+  toFun n := a ^ n
+  map_zero_to_one := map_zero (β := AddOfMul α) (nsmul_hom (AddOfMul.mk a))
+  map_add_to_mul := map_add (β := AddOfMul α) (nsmul_hom (AddOfMul.mk a))
+
+public theorem mul_nsmul [AddMonoidOps α] [IsAddMonoid α] (a: α) (n m: ℕ) : (n * m) • a = n • m • a := by
+  rw [←smul_eq_mul n m]
+  show nsmul_hom a (n • m) = n • nsmul_hom a m
+  rw [map_nsmul]
+
+public theorem pown_mul [MonoidOps α] [IsMonoid α] (a: α) (n m: ℕ) : a ^ (n * m) = (a ^ m) ^ n :=
+  mul_nsmul (α := AddOfMul α) a n m
+
+public theorem add_nsmul [AddMonoidOps α] [IsAddMonoid α] (a: α) (n m: ℕ) : (n + m) • a = n • a + m • a :=
+  map_add (nsmul_hom a) _ _
+
+public theorem pown_add [MonoidOps α] [IsMonoid α] (a: α) (n m: ℕ) : a ^ (n + m) = a ^ n * a ^ m :=
+  add_nsmul (α := AddOfMul α) a n m
+
+public theorem nsmul_add [AddMonoidOps α] [IsAddMonoid α] (a b: α) [IsAddCommAt a b] (n: ℕ) : n • (a + b) = n • a + n • b := by
+  induction n with
+  | zero => rw [zero_nsmul, zero_nsmul, zero_nsmul, add_zero]
+  | succ n ih =>
+    iterate 3 rw [succ_nsmul]
+    rw [ih, add_assoc, ←add_assoc _ a, add_comm _ a, add_assoc a, ←add_assoc _ a]
+
+public theorem mul_npow [MonoidOps α] [IsMonoid α] (a b: α) [IsCommAt a b] (n: ℕ) : (a * b) ^ n = a ^ n * b ^ n :=
+  nsmul_add (α := AddOfMul α) (AddOfMul.mk a) (AddOfMul.mk b) n
+
+public theorem one_nsmul [AddMonoidOps α] [IsAddMonoid α] (a: α) : 1 • a = a := by
+  rw [succ_nsmul, zero_nsmul, zero_add]
+public theorem npow_one [MonoidOps α] [IsMonoid α] (a: α) : a ^ 1 = a :=
+  one_nsmul (α := AddOfMul α) a
+public theorem two_nsmul [AddMonoidOps α] [IsAddMonoid α] (a: α) : 2 • a = a + a := by
+  rw [succ_nsmul, one_nsmul]
+public theorem pown_two [MonoidOps α] [IsMonoid α] (a: α) : a ^ 2 = a * a :=
+  two_nsmul (α := AddOfMul α) _
 
 end Theorems
 

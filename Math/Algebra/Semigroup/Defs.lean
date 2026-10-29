@@ -184,6 +184,23 @@ public instance : IsExpHom (α ≃ₐ*ₙ β) α β where
 
 end Impls
 
+section AddMul
+
+public instance [Funlike F α β] : Funlike (MulOfAdd F) (MulOfAdd α) (MulOfAdd β) where
+  coeFun f a := .mk (f.get a.get)
+  coeInj := DFunlike.coeInj (F := F) (α := α) (β := fun _ => β)
+
+public instance [Funlike F α β] : Funlike (AddOfMul F) (AddOfMul α) (AddOfMul β) where
+  coeFun f a := .mk (f.get a.get)
+  coeInj := DFunlike.coeInj (F := F) (α := α) (β := fun _ => β)
+
+public instance [Funlike F α β] [Add α] [Add β] [IsAddHom F α β] : IsMulHom (MulOfAdd F) (MulOfAdd α) (MulOfAdd β) where
+  map_mul := map_add (F := F) (α := α) (β := β)
+public instance [Funlike F α β] [Mul α] [Mul β] [IsMulHom F α β] : IsAddHom (AddOfMul F) (AddOfMul α) (AddOfMul β) where
+  map_add := map_mul (F := F) (α := α) (β := β)
+
+end AddMul
+
 section Theorems.Mul
 
 variable {α β γ: Type*} [Mul α] [Mul β] [Mul γ]
@@ -399,6 +416,11 @@ public instance : IsSemigroup ℕ where
   mul_assoc := Nat.mul_assoc
 public instance : IsSemigroup ℤ where
   mul_assoc := Int.mul_assoc
+public instance : IsAddSemigroup ℕ where
+  add_assoc := Nat.add_assoc
+public instance : IsAddSemigroup ℤ where
+  add_assoc := Int.add_assoc
+
 
 public instance : IsComm ℕ where
   mul_comm := Nat.mul_comm
@@ -424,3 +446,16 @@ public instance : IsLeftAddCancel ℤ where
 public instance : IsRightCancel₀ ℤ := inferInstance
 
 end Basic
+
+section Theorems
+
+public instance [Mul α] (a: α) : IsCommAt a a where
+  mul_comm := rfl
+public instance [Add α] (a: α) : IsAddCommAt a a where
+  add_comm := rfl
+public instance [Mul α] (a b: α) [IsCommAt a b] : IsAddCommAt (AddOfMul.mk a) (AddOfMul.mk b) where
+  add_comm := mul_comm a b
+public instance [Add α] (a b: α) [IsAddCommAt a b] : IsCommAt (MulOfAdd.mk a) (MulOfAdd.mk b) where
+  mul_comm := add_comm a b
+
+end Theorems
