@@ -2,7 +2,7 @@ module
 
 meta import Math.Tactic.Basic
 
-public def exists_unique (P: α -> Prop) := ∃a, P a ∧ ∀b, P b -> a = b
+@[expose] public def exists_unique (P: α -> Prop) := ∃a, P a ∧ ∀b, P b -> a = b
 
 variable {α: Type*} {P: α -> Prop}
 

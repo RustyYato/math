@@ -3,6 +3,7 @@ module
 public import Math.Data.Hom.Defs
 public import Math.Data.Embedding.Defs
 public import Math.Data.Equiv.Defs
+public import Math.Logic.UniqueChoice
 import Math.Logic.LEM
 import Math.Tactic.Basic
 
@@ -212,6 +213,8 @@ public class IsWelFounded (R: α -> α -> Prop) where
 
 export IsWelFounded (wf)
 
+theorem wf_induction (r: α -> α -> Prop) [IsWelFounded r] : ∀{C : α → Prop} (a : α), (∀ (x : α), (∀ (y : α), r y x → C y) → C x) -> C a := @(wf (R := r)).induction
+
 public class IsWellOrder (R: α -> α -> Prop) extends
   IsTrans R, IsWelFounded R, IsConnected R (· = ·)
 
@@ -330,13 +333,13 @@ section ofReflGen
 
 variable [IsRefl s]
 
-public def RelMap.ofReflGen [Funlike F α β] [IsRelMap F r s] (f: F) : Relation.ReflGen r →r₀ s where
+@[expose] public def RelMap.ofReflGen [Funlike F α β] [IsRelMap F r s] (f: F) : Relation.ReflGen r →r₀ s where
   toFun := f
   map_rel
   | .refl _ => refl _
   | .of h => map_rel f h
 
-public def RelHom.ofReflGen [Funlike F α β] [IsRelHom F r s] (f: F) : Relation.ReflGen r →r s where
+@[expose] public def RelHom.ofReflGen [Funlike F α β] [IsRelHom F r s] (f: F) : Relation.ReflGen r →r s where
   toFun := f
   map_rel_iff {a b} := by
     apply Iff.intro
@@ -348,11 +351,11 @@ public def RelHom.ofReflGen [Funlike F α β] [IsRelHom F r s] (f: F) : Relation
     apply map_rel_rev f
     assumption
 
-public def RelEmbedding.ofReflGen [EmbeddingLike F α β] [IsRelHom F r s] (f: F) : Relation.ReflGen r ↪r s where
+@[expose] public def RelEmbedding.ofReflGen [EmbeddingLike F α β] [IsRelHom F r s] (f: F) : Relation.ReflGen r ↪r s where
   toEmbedding := f
   map_rel_iff := map_rel_iff (RelHom.ofReflGen f)
 
-public def RelEquiv.ofReflGen [EquivLike F α β] [IsRelHom F r s] (f: F) : Relation.ReflGen r ≃r s where
+@[expose] public def RelEquiv.ofReflGen [EquivLike F α β] [IsRelHom F r s] (f: F) : Relation.ReflGen r ≃r s where
   toEquiv := f
   map_rel_iff := map_rel_iff (RelHom.ofReflGen f)
 
@@ -362,13 +365,13 @@ section ofSymmGen
 
 variable [IsSymm s]
 
-public def RelMap.ofSymmGen [Funlike F α β] [IsRelMap F r s] (f: F) : Relation.SymmGen r →r₀ s where
+@[expose] public def RelMap.ofSymmGen [Funlike F α β] [IsRelMap F r s] (f: F) : Relation.SymmGen r →r₀ s where
   toFun := f
   map_rel
   | .symm h => symm (map_rel f h)
   | .of h => map_rel f h
 
-public def RelHom.ofSymmGen [Funlike F α β] [IsRelHom F r s] (f: F) : Relation.SymmGen r →r s where
+@[expose] public def RelHom.ofSymmGen [Funlike F α β] [IsRelHom F r s] (f: F) : Relation.SymmGen r →r s where
   toFun := f
   map_rel_iff {a b} := by
     apply Iff.intro
@@ -381,11 +384,11 @@ public def RelHom.ofSymmGen [Funlike F α β] [IsRelHom F r s] (f: F) : Relation
     apply map_rel_rev f
     assumption
 
-public def RelEmbedding.ofSymmGen [EmbeddingLike F α β] [IsRelHom F r s] (f: F) : Relation.SymmGen r ↪r s where
+@[expose] public def RelEmbedding.ofSymmGen [EmbeddingLike F α β] [IsRelHom F r s] (f: F) : Relation.SymmGen r ↪r s where
   toEmbedding := f
   map_rel_iff := map_rel_iff (RelHom.ofSymmGen f)
 
-public def RelEquiv.ofSymmGen [EquivLike F α β] [IsRelHom F r s] (f: F) : Relation.SymmGen r ≃r s where
+@[expose] public def RelEquiv.ofSymmGen [EquivLike F α β] [IsRelHom F r s] (f: F) : Relation.SymmGen r ≃r s where
   toEquiv := f
   map_rel_iff := map_rel_iff (RelHom.ofSymmGen f)
 
@@ -395,7 +398,7 @@ section ofTransGen
 
 variable [IsTrans s]
 
-public def RelMap.ofTransGen [Funlike F α β] [IsRelMap F r s] (f: F) : Relation.TransGen r →r₀ s where
+@[expose] public def RelMap.ofTransGen [Funlike F α β] [IsRelMap F r s] (f: F) : Relation.TransGen r →r₀ s where
   toFun := f
   map_rel := by
     intro a b h
@@ -403,7 +406,7 @@ public def RelMap.ofTransGen [Funlike F α β] [IsRelMap F r s] (f: F) : Relatio
     | single h => apply map_rel f; assumption
     | tail _ h ih => exact Trans.trans ih (map_rel f h)
 
-public def RelHom.ofTransGen [Funlike F α β] [IsRelHom F r s] (f: F) : Relation.TransGen r →r s where
+@[expose] public def RelHom.ofTransGen [Funlike F α β] [IsRelHom F r s] (f: F) : Relation.TransGen r →r s where
   toFun := f
   map_rel_iff {a b} := by
     apply Iff.intro
@@ -413,11 +416,11 @@ public def RelHom.ofTransGen [Funlike F α β] [IsRelHom F r s] (f: F) : Relatio
     apply map_rel_rev f
     assumption
 
-public def RelEmbedding.ofTransGen [EmbeddingLike F α β] [IsRelHom F r s] (f: F) : Relation.TransGen r ↪r s where
+@[expose] public def RelEmbedding.ofTransGen [EmbeddingLike F α β] [IsRelHom F r s] (f: F) : Relation.TransGen r ↪r s where
   toEmbedding := f
   map_rel_iff := map_rel_iff (RelHom.ofTransGen f)
 
-public def RelEquiv.ofTransGen [EquivLike F α β] [IsRelHom F r s] (f: F) : Relation.TransGen r ≃r s where
+@[expose] public def RelEquiv.ofTransGen [EquivLike F α β] [IsRelHom F r s] (f: F) : Relation.TransGen r ≃r s where
   toEquiv := f
   map_rel_iff := map_rel_iff (RelHom.ofTransGen f)
 
@@ -427,7 +430,7 @@ section ofReflTransGen
 
 variable [IsRefl s] [IsTrans s]
 
-public def RelMap.ofReflTransGen [Funlike F α β] [IsRelMap F r s] (f: F) : Relation.ReflTransGen r →r₀ s where
+@[expose] public def RelMap.ofReflTransGen [Funlike F α β] [IsRelMap F r s] (f: F) : Relation.ReflTransGen r →r₀ s where
   toFun := f
   map_rel := by
     intro a b h
@@ -435,7 +438,7 @@ public def RelMap.ofReflTransGen [Funlike F α β] [IsRelMap F r s] (f: F) : Rel
     | refl => apply refl
     | cons h _ ih => exact Trans.trans (map_rel f h) ih
 
-public def RelHom.ofReflTransGen [Funlike F α β] [IsRelHom F r s] (f: F) : Relation.ReflTransGen r →r s where
+@[expose] public def RelHom.ofReflTransGen [Funlike F α β] [IsRelHom F r s] (f: F) : Relation.ReflTransGen r →r s where
   toFun := f
   map_rel_iff {a b} := by
     apply Iff.intro
@@ -445,11 +448,11 @@ public def RelHom.ofReflTransGen [Funlike F α β] [IsRelHom F r s] (f: F) : Rel
     apply map_rel_rev f
     assumption
 
-public def RelEmbedding.ofReflTransGen [EmbeddingLike F α β] [IsRelHom F r s] (f: F) : Relation.ReflTransGen r ↪r s where
+@[expose] public def RelEmbedding.ofReflTransGen [EmbeddingLike F α β] [IsRelHom F r s] (f: F) : Relation.ReflTransGen r ↪r s where
   toEmbedding := f
   map_rel_iff := map_rel_iff (RelHom.ofReflTransGen f)
 
-public def RelEquiv.ofReflTransGen [EquivLike F α β] [IsRelHom F r s] (f: F) : Relation.ReflTransGen r ≃r s where
+@[expose] public def RelEquiv.ofReflTransGen [EquivLike F α β] [IsRelHom F r s] (f: F) : Relation.ReflTransGen r ≃r s where
   toEquiv := f
   map_rel_iff := map_rel_iff (RelHom.ofReflTransGen f)
 
@@ -459,7 +462,7 @@ section ofEquivGen
 
 variable [IsRefl s] [IsSymm s] [IsTrans s]
 
-public def RelMap.ofEquivGen [Funlike F α β] [IsRelMap F r s] (f: F) : Relation.EquivGen r →r₀ s where
+@[expose] public def RelMap.ofEquivGen [Funlike F α β] [IsRelMap F r s] (f: F) : Relation.EquivGen r →r₀ s where
   toFun := f
   map_rel := by
     intro a b h
@@ -469,7 +472,7 @@ public def RelMap.ofEquivGen [Funlike F α β] [IsRelMap F r s] (f: F) : Relatio
     | symm => apply symm; assumption
     | trans _ _ ih₀ ih₁ => exact Trans.trans ih₀ ih₁
 
-public def RelHom.ofEquivGen [Funlike F α β] [IsRelHom F r s] (f: F) : Relation.EquivGen r →r s where
+@[expose] public def RelHom.ofEquivGen [Funlike F α β] [IsRelHom F r s] (f: F) : Relation.EquivGen r →r s where
   toFun := f
   map_rel_iff {a b} := by
     apply Iff.intro
@@ -479,11 +482,11 @@ public def RelHom.ofEquivGen [Funlike F α β] [IsRelHom F r s] (f: F) : Relatio
     apply map_rel_rev f
     assumption
 
-public def RelEmbedding.ofEquivGen [EmbeddingLike F α β] [IsRelHom F r s] (f: F) : Relation.EquivGen r ↪r s where
+@[expose] public def RelEmbedding.ofEquivGen [EmbeddingLike F α β] [IsRelHom F r s] (f: F) : Relation.EquivGen r ↪r s where
   toEmbedding := f
   map_rel_iff := map_rel_iff (RelHom.ofEquivGen f)
 
-public def RelEquiv.ofEquivGen [EquivLike F α β] [IsRelHom F r s] (f: F) : Relation.EquivGen r ≃r s where
+@[expose] public def RelEquiv.ofEquivGen [EquivLike F α β] [IsRelHom F r s] (f: F) : Relation.EquivGen r ≃r s where
   toEquiv := f
   map_rel_iff := map_rel_iff (RelHom.ofEquivGen f)
 
