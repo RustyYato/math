@@ -236,7 +236,7 @@ end Api
 
 namespace MulHom
 
-@[simp] public theorem apply_id : MulEquiv.id α x = x := rfl
+@[simp] public theorem apply_id : MulHom.id α x = x := rfl
 
 @[simp] public theorem apply_comp (f: β →*ₙ γ) (g: α →*ₙ β) (x: α) : f.comp g x = f (g x) := rfl
 
@@ -244,7 +244,7 @@ end MulHom
 
 namespace MulEmbedding
 
-@[simp] public theorem apply_id : MulEquiv.id α x = x := rfl
+@[simp] public theorem apply_id : MulEmbedding.id α x = x := rfl
 
 @[simp] public theorem apply_comp (f: β ↪*ₙ γ) (g: α ↪*ₙ β) (x: α) : f.comp g x = f (g x) := rfl
 @[simp] public theorem apply_trans (f: α ↪*ₙ β) (g: β ↪*ₙ γ) (x: α) : f.trans g x = g (f x) := rfl
@@ -331,7 +331,7 @@ end Api
 
 namespace AddHom
 
-@[simp] public theorem apply_id : AddEquiv.id α x = x := rfl
+@[simp] public theorem apply_id : AddHom.id α x = x := rfl
 
 @[simp] public theorem apply_comp (f: β →+ₙ γ) (g: α →+ₙ β) (x: α) : f.comp g x = f (g x) := rfl
 
@@ -339,7 +339,7 @@ end AddHom
 
 namespace AddEmbedding
 
-@[simp] public theorem apply_id : AddEquiv.id α x = x := rfl
+@[simp] public theorem apply_id : AddEmbedding.id α x = x := rfl
 
 @[simp] public theorem apply_comp (f: β ↪+ₙ γ) (g: α ↪+ₙ β) (x: α) : f.comp g x = f (g x) := rfl
 @[simp] public theorem apply_trans (f: α ↪+ₙ β) (g: β ↪+ₙ γ) (x: α) : f.trans g x = g (f x) := rfl

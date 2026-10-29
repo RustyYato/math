@@ -1,0 +1,693 @@
+module
+
+public import Math.Algebra.Semigroup.Defs
+public import Math.Logic.Nontrivial
+public import Math.Logic.LEM
+
+namespace Math
+
+section Property
+
+public class NoZeroDivisors (α: Type*) [Mul α] [Zero α] where
+  of_mul_eq_zero {a b: α} (h: a * b = 0) : a = 0 ∨ b = 0
+
+export NoZeroDivisors (of_mul_eq_zero)
+
+public class IsZeroNeOne (α: Type*) [Zero α] [One α] : Prop where
+  zero_ne_one : (0: α) ≠ (1: α)
+
+export IsZeroNeOne (zero_ne_one)
+
+public class IsLawfulOne (α: Type*) [Mul α] [One α] : Prop where
+  mul_one (a: α) : a * 1 = a
+  one_mul (a: α) : 1 * a = a
+public class IsLawfulZero (α: Type*) [Add α] [Zero α] : Prop where
+  add_zero (a: α) : a + 0 = a
+  zero_add (a: α) : 0 + a = a
+public class IsLawfulZeroMul (α: Type*) [Mul α] [Zero α] : Prop where
+  mul_zero (a: α) : a * 0 = 0
+  zero_mul (a: α) : 0 * a = 0
+public class IsLawfulPowN (α: Type*) [Pow α ℕ] [Mul α] [One α] : Prop where
+  pown_zero (a: α) : a ^ 0 = 1
+  pown_succ (a: α) (n: ℕ) : a ^ (n + 1) = a ^ n * a
+public class IsLawfulNSMul (α: Type*) [SMul ℕ α] [Add α] [Zero α] : Prop where
+  zero_nsmul (a: α) : 0 • a = 0
+  succ_nsmul (a: α) (n: ℕ) : (n + 1) • a = n • a + a
+
+export IsLawfulOne (one_mul mul_one)
+export IsLawfulZero (zero_add add_zero)
+export IsLawfulZeroMul (zero_mul mul_zero)
+export IsLawfulPowN (pown_zero pown_succ)
+export IsLawfulNSMul (zero_nsmul succ_nsmul)
+
+public instance (priority := 100) NoZeroDivisors.ofLeftCancel₀ [Mul α] [Zero α] [IsLawfulZeroMul α] [IsLeftCancel₀ α] [ExcludedMiddleEq α] : NoZeroDivisors α where
+  of_mul_eq_zero {a b} h := by
+    apply LEM.or_iff_not_imp_left.mpr
+    intro ha
+    rw [←mul_zero a] at h
+    exact of_mul_left₀ ha h
+public instance (priority := 100) [Mul α] [Zero α] [IsLawfulZeroMul α] [IsRightCancel₀ α] [ExcludedMiddleEq α] : NoZeroDivisors α where
+  of_mul_eq_zero {a b} h := by
+    apply LEM.or_iff_not_imp_right.mpr
+    intro hb
+    rw [←zero_mul b] at h
+    exact of_mul_right₀ hb h
+
+public instance [Add α] [Zero α] [IsLawfulZero α] : IsLawfulOne (MulOfAdd α) where
+  mul_one := add_zero (α := α)
+  one_mul := zero_add (α := α)
+public instance [Mul α] [One α] [IsLawfulOne α] : IsLawfulZero (AddOfMul α) where
+  add_zero := mul_one (α := α)
+  zero_add := one_mul (α := α)
+
+namespace DefaultPowN
+
+public def default_pown [Mul α] [One α] [IsSemigroup α] [IsLawfulOne α] (a: α) : ℕ -> α
+| 0 => 1
+| n + 1 => default_pown a n * a
+
+public def fast_pown [Mul α] [One α] [IsSemigroup α] [IsLawfulOne α] (a: α) (n: ℕ) : α :=
+  if n = 0 then
+    1
+  else
+    let x := fast_pown a (n / 2)
+    x * x * (if n % 2 == 0 then 1 else a)
+
+instance [Mul α] [One α] [IsSemigroup α] [IsLawfulOne α] (a: α) (n: ℕ) :
+  IsCommAt a (default_pown a n) where
+  mul_comm := by
+    induction n with
+    | zero =>
+      unfold default_pown
+      rw [mul_one, one_mul]
+    | succ n ih =>
+      unfold default_pown
+      rw [←mul_assoc, ih]
+
+theorem nat_succ_div_two (n: ℕ) : (n + 1) / 2 =
+  n / 2 + 1 / 2 + if 2 ≤ n % 2 + 1 % 2 then 1 else 0 := by
+  induction n with
+  | zero => rfl
+  | succ n ih =>
+    show (n + 2) / 2 = _
+    rw [Nat.add_div_right _ (by decide), ih]
+    dsimp; clear ih
+    rw [Nat.add_assoc]; congr 1
+    rw [Nat.add_mod]
+    dsimp
+    rcases Nat.mod_two_eq_zero_or_one n with h | h <;> (rw [h]; rfl)
+
+theorem default_pown_step_half [Mul α] [One α] [IsSemigroup α] [IsLawfulOne α] (a: α) (n: ℕ) :
+  default_pown a n = default_pown a (n / 2) * default_pown a (n / 2) * (if n % 2 == 0 then 1 else a) := by
+  induction n with
+  | zero =>
+    show 1 = 1 * 1 * 1
+    iterate 2 rw [mul_one]
+  | succ n ih =>
+    rw [nat_succ_div_two]
+    dsimp; rcases Nat.mod_two_eq_zero_or_one n with h | h
+    · rw [h, show (n + 1) % 2 = 1 by omega]
+      rw [default_pown, ih, h]
+      dsimp; rw [mul_one]
+    · rw [h, show (n + 1) % 2 = 0 by omega]
+      dsimp; rw [mul_one]
+      unfold default_pown
+      rw [ih, h]
+      dsimp
+      rw [mul_assoc _ _ (_ * _)]
+      rw [mul_assoc, mul_assoc]; congr 1
+      rw [←mul_assoc, ←mul_assoc]; congr 1
+      rw [mul_comm]
+
+@[csimp]
+public theorem default_pown_eq_fast_pown : @default_pown = @fast_pown := by
+  ext α _ _ _ _ a n
+  induction n using fast_pown.induct a with
+  | case1 => unfold default_pown fast_pown; dsimp
+  | case2 n hn ih =>
+    unfold fast_pown; rw [ite_eq_right hn, default_pown_step_half]
+    congr
+
+variable [Mul α] [One α] [IsSemigroup α] [IsLawfulOne α]
+
+public scoped instance : Pow α ℕ where
+  pow := default_pown
+
+public scoped instance : IsLawfulPowN α where
+  pown_zero _ := rfl
+  pown_succ _ _ := rfl
+
+end DefaultPowN
+
+namespace DefaultNSMul
+
+variable [Add α] [Zero α] [IsAddSemigroup α] [IsLawfulZero α]
+
+open scoped DefaultPowN
+
+public scoped instance : SMul ℕ α where
+  smul n a := MulOfAdd.get (Pow.pow (MulOfAdd.mk a) n)
+
+public scoped instance : IsLawfulNSMul α where
+  zero_nsmul _ := rfl
+  succ_nsmul _ _ := rfl
+
+end DefaultNSMul
+
+public class MonoidOps (α: Type*) extends Mul α, One α where
+  toPowN : Pow α ℕ
+
+public instance [MonoidOps α] : Pow α ℕ := MonoidOps.toPowN
+public instance (priority := 100) [Pow α ℕ] [Mul α] [One α] : MonoidOps α where
+  toPowN := inferInstance
+
+public class AddMonoidOps (α: Type*) extends Add α, Zero α where
+  toNSMul : SMul ℕ α
+
+public instance [AddMonoidOps α] : SMul ℕ α := AddMonoidOps.toNSMul
+public instance (priority := 100) [SMul ℕ α] [Add α] [Zero α] : AddMonoidOps α where
+  toNSMul := inferInstance
+
+public class IsMonoid (α: Type*) [MonoidOps α] extends IsSemigroup α, IsLawfulOne α, IsLawfulPowN α where
+public class IsAddMonoid (α: Type*) [AddMonoidOps α] extends IsAddSemigroup α, IsLawfulZero α, IsLawfulNSMul α where
+
+end Property
+
+section Hom
+
+section Defs
+
+public class IsOneHom (F α β: Type*) [Funlike F α β] [One α] [One β] : Prop where
+  map_one (f: F) : f 1 = 1 := by intro f; exact f.map_one
+public class IsZeroHom (F α β: Type*) [Funlike F α β] [Zero α] [Zero β] : Prop where
+  map_zero (f: F) : f 0 = 0 := by intro f; exact f.map_zero
+public class IsExpZeroHom (F α β: Type*) [Funlike F α β] [Zero α] [One β] : Prop where
+  map_zero_to_one (f: F) : f 0 = 1 := by intro f; exact f.map_zero_to_one
+public class IsLogOneHom (F α β: Type*) [Funlike F α β] [One α] [Zero β] : Prop where
+  map_one_to_zero (f: F) : f 1 = 0 := by intro f; exact f.map_one_to_zero
+
+export IsOneHom (map_one)
+export IsZeroHom (map_zero)
+export IsExpZeroHom (map_zero_to_one)
+export IsLogOneHom (map_one_to_zero)
+
+public structure OneHom (α β: Type*) [One α] [One β] extends Hom α β where
+  protected map_one : toFun 1 = 1
+public structure ZeroHom (α β: Type*) [Zero α] [Zero β] extends Hom α β where
+  protected map_zero : toFun 0 = 0
+public structure ExpZeroHom (α β: Type*) [Zero α] [One β] extends Hom α β where
+  protected map_zero_to_one : toFun 0 = 1
+public structure LogOneHom (α β: Type*) [One α] [Zero β] extends Hom α β where
+  protected map_one_to_zero : toFun 1 = 0
+
+public structure OneEquiv (α β: Type*) [One α] [One β] extends α ≃ β, OneHom α β where
+public structure ZeroEquiv (α β: Type*) [Zero α] [Zero β] extends α ≃ β, ZeroHom α β where
+public structure ExpZeroEquiv (α β: Type*) [Zero α] [One β] extends α ≃ β, ExpZeroHom α β where
+public structure LogOneEquiv (α β: Type*) [One α] [Zero β] extends α ≃ β, LogOneHom α β where
+
+public structure GroupHom (α β: Type*) [Mul α] [One α] [Mul β] [One β] extends MulHom α β, OneHom α β where
+public structure AddGroupHom (α β: Type*) [Add α] [Zero α] [Add β] [Zero β] extends AddHom α β, ZeroHom α β where
+public structure GroupExpHom (α β: Type*) [Add α] [Zero α] [Mul β] [One β] extends ExpHom α β, ExpZeroHom α β where
+public structure GroupLogHom (α β: Type*) [Mul α] [One α] [Add β] [Zero β] extends LogHom α β, LogOneHom α β where
+
+public structure GroupEmbedding (α β: Type*) [Mul α] [One α] [Mul β] [One β] extends α ↪ β, GroupHom α β where
+public structure AddGroupEmbedding (α β: Type*) [Add α] [Zero α] [Add β] [Zero β] extends α ↪ β, AddGroupHom α β where
+public structure GroupExpEmbedding (α β: Type*) [Add α] [Zero α] [Mul β] [One β] extends α ↪ β, GroupExpHom α β where
+public structure GroupLogEmbedding (α β: Type*) [Mul α] [One α] [Add β] [Zero β] extends α ↪ β, GroupLogHom α β where
+
+public structure GroupEquiv (α β: Type*) [Mul α] [One α] [Mul β] [One β] extends α ≃ β, GroupHom α β, MulEquiv α β, OneEquiv α β where
+public structure AddGroupEquiv (α β: Type*) [Add α] [Zero α] [Add β] [Zero β] extends α ≃ β, AddGroupHom α β, AddEquiv α β, ZeroEquiv α β where
+public structure GroupExpEquiv (α β: Type*) [Add α] [Zero α] [Mul β] [One β] extends α ≃ β, GroupExpHom α β, ExpEquiv α β, ExpZeroEquiv α β where
+public structure GroupLogEquiv (α β: Type*) [Mul α] [One α] [Add β] [Zero β] extends α ≃ β, GroupLogHom α β, LogEquiv α β, LogOneEquiv α β where
+
+infixr:80 " →₁ " => OneHom
+infixr:80 " →₀ " => ZeroHom
+infixr:80 " ≃₁ " => OneEquiv
+infixr:80 " ≃₀ " => ZeroEquiv
+
+infixr:80 " →* " => GroupHom
+infixr:80 " →+ " => AddGroupHom
+infixr:80 " →ₘ+ " => GroupExpHom
+infixr:80 " →ₐ* " => GroupLogHom
+
+infixr:80 " ↪* " => GroupEmbedding
+infixr:80 " ↪+ " => AddGroupEmbedding
+infixr:80 " ↪ₘ+ " => GroupExpEmbedding
+infixr:80 " ↪ₐ* " => GroupLogEmbedding
+
+infixr:80 " ≃* " => GroupEquiv
+infixr:80 " ≃+ " => AddGroupEquiv
+infixr:80 " ≃ₘ+ " => GroupExpEquiv
+infixr:80 " ≃ₐ* " => GroupLogEquiv
+
+end Defs
+
+section Impls
+
+variable [Mul α] [Mul β] [Add α] [Add β] [One α] [One β] [Zero α] [Zero β]
+
+public instance : Funlike (OneHom α β) α β where
+public instance : Funlike (ZeroHom α β) α β where
+public instance : Funlike (ExpZeroHom α β) α β where
+public instance : Funlike (LogOneHom α β) α β where
+public instance : Funlike (GroupHom α β) α β where
+public instance : Funlike (AddGroupHom α β) α β where
+public instance : Funlike (GroupExpHom α β) α β where
+public instance : Funlike (GroupLogHom α β) α β where
+
+public instance : EmbeddingLike (GroupEmbedding α β) α β where
+public instance : EmbeddingLike (AddGroupEmbedding α β) α β where
+public instance : EmbeddingLike (GroupExpEmbedding α β) α β where
+public instance : EmbeddingLike (GroupLogEmbedding α β) α β where
+
+public instance : EquivLike (OneEquiv α β) α β where
+public instance : EquivLike (ZeroEquiv α β) α β where
+public instance : EquivLike (ExpZeroEquiv α β) α β where
+public instance : EquivLike (LogOneEquiv α β) α β where
+public instance : EquivLike (GroupEquiv α β) α β where
+public instance : EquivLike (AddGroupEquiv α β) α β where
+public instance : EquivLike (GroupExpEquiv α β) α β where
+public instance : EquivLike (GroupLogEquiv α β) α β where
+
+public instance : IsOneHom (OneHom α β) α β where
+public instance : IsZeroHom (ZeroHom α β) α β where
+public instance : IsExpZeroHom (ExpZeroHom α β) α β where
+public instance : IsLogOneHom (LogOneHom α β) α β where
+public instance : IsOneHom (GroupHom α β) α β where
+public instance : IsZeroHom (AddGroupHom α β) α β where
+public instance : IsExpZeroHom (GroupExpHom α β) α β where
+public instance : IsLogOneHom (GroupLogHom α β) α β where
+public instance : IsMulHom (GroupHom α β) α β where
+public instance : IsAddHom (AddGroupHom α β) α β where
+public instance : IsExpHom (GroupExpHom α β) α β where
+public instance : IsLogHom (GroupLogHom α β) α β where
+
+public instance : IsOneHom (GroupEmbedding α β) α β where
+public instance : IsZeroHom (AddGroupEmbedding α β) α β where
+public instance : IsExpZeroHom (GroupExpEmbedding α β) α β where
+public instance : IsLogOneHom (GroupLogEmbedding α β) α β where
+public instance : IsMulHom (GroupEmbedding α β) α β where
+public instance : IsAddHom (AddGroupEmbedding α β) α β where
+public instance : IsExpHom (GroupExpEmbedding α β) α β where
+public instance : IsLogHom (GroupLogEmbedding α β) α β where
+
+public instance : IsOneHom (OneEquiv α β) α β where
+public instance : IsZeroHom (ZeroEquiv α β) α β where
+public instance : IsExpZeroHom (ExpZeroEquiv α β) α β where
+public instance : IsLogOneHom (LogOneEquiv α β) α β where
+public instance : IsOneHom (GroupEquiv α β) α β where
+public instance : IsZeroHom (AddGroupEquiv α β) α β where
+public instance : IsExpZeroHom (GroupExpEquiv α β) α β where
+public instance : IsLogOneHom (GroupLogEquiv α β) α β where
+public instance : IsMulHom (GroupEquiv α β) α β where
+public instance : IsAddHom (AddGroupEquiv α β) α β where
+public instance : IsExpHom (GroupExpEquiv α β) α β where
+public instance : IsLogHom (GroupLogEquiv α β) α β where
+
+end Impls
+
+section Theorems.One
+
+variable {α β γ: Type*} [One α] [One β] [One γ]
+
+section Reduction
+
+@[simp] public theorem OneEquiv.apply_toEquiv (f: α ≃₁ β) (x: α) : f.toEquiv x = f x := rfl
+@[simp] public theorem OneEquiv.apply_toOneHom (f: α ≃₁ β) (x: α) : f.toOneHom x = f x := rfl
+
+@[ext] public theorem OneHom.ext (f g: α →₁ β) (h: ∀i, f i = g i) : f = g := DFunlike.ext _ _ h
+@[ext] public theorem OneEquiv.ext (f g: α ≃₁ β) (h: ∀i, f i = g i) : f = g := DFunlike.ext _ _ h
+
+end Reduction
+
+section Api
+
+@[expose] public protected def OneHom.id (α: Type*) [One α] : α →₁ α where
+  toFun := id
+  map_one := rfl
+@[expose] public protected def OneEquiv.id (α: Type*) [One α] : α ≃₁ α := {
+  Equiv.id _, OneHom.id _ with
+}
+
+@[expose] public def OneHom.comp (f: β →₁ γ) (g: α →₁ β) : α →₁ γ where
+  toFun := f ∘ g
+  map_one := by dsimp only [Function.comp_apply]; rw [map_one, map_one]
+@[expose] public def OneEquiv.comp (f: β ≃₁ γ) (g: α ≃₁ β) : α ≃₁ γ := {
+  f.toEquiv.comp g.toEquiv, f.toOneHom.comp g.toOneHom with
+}
+@[expose] public def OneEquiv.trans (f: α ≃₁ β) (g: β ≃₁ γ) : α ≃₁ γ := comp g f
+@[expose] public def OneEquiv.symm (f: α ≃₁ β) : β ≃₁ α := {
+  f.toEquiv.symm with
+  map_one := by
+    apply f.inj; dsimp only [Equiv.normalize_toFun, apply_toEquiv]
+    rw [map_one f]
+    rw [←apply_toEquiv, f.symm_apply]
+}
+
+end Api
+
+namespace OneHom
+
+@[simp] public theorem apply_id : OneEquiv.id α x = x := rfl
+
+@[simp] public theorem apply_comp (f: β →₁ γ) (g: α →₁ β) (x: α) : f.comp g x = f (g x) := rfl
+
+end OneHom
+
+namespace OneEquiv
+
+@[simp] public theorem apply_id : OneEquiv.id α x = x := rfl
+
+@[simp] public theorem apply_symm (f: α ≃₁ β) (x: α) : f.symm (f x) = x := f.rightInv _
+@[simp] public theorem symm_apply (f: α ≃₁ β) (x: β) : f (f.symm x) = x := f.leftInv _
+@[simp] public theorem symm_symm (f: α ≃₁ β) : f.symm.symm = f := rfl
+
+@[simp] public theorem apply_comp (f: β ≃₁ γ) (g: α ≃₁ β) (x: α) : f.comp g x = f (g x) := rfl
+@[simp] public theorem apply_trans (f: α ≃₁ β) (g: β ≃₁ γ) (x: α) : f.trans g x = g (f x) := rfl
+@[simp] public theorem symm_comp (f: α ≃₁ β) : f.symm.comp f = OneEquiv.id _ := by
+  ext a; dsimp; rw [apply_symm]
+@[simp] public theorem comp_symm (f: α ≃₁ β) : f.comp f.symm = OneEquiv.id _ := by
+  ext a; dsimp; rw [symm_apply]
+@[simp] public theorem symm_trans (f: α ≃₁ β) : f.symm.trans f = OneEquiv.id _ := by
+  ext a; dsimp; rw [symm_apply]
+@[simp] public theorem trans_symm (f: α ≃₁ β) : f.trans f.symm = OneEquiv.id _ := by
+  ext a; dsimp; rw [apply_symm]
+
+public theorem inj (f: α ≃₁ β) : Function.Injective f := f.rightInv.injective
+public theorem surj (f: α ≃₁ β) : Function.Surjective f := f.symm.rightInv.surjective
+
+end OneEquiv
+
+end Theorems.One
+
+section Theorems.Zero
+
+variable {α β γ: Type*} [Zero α] [Zero β] [Zero γ]
+
+section Reduction
+
+@[simp] public theorem ZeroEquiv.apply_toEquiv (f: α ≃₀ β) (x: α) : f.toEquiv x = f x := rfl
+@[simp] public theorem ZeroEquiv.apply_toZeroHom (f: α ≃₀ β) (x: α) : f.toZeroHom x = f x := rfl
+
+@[ext] public theorem ZeroHom.ext (f g: α →₀ β) (h: ∀i, f i = g i) : f = g := DFunlike.ext _ _ h
+@[ext] public theorem ZeroEquiv.ext (f g: α ≃₀ β) (h: ∀i, f i = g i) : f = g := DFunlike.ext _ _ h
+
+end Reduction
+
+section Api
+
+@[expose] public protected def ZeroHom.id (α: Type*) [Zero α] : α →₀ α where
+  toFun := id
+  map_zero := rfl
+@[expose] public protected def ZeroEquiv.id (α: Type*) [Zero α] : α ≃₀ α := {
+  Equiv.id _, ZeroHom.id _ with
+}
+
+@[expose] public def ZeroHom.comp (f: β →₀ γ) (g: α →₀ β) : α →₀ γ where
+  toFun := f ∘ g
+  map_zero := by dsimp only [Function.comp_apply]; rw [map_zero, map_zero]
+@[expose] public def ZeroEquiv.comp (f: β ≃₀ γ) (g: α ≃₀ β) : α ≃₀ γ := {
+  f.toEquiv.comp g.toEquiv, f.toZeroHom.comp g.toZeroHom with
+}
+@[expose] public def ZeroEquiv.trans (f: α ≃₀ β) (g: β ≃₀ γ) : α ≃₀ γ := comp g f
+@[expose] public def ZeroEquiv.symm (f: α ≃₀ β) : β ≃₀ α := {
+  f.toEquiv.symm with
+  map_zero := by
+    apply f.inj; dsimp only [Equiv.normalize_toFun, apply_toEquiv]
+    rw [map_zero f]
+    rw [←apply_toEquiv, f.symm_apply]
+}
+
+end Api
+
+namespace ZeroHom
+
+@[simp] public theorem apply_id : ZeroEquiv.id α x = x := rfl
+
+@[simp] public theorem apply_comp (f: β →₀ γ) (g: α →₀ β) (x: α) : f.comp g x = f (g x) := rfl
+
+end ZeroHom
+
+namespace ZeroEquiv
+
+@[simp] public theorem apply_id : ZeroEquiv.id α x = x := rfl
+
+@[simp] public theorem apply_symm (f: α ≃₀ β) (x: α) : f.symm (f x) = x := f.rightInv _
+@[simp] public theorem symm_apply (f: α ≃₀ β) (x: β) : f (f.symm x) = x := f.leftInv _
+@[simp] public theorem symm_symm (f: α ≃₀ β) : f.symm.symm = f := rfl
+
+@[simp] public theorem apply_comp (f: β ≃₀ γ) (g: α ≃₀ β) (x: α) : f.comp g x = f (g x) := rfl
+@[simp] public theorem apply_trans (f: α ≃₀ β) (g: β ≃₀ γ) (x: α) : f.trans g x = g (f x) := rfl
+@[simp] public theorem symm_comp (f: α ≃₀ β) : f.symm.comp f = ZeroEquiv.id _ := by
+  ext a; dsimp; rw [apply_symm]
+@[simp] public theorem comp_symm (f: α ≃₀ β) : f.comp f.symm = ZeroEquiv.id _ := by
+  ext a; dsimp; rw [symm_apply]
+@[simp] public theorem symm_trans (f: α ≃₀ β) : f.symm.trans f = ZeroEquiv.id _ := by
+  ext a; dsimp; rw [symm_apply]
+@[simp] public theorem trans_symm (f: α ≃₀ β) : f.trans f.symm = ZeroEquiv.id _ := by
+  ext a; dsimp; rw [apply_symm]
+
+public theorem inj (f: α ≃₀ β) : Function.Injective f := f.rightInv.injective
+public theorem surj (f: α ≃₀ β) : Function.Surjective f := f.symm.rightInv.surjective
+
+end ZeroEquiv
+
+end Theorems.Zero
+
+section Theorems.Group
+
+variable {α β γ: Type*} [Mul α] [One α] [Mul β] [One β] [Mul γ] [One γ]
+
+section Reduction
+
+@[simp] public theorem GroupEmbedding.apply_toEmbedding (f: α ↪* β) (x: α) : f.toEmbedding x = f x := rfl
+@[simp] public theorem GroupEquiv.apply_toEquiv (f: α ≃* β) (x: α) : f.toEquiv x = f x := rfl
+@[simp] public theorem GroupEmbedding.apply_toGroupHom (f: α ↪* β) (x: α) : f.toGroupHom x = f x := rfl
+@[simp] public theorem GroupEquiv.apply_toGroupHom (f: α ≃* β) (x: α) : f.toGroupHom x = f x := rfl
+
+@[ext] public theorem GroupHom.ext (f g: α →* β) (h: ∀i, f i = g i) : f = g := DFunlike.ext _ _ h
+@[ext] public theorem GroupEmbedding.ext (f g: α ↪* β) (h: ∀i, f i = g i) : f = g := DFunlike.ext _ _ h
+@[ext] public theorem GroupEquiv.ext (f g: α ≃* β) (h: ∀i, f i = g i) : f = g := DFunlike.ext _ _ h
+
+end Reduction
+
+section Api
+
+@[expose] public protected def GroupHom.id (α: Type*) [Mul α] [One α] : α →* α := {
+  MulHom.id α, OneHom.id α with
+}
+@[expose] public protected def GroupEmbedding.id (α: Type*) [Mul α] [One α] : α ↪* α := {
+  Embedding.id _, GroupHom.id _ with
+}
+@[expose] public protected def GroupEquiv.id (α: Type*) [Mul α] [One α] : α ≃* α := {
+  Equiv.id _, GroupHom.id _ with
+}
+
+@[expose] public def GroupHom.comp (f: β →* γ) (g: α →* β) : α →* γ := {
+  f.toMulHom.comp g.toMulHom, f.toOneHom.comp g.toOneHom with
+}
+@[expose] public def GroupEmbedding.comp (f: β ↪* γ) (g: α ↪* β) : α ↪* γ := {
+  f.toEmbedding.comp g.toEmbedding, f.toGroupHom.comp g.toGroupHom with
+}
+@[expose] public def GroupEquiv.comp (f: β ≃* γ) (g: α ≃* β) : α ≃* γ := {
+  f.toEquiv.comp g.toEquiv, f.toGroupHom.comp g.toGroupHom with
+}
+@[expose] public def GroupEmbedding.trans (f: α ↪* β) (g: β ↪* γ) : α ↪* γ := comp g f
+@[expose] public def GroupEquiv.trans (f: α ≃* β) (g: β ≃* γ) : α ≃* γ := comp g f
+@[expose] public def GroupEquiv.symm (f: α ≃* β) : β ≃* α := {
+  f.toMulEquiv.symm, f.toOneEquiv.symm with
+}
+
+end Api
+
+namespace GroupHom
+
+@[simp] public theorem apply_id : GroupHom.id α x = x := rfl
+
+@[simp] public theorem apply_comp (f: β →* γ) (g: α →* β) (x: α) : f.comp g x = f (g x) := rfl
+
+end GroupHom
+
+namespace GroupEmbedding
+
+@[simp] public theorem apply_id : GroupEmbedding.id α x = x := rfl
+
+@[simp] public theorem apply_comp (f: β ↪* γ) (g: α ↪* β) (x: α) : f.comp g x = f (g x) := rfl
+@[simp] public theorem apply_trans (f: α ↪* β) (g: β ↪* γ) (x: α) : f.trans g x = g (f x) := rfl
+
+public theorem inj (f: α ↪* β) : Function.Injective f := f.injective
+
+end GroupEmbedding
+
+namespace GroupEquiv
+
+@[simp] public theorem apply_id : GroupEquiv.id α x = x := rfl
+
+@[simp] public theorem apply_symm (f: α ≃* β) (x: α) : f.symm (f x) = x := f.rightInv _
+@[simp] public theorem symm_apply (f: α ≃* β) (x: β) : f (f.symm x) = x := f.leftInv _
+@[simp] public theorem symm_symm (f: α ≃* β) : f.symm.symm = f := rfl
+
+@[simp] public theorem apply_comp (f: β ≃* γ) (g: α ≃* β) (x: α) : f.comp g x = f (g x) := rfl
+@[simp] public theorem apply_trans (f: α ≃* β) (g: β ≃* γ) (x: α) : f.trans g x = g (f x) := rfl
+@[simp] public theorem symm_comp (f: α ≃* β) : f.symm.comp f = GroupEquiv.id _ := by
+  ext a; dsimp; rw [apply_symm]
+@[simp] public theorem comp_symm (f: α ≃* β) : f.comp f.symm = GroupEquiv.id _ := by
+  ext a; dsimp; rw [symm_apply]
+@[simp] public theorem symm_trans (f: α ≃* β) : f.symm.trans f = GroupEquiv.id _ := by
+  ext a; dsimp; rw [symm_apply]
+@[simp] public theorem trans_symm (f: α ≃* β) : f.trans f.symm = GroupEquiv.id _ := by
+  ext a; dsimp; rw [apply_symm]
+
+public theorem inj (f: α ≃* β) : Function.Injective f := f.rightInv.injective
+public theorem surj (f: α ≃* β) : Function.Surjective f := f.symm.rightInv.surjective
+
+end GroupEquiv
+
+end Theorems.Group
+
+section Theorems.AddGroup
+
+variable {α β γ: Type*} [Add α] [Zero α] [Add β] [Zero β] [Add γ] [Zero γ]
+
+section Reduction
+
+@[simp] public theorem AddGroupEmbedding.apply_toEmbedding (f: α ↪+ β) (x: α) : f.toEmbedding x = f x := rfl
+@[simp] public theorem AddGroupEquiv.apply_toEquiv (f: α ≃+ β) (x: α) : f.toEquiv x = f x := rfl
+@[simp] public theorem AddGroupEmbedding.apply_toAddGroupHom (f: α ↪+ β) (x: α) : f.toAddGroupHom x = f x := rfl
+@[simp] public theorem AddGroupEquiv.apply_toAddGroupHom (f: α ≃+ β) (x: α) : f.toAddGroupHom x = f x := rfl
+
+@[ext] public theorem AddGroupHom.ext (f g: α →+ β) (h: ∀i, f i = g i) : f = g := DFunlike.ext _ _ h
+@[ext] public theorem AddGroupEmbedding.ext (f g: α ↪+ β) (h: ∀i, f i = g i) : f = g := DFunlike.ext _ _ h
+@[ext] public theorem AddGroupEquiv.ext (f g: α ≃+ β) (h: ∀i, f i = g i) : f = g := DFunlike.ext _ _ h
+
+end Reduction
+
+section Api
+
+@[expose] public protected def AddGroupHom.id (α: Type*) [Add α] [Zero α] : α →+ α := {
+  AddHom.id α, ZeroHom.id α with
+}
+@[expose] public protected def AddGroupEmbedding.id (α: Type*) [Add α] [Zero α] : α ↪+ α := {
+  Embedding.id _, AddGroupHom.id _ with
+}
+@[expose] public protected def AddGroupEquiv.id (α: Type*) [Add α] [Zero α] : α ≃+ α := {
+  Equiv.id _, AddGroupHom.id _ with
+}
+
+@[expose] public def AddGroupHom.comp (f: β →+ γ) (g: α →+ β) : α →+ γ := {
+  f.toAddHom.comp g.toAddHom, f.toZeroHom.comp g.toZeroHom with
+}
+@[expose] public def AddGroupEmbedding.comp (f: β ↪+ γ) (g: α ↪+ β) : α ↪+ γ := {
+  f.toEmbedding.comp g.toEmbedding, f.toAddGroupHom.comp g.toAddGroupHom with
+}
+@[expose] public def AddGroupEquiv.comp (f: β ≃+ γ) (g: α ≃+ β) : α ≃+ γ := {
+  f.toEquiv.comp g.toEquiv, f.toAddGroupHom.comp g.toAddGroupHom with
+}
+@[expose] public def AddGroupEmbedding.trans (f: α ↪+ β) (g: β ↪+ γ) : α ↪+ γ := comp g f
+@[expose] public def AddGroupEquiv.trans (f: α ≃+ β) (g: β ≃+ γ) : α ≃+ γ := comp g f
+@[expose] public def AddGroupEquiv.symm (f: α ≃+ β) : β ≃+ α := {
+  f.toAddEquiv.symm, f.toZeroEquiv.symm with
+}
+
+end Api
+
+namespace AddGroupHom
+
+@[simp] public theorem apply_id : AddGroupHom.id α x = x := rfl
+
+@[simp] public theorem apply_comp (f: β →+ γ) (g: α →+ β) (x: α) : f.comp g x = f (g x) := rfl
+
+end AddGroupHom
+
+namespace AddGroupEmbedding
+
+@[simp] public theorem apply_id : AddGroupEmbedding.id α x = x := rfl
+
+@[simp] public theorem apply_comp (f: β ↪+ γ) (g: α ↪+ β) (x: α) : f.comp g x = f (g x) := rfl
+@[simp] public theorem apply_trans (f: α ↪+ β) (g: β ↪+ γ) (x: α) : f.trans g x = g (f x) := rfl
+
+public theorem inj (f: α ↪+ β) : Function.Injective f := f.injective
+
+end AddGroupEmbedding
+
+namespace AddGroupEquiv
+
+@[simp] public theorem apply_id : AddGroupEquiv.id α x = x := rfl
+
+@[simp] public theorem apply_symm (f: α ≃+ β) (x: α) : f.symm (f x) = x := f.rightInv _
+@[simp] public theorem symm_apply (f: α ≃+ β) (x: β) : f (f.symm x) = x := f.leftInv _
+@[simp] public theorem symm_symm (f: α ≃+ β) : f.symm.symm = f := rfl
+
+@[simp] public theorem apply_comp (f: β ≃+ γ) (g: α ≃+ β) (x: α) : f.comp g x = f (g x) := rfl
+@[simp] public theorem apply_trans (f: α ≃+ β) (g: β ≃+ γ) (x: α) : f.trans g x = g (f x) := rfl
+@[simp] public theorem symm_comp (f: α ≃+ β) : f.symm.comp f = AddGroupEquiv.id _ := by
+  ext a; dsimp; rw [apply_symm]
+@[simp] public theorem comp_symm (f: α ≃+ β) : f.comp f.symm = AddGroupEquiv.id _ := by
+  ext a; dsimp; rw [symm_apply]
+@[simp] public theorem symm_trans (f: α ≃+ β) : f.symm.trans f = AddGroupEquiv.id _ := by
+  ext a; dsimp; rw [symm_apply]
+@[simp] public theorem trans_symm (f: α ≃+ β) : f.trans f.symm = AddGroupEquiv.id _ := by
+  ext a; dsimp; rw [apply_symm]
+
+public theorem inj (f: α ≃+ β) : Function.Injective f := f.rightInv.injective
+public theorem surj (f: α ≃+ β) : Function.Surjective f := f.symm.rightInv.surjective
+
+end AddGroupEquiv
+
+end Theorems.AddGroup
+
+end Hom
+
+section Basic
+
+public instance : IsLawfulZeroMul ℕ where
+  zero_mul := Nat.zero_mul
+  mul_zero := Nat.mul_zero
+public instance : IsLawfulZeroMul ℤ where
+  zero_mul := Int.zero_mul
+  mul_zero := Int.mul_zero
+public instance : IsLawfulOne ℕ where
+  one_mul := Nat.one_mul
+  mul_one := Nat.mul_one
+public instance : IsLawfulOne ℤ where
+  one_mul := Int.one_mul
+  mul_one := Int.mul_one
+public instance : IsLawfulZero ℕ where
+  zero_add := Nat.zero_add
+  add_zero := Nat.add_zero
+public instance : IsLawfulZero ℤ where
+  zero_add := Int.zero_add
+  add_zero := Int.add_zero
+public instance : NoZeroDivisors ℕ := inferInstance
+public instance : NoZeroDivisors ℤ := inferInstance
+
+end Basic
+
+section Theorems
+
+theorem subingleton_of_zero_eq_one (α: Type*) [Zero α] [One α] [Mul α] [IsLawfulZeroMul α] [IsLawfulOne α] (h: (0: α) = (1: α)) : Subsingleton α where
+  allEq a b := by
+    rw [←one_mul a, ←one_mul b, ←h, zero_mul, zero_mul]
+
+instance
+  (priority := 100)
+  [Nontrivial α] [Zero α] [One α] [Mul α]
+  [IsLawfulOne α] [IsLawfulZeroMul α]
+  [∀a: α, ExcludedMiddle (1 = a)] : IsZeroNeOne α where
+  zero_ne_one := by
+    intro h
+    have ⟨b, g⟩ := Nontrivial.exists_ne (1: α)
+    rw [←mul_one b, ←h, mul_zero] at g
+    contradiction
+
+instance [Zero α] [One α] [IsZeroNeOne α] : Nontrivial α := .intro 0 1 zero_ne_one
+
+macro_rules
+| `(tactic|contradiction) => `(tactic|nomatch zero_ne_one _ (by assumption))
+macro_rules
+| `(tactic|contradiction) => `(tactic|nomatch zero_ne_one _ (Eq.symm (by assumption)))
+
+end Theorems
+
+instance : IsZeroNeOne ℕ := inferInstance
+instance : IsZeroNeOne ℤ := inferInstance
