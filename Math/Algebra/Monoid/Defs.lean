@@ -750,7 +750,7 @@ public instance [AddMonoidOps α] [IsAddMonoid α] (a b: α) [IsAddCommAt a b] (
 public theorem pown_succ_left [MonoidOps α] [IsMonoid α] (a: α) (n: ℕ) : a ^ (n + 1) = a * a ^ n := by
   rw [mul_comm a, pown_succ]
 
-public theorem nsmul_succ_left [AddMonoidOps α] [IsAddMonoid α] (a: α) (n: ℕ) : (n + 1) • a = a + n • a :=
+public theorem succ_nsmul_left [AddMonoidOps α] [IsAddMonoid α] (a: α) (n: ℕ) : (n + 1) • a = a + n • a :=
   pown_succ_left (α := MulOfAdd α) a n
 
 @[expose] public def nsmul_hom [AddMonoidOps α] [IsAddMonoid α] (a: α) : ℕ →+ α where
@@ -789,6 +789,13 @@ public theorem nsmul_add [AddMonoidOps α] [IsAddMonoid α] (a b: α) [IsAddComm
 
 public theorem mul_npow [MonoidOps α] [IsMonoid α] (a b: α) [IsCommAt a b] (n: ℕ) : (a * b) ^ n = a ^ n * b ^ n :=
   nsmul_add (α := AddOfMul α) (AddOfMul.mk a) (AddOfMul.mk b) n
+
+public theorem nsmul_zero [AddMonoidOps α] [IsAddMonoid α] (n: ℕ) : n • (0: α) = 0 := by
+  induction n with
+  | zero => rw [zero_nsmul]
+  | succ n ih => rw [succ_nsmul, add_zero, ih]
+public theorem one_pown [MonoidOps α] [IsMonoid α] (n: ℕ) : (1: α) ^ n = 1 :=
+  nsmul_zero (α := AddOfMul α) n
 
 public theorem one_nsmul [AddMonoidOps α] [IsAddMonoid α] (a: α) : 1 • a = a := by
   rw [succ_nsmul, zero_nsmul, zero_add]
