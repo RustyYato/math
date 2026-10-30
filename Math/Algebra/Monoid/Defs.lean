@@ -808,5 +808,22 @@ public theorem pown_two [MonoidOps α] [IsMonoid α] (a: α) : a ^ 2 = a * a :=
 
 end Theorems
 
+section Opp
+
+public instance [Mul α] [One α] [IsLawfulOne α] : IsLawfulOne αᵐᵒᵖ where
+  one_mul := mul_one (α := α)
+  mul_one := one_mul (α := α)
+public instance [Add α] [Zero α] [IsLawfulZero α] : IsLawfulZero αᵃᵒᵖ where
+  zero_add := add_zero (α := α)
+  add_zero := zero_add (α := α)
+public instance [MonoidOps α] [IsMonoid α] : IsLawfulPowN αᵐᵒᵖ where
+  pown_zero := pown_zero (α := α)
+  pown_succ := pown_succ_left (α := α)
+public instance [AddMonoidOps α] [IsAddMonoid α] : IsLawfulNSMul αᵃᵒᵖ where
+  zero_nsmul := zero_nsmul (α := α)
+  succ_nsmul := succ_nsmul_left (α := α)
+
+end Opp
+
 instance : IsZeroNeOne ℕ := inferInstance
 instance : IsZeroNeOne ℤ := inferInstance

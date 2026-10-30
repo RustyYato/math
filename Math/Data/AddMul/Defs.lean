@@ -4,6 +4,11 @@ public import Math.Data.Equiv.Defs
 
 @[expose] public def AddOfMul (α: Type u) := α
 @[expose] public def MulOfAdd (α: Type u) := α
+@[expose] public def MulOpp (α: Type u) := α
+@[expose] public def AddOpp (α: Type u) := α
+
+postfix:max "ᵐᵒᵖ" => MulOpp
+postfix:max "ᵃᵒᵖ" => AddOpp
 
 namespace AddOfMul
 
@@ -44,3 +49,57 @@ public instance [Neg α] : Inv (MulOfAdd α) where
   inv a := .mk (-a.get)
 
 end MulOfAdd
+
+namespace MulOpp
+
+@[expose] public def mk : α -> αᵐᵒᵖ := id
+@[expose] public def get : αᵐᵒᵖ -> α := id
+
+@[ext] public theorem ext (a b: αᵐᵒᵖ) (h: a.get = b.get) : a = b := h
+
+attribute [local irreducible] MulOpp
+
+public instance [One α] : One (αᵐᵒᵖ) where
+  one := .mk 1
+public instance [Mul α] : Mul (αᵐᵒᵖ) where
+  mul a b := .mk (b.get * a.get)
+public instance [Pow α β] : Pow (αᵐᵒᵖ) β where
+  pow x a := .mk (x.get ^ a)
+public instance [Inv α] : Inv (αᵐᵒᵖ) where
+  inv a := .mk (a.get⁻¹)
+public instance [Mul α] [Inv α] : Div (αᵐᵒᵖ) where
+  div a b := a * b⁻¹
+
+@[simp] public theorem get_one [One α] : get 1 = (1: α) := rfl
+@[simp] public theorem get_mul [Mul α] (a b: αᵐᵒᵖ) : get (a * b) = b.get * a.get := rfl
+@[simp] public theorem get_pow [Pow α β] (a: αᵐᵒᵖ) (b: β) : get (a ^ b) = a.get ^ b := rfl
+@[simp] public theorem get_inv [Inv α] (a: αᵐᵒᵖ) : get (a⁻¹) = a.get⁻¹ := rfl
+
+end MulOpp
+
+namespace AddOpp
+
+@[expose] public def mk : α -> αᵃᵒᵖ := id
+@[expose] public def get : αᵃᵒᵖ -> α := id
+
+@[ext] public theorem ext (a b: αᵃᵒᵖ) (h: a.get = b.get) : a = b := h
+
+attribute [local irreducible] AddOpp
+
+public instance [Zero α] : Zero (αᵃᵒᵖ) where
+  zero := .mk 0
+public instance [Add α] : Add (αᵃᵒᵖ) where
+  add a b := .mk (b.get + a.get)
+public instance [SMul β α] : SMul β (αᵃᵒᵖ) where
+  smul a x := .mk (a • x.get)
+public instance [Neg α] : Neg (αᵃᵒᵖ) where
+  neg a := .mk (-a.get)
+public instance [Add α] [Neg α] : Sub (αᵃᵒᵖ) where
+  sub a b := a + -b
+
+@[simp] public theorem get_zero [Zero α] : get 0 = (0: α) := rfl
+@[simp] public theorem get_add [Add α] (a b: αᵃᵒᵖ) : get (a + b) = b.get + a.get := rfl
+@[simp] public theorem get_smul [SMul β α] (a: αᵃᵒᵖ) (b: β) : get (b • a) = b • a.get := rfl
+@[simp] public theorem get_neg [Neg α] (a: αᵃᵒᵖ) : get (-a) = -a.get := rfl
+
+end AddOpp

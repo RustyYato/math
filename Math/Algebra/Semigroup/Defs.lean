@@ -412,6 +412,23 @@ public instance [Mul α] [IsRightCancel α] : IsRightAddCancel (AddOfMul α) whe
 public instance [Add α] [IsRightAddCancel α] : IsRightCancel (MulOfAdd α) where
   of_mul_right := of_add_right (α := α)
 
+public instance [Mul α] [IsSemigroup α] : IsSemigroup αᵐᵒᵖ where
+  mul_assoc _ _ _ := by ext; dsimp; rw [mul_assoc]
+public instance [Add α] [IsAddSemigroup α] : IsAddSemigroup αᵃᵒᵖ where
+  add_assoc _ _ _ := by ext; dsimp; rw [add_assoc]
+public instance [Mul α] [IsComm α] : IsComm αᵐᵒᵖ where
+  mul_comm _ _ := by ext; dsimp; rw [mul_comm]
+public instance [Add α] [IsAddComm α] : IsAddComm αᵃᵒᵖ where
+  add_comm _ _ := by ext; dsimp; rw [add_comm]
+public instance [Mul α] [IsRightCancel α] : IsLeftCancel (αᵐᵒᵖ) where
+  of_mul_left := of_mul_right (α := α)
+public instance [Add α] [IsRightAddCancel α] : IsLeftAddCancel (αᵃᵒᵖ) where
+  of_add_left := of_add_right (α := α)
+public instance [Mul α] [IsLeftCancel α] : IsRightCancel (αᵐᵒᵖ) where
+  of_mul_right := of_mul_left (α := α)
+public instance [Add α] [IsLeftAddCancel α] : IsRightAddCancel (αᵃᵒᵖ) where
+  of_add_right := of_add_left (α := α)
+
 public instance : IsSemigroup ℕ where
   mul_assoc := Nat.mul_assoc
 public instance : IsSemigroup ℤ where
