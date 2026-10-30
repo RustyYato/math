@@ -12,8 +12,8 @@ postfix:max "ᵃᵒᵖ" => AddOpp
 
 namespace AddOfMul
 
-@[expose] public def mk : α ≃ AddOfMul α := .id _
-@[expose] public def get : AddOfMul α ≃ α := .id _
+@[expose] public def mk : α -> AddOfMul α := id
+@[expose] public def get : AddOfMul α -> α := id
 
 attribute [local irreducible] AddOfMul
 
@@ -32,8 +32,8 @@ end AddOfMul
 
 namespace MulOfAdd
 
-@[expose] public def mk : α ≃ MulOfAdd α := .id _
-@[expose] public def get : MulOfAdd α ≃ α := .id _
+@[expose] public def mk : α -> MulOfAdd α := id
+@[expose] public def get : MulOfAdd α -> α := id
 
 attribute [local irreducible] MulOfAdd
 
