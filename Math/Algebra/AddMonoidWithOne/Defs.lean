@@ -188,3 +188,14 @@ public theorem natCast_add (n m: ℕ) : (n + m: ℕ) = (n + m: α) := by
   rw [←nsmul_one_eq_natCast, add_nsmul, nsmul_one_eq_natCast, nsmul_one_eq_natCast]
 
 end Theorems
+
+namespace OfEquiv
+
+variable (f: α ≃ β)
+
+public instance [Add α] [Zero α] [One α] [NatCast α] [IsLawfulNatCast α] : IsLawfulNatCast (OfEquiv f) where
+  natCast_zero := by simp; rw [natCast_zero]
+  natCast_succ n := by simp; rw [natCast_succ]
+public instance [AddMonoidOps α] [One α] [NatCast α] [IsAddMonoidWithOne α] : IsAddMonoidWithOne (OfEquiv f) where
+
+end OfEquiv

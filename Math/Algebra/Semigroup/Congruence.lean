@@ -5,6 +5,8 @@ public import Math.Algebra.Congruence.Defs
 
 namespace Math
 
+section
+
 variable [RelLike C α] [IsCon C α]
 
 public instance [Mul α] [IsSemigroup α] [IsMulCon C α] (r: C) : IsSemigroup (AlgQuot r) where
@@ -37,7 +39,25 @@ public instance [Add α] [IsAddComm α] [IsAddCon C α] (r: C) : IsAddComm (AlgQ
     show AlgQuot.mk r _ = AlgQuot.mk r _
     rw [add_comm]
 
+end
+
 namespace AddCon
+
+@[expose] public def eq (α: Type*) [Add α] : AddCon α where
+  toRel a b := a = b
+  toEquiv := by apply eqv
+  resp_add := by intro a b c d rfl rfl; rfl
+
+@[expose] public def pullback {α β: Type*}
+  [Funlike F α β] [Add α] [Add β]
+  [IsAddHom F α β]
+  (f: F) (r: AddCon β)
+  : AddCon α where
+  toRel a b := r (f a) (f b)
+  toEquiv := by apply eqv
+  resp_add := by
+    intro a b c d h g
+    rw [map_add f, map_add f]; apply resp_add <;> assumption
 
 inductive Generate (r: α -> α -> Prop) [Add α] : α -> α -> Prop where
 | refl (a: α) : Generate r a a
@@ -56,23 +76,39 @@ variable [Add α] {r: α -> α -> Prop}
 public theorem to_generate (h: r a b) : AddCon.generate r a b := by
   exact Generate.of _ _ h
 
-@[expose] public def of_generate
+public theorem of_generate
   [Add β] [RelLike C β] [IsAddCon C β]
   [Funlike F α β] [IsAddHom F α β]
   {r: α -> α -> Prop}
-  (c: C) (f: F) (hf: respects_rel f r c) : AddCon.generate r →r₀ c where
-  toFun := f
-  map_rel {a b} h := by
-    induction h with
-    | refl => apply refl
-    | symm => apply symm; assumption
-    | trans => apply htrans; assumption; assumption
-    | add => rw [map_add f, map_add f]; apply resp_add c <;> assumption
-    | of => apply hf; assumption
+  (c: C) (f: F) (hf: respects_rel f r c) :
+  respects_rel f (AddCon.generate r) c := by
+  intro a b h
+  induction h with
+  | refl => apply refl
+  | symm => apply symm; assumption
+  | trans => apply htrans; assumption; assumption
+  | add => rw [map_add f, map_add f]; apply resp_add c <;> assumption
+  | of => apply hf; assumption
 
 end AddCon
 
 namespace MulCon
+
+@[expose] public def eq (α: Type*) [Mul α] : MulCon α where
+  toRel a b := a = b
+  toEquiv := by apply eqv
+  resp_mul := by intro a b c d rfl rfl; rfl
+
+@[expose] public def pullback {α β: Type*}
+  [Funlike F α β] [Mul α] [Mul β]
+  [IsMulHom F α β]
+  (f: F) (r: MulCon β)
+  : MulCon α where
+  toRel a b := r (f a) (f b)
+  toEquiv := by apply eqv
+  resp_mul := by
+    intro a b c d h g
+    rw [map_mul f, map_mul f]; apply resp_mul <;> assumption
 
 inductive Generate (r: α -> α -> Prop) [Mul α] : α -> α -> Prop where
 | refl (a: α) : Generate r a a
@@ -91,23 +127,43 @@ variable [Mul α] {r: α -> α -> Prop}
 public theorem to_generate (h: r a b) : MulCon.generate r a b := by
   exact Generate.of _ _ h
 
-@[expose] public def of_generate
+public theorem of_generate
   [Mul β] [RelLike C β] [IsMulCon C β]
   [Funlike F α β] [IsMulHom F α β]
   {r: α -> α -> Prop}
-  (c: C) (f: F) (hf: respects_rel f r c) : MulCon.generate r →r₀ c where
-  toFun := f
-  map_rel {a b} h := by
-    induction h with
-    | refl => apply refl
-    | symm => apply symm; assumption
-    | trans => apply htrans; assumption; assumption
-    | mul => rw [map_mul f, map_mul f]; apply resp_mul c <;> assumption
-    | of => apply hf; assumption
+  (c: C) (f: F) (hf: respects_rel f r c) :
+  respects_rel f (MulCon.generate r) c := by
+  intro a b h
+  induction h with
+  | refl => apply refl
+  | symm => apply symm; assumption
+  | trans => apply htrans; assumption; assumption
+  | mul => rw [map_mul f, map_mul f]; apply resp_mul c <;> assumption
+  | of => apply hf; assumption
 
 end MulCon
 
 namespace RingCon
+
+@[expose] public def eq (α: Type*) [Add α] [Mul α] : RingCon α where
+  toRel a b := a = b
+  toEquiv := by apply eqv
+  resp_add := by intro a b c d rfl rfl; rfl
+  resp_mul := by intro a b c d rfl rfl; rfl
+
+@[expose] public def pullback {α β: Type*}
+  [Funlike F α β] [Add α] [Mul α] [Add β] [Mul β]
+  [IsAddHom F α β] [IsMulHom F α β]
+  (f: F) (r: RingCon β)
+  : RingCon α where
+  toRel a b := r (f a) (f b)
+  toEquiv := by apply eqv
+  resp_add := by
+    intro a b c d h g
+    rw [map_add f, map_add f]; apply resp_add <;> assumption
+  resp_mul := by
+    intro a b c d h g
+    rw [map_mul f, map_mul f]; apply resp_mul <;> assumption
 
 inductive Generate (r: α -> α -> Prop) [Add α] [Mul α] : α -> α -> Prop where
 | refl (a: α) : Generate r a a
@@ -128,19 +184,19 @@ variable [Add α] [Mul α] {r: α -> α -> Prop}
 public theorem to_generate (h: r a b) : RingCon.generate r a b := by
   exact Generate.of _ _ h
 
-@[expose] public def of_generate
+public theorem of_generate
   [Add β] [Mul β] [RelLike C β] [IsAddCon C β] [IsMulCon C β]
   [Funlike F α β] [IsAddHom F α β] [IsMulHom F α β]
   {r: α -> α -> Prop}
-  (c: C) (f: F) (hf: respects_rel f r c) : RingCon.generate r →r₀ c where
-  toFun := f
-  map_rel {a b} h := by
-    induction h with
-    | refl => apply refl
-    | symm => apply symm; assumption
-    | trans => apply htrans; assumption; assumption
-    | add => rw [map_add f, map_add f]; apply resp_add c <;> assumption
-    | mul => rw [map_mul f, map_mul f]; apply resp_mul c <;> assumption
-    | of => apply hf; assumption
+  (c: C) (f: F) (hf: respects_rel f r c) :
+  respects_rel f (RingCon.generate r) c := by
+  intro a b h
+  induction h with
+  | refl => apply refl
+  | symm => apply symm; assumption
+  | trans => apply htrans; assumption; assumption
+  | add => rw [map_add f, map_add f]; apply resp_add c <;> assumption
+  | mul => rw [map_mul f, map_mul f]; apply resp_mul c <;> assumption
+  | of => apply hf; assumption
 
 end RingCon
