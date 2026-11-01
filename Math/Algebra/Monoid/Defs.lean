@@ -787,7 +787,7 @@ public theorem nsmul_add [AddMonoidOps α] [IsAddMonoid α] (a b: α) [IsAddComm
     iterate 3 rw [succ_nsmul]
     rw [ih, add_assoc, ←add_assoc _ a, add_comm _ a, add_assoc a, ←add_assoc _ a]
 
-public theorem mul_npow [MonoidOps α] [IsMonoid α] (a b: α) [IsCommAt a b] (n: ℕ) : (a * b) ^ n = a ^ n * b ^ n :=
+public theorem mul_pown [MonoidOps α] [IsMonoid α] (a b: α) [IsCommAt a b] (n: ℕ) : (a * b) ^ n = a ^ n * b ^ n :=
   nsmul_add (α := AddOfMul α) (AddOfMul.mk a) (AddOfMul.mk b) n
 
 public theorem nsmul_zero [AddMonoidOps α] [IsAddMonoid α] (n: ℕ) : n • (0: α) = 0 := by
@@ -799,7 +799,7 @@ public theorem one_pown [MonoidOps α] [IsMonoid α] (n: ℕ) : (1: α) ^ n = 1 
 
 public theorem one_nsmul [AddMonoidOps α] [IsAddMonoid α] (a: α) : 1 • a = a := by
   rw [succ_nsmul, zero_nsmul, zero_add]
-public theorem npow_one [MonoidOps α] [IsMonoid α] (a: α) : a ^ 1 = a :=
+public theorem pown_one [MonoidOps α] [IsMonoid α] (a: α) : a ^ 1 = a :=
   one_nsmul (α := AddOfMul α) a
 public theorem two_nsmul [AddMonoidOps α] [IsAddMonoid α] (a: α) : 2 • a = a + a := by
   rw [succ_nsmul, one_nsmul]

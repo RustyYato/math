@@ -43,8 +43,8 @@ public instance [MonoidOps α] [IsMonoid α] : Pow (Unit α) ℕ where
   pow a n := {
     val := a.val ^ n
     inv := a.inv ^ n
-    val_mul_inv := by rw [←mul_npow, a.val_mul_inv, one_pown]
-    inv_mul_val := by rw [←mul_npow, a.inv_mul_val, one_pown]
+    val_mul_inv := by rw [←mul_pown, a.val_mul_inv, one_pown]
+    inv_mul_val := by rw [←mul_pown, a.inv_mul_val, one_pown]
   }
 
 @[simp] theorem mul_val [Mul α] [One α] [IsSemigroup α] [IsLawfulOne α] (a b: Unit α) : (a * b).val = a.val * b.val := rfl
