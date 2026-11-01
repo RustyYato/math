@@ -29,14 +29,15 @@ section Theorems
 
 public theorem map_intCast
   [Funlike F α β]
-  [Add α] [Zero α] [One α] [NatCast α]
-  [Add β] [Zero β] [One β] [NatCast β]
-  [IsLawfulNatCast α] [IsLawfulNatCast β]
+  [Add α] [Neg α] [Zero α] [One α] [NatCast α] [IntCast α]
+  [AddGroupOps β] [One β] [NatCast β] [IntCast β]
+  [IsLawfulNatCast α] [IsLawfulNatCast β] [IsLawfulNegLeft α]
+  [IsLawfulIntCast α] [IsLawfulIntCast β] [IsAddGroup β]
   [IsAddHom F α β] [IsZeroHom F α β] [IsOneHom F α β]
-  (f: F) (n: ℕ) : f n = n := by
-  induction n with
-  | zero => rw [natCast_zero, natCast_zero, map_zero]
-  | succ n ih => rw [natCast_succ, natCast_succ, map_add, map_one, ih]
+  (f: F) (n: ℤ) : f n = n := by
+  cases n with
+  | ofNat n => dsimp; rw [intCast_ofNat, intCast_ofNat, map_natCast]
+  | negSucc n => rw [intCast_negSucc, intCast_negSucc, map_neg, map_natCast]
 
 public theorem intCast_zero
   [Add α] [Neg α] [Zero α] [One α] [NatCast α] [IntCast α]

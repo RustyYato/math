@@ -186,18 +186,18 @@ section
 
 public theorem map_inv
   [Funlike F α β]
-  [Mul α] [One α] [Inv α] [GroupOps β] [IsGroup β]
+  [Mul α] [One α] [Inv α] [IsLawfulInvLeft α]
+  [GroupOps β] [IsGroup β]
   [IsMulHom F α β] [IsOneHom F α β]
-  [IsLawfulInvLeft α] [IsLawfulInvLeft β]
   (f: F) (a: α) : f (a⁻¹) = (f a)⁻¹ := by
   apply eq_inv_of_mul
   rw [←map_mul, inv_mul_cancel, map_one]
 
 public theorem map_neg
   [Funlike F α β]
-  [Add α] [Zero α] [Neg α] [AddGroupOps β] [IsAddGroup β]
+  [Add α] [Zero α] [Neg α] [IsLawfulNegLeft α]
+  [AddGroupOps β] [IsAddGroup β]
   [IsAddHom F α β] [IsZeroHom F α β]
-  [IsLawfulNegLeft α] [IsLawfulNegLeft β]
   (f: F) (a: α) : f (-a) = -f a :=
   map_inv (MulOfAdd.mk f) (MulOfAdd.mk a)
 
@@ -312,6 +312,24 @@ public theorem add_zsmul [AddGroupOps α] [IsAddGroup α] (a: α) (n m: ℤ) : (
     rw [←Nat.succ_add]; rfl
 public theorem powz_add [GroupOps α] [IsGroup α] (a: α) (n m: ℤ) : a ^ (n + m) = a ^ n * a ^ m :=
   add_zsmul (α := AddOfMul α) a n m
+
+@[expose] public def zsmul_hom [AddGroupOps α] [IsAddGroup α] (a: α) : ℤ →+ α where
+  toFun n := n • a
+  map_zero := by rw [zero_zsmul]
+  map_add n m := by rw [add_zsmul]
+
+@[expose] public def powz_hom [GroupOps α] [IsGroup α] (a: α) : ℤ →ₘ+ α where
+  toFun n := a ^ n
+  map_zero_to_one := map_zero (β := AddOfMul α) (zsmul_hom (AddOfMul.mk a))
+  map_add_to_mul := map_add (β := AddOfMul α) (zsmul_hom (AddOfMul.mk a))
+
+public theorem mul_zsmul [AddGroupOps α] [IsAddGroup α] (a: α) (n m: ℤ) : (n * m) • a = n • m • a := by
+  rw [←smul_eq_mul n m]
+  show zsmul_hom a (n • m) = n • zsmul_hom a m
+  rw [map_zsmul]
+
+public theorem powz_mul [GroupOps α] [IsGroup α] (a: α) (n m: ℤ) : a ^ (n * m) = (a ^ m) ^ n :=
+  mul_zsmul (α := AddOfMul α) a n m
 
 public theorem zsmul_add [AddGroupOps α] [IsAddGroup α] (a b: α) [IsAddCommAt a b] (n: ℤ) : n • (a + b) = n • a + n • b := by
   cases n; dsimp
