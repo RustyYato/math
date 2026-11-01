@@ -64,3 +64,14 @@ public theorem zatCast_add (n m: ℤ) : (n + m: ℤ) = (n + m: α) := by
   rw [←zsmul_one_eq_intCast, add_zsmul, zsmul_one_eq_intCast, zsmul_one_eq_intCast]
 
 end Theorems
+
+namespace OfEquiv
+
+variable (f: α ≃ β)
+
+public instance [Neg α] [NatCast α] [IntCast α ] [IsLawfulIntCast α] : IsLawfulIntCast (OfEquiv f) where
+  intCast_ofNat n := by simp; rw [intCast_ofNat]
+  intCast_negSucc n := by simp; rw [intCast_negSucc]
+public instance [AddGroupOps α] [One α] [NatCast α] [IntCast α] [IsAddGroupWithOne α] : IsAddGroupWithOne (OfEquiv f) where
+
+end OfEquiv
