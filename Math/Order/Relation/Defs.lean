@@ -215,7 +215,7 @@ public class IsWelFounded (R: α -> α -> Prop) where
 
 export IsWelFounded (wf)
 
-theorem wf_induction (r: α -> α -> Prop) [IsWelFounded r] : ∀{C : α → Prop} (a : α), (∀ (x : α), (∀ (y : α), r y x → C y) → C x) -> C a := @(wf (R := r)).induction
+public theorem wf_induction (r: α -> α -> Prop) [IsWelFounded r] : ∀{C : α → Prop} (a : α), (∀ (x : α), (∀ (y : α), r y x → C y) → C x) -> C a := @(wf (R := r)).induction
 
 public class IsWellOrder (R: α -> α -> Prop) extends
   IsTrans R, IsWelFounded R, IsConnected R (· = ·)
@@ -293,9 +293,9 @@ public inductive Relation.ReflTransGen (r: α -> α -> Prop) : α -> α -> Prop 
 | refl (a: α) : ReflTransGen r a a
 | cons : r a b -> ReflTransGen r b c -> ReflTransGen r a c
 
-instance : IsRefl (Relation.ReflTransGen r) where
+public instance : IsRefl (Relation.ReflTransGen r) where
   refl := .refl
-instance : IsTrans (Relation.ReflTransGen r) where
+public instance : IsTrans (Relation.ReflTransGen r) where
   htrans := by
     intro a b c ab bc
     induction ab with
@@ -306,7 +306,7 @@ instance : IsTrans (Relation.ReflTransGen r) where
       apply ih
       assumption
 
-theorem Relation.ReflTransGen.of {r: α -> α -> Prop} (h: r a b) : ReflTransGen r a b :=
+public theorem Relation.ReflTransGen.of {r: α -> α -> Prop} (h: r a b) : ReflTransGen r a b :=
   .cons h (.refl _)
 
 public instance : IsRefl (Relation.ReflGen r) where
@@ -542,16 +542,16 @@ end Min
 
 section Lift
 
-theorem lift_trans [Funlike F α β] [IsRelHom F r s] [IsTrans s] (f: F) : IsTrans r where
+public theorem lift_trans [Funlike F α β] [IsRelHom F r s] [IsTrans s] (f: F) : IsTrans r where
   htrans h g := map_rel_rev f <| trans (map_rel f h) (map_rel f g)
 
-theorem lift_symm [Funlike F α β] [IsRelHom F r s] [IsSymm s] (f: F) : IsSymm r where
+public theorem lift_symm [Funlike F α β] [IsRelHom F r s] [IsSymm s] (f: F) : IsSymm r where
   symm h := map_rel_rev f <| symm (map_rel f h)
 
-theorem lift_refl [Funlike F α β] [IsRelHom F r s] [IsRefl s] (f: F) : IsRefl r where
+public theorem lift_refl [Funlike F α β] [IsRelHom F r s] [IsRefl s] (f: F) : IsRefl r where
   refl _ := map_rel_rev f (refl _)
 
-theorem lift_wf [Funlike F α β] [IsRelMap F r s] [IsWelFounded s] (f: F) : IsWelFounded r where
+public theorem lift_wf [Funlike F α β] [IsRelMap F r s] [IsWelFounded s] (f: F) : IsWelFounded r where
   wf := by
     apply WellFounded.intro
     intro a
@@ -562,17 +562,17 @@ theorem lift_wf [Funlike F α β] [IsRelMap F r s] [IsWelFounded s] (f: F) : IsW
     intro b h
     exact ih (f b) (map_rel f h) _ rfl
 
-theorem lift_connected [EmbeddingLike F α β] [IsRelHom F r s] [IsConnected s (· = ·)] (f: F) : IsConnected r (· = ·) where
+public theorem lift_connected [EmbeddingLike F α β] [IsRelHom F r s] [IsConnected s (· = ·)] (f: F) : IsConnected r (· = ·) where
   connected a b := by
     rcases connected (R := s) (f a) (f b) with h | h | h
     left; apply map_rel_rev f; assumption
     right; left; apply Embedding.inj (f: α ↪ β) h
     right; right; apply map_rel_rev f; assumption
-theorem RelEmbedding.liftWellOrder (f: r ↪r s) [IsWellOrder s] : IsWellOrder r := {
+public theorem RelEmbedding.liftWellOrder (f: r ↪r s) [IsWellOrder s] : IsWellOrder r := {
   lift_trans f.toRelHom, lift_wf f.toRelHom, lift_connected f with
 }
 
-theorem lift_total [EmbeddingLike F α β] [IsRelHom F r s] [IsTotal s] (f: F) : IsTotal r where
+public theorem lift_total [EmbeddingLike F α β] [IsRelHom F r s] [IsTotal s] (f: F) : IsTotal r where
   total a b := by
     rcases total (R := s) (f a) (f b) with h | h
     · exact .inl <| map_rel_rev f h

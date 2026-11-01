@@ -46,7 +46,7 @@ public theorem neg_mul_right [IsLeftDistrib α] (a b: α) : -(a * b) = a * -b :=
   symm; apply eq_neg_of_add
   rw [←mul_add, neg_add_cancel, mul_zero]
 
-instance [IsLeftDistrib α] [IsRightDistrib α] (a b: α) [IsCommAt a b] : IsCommAt a (-b) where
+public instance [IsLeftDistrib α] [IsRightDistrib α] (a b: α) [IsCommAt a b] : IsCommAt a (-b) where
   mul_comm := by rw [←neg_mul_left, ←neg_mul_right, mul_comm]
 
 end DistribAddGroup

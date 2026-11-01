@@ -698,11 +698,11 @@ end Basic
 
 section Theorems
 
-theorem subingleton_of_zero_eq_one (α: Type*) [Zero α] [One α] [Mul α] [IsLawfulZeroMul α] [IsLawfulOne α] (h: (0: α) = (1: α)) : Subsingleton α where
+public theorem subingleton_of_zero_eq_one (α: Type*) [Zero α] [One α] [Mul α] [IsLawfulZeroMul α] [IsLawfulOne α] (h: (0: α) = (1: α)) : Subsingleton α where
   allEq a b := by
     rw [←one_mul a, ←one_mul b, ←h, zero_mul, zero_mul]
 
-instance
+public instance
   (priority := 100)
   [Nontrivial α] [Zero α] [One α] [Mul α]
   [IsLawfulOne α] [IsLawfulZeroMul α]
@@ -713,7 +713,7 @@ instance
     rw [←mul_one b, ←h, mul_zero] at g
     contradiction
 
-instance [Zero α] [One α] [IsZeroNeOne α] : Nontrivial α := .intro 0 1 zero_ne_one
+public instance [Zero α] [One α] [IsZeroNeOne α] : Nontrivial α := .intro 0 1 zero_ne_one
 
 macro_rules
 | `(tactic|contradiction) => `(tactic|nomatch zero_ne_one _ (by assumption))
@@ -825,5 +825,5 @@ public instance [AddMonoidOps α] [IsAddMonoid α] : IsLawfulNSMul αᵃᵒᵖ w
 
 end Opp
 
-instance : IsZeroNeOne ℕ := inferInstance
-instance : IsZeroNeOne ℤ := inferInstance
+public instance : IsZeroNeOne ℕ := inferInstance
+public instance : IsZeroNeOne ℤ := inferInstance

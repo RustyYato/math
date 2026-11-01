@@ -37,28 +37,28 @@ public theorem nonempty_spec (s: Set α) : s.Nonempty ↔ ∃a, a ∈ s := by
 public theorem exists_elem (s: Set α) [s.Nonempty] : ∃x, x ∈ s := by
   rwa [←nonempty_spec]
 
-instance (a: α) : Set.Nonempty {a} := by exists a
+public instance (a: α) : Set.Nonempty {a} := by exists a
 
-instance : Inhabited ({a}: Set α) where
+public instance : Inhabited ({a}: Set α) where
   default := ⟨a, rfl⟩
 
-instance : Inhabited (insert a x: Set α) where
+public instance : Inhabited (insert a x: Set α) where
   default := ⟨a, by simp⟩
 
-instance {a b: Set α} [h: Nonempty a] : Nonempty (a ∪ b: Set _) := by
+public instance {a b: Set α} [h: Nonempty a] : Nonempty (a ∪ b: Set _) := by
     obtain ⟨x, h⟩ := h
     exact ⟨x, by simp [h]⟩
 
-instance {a b: Set α} [h: Nonempty b] : Nonempty (a ∪ b: Set _) := by
+public instance {a b: Set α} [h: Nonempty b] : Nonempty (a ∪ b: Set _) := by
     obtain ⟨x, h⟩ := h
     exact ⟨x, by simp [h]⟩
 
-instance  [h : Nonempty ι] (f : ι → α) : (range f).Nonempty := by
+public instance  [h : Nonempty ι] (f : ι → α) : (range f).Nonempty := by
   obtain ⟨x⟩ := h
 
   refine ⟨f x, by simp⟩
 
-instance (s: Set α) (f: α -> β) [s.Nonempty] : (s.image f).Nonempty := by
+public instance (s: Set α) (f: α -> β) [s.Nonempty] : (s.image f).Nonempty := by
   have ⟨x, h⟩ := exists_elem s
   exists f x; simp
   exists x

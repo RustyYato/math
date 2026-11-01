@@ -37,7 +37,7 @@ public protected theorem congrFun {f g : F} (h₁ : f = g) (x : α) : f x = g x 
 
 end DFunlike
 
-theorem Function.hfunext {α α' : Sort u} {β : α → Sort v} {β' : α' → Sort v} {f : ∀a, β a} {f' : ∀a, β' a}
+public theorem Function.hfunext {α α' : Sort u} {β : α → Sort v} {β' : α' → Sort v} {f : ∀a, β a} {f' : ∀a, β' a}
     (hα : α = α') (h : ∀a a', HEq a a' → HEq (f a) (f' a')) : HEq f f' := by
   subst hα
   have : ∀a, HEq (f a) (f' a) := fun a ↦ h a a (HEq.refl a)

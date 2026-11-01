@@ -12,10 +12,10 @@ public theorem inter_comm (a b: Set α) : a ∩ b = b ∩ a := by ext; simp [And
 public theorem union_assoc (a b c: Set α) : a ∪ b ∪ c = a ∪ (b ∪ c) := by ext; simp [or_assoc]
 public theorem inter_assoc (a b c: Set α) : a ∩ b ∩ c = a ∩ (b ∩ c) := by ext; simp [and_assoc]
 
-instance : @Std.Commutative (Set α) (· ∩ ·) := ⟨inter_comm⟩
-instance : @Std.Associative (Set α) (· ∩ ·) := ⟨inter_assoc⟩
-instance : @Std.Commutative (Set α) (· ∪ ·) := ⟨union_comm⟩
-instance : @Std.Associative (Set α) (· ∪ ·) := ⟨union_assoc⟩
+public instance : @Std.Commutative (Set α) (· ∩ ·) := ⟨inter_comm⟩
+public instance : @Std.Associative (Set α) (· ∩ ·) := ⟨inter_assoc⟩
+public instance : @Std.Commutative (Set α) (· ∪ ·) := ⟨union_comm⟩
+public instance : @Std.Associative (Set α) (· ∪ ·) := ⟨union_assoc⟩
 
 @[simp] public theorem preimage_id (s: Set α) : s.preimage id = s := rfl
 @[simp] public theorem preimage_id' (s: Set α) (f: α -> α) (hf: ∀x, f x = x) : s.preimage f = s := by
