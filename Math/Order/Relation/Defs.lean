@@ -11,8 +11,10 @@ namespace Math
 
 section Hom
 
+public abbrev respects_rel (f: α -> β) (r: α -> α -> Prop) (s: β -> β -> Prop) : Prop := ∀{a b: α}, r a b -> s (f a) (f b)
+
 public class IsRelMap (F: Sort*) {α β: outParam Sort*} [Funlike F α β] (r: outParam <| α -> α -> Prop) (s: outParam <| β -> β -> Prop) : Prop where
-  public map_rel (f: F) {a b: α}:  r a b -> s (f a) (f b) := by intro f; exact f.map_rel
+  public map_rel (f: F): respects_rel f r s := by intro f; exact f.map_rel
 
 public class IsRelHom (F: Sort*) {α β: outParam Sort*} [Funlike F α β] (r: outParam <| α -> α -> Prop) (s: outParam <| β -> β -> Prop) : Prop where
   public map_rel_iff (f: F) {a b: α}:  r a b ↔ s (f a) (f b) := by intro f; exact f.map_rel_iff
