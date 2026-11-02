@@ -167,14 +167,14 @@ end LinearEquiv
 
 namespace LinearHom
 
-instance [Zero β] [IsLawfulZero β] [IsLawfulSMulZero R β] : Zero (LinearHom R α β) where
+public instance [Zero β] [IsLawfulZero β] [IsLawfulSMulZero R β] : Zero (LinearHom R α β) where
   zero := {
     toFun _ := 0
     map_add a b := by rw [add_zero]
     map_smul r a := by rw [smul_zero]
   }
 
-instance [IsRightDistribSMul R β] [IsAddSemigroup β] [IsAddComm β] : Add (LinearHom R α β) where
+public instance [IsRightDistribSMul R β] [IsAddSemigroup β] [IsAddComm β] : Add (LinearHom R α β) where
   add f g := {
     toFun i := f i + g i
     map_add a b := by
@@ -184,7 +184,7 @@ instance [IsRightDistribSMul R β] [IsAddSemigroup β] [IsAddComm β] : Add (Lin
     map_smul r a := by rw [smul_add, map_smul, map_smul]
   }
 
-instance [SMul S β] [IsSMulComm S R β] [IsRightDistribSMul S β] : SMul S (LinearHom R α β) where
+public instance [SMul S β] [IsSMulComm S R β] [IsRightDistribSMul S β] : SMul S (LinearHom R α β) where
   smul r f := {
     toFun i := r • f i
     map_add a b := by rw [map_add, smul_add]
@@ -196,14 +196,14 @@ variable {β: Type*}
   [AddMonoidOps β] [IsAddMonoid β] [IsAddComm β]
   [IsLawfulSMulZero R β] [IsRightDistribSMul R β]
 
-instance : IsAddMonoid (LinearHom R α β) where
+public instance : IsAddMonoid (LinearHom R α β) where
   add_assoc _ _ _ := by ext i; apply add_assoc
   add_zero _ := by ext i; apply add_zero
   zero_add _ := by ext i; apply zero_add
   zero_nsmul _ := by ext i; apply zero_nsmul
   succ_nsmul _ _ := by ext i; apply succ_nsmul
 
-instance : IsAddComm (LinearHom R α β) where
+public instance : IsAddComm (LinearHom R α β) where
   add_comm f g := by ext; apply add_comm
 
 end LinearHom

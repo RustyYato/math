@@ -11,6 +11,7 @@ public class IsModule (R α: Type*)
   [SMul R α]
   extends
     IsRightDistribSMul R α, IsLeftDistribSMul R α,
-    IsLawfulMulSMul R α, IsLawfulOneSMul R α where
+    IsLawfulMulSMul R α, IsLawfulOneSMul R α,
+    IsLawfulZeroSMul R α, IsLawfulSMulZero R α where
 
-instance [AddMonoidOps α] [IsAddMonoid α] [IsAddComm α] : IsModule ℕ α where
+public instance [AddMonoidOps α] [IsAddMonoid α] [IsAddComm α] : IsModule ℕ α where

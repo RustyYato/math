@@ -357,6 +357,16 @@ public theorem zsmul_neg [AddGroupOps α] [IsAddGroup α] (a: α) (n: ℤ) : n �
 public theorem inv_powz [GroupOps α] [IsGroup α] (a: α) (n: ℤ) : (a⁻¹) ^ n = (a ^ n)⁻¹ :=
   zsmul_neg (α := AddOfMul α) _ _
 
+public theorem sub_self [AddGroupOps α] [IsAddGroup α] (a: α) : a - a = 0 := by
+  rw [sub_eq_add_neg, add_neg_cancel]
+public theorem div_self [GroupOps α] [IsGroup α] (a: α) : a / a = 1 :=
+  sub_self (α := AddOfMul α) _
+
+public theorem add_sub_assoc [AddGroupOps α] [IsAddGroup α] (a b c: α) : a + b - c = a + (b - c) := by
+  rw [sub_eq_add_neg, sub_eq_add_neg, add_assoc]
+public theorem mul_div_assoc [GroupOps α] [IsGroup α] (a b c: α) : a * b / c = a * (b / c) :=
+  add_sub_assoc (α := AddOfMul α) _ _ _
+
 public def AddGroupEquiv.conj [AddGroupOps α] [IsAddGroup α] (x: α) : α ≃+ α where
   toFun a := x + a + -x
   invFun a := -x + a + x
