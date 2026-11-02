@@ -103,3 +103,9 @@ public instance [Add α] [Neg α] : Sub (αᵃᵒᵖ) where
 @[simp] public theorem get_neg [Neg α] (a: αᵃᵒᵖ) : get (-a) = -a.get := rfl
 
 end AddOpp
+
+@[expose] public def lsmul [SMul R A] (r: R) (a: A) := r • a
+@[expose] public def rsmul [SMul Rᵐᵒᵖ A] (a: A) (r: R) := MulOpp.mk r • a
+
+infixr:73 " •> " => lsmul
+infixl:73 " <• " => rsmul
