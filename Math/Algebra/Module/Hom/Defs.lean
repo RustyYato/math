@@ -55,6 +55,21 @@ public instance : IsSMulHom (α →ₗ[R] β) R α β where
 public instance : IsSMulHom (α ↪ₗ[R] β) R α β where
 public instance : IsSMulHom (α ≃ₗ[R] β) R α β where
 
+variable [Zero R] [Zero α] [Zero β]
+  [IsLawfulZeroSMul R α]
+  [IsLawfulZeroSMul R β]
+
+public instance : IsZeroHom (SMulHom R α β) α β where
+  map_zero f := by rw [←zero_smul (R := R) (0: α), map_smul, zero_smul]
+public instance : IsZeroHom (SMulEquiv R α β) α β where
+  map_zero f := map_zero f.toSMulHom
+public instance : IsZeroHom (α →ₗ[R] β) α β where
+  map_zero f := map_zero f.toSMulHom
+public instance : IsZeroHom (α ↪ₗ[R] β) α β where
+  map_zero f := map_zero f.toSMulHom
+public instance : IsZeroHom (α ≃ₗ[R] β) α β where
+  map_zero f := map_zero f.toSMulHom
+
 end Impls
 
 section Reduction
