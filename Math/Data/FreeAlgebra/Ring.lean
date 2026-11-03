@@ -1,9 +1,12 @@
 module
 
 public import Math.Data.FreeAlgebra.Defs
+public import Math.Algebra.Algebra.Ring
 public import Math.Algebra.Ring.Defs
 
 namespace Math
+
+section
 
 variable {R α: Type*} [RingOps R] [IsRing R]
 
@@ -40,3 +43,7 @@ public instance : IsRing (FreeAlgebra R α) where
     rw [intCast_negSucc]
     show algebraMap R (-1) * (n + 1: ℕ) * a = algebraMap R (-1) * ((n + 1: ℕ) * a)
     rw [mul_assoc]
+
+end
+
+public abbrev FreeRing (α: Type*) := FreeAlgebra ℤ α

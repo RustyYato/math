@@ -141,6 +141,7 @@ public instance : IsRightDistrib (FreeAlgebra R α) where
     induction c using ind with | _ c =>
     apply sound'; apply Rel.add_mul
 
+public instance : SemiringOps (FreeAlgebra R α) := inferInstance
 public instance : IsSemiring (FreeAlgebra R α) where
   add_assoc a b c := by
     induction a using ind with | _ a =>
@@ -333,3 +334,5 @@ public theorem ι_ne_one (a: α) : ι R a ≠ 1 :=
   ι_ne_algebraMap a (1: R)
 
 end FreeAlgebra
+
+abbrev FreeSemiring (α: Type*) := FreeAlgebra ℕ α
