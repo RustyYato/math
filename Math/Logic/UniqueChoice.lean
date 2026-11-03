@@ -1,6 +1,7 @@
 module
 
 meta import Math.Tactic.Basic
+public import Math.Logic.LEM
 
 @[expose] public def exists_unique (P: α -> Prop) := ∃a, P a ∧ ∀b, P b -> a = b
 
@@ -32,5 +33,15 @@ public theorem unique_choose_spec (h: exists_unique P) : P (unique_choose h) :=
 public theorem unique_choose_unique (h: exists_unique P) : ∀a: α, P a -> unique_choose h = a :=
   have := exists_unique.subsingleton P
   (unique_choice h.nonempty).property.right
+
+namespace UniqueChoice
+
+public noncomputable scoped instance (P: Prop) [ExcludedMiddle P] :
+  Decidable P := unique_choice (by
+    rcases em P with p | np
+    exact ⟨.isTrue p⟩
+    exact ⟨.isFalse np⟩)
+
+end UniqueChoice
 
 end Classical

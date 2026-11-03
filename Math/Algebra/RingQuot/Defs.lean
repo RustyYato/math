@@ -49,6 +49,10 @@ public theorem sound {a b: α} : r a b -> mk r a = mk r b := by
   apply RingCon.to_generate
   assumption
 
+public theorem exact {a b: α} : mk r a = mk r b -> RingCon.generate r a b := by
+  intro h;
+  exact AlgQuot.exact (ofQuot.inj h)
+
 @[induction_eliminator]
 public theorem ind {motive: RingQuot r -> Prop} (mk: ∀a, motive (mk r a)) (q: RingQuot r) : motive q := by
   obtain ⟨q⟩ := q
