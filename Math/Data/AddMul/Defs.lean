@@ -15,6 +15,9 @@ namespace AddOfMul
 @[expose] public def mk : α -> AddOfMul α := id
 @[expose] public def get : AddOfMul α -> α := id
 
+@[simp] public theorem mk_get (a: AddOfMul α) : .mk a.get = a := rfl
+@[simp] public theorem get_mk (a: α) : get (.mk a) = a := rfl
+
 attribute [local irreducible] AddOfMul
 
 public instance [One α] : Zero (AddOfMul α) where
@@ -34,6 +37,9 @@ namespace MulOfAdd
 
 @[expose] public def mk : α -> MulOfAdd α := id
 @[expose] public def get : MulOfAdd α -> α := id
+
+@[simp] public theorem mk_get (a: MulOfAdd α) : .mk a.get = a := rfl
+@[simp] public theorem get_mk (a: α) : get (.mk a) = a := rfl
 
 attribute [local irreducible] MulOfAdd
 
