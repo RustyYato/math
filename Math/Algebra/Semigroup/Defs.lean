@@ -200,6 +200,11 @@ public instance [Funlike F α β] [Add α] [Add β] [IsAddHom F α β] : IsMulHo
 public instance [Funlike F α β] [Mul α] [Mul β] [IsMulHom F α β] : IsAddHom (AddOfMul F) (AddOfMul α) (AddOfMul β) where
   map_add := map_mul (F := F) (α := α) (β := β)
 
+attribute [local irreducible] AddOfMul MulOfAdd
+
+@[simp] public theorem apply_add_of_mul [Funlike F α β] (f: AddOfMul F) (a: AddOfMul α) : f a = .mk (f.get a.get) := rfl
+@[simp] public theorem apply_mul_of_add [Funlike F α β] (f: MulOfAdd F) (a: MulOfAdd α) : f a = .mk (f.get a.get) := rfl
+
 end AddMul
 
 section Theorems.Mul

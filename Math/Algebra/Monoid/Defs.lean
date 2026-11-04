@@ -130,7 +130,7 @@ public theorem default_pown_eq_fast_pown : @default_pown = @fast_pown := by
 
 variable [Mul α] [One α] [IsSemigroup α] [IsLawfulOne α]
 
-public scoped instance : Pow α ℕ where
+public scoped instance instPowNat : Pow α ℕ where
   pow := default_pown
 
 public scoped instance : IsLawfulPowN α where
@@ -482,6 +482,27 @@ end Reduction
 
 section Api
 
+@[expose] public def GroupHom.of
+  [Funlike F α β] [IsOneHom F α β] [IsMulHom F α β]
+  (f: F) : α →* β where
+  toFun := f
+  map_one := map_one f
+  map_mul := map_mul f
+
+@[expose] public def GroupEmbedding.of
+  [EmbeddingLike F α β] [IsOneHom F α β] [IsMulHom F α β]
+  (f: F) : α ↪* β where
+  toEmbedding := f
+  map_one := map_one f
+  map_mul := map_mul f
+
+@[expose] public def GroupEquiv.of
+  [EquivLike F α β] [IsOneHom F α β] [IsMulHom F α β]
+  (f: F) : α ≃* β where
+  toEquiv := f
+  map_one := map_one f
+  map_mul := map_mul f
+
 @[expose] public protected def GroupHom.id (α: Type*) [Mul α] [One α] : α →* α := {
   MulHom.id α, OneHom.id α with
 }
@@ -507,9 +528,16 @@ section Api
   f.toMulEquiv.symm, f.toOneEquiv.symm with
 }
 
+@[expose] public def GroupEquiv.mul_of_add_inv_add_of_mul (α: Type*) [Mul α] [One α] : MulOfAdd (AddOfMul α) ≃* α :=
+  GroupEquiv.id α
+
 end Api
 
 namespace GroupHom
+
+@[simp] public theorem apply_of
+  [Funlike F α β] [IsOneHom F α β] [IsMulHom F α β]
+  (f: F) (a: α) : of f a = f a := rfl
 
 @[simp] public theorem apply_id : GroupHom.id α x = x := rfl
 
@@ -518,6 +546,10 @@ namespace GroupHom
 end GroupHom
 
 namespace GroupEmbedding
+
+@[simp] public theorem apply_of
+  [EmbeddingLike F α β] [IsOneHom F α β] [IsMulHom F α β]
+  (f: F) (a: α) : of f a = f a := rfl
 
 @[simp] public theorem apply_id : GroupEmbedding.id α x = x := rfl
 
@@ -529,6 +561,10 @@ public theorem inj (f: α ↪* β) : Function.Injective f := f.injective
 end GroupEmbedding
 
 namespace GroupEquiv
+
+@[simp] public theorem apply_of
+  [EquivLike F α β] [IsOneHom F α β] [IsMulHom F α β]
+  (f: F) (a: α) : of f a = f a := rfl
 
 @[simp] public theorem apply_id : GroupEquiv.id α x = x := rfl
 
@@ -546,6 +582,13 @@ namespace GroupEquiv
   ext a; dsimp; rw [symm_apply]
 @[simp] public theorem trans_symm (f: α ≃* β) : f.trans f.symm = GroupEquiv.id _ := by
   ext a; dsimp; rw [apply_symm]
+
+attribute [local irreducible] AddOfMul MulOfAdd
+
+@[simp] public theorem apply_mul_of_add_inv_add_of_mul (a: MulOfAdd (AddOfMul α)) : GroupEquiv.mul_of_add_inv_add_of_mul α a = a.get.get :=
+  rfl
+@[simp] public theorem symm_apply_mul_of_add_inv_add_of_mul (a: α) : (GroupEquiv.mul_of_add_inv_add_of_mul α).symm a = .mk (.mk a) :=
+  rfl
 
 public theorem inj (f: α ≃* β) : Function.Injective f := f.rightInv.injective
 public theorem surj (f: α ≃* β) : Function.Surjective f := f.symm.rightInv.surjective
@@ -573,6 +616,27 @@ end Reduction
 
 section Api
 
+@[expose] public def AddGroupHom.of
+  [Funlike F α β] [IsZeroHom F α β] [IsAddHom F α β]
+  (f: F) : α →+ β where
+  toFun := f
+  map_zero := map_zero f
+  map_add := map_add f
+
+@[expose] public def AddGroupEmbedding.of
+  [EmbeddingLike F α β] [IsZeroHom F α β] [IsAddHom F α β]
+  (f: F) : α ↪+ β where
+  toEmbedding := f
+  map_zero := map_zero f
+  map_add := map_add f
+
+@[expose] public def AddGroupEquiv.of
+  [EquivLike F α β] [IsZeroHom F α β] [IsAddHom F α β]
+  (f: F) : α ≃+ β where
+  toEquiv := f
+  map_zero := map_zero f
+  map_add := map_add f
+
 @[expose] public protected def AddGroupHom.id (α: Type*) [Add α] [Zero α] : α →+ α := {
   AddHom.id α, ZeroHom.id α with
 }
@@ -598,9 +662,16 @@ section Api
   f.toAddEquiv.symm, f.toZeroEquiv.symm with
 }
 
+@[expose] public def AddGroupEquiv.add_of_mul_inv_mul_of_add (α: Type*) [Add α] [Zero α] : AddOfMul (MulOfAdd α) ≃+ α :=
+  AddGroupEquiv.id α
+
 end Api
 
 namespace AddGroupHom
+
+@[simp] public theorem apply_of
+  [Funlike F α β] [IsZeroHom F α β] [IsAddHom F α β]
+  (f: F) (a: α) : of f a = f a := rfl
 
 @[simp] public theorem apply_id : AddGroupHom.id α x = x := rfl
 
@@ -609,6 +680,10 @@ namespace AddGroupHom
 end AddGroupHom
 
 namespace AddGroupEmbedding
+
+@[simp] public theorem apply_of
+  [EmbeddingLike F α β] [IsZeroHom F α β] [IsAddHom F α β]
+  (f: F) (a: α) : of f a = f a := rfl
 
 @[simp] public theorem apply_id : AddGroupEmbedding.id α x = x := rfl
 
@@ -620,6 +695,10 @@ public theorem inj (f: α ↪+ β) : Function.Injective f := f.injective
 end AddGroupEmbedding
 
 namespace AddGroupEquiv
+
+@[simp] public theorem apply_of
+  [EquivLike F α β] [IsZeroHom F α β] [IsAddHom F α β]
+  (f: F) (a: α) : of f a = f a := rfl
 
 @[simp] public theorem apply_id : AddGroupEquiv.id α x = x := rfl
 
@@ -637,6 +716,13 @@ namespace AddGroupEquiv
   ext a; dsimp; rw [symm_apply]
 @[simp] public theorem trans_symm (f: α ≃+ β) : f.trans f.symm = AddGroupEquiv.id _ := by
   ext a; dsimp; rw [apply_symm]
+
+attribute [local irreducible] AddOfMul MulOfAdd
+
+@[simp] public theorem apply_add_of_mul_inv_mul_of_add (a: AddOfMul (MulOfAdd α)) : AddGroupEquiv.add_of_mul_inv_mul_of_add α a = a.get.get :=
+  rfl
+@[simp] public theorem symm_apply_add_of_mul_inv_mul_of_add (a: α) : (AddGroupEquiv.add_of_mul_inv_mul_of_add α).symm a = .mk (.mk a) :=
+  rfl
 
 public theorem inj (f: α ≃+ β) : Function.Injective f := f.rightInv.injective
 public theorem surj (f: α ≃+ β) : Function.Surjective f := f.symm.rightInv.surjective
