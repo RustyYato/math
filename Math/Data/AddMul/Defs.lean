@@ -61,7 +61,11 @@ namespace MulOpp
 @[expose] public def mk : α -> αᵐᵒᵖ := id
 @[expose] public def get : αᵐᵒᵖ -> α := id
 
+@[simp] public theorem mk_get (a: αᵐᵒᵖᵐᵒᵖ) : .mk a.get = a := rfl
+@[simp] public theorem get_mk (a: α) : get (.mk a) = a := rfl
+
 @[ext] public theorem ext (a b: αᵐᵒᵖ) (h: a.get = b.get) : a = b := h
+@[induction_eliminator] public def rec {motive: αᵐᵒᵖ -> Sort u} (mk: ∀a, motive (mk a)) (a: αᵐᵒᵖ) : motive a := mk _
 
 attribute [local irreducible] MulOpp
 
@@ -88,7 +92,11 @@ namespace AddOpp
 @[expose] public def mk : α -> αᵃᵒᵖ := id
 @[expose] public def get : αᵃᵒᵖ -> α := id
 
+@[simp] public theorem mk_get (a: αᵃᵒᵖᵃᵒᵖ) : .mk a.get = a := rfl
+@[simp] public theorem get_mk (a: α) : get (.mk a) = a := rfl
+
 @[ext] public theorem ext (a b: αᵃᵒᵖ) (h: a.get = b.get) : a = b := h
+@[induction_eliminator] public def rec {motive: αᵃᵒᵖ -> Sort u} (mk: ∀a, motive (mk a)) (a: αᵃᵒᵖ) : motive a := mk _
 
 attribute [local irreducible] AddOpp
 

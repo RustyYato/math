@@ -503,6 +503,13 @@ section Api
   map_one := map_one f
   map_mul := map_mul f
 
+@[expose] public def GroupHom.copy
+  [Funlike F α β] [IsOneHom F α β] [IsMulHom F α β]
+  (f: F) (g: α -> β) (h: ∀i, f i = g i) : α →* β where
+  toFun := g
+  map_one := by rw [←h, map_one]
+  map_mul a b := by rw [←h, ←h, ←h, map_mul]
+
 @[expose] public protected def GroupHom.id (α: Type*) [Mul α] [One α] : α →* α := {
   MulHom.id α, OneHom.id α with
 }
@@ -529,6 +536,8 @@ section Api
 }
 
 @[expose] public def GroupEquiv.mul_of_add_inv_add_of_mul (α: Type*) [Mul α] [One α] : MulOfAdd (AddOfMul α) ≃* α :=
+  GroupEquiv.id α
+@[expose] public def GroupEquiv.mul_opp₂ (α: Type*) [Mul α] [One α] : αᵐᵒᵖᵐᵒᵖ ≃* α :=
   GroupEquiv.id α
 
 end Api
@@ -568,6 +577,10 @@ namespace GroupEquiv
 
 @[simp] public theorem apply_id : GroupEquiv.id α x = x := rfl
 
+@[simp] public theorem apply_copy
+  [Funlike F α β] [IsOneHom F α β] [IsMulHom F α β]
+  (f: F) (g: α -> β) (h: ∀i, f i = g i) (a: α) : GroupHom.copy f g h a = f a := (h a).symm
+
 @[simp] public theorem apply_symm (f: α ≃* β) (x: α) : f.symm (f x) = x := f.rightInv _
 @[simp] public theorem symm_apply (f: α ≃* β) (x: β) : f (f.symm x) = x := f.leftInv _
 @[simp] public theorem symm_symm (f: α ≃* β) : f.symm.symm = f := rfl
@@ -588,6 +601,11 @@ attribute [local irreducible] AddOfMul MulOfAdd
 @[simp] public theorem apply_mul_of_add_inv_add_of_mul (a: MulOfAdd (AddOfMul α)) : GroupEquiv.mul_of_add_inv_add_of_mul α a = a.get.get :=
   rfl
 @[simp] public theorem symm_apply_mul_of_add_inv_add_of_mul (a: α) : (GroupEquiv.mul_of_add_inv_add_of_mul α).symm a = .mk (.mk a) :=
+  rfl
+
+@[simp] public theorem apply_mul_opp₂ (a: αᵐᵒᵖᵐᵒᵖ) : GroupEquiv.mul_opp₂ α a = a.get.get :=
+  rfl
+@[simp] public theorem symm_apply_mul_opp₂ (a: α) : (GroupEquiv.mul_opp₂ α).symm a = .mk (.mk a) :=
   rfl
 
 public theorem inj (f: α ≃* β) : Function.Injective f := f.rightInv.injective
@@ -637,6 +655,13 @@ section Api
   map_zero := map_zero f
   map_add := map_add f
 
+@[expose] public def AddGroupHom.copy
+  [Funlike F α β] [IsZeroHom F α β] [IsAddHom F α β]
+  (f: F) (g: α -> β) (h: ∀i, f i = g i) : α →+ β where
+  toFun := g
+  map_zero := by rw [←h, map_zero]
+  map_add a b := by rw [←h, ←h, ←h, map_add]
+
 @[expose] public protected def AddGroupHom.id (α: Type*) [Add α] [Zero α] : α →+ α := {
   AddHom.id α, ZeroHom.id α with
 }
@@ -664,6 +689,8 @@ section Api
 
 @[expose] public def AddGroupEquiv.add_of_mul_inv_mul_of_add (α: Type*) [Add α] [Zero α] : AddOfMul (MulOfAdd α) ≃+ α :=
   AddGroupEquiv.id α
+@[expose] public def AddGroupEquiv.add_opp₂ (α: Type*) [Add α] [Zero α] : αᵃᵒᵖᵃᵒᵖ ≃+ α :=
+  AddGroupEquiv.id α
 
 end Api
 
@@ -672,6 +699,10 @@ namespace AddGroupHom
 @[simp] public theorem apply_of
   [Funlike F α β] [IsZeroHom F α β] [IsAddHom F α β]
   (f: F) (a: α) : of f a = f a := rfl
+
+@[simp] public theorem apply_copy
+  [Funlike F α β] [IsZeroHom F α β] [IsAddHom F α β]
+  (f: F) (g: α -> β) (h: ∀i, f i = g i) (a: α) : copy f g h a = f a := (h a).symm
 
 @[simp] public theorem apply_id : AddGroupHom.id α x = x := rfl
 
@@ -722,6 +753,11 @@ attribute [local irreducible] AddOfMul MulOfAdd
 @[simp] public theorem apply_add_of_mul_inv_mul_of_add (a: AddOfMul (MulOfAdd α)) : AddGroupEquiv.add_of_mul_inv_mul_of_add α a = a.get.get :=
   rfl
 @[simp] public theorem symm_apply_add_of_mul_inv_mul_of_add (a: α) : (AddGroupEquiv.add_of_mul_inv_mul_of_add α).symm a = .mk (.mk a) :=
+  rfl
+
+@[simp] public theorem apply_mul_opp₂ (a: αᵃᵒᵖᵃᵒᵖ) : add_opp₂ α a = a.get.get :=
+  rfl
+@[simp] public theorem symm_apply_mul_opp₂ (a: α) : (add_opp₂ α).symm a = .mk (.mk a) :=
   rfl
 
 public theorem inj (f: α ≃+ β) : Function.Injective f := f.rightInv.injective
@@ -908,6 +944,8 @@ public instance [MonoidOps α] [IsMonoid α] : IsLawfulPowN αᵐᵒᵖ where
 public instance [AddMonoidOps α] [IsAddMonoid α] : IsLawfulNSMul αᵃᵒᵖ where
   zero_nsmul := zero_nsmul (α := α)
   succ_nsmul := succ_nsmul_left (α := α)
+public instance [MonoidOps α] [IsMonoid α] : IsMonoid αᵐᵒᵖ where
+public instance [AddMonoidOps α] [IsAddMonoid α] : IsAddMonoid αᵃᵒᵖ where
 
 end Opp
 

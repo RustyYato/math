@@ -9,7 +9,7 @@ public structure FreeMonoid (α: Type*) where
 
 namespace FreeMonoid
 
-public def ι : α ↪ FreeMonoid α where
+@[expose] public def ι : α ↪ FreeMonoid α where
   toFun x := ⟨[x]⟩
   injective := by intro a b h; cases h; rfl
 
@@ -33,7 +33,7 @@ public instance : IsLawfulPowN (FreeMonoid α) :=
   DefaultPowN.instIsLawfulPowN
 public instance : IsMonoid (FreeMonoid α) where
 
-theorem list_induction
+public theorem list_induction
   {motive: FreeMonoid α -> Prop}
   (one: motive 1)
   (ι_mul: ∀a b, motive b -> motive (ι a * b))
@@ -44,7 +44,7 @@ theorem list_induction
   | cons a as ih => apply ι_mul _ _ ih
 
 @[induction_eliminator]
-theorem induction
+public theorem induction
   {motive: FreeMonoid α -> Prop}
   (one: motive 1)
   (ι: ∀a, motive (ι a))
@@ -108,7 +108,7 @@ public structure FreeAddMonoid (α: Type*) where
 
 namespace FreeAddMonoid
 
-public def ι : α ↪ FreeAddMonoid α where
+@[expose] public def ι : α ↪ FreeAddMonoid α where
   toFun x := ⟨[x]⟩
   injective := by intro a b h; cases h; rfl
 
@@ -130,10 +130,10 @@ public def eqv : AddOfMul (FreeMonoid α) ≃+ FreeAddMonoid α where
 @[simp] public theorem apply_eqv (a: AddOfMul (FreeMonoid α)) : eqv a = ⟨a.get.toList⟩ := by rfl
 @[simp] public theorem symm_apply_eqv (a: FreeAddMonoid α) : eqv.symm a = .mk ⟨a.toList⟩ := by rfl
 
-instance : IsAddMonoid (FreeAddMonoid α) :=
+public instance : IsAddMonoid (FreeAddMonoid α) :=
   OfEquiv.instIsAddMonoid eqv.toEquiv
 
-theorem list_induction
+public theorem list_induction
   {motive: FreeAddMonoid α -> Prop}
   (zero: motive 0)
   (ι_add: ∀a b, motive b -> motive (ι a + b))
@@ -144,7 +144,7 @@ theorem list_induction
   | cons a as ih => apply ι_add _ _ ih
 
 @[induction_eliminator]
-theorem induction
+public theorem induction
   {motive: FreeAddMonoid α -> Prop}
   (zero: motive 0)
   (ι: ∀a, motive (ι a))
