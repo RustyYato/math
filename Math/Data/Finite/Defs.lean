@@ -134,6 +134,16 @@ public instance : Fintype Unit := ofEquivFin (n := 1) {
     | 0 => rfl
     | x + 1 => nomatch (Nat.lt_of_succ_lt_succ xLt)
 }
+public instance : Fintype PUnit := ofEquivFin (n := 1) {
+  toFun _ := ()
+  invFun _ := ⟨0, by decide⟩
+  leftInv _ := rfl
+  rightInv x := by
+    obtain ⟨x, xLt⟩ := x
+    match x with
+    | 0 => rfl
+    | x + 1 => nomatch (Nat.lt_of_succ_lt_succ xLt)
+}
 public instance : Fintype Bool := ofEquivFin (n := 2) {
   toFun
   | ⟨0, _⟩ => false
@@ -169,6 +179,16 @@ public instance : Fintype Bool := ofEquivFin (n := 2) {
   card := ft.card
   toPre := ft.toPre.recOnSubsingleton fun p =>
     .mk <| .noInv (f.comp p.toBijection)
+
+public instance : Fintype Prop :=
+  ofBijection (α := Bool) {
+    toFun b := b
+    injective a b h := by simpa using h
+    surjective := by
+      intro P; classical
+      exists decide P
+      simp
+  }
 
 end Fintype
 
