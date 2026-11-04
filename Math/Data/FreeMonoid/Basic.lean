@@ -49,7 +49,7 @@ public def reverse : (FreeMonoid α) ≃* (FreeMonoid α)ᵐᵒᵖ where
     show (reverseHom (reverseHom x).get).get = _
     rw [reverse_reverse]; rfl
 
-@[simp] theorem reverse_ι : reverse (ι a) = .mk (ι a) := by
+@[simp] public theorem reverse_ι : reverse (ι a) = .mk (ι a) := by
   apply reverseHom_ι
 
 end FreeMonoid
@@ -99,7 +99,7 @@ public def reverse : (FreeAddMonoid α) ≃+ (FreeAddMonoid α)ᵃᵒᵖ where
     show (reverseHom (reverseHom x).get).get = _
     rw [reverse_reverse]; rfl
 
-@[simp] theorem reverse_ι : reverse (ι a) = .mk (ι a) := by
+@[simp] public theorem reverse_ι : reverse (ι a) = .mk (ι a) := by
   apply reverseHom_ι
 
 end FreeAddMonoid
