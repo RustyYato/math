@@ -1,7 +1,7 @@
 module
 
 public import Math.Order.Set
-public import Math.Order.Defs
+public import Math.Order.Monotone
 
 namespace Math
 
@@ -46,3 +46,47 @@ public instance : IsCompleteLattice (Set α) where
     apply hu; assumption; assumption
 
 end Basic
+
+section SupLattice
+
+public theorem sSup_bot [SupLatticeOps α] [IsSupLattice α] [Bot α] [IsLawfulBot α] : ⨆ ⊥ = (⊥: α) := by
+  apply le_antisymm
+  apply sSup_le _ _ nofun
+  apply bot_le
+
+public theorem sSup_top [LE α] [LT α] [SupSet α] [Top α] [IsPartialOrder α] [IsLawfulSup α] [IsLawfulTop α] : ⨆ ⊤ = (⊤: α) := by
+  apply le_antisymm
+  apply le_top
+  apply le_sSup
+  trivial
+
+public theorem sSup_monotone [SupLatticeOps α] [IsSupLattice α] : IsMonotone (fun x: Set α => ⨆ x) := by
+  intro a b a_le_b; dsimp
+  apply sSup_le
+  intro x hx
+  apply le_sSup
+  apply a_le_b
+  assumption
+
+public theorem sSup_isLUB [SupLatticeOps α] [IsSupLattice α] (U: Set α) : U.isLUB (⨆ U) := by
+  apply And.intro
+  apply le_sSup
+  apply sSup_le
+
+end SupLattice
+
+section InfLattice
+
+public theorem sInf_bot [InfLatticeOps α] [Top α] [IsInfLattice α] [IsLawfulTop α] : ⨅ ⊥ = (⊤: α) :=
+  sSup_bot (α := αᵒᵖ)
+
+public theorem sInf_top [LE α] [LT α] [InfSet α] [Bot α] [IsPartialOrder α] [IsLawfulInf α] [IsLawfulBot α] : ⨅ ⊤ = (⊥: α) :=
+  sSup_top (α := αᵒᵖ)
+
+public theorem sInf_antitone [InfLatticeOps α] [IsInfLattice α] : IsAntitone (fun x: Set α => ⨅ x) :=
+  sSup_monotone (α := αᵒᵖ)
+
+public theorem sInf_isGLB [InfLatticeOps α] [IsInfLattice α] (U: Set α) : U.isGLB (⨅ U) :=
+  sSup_isLUB (α := αᵒᵖ) U
+
+end InfLattice

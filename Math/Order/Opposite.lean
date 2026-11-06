@@ -15,6 +15,8 @@ namespace OrderOpp
 @[expose] public def get : αᵒᵖ -> α := id
 @[induction_eliminator] public def rec {motive: αᵒᵖ -> Sort*} (mk: ∀a, motive (mk a)) (o: αᵒᵖ) : motive o := mk o
 
+section
+
 attribute [local irreducible] OrderOpp
 
 public instance [LE α] : LE αᵒᵖ where
@@ -33,3 +35,10 @@ public instance [Top α] : Bot αᵒᵖ where
   bot := .mk ⊤
 public instance [Bot α] : Top αᵒᵖ where
   top := .mk ⊥
+
+end
+
+public instance [Top α] [LE α] [IsLawfulTop α] : IsLawfulBot αᵒᵖ where
+  bot_le := le_top (α := α)
+public instance [Bot α] [LE α] [IsLawfulBot α] : IsLawfulTop αᵒᵖ where
+  le_top := bot_le (α := α)
