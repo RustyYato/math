@@ -14,8 +14,8 @@ namespace Math
 public class IsLawfulLT (α: Type*) [LE α] [LT α] where
   lt_iff_le_and_not_ge {a b: α} : a < b ↔ a ≤ b ∧ ¬(b ≤ a)
 export IsLawfulLT (lt_iff_le_and_not_ge)
-public class IsPreOrder (α: Type*) [LE α] [LT α] extends IsLawfulLT α, IsRefl (α := α) (· ≤ ·), IsTrans (α := α) (· ≤ ·) where
-public class IsPartialOrder (α: Type*) [LE α] [LT α] extends IsPreOrder α, IsAntisymm (α := α) (· ≤ ·) (· = ·) where
+public class IsPreorder (α: Type*) [LE α] [LT α] extends IsLawfulLT α, IsRefl (α := α) (· ≤ ·), IsTrans (α := α) (· ≤ ·) where
+public class IsPartialOrder (α: Type*) [LE α] [LT α] extends IsPreorder α, IsAntisymm (α := α) (· ≤ ·) (· = ·) where
 public class IsLinearOrder (α: Type*) [LE α] [LT α] extends IsPartialOrder α, IsConnected (α := α) (· < ·) (· = ·) where
 
 infixl:68 " ⊔ " => max
@@ -31,37 +31,37 @@ public class IsLawfulMin (α: Type*) [Min α] [LE α] where
 export IsLawfulMax (left_le_max right_le_max)
 export IsLawfulMin (min_le_left min_le_right)
 
-public class SemiSupLatticeOps (α: Type*) extends Max α, LE α, LT α where
-public class SemiInfLatticeOps (α: Type*) extends Min α, LE α, LT α where
-public class LatticeOps (α: Type*) extends SemiSupLatticeOps α, SemiInfLatticeOps α where
+public class SupSemilatticeOps (α: Type*) extends Max α, LE α, LT α where
+public class InfSemilatticeOps (α: Type*) extends Min α, LE α, LT α where
+public class LatticeOps (α: Type*) extends SupSemilatticeOps α, InfSemilatticeOps α where
 
-public instance [Max α] [LE α] [LT α] : SemiSupLatticeOps α where
-public instance [Min α] [LE α] [LT α] : SemiInfLatticeOps α where
+public instance [Max α] [LE α] [LT α] : SupSemilatticeOps α where
+public instance [Min α] [LE α] [LT α] : InfSemilatticeOps α where
 public instance [Max α] [Min α] [LE α] [LT α] : LatticeOps α where
 
-public class IsSemiSupLattice (α: Type*) [SemiSupLatticeOps α] extends IsPartialOrder α, IsLawfulMax α where
+public class IsSupSemilattice (α: Type*) [SupSemilatticeOps α] extends IsPartialOrder α, IsLawfulMax α where
   max_le {k a b: α} : a ≤ k -> b ≤ k -> a ⊔ b ≤ k
-public class IsSemiInfLattice (α: Type*) [SemiInfLatticeOps α] extends IsPartialOrder α, IsLawfulMin α where
+public class IsInfSemilattice (α: Type*) [InfSemilatticeOps α] extends IsPartialOrder α, IsLawfulMin α where
   le_min {k a b: α} : k ≤ a -> k ≤ b -> k ≤ a ⊓ b
 
-export IsSemiSupLattice (max_le)
-export IsSemiInfLattice (le_min)
+export IsSupSemilattice (max_le)
+export IsInfSemilattice (le_min)
 
-public class IsLattice (α: Type*) [LatticeOps α] extends IsSemiSupLattice α, IsSemiInfLattice α where
+public class IsLattice (α: Type*) [LatticeOps α] extends IsSupSemilattice α, IsInfSemilattice α where
 
 variable [LE α] [LT α]
 
 @[refl]
-public theorem le_refl [IsPreOrder α] (a: α) : a ≤ a := refl _
-public theorem le_trans [IsPreOrder α] {a b c: α} : a ≤ b -> b ≤ c -> a ≤ c := htrans
+public theorem le_refl [IsPreorder α] (a: α) : a ≤ a := refl _
+public theorem le_trans [IsPreorder α] {a b c: α} : a ≤ b -> b ≤ c -> a ≤ c := htrans
 public theorem le_antisymm [IsPartialOrder α] {a b: α} : a ≤ b -> b ≤ a -> a = b := antisymm _ _
 public theorem lt_connected [IsLinearOrder α] (a b: α) : a < b ∨ a = b ∨ b < a := connected _ _
 
 public theorem le_of_lt [IsLawfulLT α] {a b: α} (h: a < b) : a ≤ b := (lt_iff_le_and_not_ge.mp h).left
 public theorem not_ge_of_lt [IsLawfulLT α] {a b: α} (h: a < b) : ¬b ≤ a := (lt_iff_le_and_not_ge.mp h).right
-public theorem le_of_eq [IsPreOrder α] {a b: α} (h: a = b) : a ≤ b := h ▸ le_refl a
-public theorem ne_of_lt [IsPreOrder α] {a b: α} (h: a < b) : a ≠ b := by intro rfl; exact not_ge_of_lt h (le_refl _)
-public theorem ne_of_gt [IsPreOrder α] {a b: α} (h: a < b) : b ≠ a := by intro rfl; exact not_ge_of_lt h (le_refl _)
+public theorem le_of_eq [IsPreorder α] {a b: α} (h: a = b) : a ≤ b := h ▸ le_refl a
+public theorem ne_of_lt [IsPreorder α] {a b: α} (h: a < b) : a ≠ b := by intro rfl; exact not_ge_of_lt h (le_refl _)
+public theorem ne_of_gt [IsPreorder α] {a b: α} (h: a < b) : b ≠ a := by intro rfl; exact not_ge_of_lt h (le_refl _)
 
 end Property
 
@@ -72,7 +72,7 @@ variable [LE α] [LT α] [Max α] [Min α]
 public instance [IsLawfulLT α] : IsLawfulLT αᵒᵖ where
   lt_iff_le_and_not_ge := lt_iff_le_and_not_ge (α := α)
 
-public instance [IsPreOrder α] : IsPreOrder αᵒᵖ where
+public instance [IsPreorder α] : IsPreorder αᵒᵖ where
   refl a := le_refl a.get
   htrans h g := le_trans (α := α) g h
 
@@ -93,9 +93,9 @@ public instance [IsLawfulMin α] : IsLawfulMax αᵒᵖ where
   left_le_max := min_le_left (α := α)
   right_le_max := min_le_right (α := α)
 
-public instance [IsSemiSupLattice α] : IsSemiInfLattice αᵒᵖ where
+public instance [IsSupSemilattice α] : IsInfSemilattice αᵒᵖ where
   le_min := max_le (α := α)
-public instance [IsSemiInfLattice α] : IsSemiSupLattice αᵒᵖ where
+public instance [IsInfSemilattice α] : IsSupSemilattice αᵒᵖ where
   max_le := le_min (α := α)
 
 public instance [IsLattice α] : IsLattice αᵒᵖ where
@@ -126,21 +126,21 @@ public instance [IsLinearOrder α] (a b: α) : ExcludedMiddle (a < b) where
     · left; apply lt_iff_le_and_not_ge.mpr; assumption
     · right; intro g; apply h; apply lt_iff_le_and_not_ge.mp; assumption
 
-public theorem lt_of_lt_of_le [IsPreOrder α] {a b c: α} (h: a ≤ b) (g: b < c) : a < c := by
+public theorem lt_of_lt_of_le [IsPreorder α] {a b c: α} (h: a ≤ b) (g: b < c) : a < c := by
   apply lt_iff_le_and_not_ge.mpr
   apply And.intro
   apply le_trans h (le_of_lt g)
   intro h'
   exact not_ge_of_lt g (le_trans h' h)
 
-public theorem lt_of_le_of_lt [IsPreOrder α] {a b c: α} (h: a < b) (g: b ≤ c) : a < c := by
+public theorem lt_of_le_of_lt [IsPreorder α] {a b c: α} (h: a < b) (g: b ≤ c) : a < c := by
   apply lt_iff_le_and_not_ge.mpr
   apply And.intro
   apply le_trans (le_of_lt h) g
   intro h'
   exact not_ge_of_lt h (le_trans g h')
 
-public theorem lt_trans [IsPreOrder α] {a b c: α} (h: a < b) (g: b < c) : a < c := by
+public theorem lt_trans [IsPreorder α] {a b c: α} (h: a < b) (g: b < c) : a < c := by
   apply lt_iff_le_and_not_ge.mpr
   replace ⟨h₀, h₁⟩ := lt_iff_le_and_not_ge.mp h
   replace ⟨g₀, g₁⟩ := lt_iff_le_and_not_ge.mp g
@@ -172,7 +172,7 @@ public theorem le_or_gt [IsLinearOrder α] (a b: α) : a ≤ b ∨ b < a := by
 
 section Max
 
-variable [Max α] [IsSemiSupLattice α]
+variable [Max α] [IsSupSemilattice α]
 
 public theorem max_comm (a b: α) : a ⊔ b = b ⊔ a := by
   apply le_antisymm
@@ -221,7 +221,7 @@ end Max
 
 section Min
 
-variable [Min α] [IsSemiInfLattice α]
+variable [Min α] [IsInfSemilattice α]
 
 public theorem min_comm (a b: α) : a ⊓ b = b ⊓ a :=
   max_comm (α := αᵒᵖ) _ _
@@ -274,3 +274,25 @@ instance : IsLattice ℤ where
   min_le_right := Int.min_le_right
   max_le h g := Int.max_le.mpr ⟨h, g⟩
   le_min h g := Int.le_min.mpr ⟨h, g⟩
+
+section Hom
+
+public abbrev OrderHom (α β: Type*) [LE α] [LE β] := (· ≤ ·: α -> α -> Prop) →r (· ≤ ·: β -> β -> Prop)
+public abbrev OrderEmbedding (α β: Type*) [LE α] [LE β] := (· ≤ ·: α -> α -> Prop) ↪r (· ≤ ·: β -> β -> Prop)
+public abbrev OrderEquiv (α β: Type*) [LE α] [LE β] := (· ≤ ·: α -> α -> Prop) ≃r (· ≤ ·: β -> β -> Prop)
+
+infixr:80 " →o " => OrderHom
+infixr:80 " ↪o " => OrderEmbedding
+infixr:80 " ≃o " => OrderEquiv
+
+public instance
+  [LE α] [LT α] [IsPartialOrder α]
+  [LE β] [LT β] [IsPreorder β] : EmbeddingLike (α →o β) α β where
+  coeInjective f a b h := by
+    apply le_antisymm
+    apply map_rel_rev f
+    rw [h]
+    apply map_rel_rev f
+    rw [h]
+
+end Hom

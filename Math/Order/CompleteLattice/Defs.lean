@@ -7,17 +7,17 @@ namespace Math
 
 section Property
 
-public class SupLatticeOps (α: Type*) extends SemiSupLatticeOps α, SupSet α where
-public class InfLatticeOps (α: Type*) extends SemiInfLatticeOps α, InfSet α where
+public class SupLatticeOps (α: Type*) extends SupSemilatticeOps α, SupSet α where
+public class InfLatticeOps (α: Type*) extends InfSemilatticeOps α, InfSet α where
 public class CompleteLatticeOps (α: Type*) extends LatticeOps α, SupLatticeOps α, InfLatticeOps α, Top α, Bot α where
 
-public instance [SemiSupLatticeOps α] [SupSet α] : SupLatticeOps α where
-public instance [SemiInfLatticeOps α] [InfSet α] : InfLatticeOps α where
+public instance [SupSemilatticeOps α] [SupSet α] : SupLatticeOps α where
+public instance [InfSemilatticeOps α] [InfSet α] : InfLatticeOps α where
 public instance [SupSet α] [Max α] [Top α] [InfSet α] [Min α] [Bot α] [LE α] [LT α] : CompleteLatticeOps α where
 
-public class IsSupLattice (α: Type*) [SupLatticeOps α] extends IsLawfulSup α, IsSemiSupLattice α where
+public class IsSupLattice (α: Type*) [SupLatticeOps α] extends IsLawfulSup α, IsSupSemilattice α where
   sSup_le (U: Set α) : ⨆ U ∈ U.upperBounds.lowerBounds
-public class IsInfLattice (α: Type*) [InfLatticeOps α] extends IsLawfulInf α, IsSemiInfLattice α where
+public class IsInfLattice (α: Type*) [InfLatticeOps α] extends IsLawfulInf α, IsInfSemilattice α where
   le_sInf (U: Set α) : ⨅ U ∈ U.lowerBounds.upperBounds
 public class IsCompleteLattice (α: Type*) [CompleteLatticeOps α] extends
     IsSupLattice α, IsLawfulMax α,
