@@ -64,12 +64,15 @@ end Syntax
 @[simp] public theorem mem_iInf (f: ι -> Set α) : x ∈ ⨅i, f i ↔ ∀i, x ∈ f i := by
   simp [iInf]
 
-variable [LE α] [LT α]
+variable [LE α]
 
 public def upperBounds (U: Set α) : Set α where
   Mem a := ∀u ∈ U, u ≤ a
 public def lowerBounds (U: Set α) : Set α where
   Mem a := ∀u ∈ U, a ≤ u
+
+@[simp] public theorem mem_upperBounds (U: Set α) : ∀{x}, x ∈ U.upperBounds ↔ ∀u ∈ U, u ≤ x := Iff.rfl
+@[simp] public theorem mem_lowerBounds (U: Set α) : ∀{x}, x ∈ U.lowerBounds ↔ ∀u ∈ U, x ≤ u := Iff.rfl
 
 public def boundedAbove (U: Set α) := (upperBounds U).Nonempty
 public def boundedBelow (U: Set α) := (lowerBounds U).Nonempty
@@ -79,6 +82,8 @@ public def isMin (a: α) (U: Set α) := a ∈ U ∩ U.lowerBounds
 
 public def isGLB (a: α) (U: Set α) := U.lowerBounds.isMax a
 public def isLUB (a: α) (U: Set α) := U.upperBounds.isMin a
+
+variable [LT α]
 
 public def Iio (a: α) : Set α where
   Mem x := x < a
