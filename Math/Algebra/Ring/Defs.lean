@@ -65,9 +65,6 @@ public theorem zsmul_eq_mul_intCast (n: ℤ) (a: α) : n • a = a * n := by
   | ofNat n => dsimp; rw [intCast_ofNat, ofNat_zsmul, nsmul_eq_mul_natCast]
   | negSucc n => rw [intCast_negSucc, negSucc_zsmul, nsmul_eq_mul_natCast, neg_mul_right]
 
-public theorem intCast_add (n m: ℤ) : (n + m: ℤ) = (n: α) + m := by
-  rw [←zsmul_one_eq_intCast, add_zsmul, zsmul_one_eq_intCast, zsmul_one_eq_intCast]
-
 public theorem intCast_mul (n m: ℤ) : (n * m: ℤ) = (n: α) * m := by
   rw [←zsmul_one_eq_intCast, mul_zsmul, zsmul_eq_intCast_mul, zsmul_one_eq_intCast]
 

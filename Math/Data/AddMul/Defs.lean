@@ -18,6 +18,9 @@ namespace AddOfMul
 @[simp] public theorem mk_get (a: AddOfMul α) : .mk a.get = a := rfl
 @[simp] public theorem get_mk (a: α) : get (.mk a) = a := rfl
 
+@[ext] public theorem ext (a b: AddOfMul α) (h: a.get = b.get) : a = b := h
+@[induction_eliminator] public def rec {motive: AddOfMul α -> Sort u} (mk: ∀a, motive (mk a)) (a: AddOfMul α) : motive a := mk _
+
 attribute [local irreducible] AddOfMul
 
 public instance [One α] : Zero (AddOfMul α) where
@@ -40,6 +43,9 @@ namespace MulOfAdd
 
 @[simp] public theorem mk_get (a: MulOfAdd α) : .mk a.get = a := rfl
 @[simp] public theorem get_mk (a: α) : get (.mk a) = a := rfl
+
+@[ext] public theorem ext (a b: MulOfAdd α) (h: a.get = b.get) : a = b := h
+@[induction_eliminator] public def rec {motive: MulOfAdd α -> Sort u} (mk: ∀a, motive (mk a)) (a: MulOfAdd α) : motive a := mk _
 
 attribute [local irreducible] MulOfAdd
 

@@ -335,15 +335,13 @@ public class LatticeBuilder (S α: Type*) [SetLike S α] where
   protected gc: ∀(s: Set α) (t: S), s ⊆ t ↔ closure s ⊆ t := by
     intro s i
     apply Iff.intro
-    intro h x hx
-    show x ∈ i; apply of_mem_closure _ _ _ hx
-    apply h
+    apply of_mem_closure
     intro h x hx
     apply h
     apply sub_closure
     assumption
   protected bot : S := by exact ⊥
-  protected bot_spec (s: Set α) : bot ⊆ closure s := by exact bot_sub
+  protected bot_spec (s: Set α) : bot ⊆ closure s := by intro; exact bot_sub _
 
 namespace LatticeBuilder
 
@@ -400,3 +398,6 @@ public instance : LatticeBuilder.CompleteLattice S where
   }
 
 end LatticeBuilder
+
+public instance [h: LatticeBuilder.CompleteLattice α] : CompleteLatticeOps α := { h with }
+public instance [LatticeBuilder.CompleteLattice α] : IsCompleteLattice α := inferInstance

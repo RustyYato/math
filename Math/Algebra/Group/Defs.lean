@@ -223,6 +223,13 @@ public theorem map_zsmul
 
 end
 
+public instance [GroupOps α] [IsGroup α] : IsLawfulOneInv α where
+  one_inv := by
+    apply inv_eq_of_mul
+    rw [one_mul]
+public instance [AddGroupOps α] [IsAddGroup α] : IsLawfulNegZero α where
+  neg_zero := one_inv (α := MulOfAdd α)
+
 public theorem zero_zsmul [AddGroupOps α] [IsAddGroup α] (a: α) : (0: ℤ) • a = 0 := by
   rw [show (0: ℤ) • a = (0: ℕ) • a from ofNat_zsmul _ _, zero_nsmul]
 public theorem powz_zero [GroupOps α] [IsGroup α] (a: α) : a ^ (0: ℤ) = 1 :=

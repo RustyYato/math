@@ -60,8 +60,12 @@ public theorem zsmul_one_eq_intCast (n: ℤ) : n • (1: α) = n := by
   | ofNat n => dsimp; rw [ofNat_zsmul, intCast_ofNat, nsmul_one_eq_natCast]
   | negSucc n => rw [negSucc_zsmul, intCast_negSucc, nsmul_one_eq_natCast]
 
-public theorem zatCast_add (n m: ℤ) : (n + m: ℤ) = (n + m: α) := by
+public theorem intCast_add (n m: ℤ) : (n + m: ℤ) = (n + m: α) := by
   rw [←zsmul_one_eq_intCast, add_zsmul, zsmul_one_eq_intCast, zsmul_one_eq_intCast]
+
+public theorem intCast_neg (n: ℤ) : (-n: ℤ) = (-n: α) := by
+  apply eq_neg_of_add
+  rw [←intCast_add, neg_add_cancel, intCast_zero]
 
 end Theorems
 

@@ -1,0 +1,256 @@
+module
+
+public import Math.Data.Set.Defs
+public import Math.Algebra.Semigroup.Defs
+
+namespace Math
+
+public abbrev MemMul [Mul α] [SetLike S α] (s: S) : Prop :=
+  ∀{a b: α}, a ∈ s -> b ∈ s -> a * b ∈ s
+
+public abbrev MemAdd [Add α] [SetLike S α] (s: S) : Prop :=
+  ∀{a b: α}, a ∈ s -> b ∈ s -> a + b ∈ s
+
+public class IsMemMul (S α: Type*) [SetLike S α] [Mul α] where
+  mem_mul (s: S) : MemMul s := by intro s; exact s.mem_mul
+public class IsMemAdd (S α: Type*) [SetLike S α] [Add α] where
+  mem_add (s: S) {a b: α} : a ∈ s -> b ∈ s -> a + b ∈ s := by intro s; exact s.mem_add
+
+export IsMemMul (mem_mul)
+export IsMemAdd (mem_add)
+
+public structure Subsemigroup (α: Type*) [Mul α] where
+  toSet : Set α
+  protected mem_mul : MemMul toSet
+public structure AddSubsemigroup (α: Type*) [Add α] where
+  toSet : Set α
+  protected mem_add : MemAdd toSet
+
+public instance [Mul α] : SetLike (Subsemigroup α) α where
+public instance [Add α] : SetLike (AddSubsemigroup α) α where
+
+public instance [Mul α] : IsMemMul (Subsemigroup α) α where
+public instance [Add α] : IsMemAdd (AddSubsemigroup α) α where
+
+namespace MemMul
+
+public theorem preimage
+  [Mul α] [Mul β] [Funlike F α β] [IsMulHom F α β]
+  [SetLike S β] [IsMemMul S β] (f: F) (s: S) : MemMul (Set.preimage f s) := by
+  intro a b ha hb
+  show f _ ∈ s; rw [map_mul]
+  apply mem_mul <;> assumption
+
+public theorem image
+  [Mul α] [Mul β] [Funlike F α β] [IsMulHom F α β]
+  [SetLike S α] [IsMemMul S α] (f: F) (s: S) : MemMul (Set.image f s) := by
+  intro a b ha hb; simp at *
+  obtain ⟨a, ha, rfl⟩ := ha
+  obtain ⟨b, hb, rfl⟩ := hb
+  exists a * b
+  apply And.intro
+  exact mem_mul s ha hb
+  rw [map_mul]
+
+public theorem copy [Mul α] [SetLike S α] [IsMemMul S α]
+  (u: Set α) (h: ∃s: S, u = s) : MemMul u:= by
+  obtain ⟨s, rfl⟩ := h
+  exact mem_mul s
+
+public theorem copy' [Mul α] [SetLike S α] [IsMemMul S α]
+  {s: S} {u: Set α} (h: ∀x, x ∈ s ↔ x ∈ u) : MemMul u:= by
+  intro a b ha hb
+  apply (h _).mp
+  apply mem_mul
+  apply (h _).mpr; assumption
+  apply (h _).mpr; assumption
+
+end MemMul
+
+namespace MemAdd
+
+public theorem preimage
+  [Add α] [Add β] [Funlike F α β] [IsAddHom F α β]
+  [SetLike S β] [IsMemAdd S β] (f: F) (s: S) : MemAdd (Set.preimage f s) := by
+  intro a b ha hb
+  show f _ ∈ s; rw [map_add]
+  apply mem_add <;> assumption
+
+public theorem image
+  [Add α] [Add β] [Funlike F α β] [IsAddHom F α β]
+  [SetLike S α] [IsMemAdd S α] (f: F) (s: S) : MemAdd (Set.image f s) := by
+  intro a b ha hb; simp at *
+  obtain ⟨a, ha, rfl⟩ := ha
+  obtain ⟨b, hb, rfl⟩ := hb
+  exists a + b
+  apply And.intro
+  exact mem_add s ha hb
+  rw [map_add]
+
+public theorem copy [Add α] [SetLike S α] [IsMemAdd S α]
+  (u: Set α) (h: ∃s: S, u = s) : MemAdd u:= by
+  obtain ⟨s, rfl⟩ := h
+  exact mem_add s
+
+public theorem copy' [Add α] [SetLike S α] [IsMemAdd S α]
+  {s: S} {u: Set α} (h: ∀x, x ∈ s ↔ x ∈ u) : MemAdd u:= by
+  intro a b ha hb
+  apply (h _).mp
+  apply mem_add
+  apply (h _).mpr; assumption
+  apply (h _).mpr; assumption
+
+end MemAdd
+
+namespace Subsemigroup
+
+variable [Mul α]
+
+inductive Closure [Mul α] (U: Set α) : α -> Prop where
+| of {a: α} : a ∈ U -> Closure U a
+| mul {a b: α} : Closure U a -> Closure U b -> Closure U (a * b)
+
+public def closure (U: Set α) : Subsemigroup α where
+  toSet := { Mem := Closure U }
+  mem_mul := Closure.mul
+
+public theorem sub_closure {U: Set α} : U ⊆ closure U := fun _ => Closure.of
+public theorem of_mem_closure [SetLike S α] [IsMemMul S α]
+  (U: Set α) (s: S) (h: U ⊆ s) : ∀x ∈ closure U, x ∈ s := by
+  intro x hx
+  induction hx with
+  | of => apply h; assumption
+  | mul => apply mem_mul <;> assumption
+
+public instance : Top (Subsemigroup α) where
+   top := {
+    toSet := ⊤
+    mem_mul _ _ := True.intro
+   }
+
+public instance : Bot (Subsemigroup α) where
+   bot := {
+    toSet := ⊥
+    mem_mul := nofun
+   }
+
+public theorem bot_sub (a: Subsemigroup α) : ⊥ ⊆ a := nofun
+
+public theorem sub_top (a: Subsemigroup α) : a ⊆ ⊤ := fun _ _ => True.intro
+
+@[expose] public def of [SetLike S α] [IsMemMul S α] (s: S) : Subsemigroup α where
+  toSet := s
+  mem_mul := mem_mul s
+@[expose] public def copy [SetLike S α] [IsMemMul S α] (s: S) (u: Set α) (hu: ∀x, x ∈ s ↔ x ∈ u) : Subsemigroup α where
+  toSet := u
+  mem_mul := MemMul.copy' hu
+
+@[simp] public theorem mem_of [SetLike S α] [IsMemMul S α] {s: S} : ∀{x}, x ∈ of s ↔ x ∈ s := Iff.rfl
+@[simp] public theorem mem_copy [SetLike S α] [IsMemMul S α] {s: S} {u: Set α} {hu} : ∀{x}, x ∈ copy s u hu ↔ x ∈ s := (hu _).symm
+
+variable [Mul β] [Funlike F α β] [IsMulHom F α β]
+
+@[expose] public def preimage (f: F) (s: Subsemigroup β) : Subsemigroup α where
+  toSet := Set.preimage f s
+  mem_mul := MemMul.preimage f s
+@[expose] public def image (f: F) (s: Subsemigroup α) : Subsemigroup β where
+  toSet := Set.image f s
+  mem_mul := MemMul.image f s
+
+@[simp] public theorem mem_preimage {f: F} {s: Subsemigroup β} : ∀{x}, x ∈ s.preimage f ↔ f x ∈ s := Iff.rfl
+@[simp] public theorem mem_image {f: F} {s: Subsemigroup α} : ∀{x}, x ∈ s.image f ↔ ∃i, i ∈ s ∧ f i = x := Set.mem_image
+
+end Subsemigroup
+
+namespace AddSubsemigroup
+
+variable [Add α]
+
+inductive Closure (U: Set α) : α -> Prop where
+| of {a: α} : a ∈ U -> Closure U a
+| mul {a b: α} : Closure U a -> Closure U b -> Closure U (a + b)
+
+public def closure (U: Set α) : AddSubsemigroup α where
+  toSet := { Mem := Closure U }
+  mem_add := Closure.mul
+
+public theorem sub_closure {U: Set α} : U ⊆ closure U := fun _ => Closure.of
+public theorem of_mem_closure [SetLike S α] [IsMemAdd S α]
+  (U: Set α) (s: S) (h: U ⊆ s) : ∀x ∈ closure U, x ∈ s := by
+  intro x hx
+  induction hx with
+  | of => apply h; assumption
+  | mul => apply mem_add <;> assumption
+
+public instance : Top (AddSubsemigroup α) where
+   top := {
+    toSet := ⊤
+    mem_add _ _ := True.intro
+   }
+
+public instance : Bot (AddSubsemigroup α) where
+   bot := {
+    toSet := ⊥
+    mem_add := nofun
+   }
+
+public theorem bot_sub (a: AddSubsemigroup α) : ⊥ ⊆ a := nofun
+
+public theorem sub_top (a: AddSubsemigroup α) : a ⊆ ⊤ := fun _ _ => True.intro
+
+@[expose] public def of [SetLike S α] [IsMemAdd S α] (s: S) : AddSubsemigroup α where
+  toSet := s
+  mem_add := mem_add s
+@[expose] public def copy [SetLike S α] [IsMemAdd S α] (s: S) (u: Set α) (hu: ∀x, x ∈ s ↔ x ∈ u) : AddSubsemigroup α where
+  toSet := u
+  mem_add := MemAdd.copy' hu
+
+@[simp] public theorem mem_of [SetLike S α] [IsMemAdd S α] {s: S} : ∀{x}, x ∈ of s ↔ x ∈ s := Iff.rfl
+@[simp] public theorem mem_copy [SetLike S α] [IsMemAdd S α] {s: S} {u: Set α} {hu} : ∀{x}, x ∈ copy s u hu ↔ x ∈ s := (hu _).symm
+
+variable [Add β] [Funlike F α β] [IsAddHom F α β]
+
+@[expose] public def preimage (f: F) (s: AddSubsemigroup β) : AddSubsemigroup α where
+  toSet := Set.preimage f s
+  mem_add := MemAdd.preimage f s
+@[expose] public def image (f: F) (s: AddSubsemigroup α) : AddSubsemigroup β where
+  toSet := Set.image f s
+  mem_add := MemAdd.image f s
+
+@[simp] public theorem mem_preimage {f: F} {s: AddSubsemigroup β} : ∀{x}, x ∈ s.preimage f ↔ f x ∈ s := Iff.rfl
+@[simp] public theorem mem_image {f: F} {s: AddSubsemigroup α} : ∀{x}, x ∈ s.image f ↔ ∃i, i ∈ s ∧ f i = x := Set.mem_image
+
+end AddSubsemigroup
+
+variable [SetLike S α]
+
+attribute [local irreducible] MulOfAdd in
+public instance : SetLike (MulOfAdd S) (MulOfAdd α) where
+  coeSet s := (Set.coe s.get).preimage MulOfAdd.get
+  coeInj := by
+    intro a b h; dsimp at h
+    induction a with | _ a =>
+    induction b with | _ b =>
+    dsimp at h; congr
+    apply Set.coe_inj
+    ext i
+    show (MulOfAdd.mk i ∈ Set.preimage MulOfAdd.get a) ↔ (MulOfAdd.mk i ∈ Set.preimage MulOfAdd.get b)
+    rw [h]
+
+attribute [local irreducible] AddOfMul in
+public instance : SetLike (AddOfMul S) (AddOfMul α) where
+  coeSet s := (Set.coe s.get).preimage AddOfMul.get
+  coeInj := by
+    intro a b h; dsimp at h
+    induction a with | _ a =>
+    induction b with | _ b =>
+    dsimp at h; congr
+    apply Set.coe_inj
+    ext i
+    show (AddOfMul.mk i ∈ Set.preimage AddOfMul.get a) ↔ (AddOfMul.mk i ∈ Set.preimage AddOfMul.get b)
+    rw [h]
+
+public instance [Add α] [IsMemAdd S α] : IsMemMul (MulOfAdd S) (MulOfAdd α) where
+  mem_mul := mem_add (S := S) (α := α)
+public instance [Mul α] [IsMemMul S α] : IsMemAdd (AddOfMul S) (AddOfMul α) where
+  mem_add := mem_mul (S := S) (α := α)

@@ -34,6 +34,9 @@ public class SetLike (S: Type*) (α: outParam Type*) where
       apply SetLike.coeInj
       assumption
 
+public instance : SetLike (Set α) α where
+  coeSet := id
+
 namespace Set
 
 public instance : HasSubset (Set α) where
