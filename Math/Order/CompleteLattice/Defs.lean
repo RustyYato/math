@@ -28,13 +28,21 @@ export IsInfLattice (le_sInf)
 
 end Property
 
-section Opposite
+section Basic
 
-instance [InfLatticeOps α] [IsInfLattice α] : IsSupLattice αᵒᵖ where
+public instance [InfLatticeOps α] [IsInfLattice α] : IsSupLattice αᵒᵖ where
   sSup_le := le_sInf (α := α)
-instance [SupLatticeOps α] [IsSupLattice α] : IsInfLattice αᵒᵖ where
+public instance [SupLatticeOps α] [IsSupLattice α] : IsInfLattice αᵒᵖ where
   le_sInf := sSup_le (α := α)
-instance [CompleteLatticeOps α] [IsCompleteLattice α] : IsCompleteLattice αᵒᵖ where
+public instance [CompleteLatticeOps α] [IsCompleteLattice α] : IsCompleteLattice αᵒᵖ where
   le_sInf := sSup_le (α := α)
 
-end Opposite
+public instance : IsCompleteLattice (Set α) where
+  sSup_le U u hu x hx := by
+    obtain ⟨_, _, _⟩ := hx
+    apply hu; assumption; assumption
+  le_sInf U u hu x hx := by
+    intro s hs
+    apply hu; assumption; assumption
+
+end Basic

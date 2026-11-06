@@ -1,7 +1,7 @@
 module
 
 public import Math.Data.Set.Defs
-public import Math.Order.Opposite
+public import Math.Order.Defs
 public import Math.Data.Set.Nonempty
 import Math.Tactic.Basic
 
@@ -114,3 +114,43 @@ public instance [InfSet α] [LE α] [IsLawfulInf α] : IsLawfulSup αᵒᵖ wher
   le_sSup := sInf_le (α := α)
 public instance [SupSet α] [LE α] [IsLawfulSup α] : IsLawfulInf αᵒᵖ where
   sInf_le := le_sSup (α := α)
+
+public instance : LE (Set α) where
+  le := (· ⊆ ·)
+public instance : LT (Set α) where
+  lt a b := a ≤ b ∧ ¬b ≤ a
+
+public instance : Max (Set α) where
+  max a b := a ∪ b
+public instance : Min (Set α) where
+  min a b := a ∩ b
+
+public instance : IsLattice (Set α) where
+  lt_iff_le_and_not_ge := Iff.rfl
+  refl := Set.sub_refl
+  htrans := Set.sub_trans
+  antisymm _ _ := Set.sub_antisymm
+  left_le_max a b x hx := by left; assumption
+  right_le_max a b x hx := by right; assumption
+  min_le_left a b _ := And.left
+  min_le_right a b _ := And.right
+  max_le ha hb := by
+    intro x h; cases h
+    apply ha; assumption
+    apply hb; assumption
+  le_min ha hb := by
+    intro x hx
+    apply And.intro
+    apply ha; assumption
+    apply hb; assumption
+
+public instance : IsLawfulSup (Set α) where
+  le_sSup U u hu := by
+    intro x hx; apply Set.mem_sUnion.mpr
+    exists u
+
+public instance : IsLawfulInf (Set α) where
+  sInf_le U u hu := by
+    intro x hx;
+    replace hx := Set.mem_sInter.mp hx
+    apply hx; assumption
