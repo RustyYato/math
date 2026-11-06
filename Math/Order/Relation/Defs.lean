@@ -195,6 +195,11 @@ public class IsConnected (R: α -> α -> Prop) (E: outParam <| α -> α -> Prop)
 
 export IsConnected (connected)
 
+public class IsAntisymm (R: α -> α -> Prop) (E: outParam <| α -> α -> Prop) where
+  antisymm (a b: α) : R a b -> R b a -> E a b
+
+export IsAntisymm (antisymm)
+
 public class IsTotal (R: α -> α -> Prop) where
   total (a b: α) : R a b ∨ R b a
 
@@ -527,6 +532,8 @@ public theorem exists_unique_min [LEM] [IsConnected r (· = ·)] (h: ∃a, P a) 
 
 open Classical
 
+namespace Relation
+
 public noncomputable def arb_min (h: ∃a, P a) : α := Classical.choose (exists_min r h)
 public theorem arb_min_spec (h: ∃a, P a) : P (arb_min r h) := (Classical.choose_spec (exists_min r h)).left
 public theorem not_lt_arb_min (h: ∃a, P a) : ∀a, P a -> ¬r a (arb_min r h) := (Classical.choose_spec (exists_min r h)).right
@@ -537,6 +544,8 @@ public noncomputable def min (h: ∃a, P a) : α := Classical.unique_choose (exi
 public theorem min_spec (h: ∃a, P a) : P (min r h) := (Classical.unique_choose_spec (exists_unique_min r h)).left
 public theorem not_lt_min (h: ∃a, P a) : ∀a, P a -> ¬r a (min r h) := (Classical.unique_choose_spec (exists_unique_min r h)).right
 public theorem min_unique (h: ∃a, P a) (x: α) (px: P x) (not_lt: ∀a, P a -> ¬r a x) : min r h = x := Classical.unique_choose_unique (exists_unique_min r h) x ⟨px, not_lt⟩
+
+end Relation
 
 end Min
 
