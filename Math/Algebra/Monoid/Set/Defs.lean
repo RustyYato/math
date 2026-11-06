@@ -264,3 +264,61 @@ public theorem mem_nsmul
   [IsMemZero S α] [IsMemAdd S α]
   (a: α) (n: ℕ) (s: S) : a ∈ s -> n • a ∈ s :=
   mem_pown (S := MulOfAdd S) (α := MulOfAdd α) _ _ _
+
+public instance [One α] [IsMemOne S α] (s: S) : One s where
+  one := {
+    val := 1
+    property := mem_one s
+  }
+
+public instance [Zero α] [IsMemZero S α] (s: S) : Zero s where
+  zero := {
+    val := 0
+    property := mem_zero s
+  }
+
+public instance [MonoidOps α] [IsMonoid α] [IsMemOne S α] [IsMemMul S α] (s: S) : Pow s ℕ where
+  pow a n := {
+    val := a.val ^ n
+    property := mem_pown _ n s a.property
+  }
+
+public instance [AddMonoidOps α] [IsAddMonoid α] [IsMemZero S α] [IsMemAdd S α] (s: S) : SMul ℕ s where
+  smul n a := {
+    val := n • a.val
+    property := mem_nsmul _ n s a.property
+  }
+
+@[simp] public theorem subtype_one [One α] [IsMemOne S α] {s: S} : (1: (s: Type _)).val = 1 := rfl
+@[simp] public theorem subtype_zero [Zero α] [IsMemZero S α] {s: S} : (0: (s: Type _)).val = 0 := rfl
+@[simp] public theorem subtype_pown [MonoidOps α] [IsMonoid α] [IsMemOne S α] [IsMemMul S α] {s: S} (a: (s: Type _)) (n: ℕ) : (a ^ n).val = a.val ^ n := rfl
+@[simp] public theorem subtype_nsmul [AddMonoidOps α] [IsAddMonoid α] [IsMemZero S α] [IsMemAdd S α] {s: S} (a: (s: Type _)) (n: ℕ) : (n • a).val = n • a.val := rfl
+
+public instance [Mul α] [Zero α] [IsMemMul S α] [IsMemZero S α] [IsLeftCancel₀ α] (s: S) : IsLeftCancel₀ s where
+  of_mul_left₀ {k a b} hk h := by
+    ext; apply of_mul_left₀ (k := k.val)
+    intro g; apply hk; ext; assumption
+    exact congrArg Subtype.val h
+public instance [Mul α] [Zero α] [IsMemMul S α] [IsMemZero S α] [IsRightCancel₀ α] (s: S) : IsRightCancel₀ s where
+  of_mul_right₀ {k a b} hk h := by
+    ext; apply of_mul_right₀ (k := k.val)
+    intro g; apply hk; ext; assumption
+    exact congrArg Subtype.val h
+
+public instance [One α] [Mul α] [IsMemOne S α] [IsMemMul S α] [IsLawfulOne α] (s: S) : IsLawfulOne s where
+  one_mul a := by ext; apply one_mul
+  mul_one a := by ext; apply mul_one
+public instance [Zero α] [Mul α] [IsMemZero S α] [IsMemMul S α] [IsLawfulZeroMul α] (s: S) : IsLawfulZeroMul s where
+  zero_mul a := by ext; apply zero_mul
+  mul_zero a := by ext; apply mul_zero
+public instance [Zero α] [Add α] [IsMemZero S α] [IsMemAdd S α] [IsLawfulZero α] (s: S) : IsLawfulZero s where
+  zero_add a := by ext; apply zero_add
+  add_zero a := by ext; apply add_zero
+
+public instance [MonoidOps α] [IsMemOne S α] [IsMemMul S α] [IsMonoid α] (s: S) : IsMonoid s where
+  pown_zero a := by ext; apply pown_zero
+  pown_succ a n := by ext; apply pown_succ
+
+public instance [AddMonoidOps α] [IsMemZero S α] [IsMemAdd S α] [IsAddMonoid α] (s: S) : IsAddMonoid s where
+  zero_nsmul a := by ext; apply zero_nsmul
+  succ_nsmul a n := by ext; apply succ_nsmul

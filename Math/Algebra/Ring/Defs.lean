@@ -10,7 +10,7 @@ section Property
 public class RingOps (α: Type*)
   extends AddGroupOps α, SemiringOps α, IntCast α where
 
-public instance [AddGroupOps α] [MonoidOps α] [NatCast α] [IntCast α] : RingOps α where
+public instance instRingOps [AddGroupOps α] [MonoidOps α] [NatCast α] [IntCast α] : RingOps α where
 
 public class IsNonUnitalNonAssocRing (α: Type*)
   [AddGroupOps α] [Mul α] extends IsNonUnitalNonAssocSemiring α, IsAddGroup α, IsLeftDistrib α, IsRightDistrib α, IsLawfulZeroMul α, IsAddComm α  where

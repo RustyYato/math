@@ -121,3 +121,43 @@ variable [Zero β] [One β] [Add β] [Mul β] [Funlike F α β] [IsZeroHom F α 
 @[simp] public theorem mem_image {f: F} {s: Subsemiring α} : ∀{x}, x ∈ s.image f ↔ ∃i, i ∈ s ∧ f i = x := Set.mem_image
 
 end Subsemiring
+
+variable {S α: Type*} [SetLike S α]
+
+instance
+  [Mul α] [Add α] [IsLeftDistrib α]
+  [IsMemAdd S α] [IsMemMul S α]
+  (s: S) : IsLeftDistrib s where
+  mul_add _ _ _ := by ext; apply mul_add
+instance
+  [Mul α] [Add α] [IsRightDistrib α]
+  [IsMemAdd S α] [IsMemMul S α]
+  (s: S) : IsRightDistrib s where
+  add_mul _ _ _ := by ext; apply add_mul
+
+public instance
+  [AddMonoidOps α] [IsAddMonoid α]
+  [Mul α] [IsNonUnitalNonAssocSemiring α]
+  [IsMemZero S α] [IsMemAdd S α]
+  [IsMemMul S α]
+  (s: S) : IsNonUnitalNonAssocSemiring s where
+
+public instance
+  [AddMonoidOps α] [IsAddMonoid α]
+  [Mul α] [IsNonUnitalSemiring α]
+  [IsMemZero S α] [IsMemAdd S α]
+  [IsMemMul S α]
+  (s: S) : IsNonUnitalSemiring s where
+
+public instance
+  [AddMonoidOps α] [One α] [NatCast α] [IsAddMonoidWithOne α]
+  [Mul α] [IsNonAssocSemiring α]
+  [IsMemZero S α] [IsMemAdd S α]
+  [IsMemOne S α] [IsMemMul S α]
+  (s: S) : IsNonAssocSemiring s where
+
+public instance
+  [SemiringOps α] [IsSemiring α]
+  [IsMemZero S α] [IsMemAdd S α]
+  [IsMemOne S α] [IsMemMul S α]
+  (s: S) : IsSemiring s where

@@ -138,3 +138,38 @@ variable
 @[simp] public theorem mem_image {f: F} {s: Subring α} : ∀{x}, x ∈ s.image f ↔ ∃i, i ∈ s ∧ f i = x := Set.mem_image
 
 end Subring
+
+variable {S α: Type*} [SetLike S α]
+
+public instance
+  [AddGroupOps α] [IsAddGroup α]
+  [Mul α] [IsNonUnitalNonAssocRing α]
+  [IsMemZero S α] [IsMemAdd S α]
+  [IsMemNeg S α] [IsMemMul S α]
+  (s: S) : IsNonUnitalNonAssocRing s where
+
+public instance
+  [AddGroupOps α] [IsAddGroup α]
+  [Mul α] [IsNonUnitalRing α]
+  [IsMemZero S α] [IsMemAdd S α]
+  [IsMemNeg S α] [IsMemMul S α]
+  (s: S) : IsNonUnitalRing s where
+
+public instance
+  [AddGroupOps α] [One α] [NatCast α] [IntCast α] [IsAddGroupWithOne α]
+  [Mul α] [IsNonAssocRing α]
+  [IsMemZero S α] [IsMemAdd S α] [IsMemNeg S α]
+  [IsMemOne S α] [IsMemMul S α]
+  (s: S) : IsNonAssocRing s where
+
+public instance
+  [RingOps α] [IsRing α]
+  [IsMemZero S α] [IsMemAdd S α] [IsMemNeg S α]
+  [IsMemOne S α] [IsMemMul S α]
+  (s: S) : RingOps s := instRingOps
+
+public instance
+  [RingOps α] [IsRing α]
+  [IsMemZero S α] [IsMemAdd S α] [IsMemNeg S α]
+  [IsMemOne S α] [IsMemMul S α]
+  (s: S) : IsRing s where

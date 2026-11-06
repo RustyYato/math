@@ -17,7 +17,7 @@ public instance [Zero α] [One α] [Neg α] [Add α] : IsMemNeg (AddSubgroupWith
 public instance [Zero α] [One α] [Neg α] [Add α] : IsMemAdd (AddSubgroupWithOne α) α where
 
 public theorem mem_intCast
-  [AddGroupOps α] [NatCast α] [IntCast α] [One α] [IsAddGroupWithOne α]
+  [NatCast α] [IntCast α] [Zero α] [One α] [Neg α] [Add α] [IsLawfulNatCast α] [IsLawfulIntCast α]
   [SetLike S α] [IsMemZero S α] [IsMemOne S α] [IsMemNeg S α] [IsMemAdd S α]
   (n: ℤ) (s: S) : (n: α) ∈ s := by
   cases n with
@@ -132,3 +132,23 @@ variable {α β: Type*} [AddGroupOps α] [One α] [IsAddGroup α] [AddGroupOps �
 @[simp] public theorem mem_image {f: F} {s: AddSubgroupWithOne α} : ∀{x}, x ∈ s.image f ↔ ∃i, i ∈ s ∧ f i = x := Set.mem_image
 
 end AddSubgroupWithOne
+
+section
+
+variable [NatCast α] [IntCast α] [Zero α] [One α] [Neg α] [Add α] [IsLawfulNatCast α] [IsLawfulIntCast α]
+ [SetLike S α] [IsMemZero S α] [IsMemOne S α] [IsMemAdd S α] [IsMemNeg S α] (s: S)
+
+public instance : IntCast s where
+  intCast n := {
+    val := n
+    property := mem_intCast n s
+  }
+
+public instance : IsLawfulIntCast s where
+  intCast_ofNat _ := by ext; apply intCast_ofNat
+  intCast_negSucc _ := by ext; apply intCast_negSucc
+
+end
+
+instance [AddGroupOps α] [One α] [NatCast α] [IntCast α] [IsAddGroupWithOne α]
+  [SetLike S α] [IsMemZero S α] [IsMemOne S α] [IsMemNeg S α] [IsMemAdd S α] (s: S) : IsAddGroupWithOne s where

@@ -15,7 +15,7 @@ public instance [Zero α] [One α] [Add α] : IsMemOne (AddSubmonoidWithOne α) 
 public instance [Zero α] [One α] [Add α] : IsMemAdd (AddSubmonoidWithOne α) α where
 
 public theorem mem_natCast
-  [AddMonoidOps α] [NatCast α] [One α] [IsAddMonoidWithOne α]
+  [Zero α] [One α] [Add α] [NatCast α] [IsLawfulNatCast α]
   [SetLike S α] [IsMemZero S α] [IsMemOne S α] [IsMemAdd S α]
   (n: ℕ) (s: S) : (n: α) ∈ s := by
   induction n with
@@ -117,3 +117,18 @@ variable [Zero β] [One β] [Add β] [Funlike F α β] [IsZeroHom F α β] [IsOn
 @[simp] public theorem mem_image {f: F} {s: AddSubmonoidWithOne α} : ∀{x}, x ∈ s.image f ↔ ∃i, i ∈ s ∧ f i = x := Set.mem_image
 
 end AddSubmonoidWithOne
+
+public instance [Zero α] [One α] [Add α] [NatCast α] [IsLawfulNatCast α]
+  [SetLike S α] [IsMemZero S α] [IsMemOne S α] [IsMemAdd S α] (s: S) : NatCast s where
+  natCast n := {
+    val := n
+    property := mem_natCast n s
+  }
+
+public instance [Zero α] [One α] [Add α] [NatCast α] [IsLawfulNatCast α]
+  [SetLike S α] [IsMemZero S α] [IsMemOne S α] [IsMemAdd S α] (s: S) : IsLawfulNatCast s where
+  natCast_zero := by ext; apply natCast_zero
+  natCast_succ _ := by ext; apply natCast_succ
+
+public instance [AddMonoidOps α] [One α] [NatCast α] [IsAddMonoidWithOne α]
+  [SetLike S α] [IsMemZero S α] [IsMemOne S α] [IsMemAdd S α] (s: S) : IsAddMonoidWithOne s where

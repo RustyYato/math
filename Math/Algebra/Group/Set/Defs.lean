@@ -270,7 +270,7 @@ variable {α β: Type*} [AddGroupOps α] [IsAddGroup α] [AddGroupOps β] [IsAdd
 
 end AddSubgroup
 
-variable [SetLike S α]
+variable {S α: Type*} [SetLike S α]
 
 public instance [Neg α] [IsMemNeg S α] : IsMemInv (MulOfAdd S) (MulOfAdd α) where
   mem_inv := mem_neg (S := S) (α := α)
@@ -286,8 +286,88 @@ public theorem mem_powz
   | ofNat n => dsimp; rw [powz_ofNat]; apply mem_pown; assumption
   | negSucc n => rw [powz_negSucc]; apply mem_inv; apply mem_pown; assumption
 
+public theorem mem_div
+  [Inv α] [Mul α] [Div α] [IsLawfulDiv α]
+  [IsMemInv S α] [IsMemMul S α]
+  (a b: α) (s: S) : a ∈ s -> b ∈ s -> a / b ∈ s := by
+  intro ha hb; rw [div_eq_mul_inv]
+  apply mem_mul; assumption
+  apply mem_inv; assumption
+
 public theorem mem_zsmul
   [AddGroupOps α] [IsAddGroup α]
   [IsMemZero S α] [IsMemZero S α] [IsMemNeg S α] [IsMemAdd S α]
   (a: α) (n: ℤ) (s: S) : a ∈ s -> n • a ∈ s :=
   mem_powz (S := MulOfAdd S) (α := MulOfAdd α) _ _ _
+
+public theorem mem_sub
+  [Neg α] [Add α] [Sub α] [IsLawfulSub α]
+  [IsMemNeg S α] [IsMemAdd S α]
+  (a b: α) (s: S) : a ∈ s -> b ∈ s -> a - b ∈ s :=
+  mem_div (S := MulOfAdd S) (α := MulOfAdd α) _ _ _
+
+public instance [Inv α] [IsMemInv S α] (s: S) : Inv s where
+  inv a := {
+    val := a.val⁻¹
+    property := mem_inv s a.property
+  }
+public instance [Neg α] [IsMemNeg S α] (s: S) : Neg s where
+  neg a := {
+    val := -a.val
+    property := mem_neg s a.property
+  }
+
+@[simp] public theorem subtype_inv [Inv α] [IsMemInv S α] {s: S} (a: (s: Type _)) : (a⁻¹: (s: Type _)).val = a.val⁻¹ := rfl
+@[simp] public theorem subtype_neg [Neg α] [IsMemNeg S α] {s: S} (a: (s: Type _)) : (-a: (s: Type _)).val = -a.val := rfl
+
+section
+
+variable [GroupOps α] [IsGroup α] [IsMemOne S α] [IsMemInv S α] [IsMemMul S α]
+
+public instance (s: S) : Pow s ℤ where
+  pow a n := {
+    val := a.val ^ n
+    property := mem_powz _ n s a.property
+  }
+
+public instance (s: S) : Div s where
+  div a b := {
+    val := a.val / b.val
+    property := mem_div _ _ s a.property b.property
+  }
+
+@[simp] public theorem subtype_powz {s: S} (a: (s: Type _)) (n: ℤ) : (a ^ n).val = a.val ^ n := rfl
+
+public instance (s: S) : IsGroup s where
+  div_eq_mul_inv _ _ := by ext; apply div_eq_mul_inv
+  powz_ofNat _ _ := by ext; apply powz_ofNat
+  powz_negSucc _ _ := by ext; apply powz_negSucc
+  inv_mul_cancel _ := by ext; apply inv_mul_cancel
+
+end
+
+section
+
+variable [AddGroupOps α] [IsAddGroup α] [IsMemZero S α] [IsMemNeg S α] [IsMemAdd S α]
+
+public instance (s: S) : SMul ℤ s where
+  smul n a := {
+    val := n • a.val
+    property := mem_zsmul _ n s a.property
+  }
+
+public instance (s: S) : Sub s where
+  sub a b := {
+    val := a.val - b.val
+    property := mem_sub _ _ s a.property b.property
+  }
+
+@[simp] public theorem subtype_zsmul {s: S} (a: (s: Type _)) (n: ℤ) : (n • a).val = n • a.val := rfl
+
+public instance (s: S) : IsAddGroup s where
+  sub_eq_add_neg _ _ := by ext; apply sub_eq_add_neg
+  ofNat_zsmul _ _ := by ext; apply ofNat_zsmul
+  negSucc_zsmul _ _ := by ext; apply negSucc_zsmul
+  neg_add_cancel _ := by ext; apply neg_add_cancel
+
+end

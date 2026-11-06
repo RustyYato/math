@@ -254,3 +254,45 @@ public instance [Add α] [IsMemAdd S α] : IsMemMul (MulOfAdd S) (MulOfAdd α) w
   mem_mul := mem_add (S := S) (α := α)
 public instance [Mul α] [IsMemMul S α] : IsMemAdd (AddOfMul S) (AddOfMul α) where
   mem_add := mem_mul (S := S) (α := α)
+
+public instance [Mul α] [IsMemMul S α] (s: S) : Mul s where
+  mul a b := {
+    val := a.val * b.val
+    property := mem_mul s a.property b.property
+  }
+
+public instance [Add α] [IsMemAdd S α] (s: S) : Add s where
+  add a b := {
+    val := a.val + b.val
+    property := mem_add s a.property b.property
+  }
+
+@[simp] public theorem subtype_mul [Mul α] [IsMemMul S α] {s: S} (a b: (s: Type _)) : (a * b).val = a.val * b.val := rfl
+@[simp] public theorem subtype_add [Add α] [IsMemAdd S α] {s: S} (a b: (s: Type _)) : (a + b).val = a.val + b.val := rfl
+
+public instance [Mul α] [IsMemMul S α] [IsSemigroup α] (s: S) : IsSemigroup s where
+  mul_assoc a b c := by ext; apply mul_assoc
+public instance [Mul α] [IsMemMul S α] [IsComm α] (s: S) : IsComm s where
+  mul_comm a b := by ext; apply mul_comm
+
+public instance [Add α] [IsMemAdd S α] [IsAddSemigroup α] (s: S) : IsAddSemigroup s where
+  add_assoc a b c := by ext; apply add_assoc
+public instance [Add α] [IsMemAdd S α] [IsAddComm α] (s: S) : IsAddComm s where
+  add_comm a b := by ext; apply add_comm
+
+public instance [Mul α] [IsMemMul S α] [IsLeftCancel α] (s: S) : IsLeftCancel s where
+  of_mul_left {k a b} h := by
+    ext; apply of_mul_left (k := k.val)
+    exact congrArg Subtype.val h
+public instance [Mul α] [IsMemMul S α] [IsRightCancel α] (s: S) : IsRightCancel s where
+  of_mul_right {k a b} h := by
+    ext; apply of_mul_right (k := k.val)
+    exact congrArg Subtype.val h
+public instance [Add α] [IsMemAdd S α] [IsLeftAddCancel α] (s: S) : IsLeftAddCancel s where
+  of_add_left {k a b} h := by
+    ext; apply of_add_left (k := k.val)
+    exact congrArg Subtype.val h
+public instance [Add α] [IsMemAdd S α] [IsRightAddCancel α] (s: S) : IsRightAddCancel s where
+  of_add_right {k a b} h := by
+    ext; apply of_add_right (k := k.val)
+    exact congrArg Subtype.val h
