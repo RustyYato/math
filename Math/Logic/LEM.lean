@@ -8,6 +8,8 @@ public theorem em (P: Prop) [ExcludedMiddle P] : P ∨ ¬ P := ExcludedMiddle.ex
 public abbrev LEM := ∀P, ExcludedMiddle P
 
 public abbrev ExcludedMiddleEq (α: Sort u) := ∀a b: α, ExcludedMiddle (a = b)
+public abbrev ExcludedMiddleLE (α: Type u) [LE α] := ∀a b: α, ExcludedMiddle (a ≤ b)
+public abbrev ExcludedMiddleLT (α: Type u) [LT α] := ∀a b: α, ExcludedMiddle (a < b)
 public abbrev ExcludedMiddlePred (P: α -> Prop) := ∀a, ExcludedMiddle (P a)
 public abbrev ExcludedMiddleRel (P: α -> α -> Prop) := ∀a b, ExcludedMiddle (P a b)
 

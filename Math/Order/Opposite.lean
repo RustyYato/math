@@ -16,14 +16,14 @@ namespace OrderOpp
 
 attribute [local irreducible] OrderOpp
 
-instance [LE α] : LE (OrderOpp α) where
+public instance [LE α] : LE (OrderOpp α) where
   le a b := b.get ≤ a.get
 
-instance [LT α] : LT (OrderOpp α) where
+public instance [LT α] : LT (OrderOpp α) where
   lt a b := b.get < a.get
 
-instance [Min α] : Max (OrderOpp α) where
+public instance [Min α] : Max (OrderOpp α) where
   max a b := .mk <| min a.get b.get
 
-instance [Max α] : Min (OrderOpp α) where
+public instance [Max α] : Min (OrderOpp α) where
   min a b := .mk <| max a.get b.get
