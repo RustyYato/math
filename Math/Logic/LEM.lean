@@ -1,5 +1,7 @@
 module
 
+import Math.Tactic.Basic
+
 public class ExcludedMiddle (P: Prop) where
   protected excluded_middle : P ∨ ¬P
 
@@ -14,6 +16,11 @@ public abbrev ExcludedMiddlePred (P: α -> Prop) := ∀a, ExcludedMiddle (P a)
 public abbrev ExcludedMiddleRel (P: α -> α -> Prop) := ∀a b, ExcludedMiddle (P a b)
 
 namespace LEM
+
+instance (priority := 10000) [ExcludedMiddle P] : Nonempty (Decidable P) := by
+  rcases em P with h | h
+  exact ⟨.isTrue h⟩
+  exact ⟨.isFalse h⟩
 
 public theorem or_iff_not_imp_left : ∀ {a b : Prop} [ExcludedMiddle a], a ∨ b ↔ ¬a → b := by
   intro P Q _

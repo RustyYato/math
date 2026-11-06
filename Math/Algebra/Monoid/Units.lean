@@ -20,6 +20,22 @@ public structure AddUnit (α: Type*) [Add α] [Zero α] where
 
 namespace Unit
 
+@[ext]
+public theorem Unit.ext [Mul α] [One α]
+  [IsLawfulOne α] [IsSemigroup α]
+  (a b: Unit α) (h: a.val = b.val) : a = b := by
+  ext; assumption
+  rw [←one_mul a.inv, ←b.inv_mul_val, mul_assoc,
+    ←h, a.val_mul_inv, mul_one]
+
+@[ext]
+public theorem AddUnit.ext [Add α] [Zero α]
+  [IsLawfulZero α] [IsAddSemigroup α]
+  (a b: AddUnit α) (h: a.val = b.val) : a = b := by
+  ext; assumption
+  rw [←zero_add a.neg, ←b.neg_add_val, add_assoc,
+    ←h, a.val_add_neg, add_zero]
+
 public instance [Mul α] [One α] (a: Unit α) : IsCommAt a.val a.inv where
   mul_comm := by rw [a.inv_mul_val, a.val_mul_inv]
 
@@ -56,10 +72,10 @@ public instance [MonoidOps α] [IsMonoid α] : Pow (Unit α) ℕ where
 
 public instance [MonoidOps α] [IsMonoid α] : IsMonoid (Unit α) where
   mul_assoc _ _ _ := by ext <;> (dsimp; rw [mul_assoc])
-  mul_one _ := by ext <;> dsimp; rw [mul_one]; rw [one_mul]
-  one_mul _ := by ext <;> dsimp; rw [one_mul]; rw [mul_one]
+  mul_one _ := by ext <;> dsimp; rw [mul_one]
+  one_mul _ := by ext <;> dsimp; rw [one_mul]
   pown_zero a := by ext <;> (dsimp; apply pown_zero)
-  pown_succ a n := by ext <;> dsimp; apply pown_succ; apply pown_succ_left
+  pown_succ a n := by ext <;> dsimp; apply pown_succ
 
 end Unit
 
@@ -101,9 +117,9 @@ public instance [AddMonoidOps α] [IsAddMonoid α] : SMul ℕ (AddUnit α) where
 
 public instance [AddMonoidOps α] [IsAddMonoid α] : IsAddMonoid (AddUnit α) where
   add_assoc _ _ _ := by ext <;> (dsimp; rw [add_assoc])
-  add_zero _ := by ext <;> dsimp; rw [add_zero]; rw [zero_add]
-  zero_add _ := by ext <;> dsimp; rw [zero_add]; rw [add_zero]
+  add_zero _ := by ext <;> dsimp; rw [add_zero]
+  zero_add _ := by ext <;> dsimp; rw [zero_add]
   zero_nsmul a := by ext <;> (dsimp; apply zero_nsmul)
-  succ_nsmul a n := by ext <;> dsimp; apply succ_nsmul; apply succ_nsmul_left
+  succ_nsmul a n := by ext <;> dsimp; apply succ_nsmul
 
 end AddUnit

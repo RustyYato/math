@@ -837,11 +837,6 @@ public instance
 
 public instance [Zero α] [One α] [IsZeroNeOne α] : Nontrivial α := .intro 0 1 zero_ne_one
 
-macro_rules
-| `(tactic|contradiction) => `(tactic|nomatch zero_ne_one _ (by assumption))
-macro_rules
-| `(tactic|contradiction) => `(tactic|nomatch zero_ne_one _ (Eq.symm (by assumption)))
-
 public theorem map_pown [Funlike F α β]
   [MonoidOps α] [MonoidOps β]
   [IsLawfulPowN α] [IsLawfulPowN β]
