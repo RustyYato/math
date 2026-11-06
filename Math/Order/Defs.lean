@@ -246,3 +246,31 @@ public theorem of_min_lt {k a b: α} (h: a ⊓ b < k) : a < k ∨ b < k :=
 end Min
 
 end Theorems
+
+instance : IsLinearOrder ℕ where
+  lt_iff_le_and_not_ge := Nat.lt_iff_le_and_not_ge
+  refl := Nat.le_refl
+  htrans := Nat.le_trans
+  antisymm _ _ := Nat.le_antisymm
+  connected := Nat.lt_trichotomy
+instance : IsLattice ℕ where
+  left_le_max := Nat.le_max_left
+  right_le_max := Nat.le_max_right
+  min_le_left := Nat.min_le_left
+  min_le_right := Nat.min_le_right
+  max_le h g := Nat.max_le.mpr ⟨h, g⟩
+  le_min h g := Nat.le_min.mpr ⟨h, g⟩
+
+instance : IsLinearOrder ℤ where
+  lt_iff_le_and_not_ge := Int.lt_iff_le_and_not_ge
+  refl := Int.le_refl
+  htrans := Int.le_trans
+  antisymm _ _ := Int.le_antisymm
+  connected := Int.lt_trichotomy
+instance : IsLattice ℤ where
+  left_le_max := Int.le_max_left
+  right_le_max := Int.le_max_right
+  min_le_left := Int.min_le_left
+  min_le_right := Int.min_le_right
+  max_le h g := Int.max_le.mpr ⟨h, g⟩
+  le_min h g := Int.le_min.mpr ⟨h, g⟩
