@@ -7,14 +7,19 @@ namespace Math
 
 section Property
 
-public class IsSupLattice (α: Type*) [SupSet α] [Max α] [LE α] [LT α] extends IsLawfulSup α, IsSemiSupLattice α where
+public class SupLatticeOps (α: Type*) extends SemiSupLatticeOps α, SupSet α where
+public class InfLatticeOps (α: Type*) extends SemiInfLatticeOps α, InfSet α where
+public class CompleteLatticeOps (α: Type*) extends LatticeOps α, SupLatticeOps α, InfLatticeOps α, Top α, Bot α where
+
+public instance [SemiSupLatticeOps α] [SupSet α] : SupLatticeOps α where
+public instance [SemiInfLatticeOps α] [InfSet α] : InfLatticeOps α where
+public instance [SupSet α] [Max α] [Top α] [InfSet α] [Min α] [Bot α] [LE α] [LT α] : CompleteLatticeOps α where
+
+public class IsSupLattice (α: Type*) [SupLatticeOps α] extends IsLawfulSup α, IsSemiSupLattice α where
   sSup_le (U: Set α) : ⨆ U ∈ U.upperBounds.lowerBounds
-public class IsInfLattice (α: Type*) [InfSet α] [Min α] [LE α] [LT α] extends IsLawfulInf α, IsSemiInfLattice α where
+public class IsInfLattice (α: Type*) [InfLatticeOps α] extends IsLawfulInf α, IsSemiInfLattice α where
   le_sInf (U: Set α) : ⨅ U ∈ U.lowerBounds.upperBounds
-public class IsCompleteLattice (α: Type*)
-  [SupSet α] [Max α] [Top α]
-  [InfSet α] [Min α] [Bot α]
-  [LE α] [LT α] extends
+public class IsCompleteLattice (α: Type*) [CompleteLatticeOps α] extends
     IsSupLattice α, IsLawfulMax α,
     IsInfLattice α, IsLawfulMin α where
 
@@ -25,13 +30,11 @@ end Property
 
 section Opposite
 
-instance [InfSet α] [Min α] [LE α] [LT α] [IsInfLattice α] : IsSupLattice αᵒᵖ where
+instance [InfLatticeOps α] [IsInfLattice α] : IsSupLattice αᵒᵖ where
   sSup_le := le_sInf (α := α)
-instance [SupSet α] [Max α] [LE α] [LT α] [IsSupLattice α] : IsInfLattice αᵒᵖ where
+instance [SupLatticeOps α] [IsSupLattice α] : IsInfLattice αᵒᵖ where
   le_sInf := sSup_le (α := α)
-instance [SupSet α] [Max α] [Top α]
-  [InfSet α] [Min α] [Bot α]
-  [LE α] [LT α] [IsCompleteLattice α] : IsCompleteLattice αᵒᵖ where
+instance [CompleteLatticeOps α] [IsCompleteLattice α] : IsCompleteLattice αᵒᵖ where
   le_sInf := sSup_le (α := α)
 
 end Opposite

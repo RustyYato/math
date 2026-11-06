@@ -31,15 +31,23 @@ public class IsLawfulMin (α: Type*) [Min α] [LE α] where
 export IsLawfulMax (left_le_max right_le_max)
 export IsLawfulMin (min_le_left min_le_right)
 
-public class IsSemiSupLattice (α: Type*) [Max α] [LE α] [LT α] extends IsPartialOrder α, IsLawfulMax α where
+public class SemiSupLatticeOps (α: Type*) extends Max α, LE α, LT α where
+public class SemiInfLatticeOps (α: Type*) extends Min α, LE α, LT α where
+public class LatticeOps (α: Type*) extends SemiSupLatticeOps α, SemiInfLatticeOps α where
+
+public instance [Max α] [LE α] [LT α] : SemiSupLatticeOps α where
+public instance [Min α] [LE α] [LT α] : SemiInfLatticeOps α where
+public instance [Max α] [Min α] [LE α] [LT α] : LatticeOps α where
+
+public class IsSemiSupLattice (α: Type*) [SemiSupLatticeOps α] extends IsPartialOrder α, IsLawfulMax α where
   max_le {k a b: α} : a ≤ k -> b ≤ k -> a ⊔ b ≤ k
-public class IsSemiInfLattice (α: Type*) [Min α] [LE α] [LT α] extends IsPartialOrder α, IsLawfulMin α where
+public class IsSemiInfLattice (α: Type*) [SemiInfLatticeOps α] extends IsPartialOrder α, IsLawfulMin α where
   le_min {k a b: α} : k ≤ a -> k ≤ b -> k ≤ a ⊓ b
 
 export IsSemiSupLattice (max_le)
 export IsSemiInfLattice (le_min)
 
-public class IsLattice (α: Type*) [Max α] [Min α] [LE α] [LT α] extends IsSemiSupLattice α, IsSemiInfLattice α where
+public class IsLattice (α: Type*) [LatticeOps α] extends IsSemiSupLattice α, IsSemiInfLattice α where
 
 variable [LE α] [LT α]
 
