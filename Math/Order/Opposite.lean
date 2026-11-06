@@ -1,6 +1,7 @@
 module
 
 import Math.Tactic.Basic
+public import Math.Order.TopBot.Defs
 
 namespace Math
 
@@ -10,20 +11,25 @@ postfix:max "ᵒᵖ" => OrderOpp
 
 namespace OrderOpp
 
-@[expose] public def mk : α -> OrderOpp α := id
-@[expose] public def get : OrderOpp α -> α := id
-@[induction_eliminator] public def rec {motive: OrderOpp α -> Sort*} (mk: ∀a, motive (mk a)) (o: αᵒᵖ) : motive o := mk o
+@[expose] public def mk : α -> αᵒᵖ := id
+@[expose] public def get : αᵒᵖ -> α := id
+@[induction_eliminator] public def rec {motive: αᵒᵖ -> Sort*} (mk: ∀a, motive (mk a)) (o: αᵒᵖ) : motive o := mk o
 
 attribute [local irreducible] OrderOpp
 
-public instance [LE α] : LE (OrderOpp α) where
+public instance [LE α] : LE αᵒᵖ where
   le a b := b.get ≤ a.get
 
-public instance [LT α] : LT (OrderOpp α) where
+public instance [LT α] : LT αᵒᵖ where
   lt a b := b.get < a.get
 
-public instance [Min α] : Max (OrderOpp α) where
+public instance [Min α] : Max αᵒᵖ where
   max a b := .mk <| min a.get b.get
 
-public instance [Max α] : Min (OrderOpp α) where
+public instance [Max α] : Min αᵒᵖ where
   min a b := .mk <| max a.get b.get
+
+public instance [Top α] : Bot αᵒᵖ where
+  bot := .mk ⊤
+public instance [Bot α] : Top αᵒᵖ where
+  top := .mk ⊥

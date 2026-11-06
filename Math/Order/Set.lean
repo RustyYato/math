@@ -3,9 +3,66 @@ module
 public import Math.Data.Set.Defs
 public import Math.Order.Opposite
 public import Math.Data.Set.Nonempty
+import Math.Tactic.Basic
 
 @[expose] section
-namespace Math.Set
+namespace Math
+
+public class SupSet (α: Type*) where
+  sSup : Set α -> α
+public class InfSet (α: Type*) where
+  sInf : Set α -> α
+
+prefix:100 "⨆ " => SupSet.sSup
+prefix:100 "⨅ " => InfSet.sInf
+
+namespace Set
+
+public instance : SupSet (Set α) where
+  sSup U := ⋃ U
+
+public instance : InfSet (Set α) where
+  sInf U := ⋂ U
+
+@[simp] public theorem sSup_eq_sUnion (s: Set (Set α)) : ⨆ s = ⋃ s := rfl
+@[simp] public theorem sInf_eq_sInter (s: Set (Set α)) : ⨅ s = ⋂ s := rfl
+
+public def iSup [SupSet α] (s: ι -> α) : α := ⨆ (Set.range s)
+public def iInf [InfSet α] (s: ι -> α) : α := ⨅ (Set.range s)
+
+section Syntax
+
+open Lean Meta PrettyPrinter TSyntax.Compat
+
+macro (name := big_op_iSup) "⨆ " xs:explicitBinders ", " b:term:60 : term => expandExplicitBinders ``iSup xs b
+macro (name := big_op_iInf) "⨅ " xs:explicitBinders ", " b:term:60 : term => expandExplicitBinders ``iInf xs b
+
+@[app_unexpander iSup] public meta def unexpand_iSup : Unexpander
+  | `($(_) fun $x:ident => ⨆ $xs:binderIdent*, $b) => `(⨆ $x:ident $xs:binderIdent*, $b)
+  | `($(_) fun $x:ident => $b)                     => `(⨆ $x:ident, $b)
+  | `($(_) fun ($x:ident : $t) => $b)              => `(⨆ ($x:ident : $t), $b)
+  | _                                              => throw ()
+
+@[app_unexpander iInf] public meta def unexpand_iInf : Unexpander
+  | `($(_) fun $x:ident => ⨅ $xs:binderIdent*, $b) => `(⨅ $x:ident $xs:binderIdent*, $b)
+  | `($(_) fun $x:ident => $b)                     => `(⨅ $x:ident, $b)
+  | `($(_) fun ($x:ident : $t) => $b)              => `(⨅ ($x:ident : $t), $b)
+  | _                                              => throw ()
+
+end Syntax
+
+@[simp] public theorem mem_iSup (f: ι -> Set α) : x ∈ ⨆i, f i ↔ ∃i, x ∈ f i := by
+  simp [iSup]
+  apply Iff.intro
+  intro ⟨_, ⟨i, rfl⟩, _⟩
+  exists i
+  intro ⟨i, hi⟩
+  exists f i
+  apply And.intro _ hi
+  exists i
+
+@[simp] public theorem mem_iInf (f: ι -> Set α) : x ∈ ⨅i, f i ↔ ∀i, x ∈ f i := by
+  simp [iInf]
 
 variable [LE α] [LT α]
 
@@ -36,9 +93,24 @@ public def Ioc (a b: α) : Set α := Ioi a ∩ Iic b
 public def Ico (a b: α) : Set α := Ici a ∩ Iio b
 public def Icc (a b: α) : Set α := Ici a ∩ Iic b
 
-attribute [local irreducible] OrderOpp
+end Set
 
+public class IsLawfulSup (α: Type*) [LE α] [SupSet α] where
+  le_sSup (U: Set α) : ⨆ U ∈ U.upperBounds
+
+public class IsLawfulInf (α: Type*) [LE α]  [InfSet α] where
+  sInf_le (U: Set α) : ⨅ U ∈ U.lowerBounds
+
+export IsLawfulSup (le_sSup)
+export IsLawfulInf (sInf_le)
+
+attribute [local irreducible] OrderOpp in
 public instance [InfSet α] : SupSet αᵒᵖ where
   sSup U := .mk (⨅ (U.preimage .mk))
+attribute [local irreducible] OrderOpp in
 public instance [SupSet α] : InfSet αᵒᵖ where
   sInf U := .mk (⨆ (U.preimage .mk))
+public instance [InfSet α] [LE α] [IsLawfulInf α] : IsLawfulSup αᵒᵖ where
+  le_sSup := sInf_le (α := α)
+public instance [SupSet α] [LE α] [IsLawfulSup α] : IsLawfulInf αᵒᵖ where
+  sInf_le := le_sSup (α := α)

@@ -19,29 +19,9 @@ public class SUnion (α: Type*) (β: outParam <| Type*) where
 public class SInter (α: Type*) (β: outParam <| Type*) where
   sInter : α -> β
 
-public class SupSet (α: Type*) where
-  sSup : Set α -> α
-public class InfSet (α: Type*) where
-  sInf : Set α -> α
-
 prefix:100 "⋃ " => SUnion.sUnion
 prefix:100 "⋂ " => SInter.sInter
 postfix:max "ᶜ" => Complement.complement
-
-prefix:100 "⨆ " => SupSet.sSup
-prefix:100 "⨅ " => InfSet.sInf
-
-public class IsLawfulSup (α: Type*) [LE α] [SupSet α] where
-  protected le_sSup (U: Set α) (u: α) (hu: u ∈ U) : u ≤ ⨆ U
-
-public class IsLawfulInf (α: Type*) [LE α]  [InfSet α] where
-  protected sInf_le (U: Set α) (u: α) (hu: u ∈ U) : ⨅ U ≤ u
-
-public theorem le_sSup [LE α] [SupSet α] [IsLawfulSup α] (U: Set α) (u: α) (hu: u ∈ U) : u ≤ ⨆ U :=
-  IsLawfulSup.le_sSup _ _ hu
-
-public theorem sInf_le [LE α] [InfSet α] [IsLawfulInf α] (U: Set α) (u: α) (hu: u ∈ U) : ⨅ U ≤ u :=
-  IsLawfulInf.sInf_le _ _ hu
 
 public class SetLike (S: Type*) (α: outParam Type*) where
   coeSet : S -> Set α := by intro s; exact s.toSet
@@ -183,60 +163,14 @@ public def range (f: ι -> α) : Set α where
 
 public theorem mem_range' {f: ι -> α} : f x ∈ range f := by simp
 
-public def iSup [SupSet α] (s: ι -> α) : α := ⨆ (Set.range s)
-public def iInf [InfSet α] (s: ι -> α) : α := ⨅ (Set.range s)
-
-section Syntax
-
-open Lean Meta PrettyPrinter TSyntax.Compat
-
-macro (name := big_op_iSup) "⨆ " xs:explicitBinders ", " b:term:60 : term => expandExplicitBinders ``iSup xs b
-macro (name := big_op_iInf) "⨅ " xs:explicitBinders ", " b:term:60 : term => expandExplicitBinders ``iInf xs b
-
-@[app_unexpander iSup] public meta def unexpand_iSup : Unexpander
-  | `($(_) fun $x:ident => ⨆ $xs:binderIdent*, $b) => `(⨆ $x:ident $xs:binderIdent*, $b)
-  | `($(_) fun $x:ident => $b)                     => `(⨆ $x:ident, $b)
-  | `($(_) fun ($x:ident : $t) => $b)              => `(⨆ ($x:ident : $t), $b)
-  | _                                              => throw ()
-
-@[app_unexpander iInf] public meta def unexpand_iInf : Unexpander
-  | `($(_) fun $x:ident => ⨅ $xs:binderIdent*, $b) => `(⨅ $x:ident $xs:binderIdent*, $b)
-  | `($(_) fun $x:ident => $b)                     => `(⨅ $x:ident, $b)
-  | `($(_) fun ($x:ident : $t) => $b)              => `(⨅ ($x:ident : $t), $b)
-  | _                                              => throw ()
-
-end Syntax
-
 public instance : SUnion (Set (Set α)) (Set α) where
   sUnion U := { Mem x := ∃s ∈ U, x ∈ s }
 
 public instance : SInter (Set (Set α)) (Set α) where
   sInter U := { Mem x := ∀s ∈ U, x ∈ s }
 
-public instance : SupSet (Set α) where
-  sSup U := ⋃ U
-
-public instance : InfSet (Set α) where
-  sInf U := ⋂ U
-
-@[simp] public theorem sSup_eq_sUnion (s: Set (Set α)) : ⨆ s = ⋃ s := rfl
-@[simp] public theorem sInf_eq_sInter (s: Set (Set α)) : ⨅ s = ⋂ s := rfl
-
 @[simp] public theorem mem_sUnion {S: Set (Set α)} : ∀{x}, x ∈ ⋃ S ↔ ∃s ∈ S, x ∈ s := Iff.rfl
 @[simp] public theorem mem_sInter {S: Set (Set α)} : ∀{x}, x ∈ ⋂ S ↔ ∀s ∈ S, x ∈ s := Iff.rfl
-
-@[simp] public theorem mem_iSup (f: ι -> Set α) : x ∈ ⨆i, f i ↔ ∃i, x ∈ f i := by
-  simp [iSup]
-  apply Iff.intro
-  intro ⟨_, ⟨i, rfl⟩, _⟩
-  exists i
-  intro ⟨i, hi⟩
-  exists f i
-  apply And.intro _ hi
-  exists i
-
-@[simp] public theorem mem_iInf (f: ι -> Set α) : x ∈ ⨅i, f i ↔ ∀i, x ∈ f i := by
-  simp [iInf]
 
 public def powerset (s: Set α) : Set (Set α) where
   Mem a := a ⊆ s
