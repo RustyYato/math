@@ -20,8 +20,8 @@ public class IsSupLattice (α: Type*) [SupLatticeOps α] extends IsLawfulSup α,
 public class IsInfLattice (α: Type*) [InfLatticeOps α] extends IsLawfulInf α, IsInfSemilattice α where
   le_sInf (U: Set α) : ⨅ U ∈ U.lowerBounds.upperBounds
 public class IsCompleteLattice (α: Type*) [CompleteLatticeOps α] extends
-    IsSupLattice α, IsLawfulMax α,
-    IsInfLattice α, IsLawfulMin α where
+    IsSupLattice α, IsLawfulMax α, IsLawfulTop α,
+    IsInfLattice α, IsLawfulMin α, IsLawfulBot α where
 
 export IsSupLattice (sSup_le)
 export IsInfLattice (le_sInf)

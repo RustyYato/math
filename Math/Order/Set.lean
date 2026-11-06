@@ -159,3 +159,8 @@ public instance : IsLawfulInf (Set α) where
     intro x hx;
     replace hx := Set.mem_sInter.mp hx
     apply hx; assumption
+
+public instance : IsLawfulTop (Set α) where
+  le_top _ _ _ := True.intro
+public instance : IsLawfulBot (Set α) where
+  bot_le := nofun

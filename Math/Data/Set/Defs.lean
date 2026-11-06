@@ -152,7 +152,7 @@ public def image (f: ι -> α) (s: Set ι) : Set α where
 
 @[simp] public theorem mem_image {s: Set ι} {f: ι -> α} : ∀{x}, x ∈ s.image f ↔ ∃i ∈ s, f i = x := Iff.rfl
 
-public theorem mem_image' {s: Set ι} {f: ι -> α} : x ∈ s -> f x ∈ s.image f := by
+@[simp] public theorem mem_image' {s: Set ι} {f: ι -> α} : x ∈ s -> f x ∈ s.image f := by
   intro h
   simp; exists x
 
