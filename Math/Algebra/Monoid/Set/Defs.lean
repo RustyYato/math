@@ -20,6 +20,9 @@ public class IsMemZero (S α: Type*) [SetLike S α] [Zero α] where
 export IsMemOne (mem_one)
 export IsMemZero (mem_zero)
 
+public instance [Zero α] [SetLike S α] [IsMemZero S α] (s: S) : Set.Nonempty (s: Set α) := ⟨_, mem_zero s⟩
+public instance [One α] [SetLike S α] [IsMemOne S α] (s: S) : Set.Nonempty (s: Set α) := ⟨_, mem_one s⟩
+
 public structure Submonoid (α: Type*) [One α] [Mul α] extends Subsemigroup α where
   protected mem_one : MemOne toSet
 public structure AddSubmonoid (α: Type*) [Zero α] [Add α] extends AddSubsemigroup α where
