@@ -6,8 +6,7 @@ namespace Math
 
 variable {ι: Type*} {α: ι -> Type*}
 
-public class GradedOne [Zero ι] (α: ι -> Type*) where
-  gOne : α 0
+public abbrev GradedOne [Zero ι] (α: ι -> Type*) := One (α 0)
 
 public class GradedMul [Add ι] (α: ι -> Type*) where
   gMul {i j: ι} (a: α i) (b: α j) : α (i + j)
@@ -15,8 +14,6 @@ public class GradedMul [Add ι] (α: ι -> Type*) where
 public class GradedPow (α: ι -> Type*) (R: Type*) [SMul R ι] where
   gPow {i: ι} (a: α i) (n: R) : α (n • i)
 
-public instance [Zero ι] [GradedOne α] : One (α 0) where
-  one := GradedOne.gOne
 public instance [Add ι] [GradedMul α] : HMul (α i) (α j) (α (i + j)) where
   hMul := GradedMul.gMul
 
@@ -30,6 +27,21 @@ public class IsLawfulGradedPowN [AddMonoidOps ι] [IsLawfulNSMul ι] (α: ι -> 
 
 public class IsGradedSemigroup [Add ι] [IsAddSemigroup ι] (α: ι -> Type*) [GradedMul α] where
   gmul_assoc (a: α i) (b: α j) (c: α k) : a * b * c ≍ a * (b * c)
+
+export IsLawfulGradedOne (gone_gmul gmul_gone)
+export IsGradedSemigroup (gmul_assoc)
+
+public class IsGradedLeftDistrib [Add ι] (α: ι -> Type*) [GradedMul α] [∀i, Add (α i)] where
+  gmul_add (k: α i) (a b: α j) : k * (a + b) = k * a + k * b
+public class IsGradedRightDistrib [Add ι] (α: ι -> Type*) [GradedMul α] [∀i, Add (α i)] where
+  add_gmul (a b: α j) (k: α i) : (a + b) * k = a * k + b * k
+public class IsLawfulGradedZeroMul [Add ι] (α: ι -> Type*) [GradedMul α] [∀i, Zero (α i)] where
+  gmul_zero (a: α i) : a * (0: α j) = (0: α (i + j))
+  zero_gmul (a: α j) : (0: α i) * a = (0: α (i + j))
+
+export IsGradedLeftDistrib (gmul_add)
+export IsGradedRightDistrib (add_gmul)
+export IsLawfulGradedZeroMul (gmul_zero zero_gmul)
 
 public class GradedMonoidOps [AddMonoidOps ι] (α: ι -> Type*) extends GradedOne α, GradedMul α, GradedPow α ℕ where
 
@@ -86,26 +98,30 @@ public instance
   [GradedMonoidOps α] [IsGradedMonoid α]
   : IsMonoid (GradedMonoid α) where
 
+public instance [Zero ι] [Add ι] [IsLawfulZero ι] [GradedMul α] : Mul (α 0) where
+  mul a b := cast (by rw [add_zero]) (a * b)
+
 variable {α: Type*}
 
-instance [Zero ι] [One α] : GradedOne (fun _: ι => α) where
-  gOne := 1
-
-instance [Add ι] [Mul α] : GradedMul (fun _: ι => α) where
+public instance [Add ι] [Mul α] : GradedMul (fun _: ι => α) where
   gMul a b := a * b
 
-instance [SMul R ι] [Pow α R] : GradedPow (fun _: ι => α) R where
+public instance [SMul R ι] [Pow α R] : GradedPow (fun _: ι => α) R where
   gPow a r := a ^ r
 
-instance [Zero ι] [Add ι] [IsLawfulZero ι] [One α] [Mul α] [IsLawfulOne α] : IsLawfulGradedOne (fun _: ι => α) where
+public instance [Zero ι] [Add ι] [IsLawfulZero ι] [One α] [Mul α] [IsLawfulOne α] : IsLawfulGradedOne (fun _: ι => α) where
   gone_gmul a := heq_of_eq (one_mul a)
   gmul_gone a := heq_of_eq (mul_one a)
 
-instance [Zero ι] [Add ι] [SMul ℕ ι] [IsLawfulNSMul ι] [One α] [Mul α] [Pow α ℕ] [IsLawfulPowN α] : IsLawfulGradedPowN (fun _: ι => α) where
+public instance [Zero ι] [Add ι] [SMul ℕ ι] [IsLawfulNSMul ι] [One α] [Mul α] [Pow α ℕ] [IsLawfulPowN α] : IsLawfulGradedPowN (fun _: ι => α) where
   gpown_zero a := heq_of_eq (pown_zero a)
   gpown_succ a n := heq_of_eq (pown_succ a n)
 
-instance [Add ι] [IsAddSemigroup ι] [Mul α] [IsSemigroup α] : IsGradedSemigroup (fun _: ι => α) where
+public instance [Add ι] [IsAddSemigroup ι] [Mul α] [IsSemigroup α] : IsGradedSemigroup (fun _: ι => α) where
   gmul_assoc a b c := heq_of_eq (mul_assoc a b c)
 
-instance [AddMonoidOps ι] [IsAddMonoid ι] [MonoidOps α] [IsMonoid α] : IsGradedMonoid (fun _: ι => α) where
+public instance [AddMonoidOps ι] [IsAddMonoid ι] [MonoidOps α] [IsMonoid α] : IsGradedMonoid (fun _: ι => α) where
+
+public instance [Add ι] [Zero α] [Mul α] [IsLawfulZeroMul α] : IsLawfulGradedZeroMul (fun _: ι => α) where
+  gmul_zero := mul_zero
+  zero_gmul := zero_mul
