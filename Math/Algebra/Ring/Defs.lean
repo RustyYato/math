@@ -94,6 +94,14 @@ public theorem neg_sq (a: α) : (-a) ^ 2 = a ^ 2 := by
 public theorem sub_sq (a b: α) [IsCommAt a b] : (a - b) ^ 2 = a ^ 2 - (2: ℕ) * (a * b) + b ^ 2 := by
   rw [sub_eq_add_neg, sub_eq_add_neg, add_sq, ←neg_mul_right, ←neg_mul_right, neg_sq]
 
+public theorem sub_mul (a b k: α) : (a - b) * k = a * k - b * k := by
+  iterate 2 rw [sub_eq_add_neg]
+  rw [add_mul, neg_mul_left]
+
+public theorem mul_sub (a b k: α) : k * (a - b) = k * a - k * b := by
+  iterate 2 rw [sub_eq_add_neg]
+  rw [mul_add, neg_mul_right]
+
 end Ring
 
 end Theorems

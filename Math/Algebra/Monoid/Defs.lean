@@ -177,13 +177,13 @@ section Hom
 
 section Defs
 
-public class IsOneHom (F α β: Type*) [Funlike F α β] [One α] [One β] : Prop where
+public class IsOneHom (F: Type*) (α β: outParam Type*) [Funlike F α β] [One α] [One β] : Prop where
   map_one (f: F) : f 1 = 1 := by intro f; exact f.map_one
-public class IsZeroHom (F α β: Type*) [Funlike F α β] [Zero α] [Zero β] : Prop where
+public class IsZeroHom (F: Type*) (α β: outParam Type*) [Funlike F α β] [Zero α] [Zero β] : Prop where
   map_zero (f: F) : f 0 = 0 := by intro f; exact f.map_zero
-public class IsExpZeroHom (F α β: Type*) [Funlike F α β] [Zero α] [One β] : Prop where
+public class IsExpZeroHom (F: Type*) (α β: outParam Type*) [Funlike F α β] [Zero α] [One β] : Prop where
   map_zero_to_one (f: F) : f 0 = 1 := by intro f; exact f.map_zero_to_one
-public class IsLogOneHom (F α β: Type*) [Funlike F α β] [One α] [Zero β] : Prop where
+public class IsLogOneHom (F: Type*) (α β: outParam Type*) [Funlike F α β] [One α] [Zero β] : Prop where
   map_one_to_zero (f: F) : f 1 = 0 := by intro f; exact f.map_one_to_zero
 
 export IsOneHom (map_one)

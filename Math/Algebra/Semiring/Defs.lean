@@ -227,6 +227,9 @@ public theorem add_sq (a b: α) [IsCommAt a b] : (a + b) ^ 2 = a ^ 2 + (2: ℕ) 
   rw [pown_succ, pown_one, mul_add, add_mul, add_mul, mul_comm b,
     ←add_assoc, add_assoc (a * a), ←two_mul, ←pown_two, ←pown_two]
 
+public instance (n: ℕ) (a: α) : IsCommAt (n: α) a where
+  mul_comm := by rw [←nsmul_eq_mul_natCast, ←nsmul_eq_natCast_mul]
+
 end Theorems
 
 namespace OfEquiv

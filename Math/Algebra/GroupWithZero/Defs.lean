@@ -328,4 +328,8 @@ public theorem powz?_neg [NoZeroDivisors α] (a: α) (n: ℤ) (h: a ≠ 0) : a ^
   rw [powz_neg]
   all_goals invert_tactic
 
+public theorem zero_div? (a: α) (h: a ≠ 0) : 0 /? a = 0 := by
+  apply of_mul_right₀ h
+  rw [div?_mul_cancel, zero_mul]
+
 end

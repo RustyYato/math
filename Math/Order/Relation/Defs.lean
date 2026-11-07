@@ -588,3 +588,6 @@ public theorem lift_total [EmbeddingLike F α β] [IsRelHom F r s] [IsTotal s] (
     · exact .inr <| map_rel_rev f h
 
 end Lift
+
+public instance : IsWelFounded (α := ℕ) (· < ·) where
+  wf := Nat.lt_wfRel.wf
