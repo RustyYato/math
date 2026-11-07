@@ -21,7 +21,11 @@ public class IsNonUnitalRing (α: Type*)
 public class IsNonAssocRing (α: Type*)
   [AddGroupOps α] [One α] [Mul α] [NatCast α] [IntCast α] extends IsNonAssocSemiring α, IsNonUnitalNonAssocRing α, IsAddGroupWithOne α, IsLawfulOne α where
 
-public class IsRing (α: Type*) [RingOps α] : Prop extends IsSemiring α, IsNonUnitalRing α, IsNonAssocRing α, IsMonoidWithZero α where
+public class IsRing (α: Type*) [RingOps α] : Prop extends IsAddGroup α, IsSemiring α, IsNonUnitalRing α, IsNonAssocRing α, IsMonoidWithZero α where
+
+-- shortcut instance, since Lean is too stupid to do this sometimes and goes on a wild goose chase
+-- through other irrelevant instances
+public instance [RingOps α] [IsRing α] : IsAddGroup α := inferInstance
 
 end Property
 

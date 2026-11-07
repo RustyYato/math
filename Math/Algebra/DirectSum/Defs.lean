@@ -428,16 +428,6 @@ variable [Zero α] [One (R 0)] [NatCast (R 0)] [IsLawfulNatCast (R 0)]
 
 public instance : IsSemiring (⊕a, R a) where
 
-@[expose]
-public def C : R 0 →+* ⊕a, R a where
-  toAddGroupHom := ι 0
-  map_one := rfl
-  map_mul a b := by
-    show ι 0 _ = ι 0 _ * ι 0 _
-    rw [ι_mul_ι]; apply congr_ι
-    rw [add_zero]
-    apply cast_heq
-
 end Mul
 
 end DirectSum

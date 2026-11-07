@@ -98,7 +98,7 @@ public instance
   [GradedMonoidOps α] [IsGradedMonoid α]
   : IsMonoid (GradedMonoid α) where
 
-public instance [Zero ι] [Add ι] [IsLawfulZero ι] [GradedMul α] : Mul (α 0) where
+instance [Zero ι] [Add ι] [IsLawfulZero ι] [GradedMul α] : Mul (α 0) where
   mul a b := cast (by rw [add_zero]) (a * b)
 
 variable {α: Type*}

@@ -79,13 +79,16 @@ variable
 
 variable [IsAddSemigroup α] [IsGradedSemigroup R]
 
-instance : IsNonUnitalRing (⊕a, R a) where
+public instance : IsNonUnitalRing (⊕a, R a) where
 
 variable [Zero α] [One (R 0)]
   [NatCast (R 0)] [IsLawfulNatCast (R 0)]
   [IntCast (R 0)] [IsLawfulIntCast (R 0)]
   [IsLawfulZero α] [IsLawfulGradedOne R]
 
-instance : IsRing (⊕a, R a) where
+public instance : RingOps (⊕a, R a) := inferInstance
+public instance : IsRing (⊕a, R a) where
 
 end DirectSum
+
+section
