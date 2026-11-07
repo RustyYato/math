@@ -81,7 +81,7 @@ public theorem add_induction
   | add => apply add <;> assumption
   | ι => apply term
 
-instance [IsComm α] : IsComm (MvPoly ι α) where
+public instance [IsComm α] : IsComm (MvPoly ι α) where
   mul_comm a b := by
     induction a using add_induction with
     | zero => rw [mul_zero, zero_mul]
@@ -167,7 +167,7 @@ theorem preEvalAdd_term (f: ι -> R) (i: ⊕_: ι, ℕ)  (val: α) :
 
 variable [IsComm α]
 
-instance : IsAlgebra α (MvPoly ι α) where
+public instance : IsAlgebra α (MvPoly ι α) where
   commutes _ _ := mul_comm _ _
   smul_def k a := by
     induction a using add_induction with
