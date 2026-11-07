@@ -161,12 +161,12 @@ section Theorems
 
 public theorem eq_inv_of_mul [GroupOps α] [IsGroup α] (a b: α) (h: a * b = 1) : a = b⁻¹ := by
   rw [←one_mul b⁻¹, ←h, mul_assoc, mul_inv_cancel, mul_one]
-public theorem inv_eq_of_mul [GroupOps α] [IsGroup α] (a b: α) (h: a * b = 1) : a⁻¹ = b := by
+public theorem inv_eq_of_mul [One α] [Inv α] [Mul α] [IsLawfulOne α] [IsSemigroup α] [IsLawfulInvLeft α] (a b: α) (h: a * b = 1) : a⁻¹ = b := by
   rw [←mul_one a⁻¹, ←h, ←mul_assoc, inv_mul_cancel, one_mul]
 
 public theorem eq_neg_of_add [AddGroupOps α] [IsAddGroup α] (a b: α) (h: a + b = 0) : a = -b :=
   eq_inv_of_mul (α := MulOfAdd α) _ _ h
-public theorem neg_eq_of_add [AddGroupOps α] [IsAddGroup α] (a b: α) (h: a + b = 0) : -a = b :=
+public theorem neg_eq_of_add [Zero α] [Neg α] [Add α] [IsLawfulZero α] [IsAddSemigroup α] [IsLawfulNegLeft α] (a b: α) (h: a + b = 0) : -a = b :=
   inv_eq_of_mul (α := MulOfAdd α) _ _ h
 
 public instance [AddGroupOps α] [IsAddGroup α] (a b: α) [IsAddCommAt a b] : IsAddCommAt a (-b) where
@@ -177,7 +177,7 @@ public instance [AddGroupOps α] [IsAddGroup α] (a b: α) [IsAddCommAt a b] : I
 public instance [GroupOps α] [IsGroup α] (a b: α) [IsCommAt a b] : IsCommAt a (b⁻¹) where
   mul_comm := add_comm (AddOfMul.mk a) (-AddOfMul.mk b)
 
-public instance [AddGroupOps α] [IsAddGroup α] : IsLawfulNegZero α where
+public instance [Zero α] [Neg α] [Add α] [IsLawfulZero α] [IsAddSemigroup α] [IsLawfulNegLeft α] : IsLawfulNegZero α where
   neg_zero := by
     apply neg_eq_of_add
     rw [add_zero]
