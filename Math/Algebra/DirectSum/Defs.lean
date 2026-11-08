@@ -273,17 +273,6 @@ public theorem liftAdd_ι (f: ∀a, R a →+ M) (a: α) (r: R a) : liftAdd f (ι
 
 end Lift
 
-public def get [DecidableEq α] (a: α) : (⊕a, R a) →+ R a :=
-  liftAdd fun x => if h:a = x then cast (by rw [h]) (AddGroupHom.id (R a)) else 0
-
-public theorem get_ι_eq [DecidableEq α] (a: α) (r: R a) : get a (ι a r) = r := by
-  unfold get; rw [liftAdd_ι, dite_eq_left rfl];
-  rfl
-
-public theorem get_ι_ne [DecidableEq α] (a b: α) (h: a ≠ b) (r: R b) : get a (ι b r) = 0 := by
-  unfold get; rw [liftAdd_ι, dite_eq_right h];
-  rfl
-
 end AddMonoid
 
 section Mul
@@ -440,5 +429,137 @@ variable [Zero α] [One (R 0)] [NatCast (R 0)] [IsLawfulNatCast (R 0)]
 public instance : IsSemiring (⊕a, R a) where
 
 end Mul
+
+section Domain
+
+variable [∀a, AddMonoidOps (R a)] [∀a, IsAddMonoid (R a)] [∀a, IsAddComm (R a)]
+ [DecidableEq α]
+
+public def get (a: α) : (⊕a, R a) →+ R a :=
+  liftAdd fun x => if h:a = x then cast (by rw [h]) (AddGroupHom.id (R a)) else 0
+
+public theorem get_ι_eq (a: α) (r: R a) : get a (ι a r) = r := by
+  unfold get; rw [liftAdd_ι, dite_eq_left rfl];
+  rfl
+
+public theorem get_ι_ne (a b: α) (h: a ≠ b) (r: R b) : get a (ι b r) = 0 := by
+  unfold get; rw [liftAdd_ι, dite_eq_right h];
+  rfl
+
+public def erase (a: α) : (⊕a, R a) →+ ⊕a, R a :=
+  liftAdd fun x => if a = x then 0 else ι x
+
+public theorem erase_ι_eq (a: α) (r: R a) : erase a (ι a r) = 0 := by
+  unfold erase; rw [liftAdd_ι, ite_eq_left rfl]; rfl
+
+public theorem erase_ι_ne (a b: α) (h: a ≠ b) (r: R b) : erase a (ι b r) = ι b r := by
+  unfold erase; rw [liftAdd_ι, ite_eq_right h]
+
+public theorem get_erase_eq (a: α) (ds: ⊕a, R a) : get a (erase a ds) = 0 := by
+  induction ds with
+  | zero => rw [map_zero, map_zero]
+  | add a b iha ihb => simp [map_add, iha, ihb, add_zero]
+  | ι i r =>
+    by_cases h:a = i
+    subst i; rw [erase_ι_eq, map_zero]
+    rw [erase_ι_ne, get_ι_ne]
+    assumption
+    assumption
+
+public theorem get_erase_ne (a b: α) (h: a ≠ b) (ds: ⊕a, R a) : get a (erase b ds) = get a ds := by
+  induction ds with
+  | zero => rw [map_zero, map_zero]
+  | add a b iha ihb => simp [map_add, iha, ihb]
+  | ι i r =>
+    by_cases h:b = i
+    subst i; rw [erase_ι_eq, map_zero, get_ι_ne _ _ h]
+    rw [erase_ι_ne]
+    assumption
+
+variable [∀a, ExcludedMiddleEq (R a)]
+
+theorem preDomain (ds: ⊕a, R a) : ∃domain: List α, ∀x, get x ds ≠ 0 -> x ∈ domain := by
+  induction ds with
+  | zero =>
+    exists []
+    intro x; rw [map_zero]; nofun
+  | add a b iha ihb =>
+    obtain ⟨as, has⟩ := iha
+    obtain ⟨bs, hbs⟩ := ihb
+    exists as ++ bs
+    intro x h
+    rw [map_add] at h
+    rcases em (get x a = 0) with ha | ha
+    rw [ha, zero_add] at h
+    apply List.mem_append_right; apply hbs
+    assumption
+    apply List.mem_append_left; apply has
+    assumption
+  | ι a r =>
+    exists [a]
+    intro x
+    by_cases x = a; subst x; intro; apply List.mem_singleton.mpr; rfl
+    rw [get_ι_ne]; nofun; assumption
+
+public theorem domain (ds: ⊕a, R a) : ∃domain: List α, domain.Nodup ∧ ∀x, x ∈ domain ↔ get x ds ≠ 0 := by
+  have ⟨domain, hds⟩ := preDomain ds
+  induction domain generalizing ds with
+  | nil =>
+    exists []
+    apply And.intro
+    apply List.nodup_nil
+    intro x; apply Iff.intro nofun
+    apply hds
+  | cons x xs ih =>
+    have ⟨domain, nodup, h⟩ := ih (ds.erase x) (by
+      intro i hi
+      rcases em (i = x) with h | h
+      subst i
+      rw [get_erase_eq] at hi
+      contradiction
+      rw [get_erase_ne] at hi
+      cases hds _ hi
+      contradiction
+      assumption
+      assumption)
+    clear ih hds xs
+    rcases em (get x ds = 0) with eq_zero | ne_zero
+    exists domain
+    apply And.intro
+    · assumption
+    · intro i;
+      apply Iff.intro
+      intro hi; have := (h i).mp hi
+      rwa [get_erase_ne] at this
+      intro rfl
+      rw [get_erase_eq] at this; contradiction
+      intro hi
+      apply (h i).mpr
+      rwa [get_erase_ne]
+      intro rfl
+      contradiction
+    exists x::domain
+    apply And.intro
+    · apply List.nodup_cons.mpr
+      apply And.intro _ nodup
+      intro hx
+      have := (h x).mp hx
+      rw [get_erase_eq] at this
+      contradiction
+    · intro i; apply Iff.intro
+      intro hi; rcases hi with _ | ⟨_, hi⟩
+      assumption
+      have := (h i).mp hi
+      rwa [get_erase_ne] at this
+      intro rfl; rw [get_erase_eq] at this
+      contradiction
+      intro hi
+      by_cases hix:i = x
+      subst x; apply List.mem_cons_self
+      apply List.mem_cons_of_mem
+      apply (h _).mpr
+      rwa [get_erase_ne]
+
+end Domain
 
 end DirectSum
