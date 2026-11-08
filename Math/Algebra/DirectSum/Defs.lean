@@ -273,6 +273,17 @@ public theorem liftAdd_ι (f: ∀a, R a →+ M) (a: α) (r: R a) : liftAdd f (ι
 
 end Lift
 
+public def get [DecidableEq α] (a: α) : (⊕a, R a) →+ R a :=
+  liftAdd fun x => if h:a = x then cast (by rw [h]) (AddGroupHom.id (R a)) else 0
+
+public theorem get_ι_eq [DecidableEq α] (a: α) (r: R a) : get a (ι a r) = r := by
+  unfold get; rw [liftAdd_ι, dite_eq_left rfl];
+  rfl
+
+public theorem get_ι_ne [DecidableEq α] (a b: α) (h: a ≠ b) (r: R b) : get a (ι b r) = 0 := by
+  unfold get; rw [liftAdd_ι, dite_eq_right h];
+  rfl
+
 end AddMonoid
 
 section Mul
