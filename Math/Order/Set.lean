@@ -164,3 +164,21 @@ public instance : IsLawfulTop (Set α) where
   le_top _ _ _ := True.intro
 public instance : IsLawfulBot (Set α) where
   bot_le := nofun
+
+public def Set.Induced (r: α -> α -> Prop) (U: Set α) :
+  U -> U -> Prop := fun a b => r a b
+
+namespace Set.Induced
+
+variable (U: Set α) (r: α -> α -> Prop)
+
+public instance [IsRefl r] : IsRefl (U.Induced r) where
+  refl _ := refl (r := r) _
+public instance [IsTrans r] : IsTrans (U.Induced r) where
+  htrans := htrans (r := r)
+public instance [IsConnected r (· = ·)] : IsConnected (U.Induced r) (· = ·) where
+  connected a b := by
+    rcases connected (R := r) a.val b.val with h | h | h
+    left; assumption
+    right; left; ext; assumption
+    right; right; assumption

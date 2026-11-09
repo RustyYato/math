@@ -9,9 +9,6 @@ namespace Set
 
 variable {α: Type*}
 
-@[expose] public def Induced (r: α -> α -> Prop) (U: Set α) :
-  U -> U -> Prop := fun a b => r a b
-
 @[expose] public def inducedEmb (r: α -> α -> Prop) (U: Set α) : Induced r U ↪r r where
   toFun := Subtype.val
   injective := by intro ⟨a, ha⟩ ⟨b, hb⟩ rfl; rfl

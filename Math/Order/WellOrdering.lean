@@ -30,6 +30,12 @@ instance : LE (Relation α) where
 instance : LT (Relation α) where
   lt a b := a ≤ b ∧ ¬b ≤ a
 
+theorem Relation.defined_sub_of_le {r s: Relation α} (h: r ≤ s) : r.defined ⊆ s.defined := by
+  intro x ⟨k, hx⟩
+  rcases hx with hx | hx <;> exists k
+  left; apply h.maps; assumption
+  right; apply h.maps; assumption
+
 instance : IsPartialOrder (Relation α) where
   lt_iff_le_and_not_ge := Iff.rfl
   refl _ := {
@@ -85,14 +91,60 @@ theorem Relation.insert_spec
 def Relation.union (C: Set (Relation α)) : Relation α where
   toRel a b := ∃r ∈ C, r.toRel a b
 
+theorem Relation.of_union_defined
+  (C: Set (Relation α)) (a: α) (ha: a ∈ (Relation.union C).defined) :
+  ∃r ∈ C, a ∈ r.defined := by
+  obtain ⟨k, ha⟩ := ha
+  rcases ha with ⟨r, r_in_c, a_lt_k⟩ | ⟨r, r_in_c, k_lt_a⟩
+  all_goals refine ⟨r, r_in_c, k, ?_⟩
+  left; assumption
+  right; assumption
+
 theorem Relation.union_spec
   (C: Set (Relation α))
   (C_sub: C ⊆ Relation.sub_well_orderings α)
   (C_chain: C.IsChain (· ≤ ·))
   : Relation.union C ∈ Relation.sub_well_orderings α where
-  wf := sorry
-  trans := sorry
-  connected := sorry
+  wf := {
+    wf := by
+      apply WellFounded.intro
+      intro a; apply Acc.intro
+      intro b ⟨r, hr, b_lt_a⟩
+      induction a using (C_sub _ hr).wf.wf.induction generalizing b with
+      | _ a ih =>
+      apply Acc.intro
+      intro c ⟨s, hs, c_lt_b⟩
+      have:= Relation.transfer C C_chain hs hr c_lt_b ⟨_, .inl b_lt_a⟩
+      apply ih <;> assumption
+  }
+  trans := {
+    htrans {a b c} h g := by
+      obtain ⟨r, r_in_c, a_lt_b⟩ := h
+      obtain ⟨s, s_in_c, b_lt_c⟩ := g
+      have a_lt_b := Relation.transfer C C_chain r_in_c s_in_c a_lt_b ⟨c, .inl b_lt_c⟩
+      have := (C_sub _ s_in_c).trans
+      refine ⟨s, s_in_c, trans a_lt_b b_lt_c⟩
+  }
+  connected := {
+    connected := by
+      intro ⟨a, ha⟩ ⟨b, hb⟩
+      simp [Set.Induced]
+      have ⟨r, r_in_c, a_defined⟩ := Relation.of_union_defined C a ha
+      have ⟨s, s_in_c, b_defined⟩ := Relation.of_union_defined C b hb
+      have : IsRefl (C.Induced (· ≤ ·)) := inferInstance
+      rcases total (R := C.Induced (· ≤ ·)) ⟨r, r_in_c⟩ ⟨s, s_in_c⟩ with h | h <;>
+        (unfold Set.Induced at h; dsimp at h)
+      · have a_defined := (defined_sub_of_le h) a a_defined
+        rcases (C_sub _ s_in_c).connected.connected ⟨a, a_defined⟩ ⟨b, b_defined⟩ with h | h | h
+        left; exists s
+        right; left; cases h; rfl
+        right; right; exists s
+      · have b_defined := (defined_sub_of_le h) b b_defined
+        rcases (C_sub _ r_in_c).connected.connected ⟨a, a_defined⟩ ⟨b, b_defined⟩ with h | h | h
+        left; exists r
+        right; left; cases h; rfl
+        right; right; exists r
+  }
 
 inductive TrivialRel (x y: α) (h: x ≠ y) : α -> α -> Prop where
 | intro : TrivialRel x y h x y

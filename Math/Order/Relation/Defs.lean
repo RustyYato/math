@@ -271,6 +271,13 @@ public abbrev setoid (r: α -> α -> Prop) [IsRefl r] [IsSymm r] [IsTrans r] : S
   r := _
   iseqv := eqv r
 
+public instance {r: α -> α -> Prop} [IsRefl r] [IsConnected r (· = ·)] : IsTotal r where
+  total a b := by
+    rcases connected (R := r) a b with h | rfl | h
+    left; assumption
+    right; apply refl
+    right; assumption
+
 end Property
 
 section Generator
