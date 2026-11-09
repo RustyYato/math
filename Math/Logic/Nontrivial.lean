@@ -15,12 +15,18 @@ public instance : Nontrivial Int :=
 
 namespace Nontrivial
 
-variable [h: Nontrivial α]
-
-public theorem exists_ne (a: α) [∀x, ExcludedMiddle (a = x)] : ∃b, a ≠ b := by
+public theorem exists_ne [h: Nontrivial α] (a: α) [∀x, ExcludedMiddle (a = x)] : ∃b, a ≠ b := by
   rcases h with ⟨x, y, h⟩
   rcases em (a = x)
   exists y; subst a; assumption
   exists x
+
+public theorem of_not_subsingleton [LEM] (h: ¬Subsingleton α) : Nontrivial α := by
+  apply LEM.byContradiction
+  intro g; apply h; refine ⟨?_⟩
+  intro a b
+  apply LEM.byContradiction
+  intro h; apply g
+  refine ⟨a, b, h⟩
 
 end Nontrivial
