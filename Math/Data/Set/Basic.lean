@@ -141,8 +141,6 @@ public theorem image_eq_range (f: α -> β) (s: Set α): s.image f = Set.range (
 public theorem image_univ_eq_range (f: α -> β): image f ⊤ = Set.range f := by
   ext b; simp
 
-@[expose] public def Induced (r: α -> α -> Prop) (U: Set α) : U -> U -> Prop := fun x y => r x y
-
 public theorem image_nonempty_iff {f: α -> β} {s: Set α} : (s.image f).Nonempty ↔ s.Nonempty := by
   simp only [nonempty_spec]
   apply Iff.intro
