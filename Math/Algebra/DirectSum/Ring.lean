@@ -76,8 +76,7 @@ end
 variable
   [Add α] [GradedMul R] [IsLawfulGradedZeroMul R]
   [IsGradedLeftDistrib R] [IsGradedRightDistrib R]
-
-variable [IsAddSemigroup α] [IsGradedSemigroup R]
+  [IsAddSemigroup α] [IsGradedSemigroup R]
 
 public instance : IsNonUnitalRing (⊕a, R a) where
 
