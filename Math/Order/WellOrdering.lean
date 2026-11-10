@@ -62,8 +62,16 @@ structure IsSubWellOrdering (r: Relation α) : Prop where
 def Relation.sub_well_orderings (α: Type*) : Set (Relation α) where
   Mem := IsSubWellOrdering
 
+inductive InsertRel (r: Relation α) (x: α) : α -> α -> Prop where
+| of : r.toRel a b -> InsertRel r x a b
+| insert : a ∈ r.defined -> InsertRel r x a x
+
+inductive InsertDefined (r: Relation α) (x: α) : α -> Prop where
+| of : a ∈ r.defined -> InsertDefined r x a
+| insert : InsertDefined r x x
+
 def Relation.insert (r: Relation α) (x: α) : Relation α where
-  toRel a b := r.toRel a b ∨ a ∈ r.defined ∧ b = x
+  toRel := InsertRel r x
 
 theorem Relation.transfer
   (C: Set (Relation α))
@@ -79,14 +87,64 @@ theorem Relation.transfer
   · apply le.initial _ h
     dsimp; assumption
 
+theorem Relation.of_insert_defined
+  (r: Relation α) (x a: α) :
+  a ∈ (r.insert x).defined -> InsertDefined r x a := by
+  intro ⟨k, h⟩; rcases h with h | h
+  cases h; left; exists k; left; assumption
+  left; assumption
+  cases h; left; exists k; right; assumption
+  right
+
 theorem Relation.insert_spec
   {r: Relation α} {x: α}
-  (h: r ∈ Relation.sub_well_orderings α)
+  (wo: r ∈ Relation.sub_well_orderings α)
   (hx: x ∉ r.defined)
   : Relation.insert r x ∈ Relation.sub_well_orderings α where
-  wf := sorry
-  trans := sorry
-  connected := sorry
+  wf := {
+    wf := by
+      apply WellFounded.intro
+      suffices ∀a, a ∈ r.defined -> Acc (r.insert x).toRel a by
+        intro a; apply Acc.intro
+        intro b a_lt_b; cases a_lt_b
+        apply this; exists a; left; assumption
+        apply this; assumption
+      intro a ha
+      induction a using wo.wf.wf.induction with
+      | _ a ih =>
+      apply Acc.intro
+      intro b b_lt_a; cases b_lt_a
+      apply ih; assumption
+      exists a; left; assumption
+      contradiction
+  }
+  trans := {
+    htrans {a b c} h g := by
+      have := wo.trans
+      cases h <;> cases g
+      apply InsertRel.of; apply htrans <;> assumption
+      apply InsertRel.insert; exists b; left; assumption
+      exfalso; apply hx; exists c; left; assumption
+      contradiction
+  }
+  connected := {
+    connected := by
+      intro ⟨a, ha⟩ ⟨b, hb⟩
+      rcases of_insert_defined _ _ _ ha with ha | _
+      <;> rcases of_insert_defined _ _ _ hb with hb | _
+      all_goals dsimp [Set.Induced]
+      · have := wo.connected
+        rcases connected (R := r.defined.Induced r.toRel) ⟨a, ha⟩ ⟨b, hb⟩ with h | h | h
+        any_goals dsimp [Set.Induced] at h
+        left; apply InsertRel.of; assumption
+        right; left; cases h; rfl
+        right; right; apply InsertRel.of; assumption
+      · left; apply InsertRel.insert
+        assumption
+      · right; right; apply InsertRel.insert
+        assumption
+      · right; left; rfl
+  }
 
 def Relation.union (C: Set (Relation α)) : Relation α where
   toRel a b := ∃r ∈ C, r.toRel a b
@@ -219,9 +277,10 @@ public theorem exists_well_ordering (α: Type*) : ∃r: α -> α -> Prop, IsWell
     assumption
     assumption
     refine ⟨?_, ?_⟩
-    · intro x y; apply Or.inl
+    · intro x y; apply InsertRel.of
     · intro i j hj i_lt_j
-      rcases i_lt_j with _ | ⟨_, rfl⟩; assumption
+      rcases i_lt_j
+      assumption
       contradiction
     rw [Set.not_nonempty] at hrel
     classical
