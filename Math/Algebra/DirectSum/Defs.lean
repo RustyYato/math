@@ -3,6 +3,7 @@ module
 public import Math.Data.FreeMonoid.Defs
 public import Math.Algebra.GroupQuot.Defs
 public import Math.Algebra.Monoid.Action.Defs
+public import Math.Algebra.Module.Defs
 public import Math.Algebra.GradedMonoid.Defs
 public import Math.Algebra.Semiring.Defs
 
@@ -238,6 +239,10 @@ public instance: IsAddMonoid (⊕a, R a) where
   zero_nsmul a := by
     induction a with rw [zero_smul]
   succ_nsmul a n := by rw [add_smul, one_smul]
+
+public instance
+  [SemiringOps S] [IsSemiring S] [∀a, SMul S (R a)]
+  [∀a, IsModule S (R a)] : IsModule S (⊕a, R a) where
 
 section Lift
 
