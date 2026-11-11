@@ -5,6 +5,8 @@ public import Math.Algebra.DirectSum.Ring
 
 namespace Math.LinearCombo
 
+section
+
 variable {ι α: Type*} [AddGroupOps α] [IsAddGroup α] [IsAddComm α]
 
 public instance : Neg (LinearCombo ι α) where
@@ -16,3 +18,13 @@ public instance : SMul ℤ (LinearCombo ι α) where
 
 public instance : IsAddGroup (LinearCombo ι α) :=
   OfEquiv.instIsAddGroup addEqv.toEquiv
+
+end
+
+variable {ι α: Type*} [RingOps α] [IsRing α]
+
+public theorem get_inj [DecidableEq ι] : Function.Injective fun lc: LinearCombo ι α => (LinearCombo.get · lc) := by
+  intro a b h;
+  dsimp at h
+  replace h (i: ι) := congrFun h i
+  sorry

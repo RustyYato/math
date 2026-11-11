@@ -3,6 +3,7 @@ module
 public import Math.Algebra.DirectSum.Defs
 public import Math.Algebra.Module.Defs
 public import Math.Algebra.Module.Hom.Defs
+import Math.Data.List.Defs
 
 namespace Math
 
@@ -125,3 +126,89 @@ public def lift : (ι -> M) ≃ (LinearCombo ι α →ₗ[α] M) where
   rightInv f := by ext i; dsimp; rw [preLift_ι, one_smul]
 
 public theorem lift_ι (f: ι -> M) (i: ι) (a: α) : lift f (.ι α i a) = a • f i := preLift_ι _ _ _
+
+public def get [DecidableEq ι] (i: ι) : LinearCombo ι α →ₗ[α] α :=
+  lift fun j => if i = j then 1 else 0
+
+public theorem get_ι_eq [DecidableEq ι] (i: ι) (a: α) : get i (.ι α i a) = a := by
+  unfold get; rw [lift_ι, ite_eq_left rfl, smul_eq_mul, mul_one]
+public theorem get_ι_ne [DecidableEq ι] (i j: ι) (h: i ≠ j) (a: α) : get i (.ι α j a) = 0 := by
+  unfold get; rw [lift_ι, ite_eq_right h, smul_zero]
+
+theorem contrapos {P Q: Prop} [ExcludedMiddle Q] (h: ¬Q -> ¬P) : P -> Q := by
+  intro p; rcases em Q with q | nq
+  assumption
+  nomatch h nq p
+
+theorem preDomain₀ [DecidableEq ι] [DecidableEq α] (lc: LinearCombo ι α) : ∃domain: List ι, ∀i, lc.get i ≠ 0 -> i ∈ domain := by
+  induction lc with
+  | zero =>
+    exists []; intro i h
+    rw [map_zero] at h
+    contradiction
+  | add a b iha ihb =>
+    obtain ⟨da, hda⟩ := iha
+    obtain ⟨db, hdb⟩ := ihb
+    exists da ++ db
+    intro i hi
+    simp
+    rw [map_add] at hi
+    by_cases ha:get i a = 0
+    rw [ha, zero_add] at hi
+    right; apply hdb; assumption
+    left; apply hda; assumption
+  | ι j a =>
+    exists [j]
+    intro i hi
+    by_cases h:i = j
+    subst j
+    rw [get_ι_eq] at hi; apply List.mem_singleton_self
+    rw [get_ι_ne _ _ h] at hi
+    contradiction
+
+theorem preDomain₁ [DecidableEq ι] [DecidableEq α] (lc: LinearCombo ι α) : ∃domain: List ι, domain.Nodup ∧ (∀i, lc.get i ≠ 0 ↔ i ∈ domain) := by
+  obtain ⟨domain, hdomain⟩ := preDomain₀ lc
+  exists (domain.filter fun i => get i lc ≠ 0).eraseDups
+  apply And.intro
+  apply List.nodup_eraseDups
+  intro i
+  apply Iff.intro
+  intro hi; simpa [hdomain _ hi]
+  simp
+
+public theorem domain [DecidableEq ι] [DecidableEq α] (lc: LinearCombo ι α) : ∃domain: List ι, domain.Nodup ∧ (∀i, lc.get i ≠ 0 ↔ i ∈ domain) ∧ lc = (domain.map (fun i => .ι α i (lc.get i))).sum := by
+  induction lc with
+  | zero =>
+    exists []
+    simp [map_zero]
+  | ι i a =>
+    by_cases ha:a = 0
+    exists []
+    simp [ha, map_zero]
+    exists [i]; simp [add_zero, get_ι_eq]
+    intro j
+    apply Iff.intro
+    intro hj
+    apply Decidable.byContradiction
+    intro h; rw [get_ι_ne _ _ h] at hj
+    contradiction
+    intro rfl; rwa [get_ι_eq]
+  | add a b iha ihb =>
+    have ⟨domain, domain_nodup, domain_spec⟩ := preDomain₁ (a + b)
+    have ⟨da, da_nodup, da_spec, da_sum⟩ := iha
+    have ⟨db, db_nodup, db_spec, db_sum⟩ := ihb
+    clear iha ihb; refine ⟨domain, domain_nodup, domain_spec, ?_⟩
+    simp [map_add]
+    have : ∀x ∈ domain, x ∈ da ∨ x ∈ db := by
+      intro i hi
+      rw [←da_spec, ←db_spec]
+      rw [←domain_spec, map_add] at hi
+      apply Decidable.or_iff_not_imp_left.mpr
+      intro g; simp at g; rwa [g, zero_add] at hi
+    -- these sums are equal to the sums on supersets
+    -- so we can extend all these sums to (da ∪ db)
+    -- then merge the sums together
+    sorry
+
+@[ext] public theorem ext [DecidableEq ι] (a b: LinearCombo ι α) (h: ∀i, a.get i = b.get i) : a = b := by
+  sorry

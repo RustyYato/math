@@ -201,6 +201,22 @@ public theorem map_neg
   (f: F) (a: α) : f (-a) = -f a :=
   map_inv (MulOfAdd.mk f) (MulOfAdd.mk a)
 
+public theorem map_div
+  [Funlike F α β]
+  [Mul α] [One α] [Inv α] [Div α] [IsLawfulInvLeft α] [IsLawfulDiv α]
+  [GroupOps β] [IsGroup β]
+  [IsMulHom F α β] [IsOneHom F α β]
+  (f: F) (a b: α) : f (a / b) = f a / f b := by
+  rw [div_eq_mul_inv, div_eq_mul_inv, map_mul, map_inv]
+
+public theorem map_sub
+  [Funlike F α β]
+  [Add α] [Zero α] [Neg α] [Sub α] [IsLawfulNegLeft α] [IsLawfulSub α]
+  [AddGroupOps β] [IsAddGroup β]
+  [IsAddHom F α β] [IsZeroHom F α β]
+  (f: F) (a b: α) : f (a - b) = f a - f b :=
+  map_div (MulOfAdd.mk f) (MulOfAdd.mk a) (MulOfAdd.mk b)
+
 public theorem map_powz
   [Funlike F α β]
   [GroupOps α] [GroupOps β]
