@@ -18,3 +18,10 @@ public theorem nodup_eraseDups [BEq α] [LawfulBEq α] (as: List α) : as.eraseD
       apply flip Nat.lt_of_le_of_lt
       apply Nat.lt_succ_self
       apply List.length_filter_le
+
+public theorem perm_map (f: α -> β) {as bs: List α} (h: as ≈ bs) : as.map f ≈ bs.map f := by
+  induction h with
+  | nil => apply List.Perm.nil
+  | swap => apply List.Perm.swap
+  | cons => apply List.Perm.cons; assumption
+  | trans => apply List.Perm.trans <;> assumption
