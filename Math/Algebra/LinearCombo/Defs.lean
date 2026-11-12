@@ -3,6 +3,8 @@ module
 public import Math.Algebra.DirectSum.Defs
 public import Math.Algebra.Module.Defs
 public import Math.Algebra.Module.Hom.Defs
+-- public import Math.Data.Finset.Defs
+public import Math.Data.Finset.Algebra
 import Math.Data.List.Defs
 
 namespace Math
@@ -176,16 +178,84 @@ theorem preDomain₁ [DecidableEq ι] [DecidableEq α] (lc: LinearCombo ι α) :
   intro hi; simpa [hdomain _ hi]
   simp
 
-public theorem domain [DecidableEq ι] [DecidableEq α] (lc: LinearCombo ι α) : ∃domain: List ι, domain.Nodup ∧ (∀i, lc.get i ≠ 0 ↔ i ∈ domain) ∧ lc = (domain.map (fun i => .ι α i (lc.get i))).sum := by
+theorem preDomain₂ [DecidableEq ι] [DecidableEq α] (lc: LinearCombo ι α) : ∃domain: Finset ι, (∀i, lc.get i ≠ 0 ↔ i ∈ domain) := by
+  obtain ⟨domain, domain_nodup, hdomain⟩ := preDomain₁ lc
+  exact ⟨⟨.mk domain, domain_nodup⟩, hdomain⟩
+
+def IsDomain [DecidableEq ι] (s: Finset ι) (lc: LinearCombo ι α) : Prop := ∀i, lc.get i ≠ 0 -> i ∈ s
+
+@[expose] public def domain_sum [DecidableEq ι] (s: Finset ι) (lc: LinearCombo ι α) : LinearCombo ι α :=
+  s.sum fun i => .ι α i (lc.get i)
+
+instance [Add β] [IsAddComm β] : Std.Commutative (α := β) (· + ·) where
+  comm _ _ := add_comm _ _
+instance [Add β] [IsAddSemigroup β] : Std.Associative (α := β) (· + ·) where
+  assoc := add_assoc
+
+theorem domain_sum_add [DecidableEq ι]
+  (s: Finset ι)
+  (a b: LinearCombo ι α) : domain_sum s (a + b) = domain_sum s a + domain_sum s b := by
+  unfold domain_sum
+  induction s generalizing a b with
+  | nil => simp [add_zero]
+  | cons i s not_mem ih =>
+    simp
+    rw [ih]
+    simp [map_add]
+    ac_rfl
+
+theorem domain_sum_disjoint [DecidableEq ι] (s t: Finset ι) (h: ∀x, x ∉ s ∩ t) (lc: LinearCombo ι α) :
+  domain_sum (s ∪ t) lc = domain_sum s lc + domain_sum t lc := by
+  unfold domain_sum
+  induction s with
+  | nil => simp [zero_add]
+  | cons a as a_not_in_as ih =>
+    simp; rw [add_assoc, Finset.insert_unique_union]
+    simp; congr 1
+    rw [ih]
+    · intro i
+      have := h i
+      simp at this
+      simp; intro h; apply this;
+      right; assumption
+    · have := h a
+      simpa
+
+theorem domain_sum_eq_superset [DecidableEq ι] [DecidableEq α]
+  (s t: Finset ι) (h: s ⊆ t)
+  (lc: LinearCombo ι α) (hs: IsDomain s lc) : domain_sum s lc = domain_sum t lc := by
+  obtain ⟨t, rfl, ht⟩ := Finset.eq_union_of_superset h; clear h
+  rw [←add_zero (domain_sum s lc), domain_sum_disjoint _ _ ht]
+  congr; symm
+  have : ∀i ∈ t, lc.get i = 0 := ?_
+  · unfold domain_sum
+    clear s ht hs
+    induction t with
+    | nil => rw [Finset.sum_empty]
+    | cons _ _ _ ih =>
+      rw [Finset.sum_insert_unique, this, map_zero, zero_add, ih]
+      intro i hi
+      apply this; simp; right; assumption
+      simp
+  · intro i hi
+    apply Decidable.byContradiction
+    intro g
+    apply ht i
+    simp [hi]
+    apply hs
+    assumption
+
+public theorem domain [DecidableEq ι] [DecidableEq α] (lc: LinearCombo ι α) :
+  ∃domain: Finset ι, (∀i, lc.get i ≠ 0 ↔ i ∈ domain) ∧ lc = domain_sum domain lc := by
   induction lc with
   | zero =>
-    exists []
-    simp [map_zero]
+    exists ∅
+    simp [map_zero, domain_sum]
   | ι i a =>
     by_cases ha:a = 0
-    exists []
-    simp [ha, map_zero]
-    exists [i]; simp [add_zero, get_ι_eq]
+    exists ∅
+    simp [ha, map_zero, domain_sum]
+    exists {i}; simp [get_ι_eq, domain_sum]
     intro j
     apply Iff.intro
     intro hj
@@ -195,20 +265,36 @@ public theorem domain [DecidableEq ι] [DecidableEq α] (lc: LinearCombo ι α) 
     intro rfl; rwa [get_ι_eq]
   | add a b iha ihb =>
     have ⟨domain, domain_nodup, domain_spec⟩ := preDomain₁ (a + b)
-    have ⟨da, da_nodup, da_spec, da_sum⟩ := iha
-    have ⟨db, db_nodup, db_spec, db_sum⟩ := ihb
-    clear iha ihb; refine ⟨domain, domain_nodup, domain_spec, ?_⟩
-    simp [map_add]
-    have : ∀x ∈ domain, x ∈ da ∨ x ∈ db := by
-      intro i hi
+    have ⟨da, da_spec, da_sum⟩ := iha
+    have ⟨db, db_spec, db_sum⟩ := ihb
+    clear iha ihb; refine ⟨⟨.mk domain, domain_nodup⟩, domain_spec, ?_⟩
+    have : ∀x ∈ domain, x ∈ da ∪ db := by
+      intro i hi; simp
       rw [←da_spec, ←db_spec]
       rw [←domain_spec, map_add] at hi
       apply Decidable.or_iff_not_imp_left.mpr
       intro g; simp at g; rwa [g, zero_add] at hi
-    -- these sums are equal to the sums on supersets
-    -- so we can extend all these sums to (da ∪ db)
-    -- then merge the sums together
-    sorry
+    rw (occs := [1]) [da_sum, db_sum]
+    have ha : IsDomain da a := by
+      intro i hi
+      exact (da_spec i).mp hi
+    have hb : IsDomain db b := by
+      intro i hi
+      exact (db_spec i).mp hi
+    rw [
+      domain_sum_eq_superset (s := da) (t := da ∪ db),
+      domain_sum_eq_superset (s := db) (t := da ∪ db),
+      domain_sum_eq_superset (s := Finset.mk (Multiset.mk domain) domain_nodup) (t := da ∪ db),
+    ]
+    · rw [domain_sum_add]
+    · apply this
+    · intro i hi
+      apply (domain_spec i).mp
+      assumption
+    · intro i; simp; apply Or.inr
+    · assumption
+    · intro i; simp; apply Or.inl
+    · assumption
 
 @[ext] public theorem ext [DecidableEq ι] (a b: LinearCombo ι α) (h: ∀i, a.get i = b.get i) : a = b := by
   sorry

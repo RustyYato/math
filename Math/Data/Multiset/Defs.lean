@@ -19,9 +19,11 @@ public theorem sound : a ≈ b -> mk a = mk b := by
   unfold mk; intro h; congr 1; apply Quotient.sound
   assumption
 
-public theorem ind {motive: Multiset α -> Prop} (mk : ∀x, motive (mk x)) (ms: Multiset α) : motive ms := by
-  obtain ⟨ms⟩ := ms; induction ms using Quotient.ind
+public def recOnSubsingleton {motive: Multiset α -> Sort u} [∀ms, Subsingleton (motive ms)] (mk : ∀x, motive (mk x)) (ms: Multiset α) : motive ms := by
+  obtain ⟨ms⟩ := ms; apply ms.recOnSubsingleton (motive := fun s => _)
   apply mk
+public theorem ind {motive: Multiset α -> Prop} (mk : ∀x, motive (mk x)) (ms: Multiset α) : motive ms := by
+  apply recOnSubsingleton; apply mk
 
 public def lift (f: List α -> β) (hf: ∀a b, a ≈ b -> f a = f b) (ms: Multiset α) : β :=
   ms.toQuot.lift f hf
@@ -51,6 +53,13 @@ public instance : Membership α (Multiset α) where
   mem := flip fun a => lift (a ∈ ·) <| by
     intro as bs h; ext; apply h.mem_iff
 
+@[simp] public theorem mem_cons {a: α} {as: Multiset α} : ∀{x}, x ∈ a::ₘas ↔ x = a ∨ x ∈ as := by
+  induction as using ind
+  intro x; apply List.mem_cons
+
+public instance [DecidableEq α] (a: α) (s: Multiset α) : Decidable (a ∈ s) :=
+  s.recOnSubsingleton (motive := fun s => Decidable (a ∈ s)) fun s => inferInstanceAs (Decidable (a ∈ s))
+
 public theorem nil_append (bs: Multiset α) : nil ++ bs = bs := by
   induction bs using ind; apply sound
   rw [List.nil_append]; apply List.Perm.refl
@@ -67,6 +76,11 @@ public theorem append_nil (as: Multiset α) : as ++ nil = as := by
 public theorem append_cons (b: α) (as bs: Multiset α) : as ++ b::ₘbs = b::ₘ(as ++ bs) := by
   rw [append_comm, cons_append, append_comm]
 
+@[simp] public theorem mem_append {as bs: Multiset α} : ∀{x}, x ∈ as ++ bs ↔ x ∈ as ∨ x ∈ bs := by
+  induction as using ind
+  induction bs using ind
+  intro x; apply List.mem_append
+
 @[induction_eliminator]
 public theorem induction
   {motive: Multiset α -> Prop}
@@ -82,7 +96,7 @@ public def eraseDups [DecidableEq α] : Multiset α -> Multiset α :=
   lift (fun as => mk as.eraseDups) <| by
     intro  as bs h; apply sound
     show as.eraseDups.Perm bs.eraseDups
-    apply (List.perm_ext_iff_of_nodup _ _).mpr
+    apply (List.perm_ext_iff_of_nodup' _ _).mpr
     intro a; simp; apply h.mem_iff
     exact List.nodup_eraseDups as
     exact List.nodup_eraseDups bs
@@ -117,6 +131,17 @@ public theorem nodup_nil : Nodup (nil (α := α)) := List.nodup_nil
 public theorem nodup_cons (a: α) (as: Multiset α) : (a::ₘas).Nodup ↔ a ∉ as ∧ as.Nodup := by
   induction as using ind
   apply List.nodup_cons
+public theorem nodup_append {as bs: Multiset α} : (as ++ bs).Nodup ↔ as.Nodup ∧ bs.Nodup ∧ ∀x ∈ as, x ∉ bs := by
+  induction as using ind with | _ as =>
+  induction bs using ind with | _ bs =>
+  apply Iff.trans List.nodup_append
+  apply and_congr; apply Iff.rfl
+  apply and_congr; apply Iff.rfl
+  apply Iff.intro
+  intro h x ha hb
+  exact h x ha x hb rfl
+  intro h a ha b hb rfl
+  exact h a ha hb
 
 public theorem mem_eraseDups [DecidableEq α] (as: Multiset α) : ∀x, x ∈ as.eraseDups ↔ x ∈ as := by
   induction as using ind
@@ -136,5 +161,23 @@ public def map (f: α -> β) : Multiset α -> Multiset β :=
 @[simp] public theorem map_cons (f: α -> β) (a: α) (as: Multiset α) : map f (a::ₘas) = f a::ₘmap f as := by
   induction as using ind
   rfl
+
+public def filter (f: α -> Bool) : Multiset α -> Multiset α :=
+  lift (mk ∘ List.filter f) <| by
+    intro a b h; apply sound
+    apply List.perm_filter
+    assumption
+
+@[simp] public theorem mem_filter {f: α -> Bool} {ms: Multiset α} : ∀{x}, x ∈ ms.filter f ↔ x ∈ ms ∧ f x := by
+  induction ms using ind
+  intro x; apply List.mem_filter
+
+public theorem nodup_filter {f: α -> Bool} {ms: Multiset α} :
+  ms.Nodup -> (ms.filter f).Nodup  := by
+  induction ms using ind
+  apply List.nodup_filter
+
+public def length : Multiset α -> ℕ :=
+  lift List.length fun _ _ h => h.length_eq
 
 end Multiset
