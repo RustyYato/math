@@ -221,7 +221,7 @@ theorem domain_sum_disjoint [DecidableEq ι] (s t: Finset ι) (h: ∀x, x ∉ s 
     · have := h a
       simpa
 
-theorem domain_sum_eq_superset [DecidableEq ι] [DecidableEq α]
+theorem domain_sum_eq_superset [DecidableEq ι] [ExcludedMiddleEq α]
   (s t: Finset ι) (h: s ⊆ t)
   (lc: LinearCombo ι α) (hs: IsDomain s lc) : domain_sum s lc = domain_sum t lc := by
   obtain ⟨t, rfl, ht⟩ := Finset.eq_union_of_superset h; clear h
@@ -238,7 +238,7 @@ theorem domain_sum_eq_superset [DecidableEq ι] [DecidableEq α]
       apply this; simp; right; assumption
       simp
   · intro i hi
-    apply Decidable.byContradiction
+    apply LEM.byContradiction
     intro g
     apply ht i
     simp [hi]
@@ -296,5 +296,11 @@ public theorem domain [DecidableEq ι] [DecidableEq α] (lc: LinearCombo ι α) 
     · intro i; simp; apply Or.inl
     · assumption
 
-@[ext] public theorem ext [DecidableEq ι] (a b: LinearCombo ι α) (h: ∀i, a.get i = b.get i) : a = b := by
-  sorry
+@[ext] public theorem ext [DecidableEq ι] [DecidableEq α] (a b: LinearCombo ι α) (h: ∀i, a.get i = b.get i) : a = b := by
+  have ⟨da, da_spec, ha⟩ := domain a
+  have ⟨db, db_spec, hb⟩ := domain b
+  rw [ha, hb]; clear ha hb
+  rw [show da = db from ?_]
+  unfold domain_sum; congr; ext i
+  rw [h]
+  ext i; rw [←da_spec, ←db_spec, h]
