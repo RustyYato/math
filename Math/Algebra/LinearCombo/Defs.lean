@@ -187,6 +187,12 @@ def IsDomain [DecidableEq ι] (s: Finset ι) (lc: LinearCombo ι α) : Prop := �
 @[expose] public def domain_sum [DecidableEq ι] (s: Finset ι) (lc: LinearCombo ι α) : LinearCombo ι α :=
   s.sum fun i => .ι α i (lc.get i)
 
+@[simp] public theorem domain_sum_empty [DecidableEq ι] (lc: LinearCombo ι α) : domain_sum ∅ lc = 0 :=
+  Finset.sum_empty _
+
+@[simp] public theorem domain_sum_insert_unique [DecidableEq ι] (i: ι) (s: Finset ι) (hi: i ∉ s) (lc: LinearCombo ι α) : domain_sum (s.insert_unique i hi) lc = .ι α i (lc.get i) + domain_sum s lc :=
+  Finset.sum_insert_unique _ _ _ _
+
 instance [Add β] [IsAddComm β] : Std.Commutative (α := β) (· + ·) where
   comm _ _ := add_comm _ _
 instance [Add β] [IsAddSemigroup β] : Std.Associative (α := β) (· + ·) where

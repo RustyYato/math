@@ -6,6 +6,8 @@ import Math.Order.Zorn
 
 namespace Math
 
+section
+
 variable {R V: Type*} [FieldOps R] [IsDivisionRing R]
   [AddGroupOps V] [IsAddGroup V] [IsAddComm V]
   [SMul R V] [IsModule R V]
@@ -84,6 +86,35 @@ theorem insert_linear_independent
     apply Submodule.sub_span
     assumption
 
+open Classical in
+theorem filter_eval_eq
+  (A B: Set V)
+  (lc: LinearCombo B R)
+  (s: Finset B)
+  (h: ∀i, lc.get i ≠ 0 -> i.val ∈ A) :
+  IsModule.eval R A ((LinearCombo.domain_sum s lc).filter R A) = IsModule.eval R B (LinearCombo.domain_sum s lc) := by
+  induction s with
+  | nil => simp [map_zero]
+  | cons a as ha ih =>
+    simp [map_add, ih]
+    congr 1
+    by_cases hi:lc.get a = 0
+    simp [hi, map_zero]
+    rw [LinearCombo.filter_ι_mem, IsModule.eval_ι, IsModule.eval_ι]
+    apply h
+    assumption
+
+open Classical in
+theorem eval_complete_subset
+  (A B: Set V)
+  (lc: LinearCombo B R)
+  (h: ∀i, lc.get i ≠ 0 -> i.val ∈ A) :
+  IsModule.eval R A (lc.filter R A) = IsModule.eval R B lc := by
+  obtain ⟨s, hs, eq⟩ := lc.domain
+  rw (occs := [1, 2]) [eq]
+  rw [filter_eval_eq]
+  assumption
+
 theorem sUnion_linear_independent
   (Bs: Set (Set V))
   (hBs: ∀B ∈ Bs, IsModule.IsLinearIndependent R B)
@@ -154,7 +185,20 @@ theorem sUnion_linear_independent
   assumption
   unfold a' b'
   clear a' b'
-  sorry
+  rw [eval_complete_subset, eval_complete_subset, h]
+  · intro i hi; apply B_spec
+    right; assumption
+  · intro i hi; apply B_spec
+    left; assumption
+
+end
+
+namespace IsModule
+
+variable
+ (R V: Type*) [FieldOps R] [IsDivisionRing R]
+  [AddGroupOps V] [IsAddGroup V] [IsAddComm V]
+  [SMul R V] [IsModule R V]
 
 public theorem basis_exists
   (R V: Type*) [FieldOps R] [IsDivisionRing R]
@@ -178,3 +222,8 @@ public theorem basis_exists
       assumption
     · dsimp; intro u hu v hv
       exact ⟨u, hu, hv⟩
+
+public noncomputable def basis : Set V := Classical.choose (basis_exists R V)
+public theorem basis_is_basis : IsBasis R (basis R V) := Classical.choose_spec (basis_exists R V)
+public theorem basis_is_linindep : IsLinearIndependent R (basis R V) := (basis_is_basis R V).linindep
+public theorem basis_complete : ∀v, v ∈ Submodule.span R (basis R V) := (basis_is_basis R V).complete
