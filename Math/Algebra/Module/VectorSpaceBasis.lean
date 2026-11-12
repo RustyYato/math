@@ -32,7 +32,8 @@ theorem insert_linear_independent
     unfold r at hr; unfold lc' r at this
     rw [hr, map_zero, sub_zero] at this
     have lc_get : ∀i, lc.get i = 0 := ?_
-    · sorry
+    · ext i;rw [map_zero]
+      apply lc_get
     · intro ⟨w, hw⟩; rcases hw with rfl | hw
       assumption
       rw [←LinearCombo.filter_get_mem, this, map_zero]
@@ -88,6 +89,71 @@ theorem sUnion_linear_independent
   (hBs: ∀B ∈ Bs, IsModule.IsLinearIndependent R B)
   (Bs_chain: Bs.IsChain (· ≤ ·)):
   IsModule.IsLinearIndependent R (⋃ Bs) := by
+  classical
+  intro a b h
+  by_cases nonempty:Bs = ⊥
+  · have : ∀a: LinearCombo (⋃ Bs) R, a = 0 := ?_
+    rw [this a, this b]
+    clear a b h Bs_chain hBs
+    subst Bs
+    intro a
+    induction a with
+    | zero => rfl
+    | add a b iha ihb => rw [iha, ihb, add_zero]
+    | ι i a =>
+      obtain ⟨_, hi⟩ := i
+      simp at hi
+  have : ∃U ∈ Bs, ∀i, a.get i ≠ 0 ∨ b.get i ≠ 0 -> i.val ∈ U := by
+    have ⟨da, da_spec, ha⟩ := a.domain
+    have ⟨db, db_spec, hb⟩ := b.domain
+    clear ha hb
+    suffices ∃U ∈ Bs, ∀i ∈ da ∪ db, i.val ∈ U by
+      obtain ⟨U, U_in_Bs, spec⟩ := this
+      refine ⟨U, U_in_Bs, ?_⟩
+      intro i
+      have := spec i; simp [←da_spec, ←db_spec] at this
+      apply this
+    clear da_spec db_spec
+    generalize da ∪ db = domain
+    clear da db h a b
+    induction domain with
+    | nil =>
+      simp
+      simp at nonempty
+      obtain ⟨B, hB⟩ := nonempty
+      exists B
+    | cons a as a_notin_as ih =>
+      obtain ⟨B, hB, Bspec⟩ := ih
+      obtain ⟨a, B', hB', a_in_B'⟩ := a
+      simp
+      obtain ⟨U, hU, B_sub_U, B'_sub_U⟩ : ∃U ∈ Bs, B ⊆ U ∧ B' ⊆ U := by
+        have : IsTotal (Bs.Induced (· ≤ ·)) := inferInstance
+        rcases total (R := Bs.Induced (· ≤ ·)) ⟨B, hB⟩ ⟨B', hB'⟩ with h | h
+        exists B'
+        exists B
+      refine ⟨U, hU, ?_, ?_⟩
+      apply B'_sub_U; assumption
+      intro i V ⟨V_in_Bs, i_in_V⟩ i_in_as
+      apply B_sub_U
+      apply Bspec _ i_in_as
+  obtain ⟨B, B_in_Bs, B_spec⟩ := this
+  let a' := a.filter R B
+  let b' := b.filter R B
+  have : IsModule.eval R B a' = IsModule.eval R B b' := ?_
+  have := hBs _ B_in_Bs this
+  unfold a' b' at this
+  ext i
+  by_cases ha:a.get i = 0
+  by_cases hb:b.get i = 0
+  rw [ha, hb]
+  have hi := B_spec i (.inr hb)
+  rw [←LinearCombo.filter_get_mem _ _ _ a, ←LinearCombo.filter_get_mem _ _ _ b, this]
+  assumption
+  have hi := B_spec i (.inl ha)
+  rw [←LinearCombo.filter_get_mem _ _ _ a, ←LinearCombo.filter_get_mem _ _ _ b, this]
+  assumption
+  unfold a' b'
+  clear a' b'
   sorry
 
 public theorem basis_exists
