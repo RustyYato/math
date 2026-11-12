@@ -9,7 +9,7 @@ variable {α: Type*} (R: Type*)
   [RingOps R] [IsRing R] [SMul R α]
   [AddGroupOps α] [IsAddGroup α] [IsAddComm α] [IsModule R α]
 
-public theorem lin_indep_iff_eq_zero_of_eval_0 (U: Set α) : IsLinearIndependent R U ↔ ∀lc: LinearCombo U R, eval R U lc = 0 -> lc = 0 := by
+public theorem linindep_iff_eq_zero_of_eval_0 (U: Set α) : IsLinearIndependent R U ↔ ∀lc: LinearCombo U R, eval R U lc = 0 -> lc = 0 := by
   apply Iff.intro
   · intro lin lc h
     rw [←map_zero (eval R U)] at h

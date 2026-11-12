@@ -16,7 +16,7 @@ theorem insert_linear_independent
   (B: Set V) (v: V) (hB: IsModule.IsLinearIndependent R B) (h: v ∉ Submodule.span R B) :
   IsModule.IsLinearIndependent R (insert v B) := by
   classical
-  rw [IsModule.lin_indep_iff_eq_zero_of_eval_0] at *
+  rw [IsModule.linindep_iff_eq_zero_of_eval_0] at *
   intro lc lc_eval_eq_zero
   let i : (insert v B: Set V) := ⟨v, by simp⟩
   let r := lc.get i
@@ -153,8 +153,8 @@ theorem sUnion_linear_independent
       simp at nonempty
       obtain ⟨B, hB⟩ := nonempty
       exists B
-    | cons a as a_notin_as ih =>
-      obtain ⟨B, hB, Bspec⟩ := ih
+    | cons a as a_not_in_as ih =>
+      obtain ⟨B, hB, B_spec⟩ := ih
       obtain ⟨a, B', hB', a_in_B'⟩ := a
       simp
       obtain ⟨U, hU, B_sub_U, B'_sub_U⟩ : ∃U ∈ Bs, B ⊆ U ∧ B' ⊆ U := by
@@ -166,7 +166,7 @@ theorem sUnion_linear_independent
       apply B'_sub_U; assumption
       intro i V ⟨V_in_Bs, i_in_V⟩ i_in_as
       apply B_sub_U
-      apply Bspec _ i_in_as
+      apply B_spec _ i_in_as
   obtain ⟨B, B_in_Bs, B_spec⟩ := this
   let a' := a.filter R B
   let b' := b.filter R B
