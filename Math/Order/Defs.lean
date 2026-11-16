@@ -170,6 +170,12 @@ public theorem le_or_gt [IsLinearOrder α] (a b: α) : a ≤ b ∨ b < a := by
   left; exact le_of_lt h; left; rfl
   right; assumption
 
+public theorem of_le_bot [IsPartialOrder α] [Bot α] [IsLawfulBot α] {a: α} (h: a ≤ ⊥) : a = ⊥ :=
+  le_antisymm h (bot_le _)
+public theorem of_top_le [IsPartialOrder α] [Top α] [IsLawfulTop α] {a: α} (h: ⊤ ≤ a) : a = ⊤ :=
+  le_antisymm (le_top _) h
+
+
 section Max
 
 variable [Max α] [IsSupSemilattice α]
@@ -296,3 +302,11 @@ public instance
     rw [h]
 
 end Hom
+
+@[expose] public def Setoid.preorder (α: Type*) [LE α] [LT α] [IsPreorder α] : Setoid α where
+  r a b := a ≤ b ∧ b ≤ a
+  iseqv := {
+    refl _ := ⟨le_refl _, le_refl _⟩
+    symm := And.symm,
+    trans h g := ⟨le_trans h.left g.left, le_trans g.right h.right⟩
+  }
