@@ -476,6 +476,9 @@ public theorem ble_spec : ble a b ↔ a ≤ b := by
 public instance : Decidable (Kind.LE a b) :=
     decidable_of_bool _ ble_spec
 
+public instance {a b: Kind} : Decidable (a ≤ b) :=
+    inferInstanceAs (Decidable (Kind.LE a b))
+
 theorem IsTruncLe.helper₄ : IsTruncLe k a.trunc -> IsTruncLe k (.trunc (.max a b)) := by
   generalize hA:a.trunc=A
   intro h; induction h
@@ -886,3 +889,44 @@ public theorem le_sound {a b: Kind} : a ≤ b -> a.eval_le b := by
   | param => intro; apply le_refl
 
 end Kind
+
+namespace Level
+
+public def size : Level -> ℕ
+| .zero | .param _ => 0
+| .succ a => a.size + 1
+| .when _ a => a.size + 1
+| .max a b => a.size + b.size + 1
+
+public def ble (balance: ℤ) (a b: Level) : Bool :=
+  match ha:a, hb:b with
+  | .zero, .zero | .zero, .param _ => balance >= 0
+  | .succ a, .succ b => ble balance a b
+  | .succ a, b => ble (balance - 1) a b
+  | a, .succ b => ble (balance + 1) a b
+
+  | .max a b, k => ble balance a k && ble balance b k
+  | k, .max a b => ble balance k a || ble balance k b
+
+  | .param _, .zero => false
+  | .param i, .param j => i == j && balance >= 0
+  | .zero, .when k _ => balance >= 0 || Kind.type ≤ k && ble balance .zero a
+  | .param i, .when k l => Kind.type ≤ k && ble balance (.param i) l
+  | .when ka a, .when kb b =>
+    if ka ≤ .prop then
+      ble balance .zero (.when kb b)
+    else if kb ≤ .prop then
+      ble balance (.when ka a) .zero
+    else
+      ble balance a b
+  | .when k a, b =>
+    if k ≤ Kind.prop then balance >= 0 else ble balance a b
+termination_by a.size + b.size
+decreasing_by
+  all_goals
+    cases ha
+    cases hb
+    simp [size]
+  any_goals omega
+
+end Level
