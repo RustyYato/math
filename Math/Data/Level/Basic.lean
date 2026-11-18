@@ -559,7 +559,7 @@ theorem trunc_le_trunc_self (a: Kind) : a.IsTruncLe a.trunc := by
       apply IsTruncLe.helper₅
       assumption
 
-theorem le_refl (a: Kind) : a ≤ a := by
+theorem le_refl' (a: Kind) : a ≤ a := by
   induction a with
   | sprop => apply LE.sprop
   | prop => apply LE.prop; apply IsPropLe.prop
@@ -746,7 +746,7 @@ public instance : LT Kind where
   lt a b := a ≤ b ∧ ¬b ≤ a
 public instance : IsPreorder Kind where
   lt_iff_le_and_not_ge := Iff.rfl
-  refl := le_refl
+  refl := le_refl'
   htrans {a b c} h g := by
     induction h with
     | sprop => apply LE.sprop
@@ -798,5 +798,91 @@ public instance : IsPreorder Kind where
       | trunc => apply IsTruncLe.trunc; assumption
       | param_type => apply IsTruncLe.param_type
       | param => apply IsTruncLe.param
+
+public theorem prop_le_sound {a: Kind} : IsPropLe a -> eval_le .prop a := by
+  intro h; induction h with
+  | prop => intro; apply le_refl
+  | type => intro; apply le_top
+  | @trunc a _ ih =>
+    intro f; replace ih := ih f
+    revert ih; simp [eval]
+    generalize eval f a=A
+    decide +revert
+  | max_left _ ih =>
+    intro f; simp [eval]; apply le_trans (ih f)
+    apply left_le_max
+  | max_right _ ih =>
+    intro f; simp [eval]; apply le_trans (ih f)
+    apply right_le_max
+public theorem type_le_sound {a: Kind} : IsTypeLe a -> eval_le .type a := by
+  intro h; induction h with
+  | type => intro; apply le_top
+  | max_left _ ih =>
+    intro f; simp [eval]; apply le_trans (ih f)
+    apply left_le_max
+  | max_right _ ih =>
+    intro f; simp [eval]; apply le_trans (ih f)
+    apply right_le_max
+public theorem trunc_le_sound {a b: Kind} : IsTruncLe a b -> eval_le (.trunc a) b := by
+  intro h; induction h with
+  | sprop => intro f; simp [eval]; apply bot_le
+  | prop | type =>
+    apply prop_le_sound
+    assumption
+  | @max a b k _ _ iha ihb =>
+    intro f
+    replace iha := iha f
+    replace ihb := ihb f
+    revert iha ihb
+    simp [eval]
+    generalize eval f a = A
+    generalize eval f b = B
+    generalize eval f k = K
+    decide +revert
+  | max_left _ ih =>
+    intro f; simp [eval]; apply le_trans (ih f)
+    apply left_le_max
+  | max_right _ ih =>
+    intro f; simp [eval]; apply le_trans (ih f)
+    apply right_le_max
+  | trunc a iha =>
+    intro f; simp [eval]
+    rw [show ∀a: ConcreteKind, a.trunc.trunc = a.trunc by decide]
+    apply iha
+  | @param_prop i
+  | @param_type i =>
+    intro f; simp [eval]
+    generalize f i = A; decide +revert
+  | @param_trunc i a _ ih =>
+    intro f; replace ih := ih f
+    revert ih; simp [eval]
+    generalize f i = A
+    generalize eval f a = B
+    decide +revert
+  | @param i =>
+    intro f; simp [eval]; generalize f i = A
+    decide +revert
+
+public theorem le_sound {a b: Kind} : a ≤ b -> a.eval_le b := by
+  intro h; induction h with
+  | sprop => intro; apply bot_le
+  | prop => apply prop_le_sound; assumption
+  | type => apply type_le_sound; assumption
+  | @max a b k ha hb iha ihb =>
+    intro i; simp [eval]
+    apply max_le; apply iha; apply ihb
+  | max_left _  ih =>
+    intro i; simp [eval]
+    apply le_trans _ (left_le_max _ _)
+    apply ih
+  | max_right _ ih =>
+    intro i; simp [eval]
+    apply le_trans _ (right_le_max _ _)
+    apply ih
+  | trunc =>
+    apply trunc_le_sound
+    assumption
+  | param_type => intro i; apply le_top
+  | param => intro; apply le_refl
 
 end Kind
