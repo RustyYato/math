@@ -101,6 +101,19 @@ public def lift : (α -> M) ≃ (FreeMonoid α →* M) where
 
 public theorem lift_ι (f: α -> M) (a: α) : lift f (ι a) = f a := preLift'_ι _
 
+public def map (f: α -> β) : FreeMonoid α →* FreeMonoid β :=
+  GroupHom.copy (lift (ι ∘ f)) (fun as => ⟨as.toList.map f⟩) <| by
+    intro as
+    induction as with
+    | one | ι => rfl
+    | mul a b ha hb =>
+      rw [map_mul, ha, hb]
+      show ofList _ = _; congr; dsimp
+      rw [←List.map_append]
+      rfl
+
+@[simp] public theorem map_ι (f: α -> β) (a: α) : FreeMonoid.map f (ι a) = ι (f a) := by rfl
+
 end FreeMonoid
 
 public structure FreeAddMonoid (α: Type*) where
@@ -187,5 +200,18 @@ public theorem lift_ι (f: α -> M) (a: α) : lift f (ι a) = f a := by
   show (FreeMonoid.lift (MulOfAdd.mk ∘ f) (FreeMonoid.ι a)).get = _
   rw [FreeMonoid.lift_ι]
   rfl
+
+public def map (f: α -> β) : FreeAddMonoid α →+ FreeAddMonoid β :=
+  AddGroupHom.copy (lift (ι ∘ f)) (fun as => ⟨as.toList.map f⟩) <| by
+    intro as
+    induction as with
+    | zero | ι => rfl
+    | add a b ha hb =>
+      rw [map_add, ha, hb]
+      show ofList _ = _; congr; dsimp
+      rw [←List.map_append]
+      rfl
+
+@[simp] public theorem map_ι (f: α -> β) (a: α) : FreeAddMonoid.map f (ι a) = ι (f a) := by rfl
 
 end FreeAddMonoid

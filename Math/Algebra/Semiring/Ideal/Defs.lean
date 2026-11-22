@@ -132,6 +132,8 @@ namespace IdealLeft
 
 variable {α: Type*} [Zero α] [Add α] [Mul α]
 
+@[ext] public theorem ext (a b: IdealLeft α) (h: ∀x, x ∈ a ↔ x ∈ b) : a = b := SetLike.ext _ _ h
+
 inductive Closure {α: Type*} (U: Set α) [Zero α] [Add α] [Mul α] : α -> Prop where
 | of : a ∈ U -> Closure U a
 | zero : Closure U 0
@@ -221,6 +223,8 @@ namespace IdealRight
 
 variable {α: Type*} [Zero α] [Add α] [Mul α]
 
+@[ext] public theorem ext (a b: IdealRight α) (h: ∀x, x ∈ a ↔ x ∈ b) : a = b := SetLike.ext _ _ h
+
 inductive Closure {α: Type*} (U: Set α) [Zero α] [Add α] [Mul α] : α -> Prop where
 | of : a ∈ U -> Closure U a
 | zero : Closure U 0
@@ -309,6 +313,8 @@ end IdealRight
 namespace Ideal
 
 variable {α: Type*} [Zero α] [Add α] [Mul α]
+
+@[ext] public theorem ext (a b: Ideal α) (h: ∀x, x ∈ a ↔ x ∈ b) : a = b := SetLike.ext _ _ h
 
 inductive Closure {α: Type*} (U: Set α) [Zero α] [Add α] [Mul α] : α -> Prop where
 | of : a ∈ U -> Closure U a

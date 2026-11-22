@@ -52,6 +52,8 @@ public theorem coe_inj [SetLike S α] : Function.Injective (Set.coe (S := S)) :=
 
 public instance [SetLike S α] : CoeOut S (Set α) where
   coe := Set.coe
+public instance [SetLike S α] : CoeSort S (Type u) where
+  coe s := (s: Set α).toType
 
 public instance (priority := 700) [SetLike S α] : Membership α S where
   mem S a := a ∈ (Set.coe S)
