@@ -9,7 +9,7 @@ public structure Embedding (α β: Sort*) extends Hom α β where
 infixr:50 " ↪ " => Embedding
 
 public class EmbeddingLike (F: Sort*) (α β: outParam Sort*) extends Funlike F α β where
-  coeInjective (f: F): Function.Injective f := by intro f; apply f.injective
+  coeInjective (f: F): Function.Injective f := by intro f; first|exact f.injective|exact f.inj
 
 @[coe, expose] public def Embedding.coe [EmbeddingLike F α β] (f: F) : α ↪ β where
   toFun := f

@@ -37,6 +37,11 @@ public instance : EquivLike (α ≃ β) α β where
     apply a.rightInv.injective
     rw [a.leftInv, h, b.leftInv]
 
+public theorem coe_inj [EquivLike F α β] : Function.Injective (Equiv.coe (F := F)) := by
+  intro f g h
+  apply DFunlike.coeInj
+  ext i; show Equiv.coe f i = Equiv.coe g i; rw [h]
+
 @[expose] public protected def id (α: Sort*) : α ≃ α where
   toFun := id
   invFun := id
