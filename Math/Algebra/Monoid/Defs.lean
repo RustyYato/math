@@ -3,6 +3,7 @@ module
 public import Math.Algebra.Semigroup.Defs
 public import Math.Logic.Nontrivial
 public import Math.Logic.LEM
+public import Math.Data.Equiv.Ext
 
 namespace Math
 
@@ -993,6 +994,22 @@ end OfEquiv
 
 namespace GroupHom
 
+@[expose] public def of_mul
+  [One α] [Mul α] [IsLawfulOne α]
+  [One β] [Mul β] [IsLawfulOne β]
+  [SurjectionLike F α β] [IsMulHom F α β] (f: F) : α →* β where
+  toFun := f
+  map_mul := map_mul f
+  map_one := by
+    have ⟨a, ha⟩ := SurjectionLike.coeSurjection f 1
+    rw (occs := [1]) [←mul_one (f 1), ←ha, ←map_mul f]
+    rw [one_mul, ha]
+
+@[simp] public theorem apply_of_mul
+  [One α] [Mul α] [IsLawfulOne α]
+  [One β] [Mul β] [IsLawfulOne β]
+  [SurjectionLike F α β] [IsMulHom F α β] (f: F) (a: α) : of_mul f a = f a := rfl
+
 variable {α β: Type*} [One α] [Mul α] [MonoidOps β] [IsMonoid β]
 
 public instance : One (GroupHom α β) where
@@ -1031,6 +1048,22 @@ public instance [IsComm β] : IsComm (GroupHom α β) where
 end GroupHom
 
 namespace AddGroupHom
+
+@[expose] public def of_add
+  [Zero α] [Add α] [IsLawfulZero α]
+  [Zero β] [Add β] [IsLawfulZero β]
+  [SurjectionLike F α β] [IsAddHom F α β] (f: F) : α →+ β where
+  toFun := f
+  map_add := map_add f
+  map_zero := by
+    have ⟨a, ha⟩ := SurjectionLike.coeSurjection f 0
+    rw (occs := [1]) [←add_zero (f 0), ←ha, ←map_add f]
+    rw [zero_add, ha]
+
+@[simp] public theorem apply_of_add
+  [Zero α] [Add α] [IsLawfulZero α]
+  [Zero β] [Add β] [IsLawfulZero β]
+  [SurjectionLike F α β] [IsAddHom F α β] (f: F) (a: α) : of_add f a = f a := rfl
 
 variable {α β: Type*} [Zero α] [Add α] [AddMonoidOps β] [IsAddMonoid β]
 
@@ -1072,3 +1105,35 @@ public instance [IsAddComm β] : IsAddComm (AddGroupHom α β) where
 @[simp] public theorem apply_nsul [IsAddComm β] (n: ℕ) (a: α →+ β) (i: α) : (n • a) i = n • a i := rfl
 
 end AddGroupHom
+
+namespace GroupEquiv
+
+@[expose] public def of_mul
+  [One α] [Mul α] [IsLawfulOne α]
+  [One β] [Mul β] [IsLawfulOne β]
+  [EquivLike F α β] [IsMulHom F α β] (f: F) : α ≃* β := {
+  Equiv.coe f, GroupHom.of_mul f with
+}
+
+@[simp] public theorem apply_of_mul
+  [One α] [Mul α] [IsLawfulOne α]
+  [One β] [Mul β] [IsLawfulOne β]
+  [EquivLike F α β] [IsMulHom F α β] (f: F) (a: α) : of_mul f a = f a := rfl
+
+end GroupEquiv
+
+namespace AddGroupEquiv
+
+@[expose] public def of_add
+  [Zero α] [Add α] [IsLawfulZero α]
+  [Zero β] [Add β] [IsLawfulZero β]
+  [EquivLike F α β] [IsAddHom F α β] (f: F) : α ≃+ β := {
+  Equiv.coe f, AddGroupHom.of_add f with
+}
+
+@[simp] public theorem apply_of_add
+  [Zero α] [Add α] [IsLawfulZero α]
+  [Zero β] [Add β] [IsLawfulZero β]
+  [EquivLike F α β] [IsAddHom F α β] (f: F) (a: α) : of_add f a = f a := rfl
+
+end AddGroupEquiv

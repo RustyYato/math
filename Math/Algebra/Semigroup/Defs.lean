@@ -3,6 +3,7 @@ module
 public import Math.Tactic.Basic
 public import Math.Data.AddMul.Defs
 public import Math.Data.Embedding.Defs
+public import Math.Data.Surjection.Defs
 public import Math.Data.OfEquiv.Defs
 
 namespace Math
@@ -130,6 +131,11 @@ public structure AddEmbedding (α β: Type*) [Add α] [Add β] extends α ↪ β
 public structure ExpEmbedding (α β: Type*) [Add α] [Mul β] extends α ↪ β, ExpHom α β where
 public structure LogEmbedding (α β: Type*) [Mul α] [Add β] extends α ↪ β, LogHom α β where
 
+public structure MulSurjection (α β: Type*) [Mul α] [Mul β] extends α ↠ β, MulHom α β where
+public structure AddSurjection (α β: Type*) [Add α] [Add β] extends α ↠ β, AddHom α β where
+public structure ExpSurjection (α β: Type*) [Add α] [Mul β] extends α ↠ β, ExpHom α β where
+public structure LogSurjection (α β: Type*) [Mul α] [Add β] extends α ↠ β, LogHom α β where
+
 public structure MulEquiv (α β: Type*) [Mul α] [Mul β] extends α ≃ β, MulHom α β where
 public structure AddEquiv (α β: Type*) [Add α] [Add β] extends α ≃ β, AddHom α β where
 public structure ExpEquiv (α β: Type*) [Add α] [Mul β] extends α ≃ β, ExpHom α β where
@@ -144,6 +150,11 @@ infixr:80 " ↪*ₙ " => MulEmbedding
 infixr:80 " ↪+ₙ " => AddEmbedding
 infixr:80 " ↪ₘ+ₙ " => LogEmbedding
 infixr:80 " ↪ₐ*ₙ " => ExpEmbedding
+
+infixr:80 " ↠*ₙ " => MulSurjection
+infixr:80 " ↠+ₙ " => AddSurjection
+infixr:80 " ↠ₘ+ₙ " => LogSurjection
+infixr:80 " ↠ₐ*ₙ " => ExpSurjection
 
 infixr:80 " ≃*ₙ " => MulEquiv
 infixr:80 " ≃+ₙ " => AddEquiv
@@ -173,6 +184,15 @@ public instance : IsMulHom (α ↪*ₙ β) α β where
 public instance : IsAddHom (α ↪+ₙ β) α β where
 public instance : IsLogHom (α ↪ₘ+ₙ β) α β where
 public instance : IsExpHom (α ↪ₐ*ₙ β) α β where
+
+public instance : SurjectionLike (α ↠*ₙ β) α β where
+public instance : SurjectionLike (α ↠+ₙ β) α β where
+public instance : SurjectionLike (α ↠ₘ+ₙ β) α β where
+public instance : SurjectionLike (α ↠ₐ*ₙ β) α β where
+public instance : IsMulHom (α ↠*ₙ β) α β where
+public instance : IsAddHom (α ↠+ₙ β) α β where
+public instance : IsLogHom (α ↠ₘ+ₙ β) α β where
+public instance : IsExpHom (α ↠ₐ*ₙ β) α β where
 
 public instance : EquivLike (α ≃*ₙ β) α β where
 public instance : EquivLike (α ≃+ₙ β) α β where
@@ -232,6 +252,9 @@ section Api
 @[expose] public protected def MulEmbedding.id (α: Type*) [Mul α] : α ↪*ₙ α := {
   Embedding.id _, MulHom.id _ with
 }
+@[expose] public protected def MulSurjection.id (α: Type*) [Mul α] : α ↠*ₙ α := {
+  Surjection.id _, MulHom.id _ with
+}
 @[expose] public protected def MulEquiv.id (α: Type*) [Mul α] : α ≃*ₙ α := {
   Equiv.id _, MulHom.id _ with
 }
@@ -242,10 +265,14 @@ section Api
 @[expose] public def MulEmbedding.comp (f: β ↪*ₙ γ) (g: α ↪*ₙ β) : α ↪*ₙ γ := {
   f.toEmbedding.comp g.toEmbedding, f.toMulHom.comp g.toMulHom with
 }
+@[expose] public def MulSurjection.comp (f: β ↠*ₙ γ) (g: α ↠*ₙ β) : α ↠*ₙ γ := {
+  f.toSurjection.comp g.toSurjection, f.toMulHom.comp g.toMulHom with
+}
 @[expose] public def MulEquiv.comp (f: β ≃*ₙ γ) (g: α ≃*ₙ β) : α ≃*ₙ γ := {
   f.toEquiv.comp g.toEquiv, f.toMulHom.comp g.toMulHom with
 }
 @[expose] public def MulEmbedding.trans (f: α ↪*ₙ β) (g: β ↪*ₙ γ) : α ↪*ₙ γ := comp g f
+@[expose] public def MulSurjection.trans (f: α ↠*ₙ β) (g: β ↠*ₙ γ) : α ↠*ₙ γ := comp g f
 @[expose] public def MulEquiv.trans (f: α ≃*ₙ β) (g: β ≃*ₙ γ) : α ≃*ₙ γ := comp g f
 @[expose] public def MulEquiv.symm (f: α ≃*ₙ β) : β ≃*ₙ α := {
   f.toEquiv.symm with
@@ -275,6 +302,17 @@ namespace MulEmbedding
 public theorem inj (f: α ↪*ₙ β) : Function.Injective f := f.injective
 
 end MulEmbedding
+
+namespace MulSurjection
+
+@[simp] public theorem apply_id : MulSurjection.id α x = x := rfl
+
+@[simp] public theorem apply_comp (f: β ↠*ₙ γ) (g: α ↠*ₙ β) (x: α) : f.comp g x = f (g x) := rfl
+@[simp] public theorem apply_trans (f: α ↠*ₙ β) (g: β ↠*ₙ γ) (x: α) : f.trans g x = g (f x) := rfl
+
+public theorem surj (f: α ↠*ₙ β) : Function.Surjective f := f.surjective
+
+end MulSurjection
 
 namespace MulEquiv
 
@@ -327,6 +365,9 @@ section Api
 @[expose] public protected def AddEmbedding.id (α: Type*) [Add α] : α ↪+ₙ α := {
   Embedding.id _, AddHom.id _ with
 }
+@[expose] public protected def AddSurjection.id (α: Type*) [Add α] : α ↠+ₙ α := {
+  Surjection.id _, AddHom.id _ with
+}
 @[expose] public protected def AddEquiv.id (α: Type*) [Add α] : α ≃+ₙ α := {
   Equiv.id _, AddHom.id _ with
 }
@@ -337,10 +378,14 @@ section Api
 @[expose] public def AddEmbedding.comp (f: β ↪+ₙ γ) (g: α ↪+ₙ β) : α ↪+ₙ γ := {
   f.toEmbedding.comp g.toEmbedding, f.toAddHom.comp g.toAddHom with
 }
+@[expose] public def AddSurjection.comp (f: β ↠+ₙ γ) (g: α ↠+ₙ β) : α ↠+ₙ γ := {
+  f.toSurjection.comp g.toSurjection, f.toAddHom.comp g.toAddHom with
+}
 @[expose] public def AddEquiv.comp (f: β ≃+ₙ γ) (g: α ≃+ₙ β) : α ≃+ₙ γ := {
   f.toEquiv.comp g.toEquiv, f.toAddHom.comp g.toAddHom with
 }
 @[expose] public def AddEmbedding.trans (f: α ↪+ₙ β) (g: β ↪+ₙ γ) : α ↪+ₙ γ := comp g f
+@[expose] public def AddSurjection.trans (f: α ↠+ₙ β) (g: β ↠+ₙ γ) : α ↠+ₙ γ := comp g f
 @[expose] public def AddEquiv.trans (f: α ≃+ₙ β) (g: β ≃+ₙ γ) : α ≃+ₙ γ := comp g f
 @[expose] public def AddEquiv.symm (f: α ≃+ₙ β) : β ≃+ₙ α := {
   f.toEquiv.symm with
@@ -370,6 +415,17 @@ namespace AddEmbedding
 public theorem inj (f: α ↪+ₙ β) : Function.Injective f := f.injective
 
 end AddEmbedding
+
+namespace AddSurjection
+
+@[simp] public theorem apply_id : AddSurjection.id α x = x := rfl
+
+@[simp] public theorem apply_comp (f: β ↠+ₙ γ) (g: α ↠+ₙ β) (x: α) : f.comp g x = f (g x) := rfl
+@[simp] public theorem apply_trans (f: α ↠+ₙ β) (g: β ↠+ₙ γ) (x: α) : f.trans g x = g (f x) := rfl
+
+public theorem surj (f: α ↠+ₙ β) : Function.Surjective f := f.surjective
+
+end AddSurjection
 
 namespace AddEquiv
 
