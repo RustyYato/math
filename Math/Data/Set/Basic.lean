@@ -155,3 +155,15 @@ public theorem image_nonempty_iff {f: α -> β} {s: Set α} : (s.image f).Nonemp
 public theorem univ_nonempty (α: Type*) [h: Nonempty α] : (⊤: Set α).Nonempty := by
   obtain ⟨x⟩ := h
   exact ⟨x, True.intro⟩
+
+public theorem inter_eq_left (a b: Set α) (h: a ⊆ b) : a ∩ b = a := by
+  ext i; apply Iff.intro And.left
+  intro ha; apply And.intro ha
+  exact h _ ha
+public theorem inter_eq_right (a b: Set α) (h: b ⊆ a) : a ∩ b = b := by
+  rw [inter_comm, inter_eq_left _ _ h]
+public theorem union_inter (a b k: Set α) : (a ∪ b) ∩ k = a ∩ k ∪ b ∩ k := by
+  ext i; simp; apply or_and_right
+public theorem sdiff_inter (a b: Set α) : a \ b ∩ b = ⊥ := by
+  ext i; simp
+public theorem sdiff_sub (a b: Set α) : a \ b ⊆ a := fun _ => And.left
