@@ -64,6 +64,9 @@ end Syntax
 @[simp] public theorem mem_iInf (f: ι -> Set α) : x ∈ ⨅i, f i ↔ ∀i, x ∈ f i := by
   simp [iInf]
 
+public theorem iSup_inter (f: ι -> Set α) (b: Set α) : (⨆i, f i) ∩ b = ⨆i, f i ∩ b := by
+  ext i; simp
+
 variable [LE α]
 
 public def upperBounds (U: Set α) : Set α where
