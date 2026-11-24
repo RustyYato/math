@@ -77,7 +77,7 @@ public theorem HasChar.of_eqv [AddMonoidOps β] [IsAddMonoid β] [HasChar α n] 
     rw [map_nsmul, nsmul_eq_zero, map_zero]
     assumption
 
-instance : HasChar ℕ 0 where
+public instance : HasChar ℕ 0 where
   nsmul_eq_zero_iff_dvd n := by
     apply Iff.intro
     intro h
@@ -89,7 +89,7 @@ instance : HasChar ℕ 0 where
     intro
     simp [zero_nsmul]
 
-instance : HasChar ℤ 0 where
+public instance : HasChar ℤ 0 where
   nsmul_eq_zero_iff_dvd n := by
     apply Iff.intro
     intro h
@@ -117,9 +117,9 @@ public theorem char_eq_zero_or_gt_two (α: Type*) [AddMonoidOps α] [IsAddMonoid
   | 2, h => nomatch char_ne_two α
   | n + 3, h => right; apply Nat.add_lt_add_right _ 2; apply Nat.zero_lt_succ
 
-instance instNontrivialChar0 [HasChar α 0] : NontrivialChar α 0 where
+public instance instNontrivialChar0 [HasChar α 0] : NontrivialChar α 0 where
   n_not_dvd_two := by decide
-instance instNontrivialCharN [HasChar α (n + 3)] : NontrivialChar α (n + 3) where
+public instance instNontrivialCharN [HasChar α (n + 3)] : NontrivialChar α (n + 3) where
   n_not_dvd_two := by
     intro h; apply Nat.not_lt_of_le (Nat.le_of_dvd (by decide) h)
     apply Nat.add_lt_add_right _ 2

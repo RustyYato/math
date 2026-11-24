@@ -8,6 +8,8 @@ namespace Math
 
 variable [SemiringOps α] [IsSemiring α]
 
+namespace HasChar
+
 public theorem of_natCast_eq_zero (n: ℕ)  (h: (n: α) = 0) (g: ∀m: ℕ, (m: α) = 0 -> n ∣ m) : HasChar α n where
   nsmul_eq_zero_iff_dvd m := by
     apply Iff.intro
@@ -48,6 +50,8 @@ public theorem of_ring_equiv
   [SemiringOps β] [IsSemiring β] [HasChar β n] (f: α ≃+* β) : HasChar α n :=
   of_ring_emb { f.symm.toRingHom with injective := f.symm.inj }
 
+end HasChar
+
 public theorem natCast_inj [IsLeftAddCancel α] [HasChar α 0]: Function.Injective (Nat.cast (R := α)) := by
   suffices ∀n m: ℕ, (n: α) = m -> n ≤ m -> n = m by
     intro n m eq
@@ -64,11 +68,11 @@ public theorem natCast_inj [IsLeftAddCancel α] [HasChar α 0]: Function.Injecti
   replace h := of_add_left h
   rw (occs := [1]) [←add_zero a]
   congr 1; clear a_le_b; symm
-  exact Nat.zero_dvd.mp (dvd_of_natCast_eq_zero _ h.symm)
+  exact Nat.zero_dvd.mp (HasChar.dvd_of_natCast_eq_zero _ h.symm)
 
 public theorem two_ne_zero [nc: NontrivialChar α n] : ((2: ℕ): α) ≠ 0 := by
   intro h
-  exact nc.n_not_dvd_two (dvd_of_natCast_eq_zero _ h)
+  exact nc.n_not_dvd_two (HasChar.dvd_of_natCast_eq_zero _ h)
 
 instance [nc: NontrivialChar α n] : NeZero ((2: ℕ): α) where
   out := two_ne_zero

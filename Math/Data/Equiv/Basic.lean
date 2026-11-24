@@ -211,3 +211,57 @@ public def congr_option (f: α ≃ β) : (Option α ≃ Option β) where
   exists f.symm a
   apply g.inj
   rw [←ha]; rfl
+
+@[expose] public def prod_sum : (γ × (α ⊕ β)) ≃ ((γ × α) ⊕ γ × β) where
+  toFun
+  | ⟨i, .inl a⟩ => .inl ⟨i, a⟩
+  | ⟨i, .inr a⟩ => .inr ⟨i, a⟩
+  invFun
+  | .inl ⟨i, a⟩ => ⟨i, .inl a⟩
+  | .inr ⟨i, a⟩ => ⟨i, .inr a⟩
+  leftInv a := by cases a <;> rfl
+  rightInv | ⟨i, a⟩ => by cases a <;> rfl
+
+@[expose] public def prod_comm : (α × β) ≃ (β × α) where
+  toFun := Prod.swap
+  invFun := Prod.swap
+  leftInv _ := rfl
+  rightInv _ := rfl
+
+@[expose] public def sum_comm : (α ⊕ β) ≃ (β ⊕ α) where
+  toFun := Sum.swap
+  invFun := Sum.swap
+  leftInv a := by cases a <;> rfl
+  rightInv a := by cases a <;> rfl
+
+@[expose] public def prod_assoc : ((α × β) × γ) ≃ (α × (β × γ)) where
+  toFun x := (x.1.1, x.1.2, x.2)
+  invFun x := ((x.1, x.2.1), x.2.2)
+  leftInv _ := rfl
+  rightInv _ := rfl
+
+@[expose] public def sum_assoc : ((α ⊕ β) ⊕ γ) ≃ (α ⊕ (β ⊕ γ)) where
+  toFun
+  | .inl (.inl x) => .inl x
+  | .inl (.inr x) => .inr (.inl x)
+  | .inr x => .inr (.inr x)
+  invFun
+  | .inl x => .inl (.inl x)
+  | .inr (.inl x) => .inl (.inr x)
+  | .inr (.inr x) => .inr x
+  leftInv
+  | .inl _
+  | .inr (.inl _)
+  | .inr (.inr _) => rfl
+  rightInv
+  | .inl (.inl _)
+  | .inl (.inr _)
+  | .inr _ => rfl
+
+@[expose] public def option_func : (Option α -> β) ≃ ((α -> β) × β) where
+  toFun f := (f ∘ Option.some, f .none)
+  invFun
+  | f, .some a => f.1 a
+  | f, .none => f.2
+  leftInv _ := rfl
+  rightInv f := by ext i; cases i <;> rfl

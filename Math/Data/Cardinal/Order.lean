@@ -48,7 +48,7 @@ public instance : IsPreorder Cardinal where
     apply type_le_type
     exact h.trans g
 
-public def fin : ℕ →o Cardinal where
+@[expose] public def fin : ℕ →o Cardinal where
   toFun n := type (Fin n)
   map_rel_iff {n m} := by
     apply Iff.trans _ type_le_type_iff.symm
@@ -173,6 +173,11 @@ public def ulift : Cardinal.{u} →o Cardinal.{max u v} where
     exact (Equiv.congr_embedding Equiv.ulift Equiv.ulift).symm f
     intro ⟨f⟩; refine ⟨?_⟩
     exact Equiv.congr_embedding Equiv.ulift Equiv.ulift f
+
+@[simp]
+public theorem ulift_type (α: Type u) : ulift (type α) = type (ULift α) := by
+  show lift _ _ _ = _
+  rw [lift_type]
 
 -- public def ulift' : Cardinal.{u} ≼i Cardinal.{max u v} where
 --   toRelHom := ulift
