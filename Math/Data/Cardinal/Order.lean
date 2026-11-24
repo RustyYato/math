@@ -86,7 +86,7 @@ def erase_missing (f: α ↪ Fin (n + 1)) (i: Fin (n + 1)) (hi: i ∉ Set.range 
       simp; omega
       simp; omega
 
-@[expose] public def fin' [LEM] : ℕ ≼i Cardinal where
+@[expose] public def fin' [LEM] : ℕ ≤i Cardinal where
   toRelHom := fin
   isInitial := by
     intro n c h
@@ -179,7 +179,7 @@ public theorem ulift_type (α: Type u) : ulift (type α) = type (ULift α) := by
   show lift _ _ _ = _
   rw [lift_type]
 
--- public def ulift' : Cardinal.{u} ≼i Cardinal.{max u v} where
+-- public def ulift' : Cardinal.{u} ≤i Cardinal.{max u v} where
 --   toRelHom := ulift
 --   isInitial := by
 --     unfold ulift; dsimp; intro A B h
