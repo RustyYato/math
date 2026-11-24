@@ -5,6 +5,7 @@ Copyright (c) 2023 Microsoft Corporation. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Gabriel Ebner
 -/
+public meta import Lean.PrettyPrinter.Delaborator.Builtins
 import Lean
 
 /-!
@@ -15,6 +16,8 @@ of universe parameters for the associated declaration.  This is helpful for defi
 `Ordinal`, where the universe levels are both relevant and not deducible from the arguments.
 -/
 
+public meta section
+
 namespace Mathlib.PPWithUniv
 
 open Lean Parser PrettyPrinter Delaborator SubExpr Elab Command
@@ -24,12 +27,12 @@ Delaborator that prints the current application with universe parameters on the 
 unless `pp.universes` is explicitly set to `false`.
 -/
 def delabWithUniv : Delab :=
-  whenPPOption (·.get pp.universes.name true) <|
-  let enablePPUnivOnHead subExpr :=
-    let expr := subExpr.expr
-    let expr := mkAppN (expr.getAppFn.setOption pp.universes.name true) expr.getAppArgs
-    { subExpr with expr }
-  withTheReader SubExpr enablePPUnivOnHead delabApp
+  whenPPOption (·.get pp.universes.name true) do
+  let pos := (← getPos).pushNaryFn (← getExpr).getAppNumArgs
+  let enablePPUnivOnHead (ctx : Delaborator.Context) :=
+    let optionsPerPos := ctx.optionsPerPos.insertAt pos pp.universes.name true
+    { ctx with optionsPerPos }
+  withReader enablePPUnivOnHead delabApp
 
 /--
 `attribute [pp_with_univ] Ordinal` instructs the pretty-printer to
@@ -48,3 +51,7 @@ initialize registerBuiltinAttribute {
       let attr ← Elab.elabAttr <| ← `(Term.attrInstance| delab $(mkIdent <| `app ++ src))
       liftTermElabM <| Term.applyAttributes ``delabWithUniv #[{attr with kind}]
   | _ => throwUnsupportedSyntax }
+
+end PPWithUniv
+
+end Mathlib
