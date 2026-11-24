@@ -95,3 +95,9 @@ public theorem perm_ext_iff_of_nodup' {as bs : List α} (ha : as.Nodup) (hb : bs
       rcases (h x).mpr (perm.mem_iff.mp (.tail _ hx)) with h | h
       have := (List.nodup_cons.mp hb).left; contradiction
       assumption
+
+public theorem nodup_map (f: α -> β) (hf: Function.Injective f) (as: List α) (ha: as.Nodup) : (as.map f).Nodup := by
+  apply List.nodup_iff_eq_of_getElem_eq.mpr
+  intro i j hi hj h
+  rw [List.getElem_map, List.getElem_map] at h
+  exact List.nodup_iff_eq_of_getElem_eq.mp ha _ _ _ _ (hf h)
