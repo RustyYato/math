@@ -1,23 +1,22 @@
 module
 
-public import Math.Algebra.RingQuot.Defs
-public import Math.Algebra.Ring.Congruence
+public import Math.Algebra.GroupQuot.Defs
+public import Math.Algebra.Group.Congruence
 
-namespace Math.RingQuot
+namespace Math.GroupQuot
 
 variable {r: α -> α -> Prop}
 
-def ofQuot' [SemiringOps α] (r: α -> α -> Prop) : AlgQuot (RingCon.generate r) ≃ RingQuot r where
-  toFun := RingQuot.ofQuot
-  invFun := RingQuot.toQuot
+def ofQuot' [MonoidOps α] (r: α -> α -> Prop) : AlgQuot (MulCon.generate r) ≃ GroupQuot r where
+  toFun := GroupQuot.ofQuot
+  invFun := GroupQuot.toQuot
   leftInv _ := rfl
   rightInv _ := rfl
 
-public instance [RingOps α] [IsRing α] : RingOps (RingQuot r) where
-  sub a b := ⟨a.toQuot - b.toQuot⟩
-  neg a := ⟨-a.toQuot⟩
-  intCast n := ⟨n⟩
-  toZSMul := ⟨fun n a => ⟨n • a.toQuot⟩⟩
+public instance [GroupOps α] [IsGroup α] : GroupOps (GroupQuot r) where
+  div a b := ⟨a.toQuot / b.toQuot⟩
+  inv a := ⟨a.toQuot⁻¹⟩
+  toPowZ := ⟨fun a n => ⟨a.toQuot ^ n⟩⟩
 
-public instance [RingOps α] [IsRing α] : IsRing (RingQuot r) :=
-  OfEquiv.instIsRing (RingQuot.ofQuot' r)
+public instance [GroupOps α] [IsGroup α] : IsGroup (GroupQuot r) :=
+  OfEquiv.instIsGroup (ofQuot' r)
