@@ -156,7 +156,7 @@ public def RelEquiv.antisymm [IsWellOrder r] [IsWellOrder s] (f: r ≼i s) (g: s
     rw [Subsingleton.allEq (f.trans g) (InitialSeg.of_eqv (.id _))]
     rfl
 
-public def PrincipleSeg.toInitialSeg [IsTrans s] (f: r ≺i s) : r ≼i s where
+@[expose] public def PrincipleSeg.toInitialSeg [IsTrans s] (f: r ≺i s) : r ≼i s where
   toRelHom := f.toRelHom
   isInitial := by
     change IsInitial f s

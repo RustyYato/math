@@ -62,6 +62,16 @@ public instance : IsTrans (· ≤ ·: Ordinal -> Ordinal -> Prop) where
     obtain ⟨g⟩ := g
     refine ⟨h.trans g⟩
 
+public instance : IsTrans (· < ·: Ordinal -> Ordinal -> Prop) where
+  htrans {a b c} h g := by
+    induction a with | @type α r =>
+    induction b with | @type β s =>
+    induction c with | @type γ t =>
+    simp at *
+    obtain ⟨h⟩ := h
+    obtain ⟨g⟩ := g
+    refine ⟨h.trans_init g.toInitialSeg⟩
+
 public instance [LEM] : IsPartialOrder Ordinal where
   lt_iff_le_and_not_ge := by
     intro a b
@@ -195,6 +205,67 @@ public theorem rank_hom_init
       dsimp; ext; apply Embedding.inj (Embedding.coe f)
       apply hinv
   }
+
+public theorem rank_lt_type (r: A -> A -> Prop) [IsWellOrder r] (a: A) : rank r a < type r := by
+  apply type_lt_type.mpr
+  refine ⟨?_⟩
+  exact {
+    toFun := Subtype.val
+    map_rel_iff := Iff.rfl
+    isPrinciple := by
+      exists a; intro b
+      apply Iff.intro
+      intro h; exact ⟨⟨b, h⟩, rfl⟩
+      rintro ⟨b, rfl⟩; exact b.property
+  }
+
+public theorem lt_type_iff (r: A -> A -> Prop) [IsWellOrder r] (o: Ordinal) : o < type r ↔ o ∈ Set.range (rank_hom r) := by
+  induction o with | @type B s =>
+  apply Iff.intro
+  · intro f; replace ⟨f⟩ := type_lt_type.mp f
+    have ⟨top, htop⟩ := f.isPrinciple
+    have := (htop ·)
+    have (x: { x // r x top }) : exists_unique fun a => f a = x := by
+      have ⟨a, ha⟩ := (this x.val).mp x.property
+      exists a; apply And.intro ha
+      intro b hb
+      apply Embedding.inj (Embedding.coe f.toInitialSeg)
+      exact ha.trans hb.symm
+    replace := Classical.axiomOfUniqueChoice this
+    obtain ⟨inv, hinv, h⟩ := this; clear h
+    exists top; symm; apply sound
+    exact {
+      toFun x := {
+        val := f x
+        property := by
+          apply (htop _).mpr
+          apply Set.mem_range'
+      }
+      invFun := inv
+      leftInv x := by dsimp; congr; rw [hinv]
+      rightInv x := by
+        apply Embedding.inj (Embedding.coe f.toInitialSeg)
+        apply hinv
+      map_rel_iff {a b} := map_rel_iff f
+    }
+  · intro ⟨a, ha⟩; rw [←ha]; clear ha
+    apply rank_lt_type
+
+instance : IsWelFounded (· < ·: Ordinal -> Ordinal -> Prop) where
+  wf := by
+    apply WellFounded.intro
+    intro a
+    induction a with | @type α r =>
+    apply Acc.intro
+    intro _ h; rw [lt_type_iff] at h
+    obtain ⟨a, rfl⟩ := h
+    induction a using (wf (R := r)).induction with
+    | _ a ih =>
+    apply Acc.intro
+    intro b h
+    obtain ⟨b, rfl⟩ := (lt_type_iff r _).mp (htrans h (rank_lt_type r a))
+    apply ih; apply of_rank_lt_rank
+    assumption
 
 structure min_ty (r: α -> α -> Prop) (s: β -> β -> Prop) [IsWellOrder r] [IsWellOrder s] where
   left: α
