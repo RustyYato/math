@@ -2,6 +2,7 @@ module
 
 public import Math.Order.Defs
 public import Math.Data.Set.Defs
+import Math.Order.Set
 
 namespace Math
 
@@ -202,3 +203,76 @@ public theorem InitialSeg.eqv_or_principal
     obtain ⟨a, rfl⟩ := h
     have := (f.isInitial _ top top_lt)
     contradiction
+
+noncomputable section
+
+variable [LEM] {α β: Type*} {r: α -> α -> Prop} {s: β -> β -> Prop}
+  [IsWellOrder s]
+
+def collapse_helper (f: r ↪r s) : ∀a, { b // ¬s (f a) b } :=
+  f.liftWellOrder.wf.fix fun a ih =>
+      let S := Set.mk fun b => ∀a₀ h, s (ih a₀ h).val b
+      have mem : f a ∈ S := by
+        intro a₀ h₀
+        rcases connected (R := s) (ih a₀ h₀) (f a) with h | h | h
+        assumption
+        · exfalso; apply (ih a₀ h₀).property
+          rw [h]
+          apply map_rel
+          assumption
+        · exfalso; apply (ih a₀ h₀).property
+          apply htrans _ h
+          apply map_rel
+          assumption
+      have : ∃x, x ∈ S := ⟨_, mem⟩
+      {
+        val := Set.unique_min _ s this
+        property := (Set.not_lt_unique_min _ s this _ mem)
+      }
+
+theorem collapse_helper_lt (f: r ↪r s) : ∀a b, r b a -> s (collapse_helper f b) (collapse_helper f a) := by
+  intro a
+  unfold collapse_helper
+  show (collapse_helper f a).val ∈ Set.mk fun b => ∀ (a') (_ : r a' a), s (collapse_helper f a').val b
+  unfold collapse_helper; rw [WellFounded.fix_eq]
+  dsimp; apply Set.unique_min_mem
+
+theorem collapse_helper_not_lt (f : r ↪r s) (a : α) {b}
+    (h : ∀ a' (_ : r a' a), s (collapse_helper f a').1 b) : ¬s b (collapse_helper f a).1 := by
+  unfold collapse_helper; rw [WellFounded.fix_eq]
+  dsimp only; apply Set.not_lt_unique_min
+  assumption
+
+public def InitialSeg.collapse (f: r ↪r s) : r ≼i s where
+  toFun a := collapse_helper f a
+  map_rel_iff {a b} := by
+    have := f.liftWellOrder
+    apply Iff.intro
+    intro h
+    apply collapse_helper_lt; assumption
+    intro h
+    rcases connected (R := r) a b with h | h | g
+    · assumption
+    · subst b; nomatch irrefl h
+    · nomatch asymm (collapse_helper_lt f _ _ g) h
+  isInitial := by
+    have := f.liftWellOrder
+    intro a b h
+    dsimp at h
+    let S := Set.mk fun a => ¬s (collapse_helper f a).val b
+    have ex : ∃x, x ∈ S := ⟨_, asymm h⟩
+    let a' := Set.unique_min S r ex
+    exists a'
+    dsimp
+    rcases connected (R := s) (collapse_helper f a').val b with g | g | g
+    · have := Set.unique_min_mem S r ex
+      contradiction
+    · assumption
+    · exfalso; apply collapse_helper_not_lt f _ _ g
+      intro a'' hr
+      apply LEM.byContradiction
+      intro h
+      apply Set.not_lt_unique_min S r ex _ _ hr
+      assumption
+
+end

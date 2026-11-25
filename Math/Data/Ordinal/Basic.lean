@@ -267,6 +267,138 @@ instance : IsWelFounded (· < ·: Ordinal -> Ordinal -> Prop) where
     apply ih; apply of_rank_lt_rank
     assumption
 
+section
+
+variable {α β: Type u}
+  (r: α -> α -> Prop) (s: β -> β -> Prop)
+  [IsWellOrder r] [IsWellOrder s]
+  (r': α' -> α' -> Prop) (s': β' -> β' -> Prop)
+  [IsWellOrder r'] [IsWellOrder s']
+
+public instance : IsWellOrder (Sum.Lex r s) where
+  htrans := by
+    intro a b c h g
+    cases h <;> cases g
+    apply Sum.Lex.inl; apply htrans <;> assumption
+    apply Sum.Lex.sep
+    apply Sum.Lex.inr; apply htrans <;> assumption
+    apply Sum.Lex.sep
+  connected {a b} := by
+    cases a <;> cases b
+    · rename_i a b
+      rcases connected (R := r) a b with h | h | h
+      · left; apply Sum.Lex.inl; assumption
+      · right; left; congr
+      · right; right; apply Sum.Lex.inl; assumption
+    · left; apply Sum.Lex.sep
+    · right; right; apply Sum.Lex.sep
+    · rename_i a b
+      rcases connected (R := s) a b with h | h | h
+      · left; apply Sum.Lex.inr; assumption
+      · right; left; congr
+      · right; right; apply Sum.Lex.inr; assumption
+  wf := by
+    apply WellFounded.intro
+    suffices ∀a: α, Acc (Sum.Lex r s) (.inl a) by
+      intro a; cases a with
+      | inl a => apply this
+      | inr a =>
+      induction a using (wf (R := s)).induction with
+      | _ a ih =>
+      apply Acc.intro
+      intro b h; cases h
+      apply ih; assumption
+      apply this
+    intro a
+    induction a using (wf (R := r)).induction with
+    | _ a ih =>
+    apply Acc.intro
+    intro b h; cases h
+    apply ih; assumption
+
+def map_lex (fr: r ≃r r') (fs: s ≃r s') : Sum.Lex r s ≼i Sum.Lex r' s' where
+  toFun
+  | .inl x => .inl (fr x)
+  | .inr x => .inr (fs x)
+  map_rel_iff := by
+    intro a b
+    cases a <;> cases b <;> simp
+    · apply map_rel_iff fr
+    · apply map_rel_iff fs
+  isInitial := by
+    intro a b  h
+    dsimp at h
+    cases a <;> cases h
+    rename_i x _
+    exists .inl (fr.symm x); simp
+    rename_i x _
+    exists .inr (fs.symm x); simp
+    rename_i x
+    exists .inl (fr.symm x); simp
+
+public def add : Ordinal.{u} -> Ordinal.{u} -> Ordinal.{u} :=
+  lift₂ (fun a b => type (Sum.Lex a b)) <| by
+    intro _ _ _ _ r s r' s' _ _ _ _ h g
+    apply sound; apply RelEquiv.antisymm
+    apply map_lex <;> assumption
+    apply map_lex <;> (apply RelEquiv.symm; assumption)
+
+public instance : Add Ordinal where
+  add := add
+
+@[simp] public theorem type_add_type : type r + type s = type (Sum.Lex r s) := by
+  apply lift₂_type
+
+public theorem left_le_add (a b: Ordinal) : a ≤ a + b := by
+  induction a with | @type A r =>
+  induction b with | @type B s =>
+  simp; refine ⟨?_⟩
+  exact {
+    toFun := .inl
+    map_rel_iff {a b} := by
+      apply Iff.intro
+      apply Sum.Lex.inl
+      intro h; cases h
+      assumption
+    isInitial := by
+      intro a b h; cases h
+      apply Set.mem_range'
+  }
+
+public theorem right_le_add [LEM] (a b: Ordinal) : b ≤ a + b := by
+  induction a with | @type A r =>
+  induction b with | @type B s =>
+  simp; refine ⟨?_⟩
+  apply InitialSeg.collapse
+  exact {
+    toFun := .inr
+    injective {_ _} := Sum.inr.inj
+    map_rel_iff := by
+      intro a b
+      apply Iff.intro
+      apply Sum.Lex.inr
+      intro h; cases h; assumption
+  }
+
+public instance [LEM] : IsWellOrder (· < ·: Ordinal -> Ordinal -> Prop) where
+  connected a b := by
+    have ⟨o, a_le_o, b_le_o⟩ : ∃o, a ≤ o ∧ b ≤ o := ⟨a + b, left_le_add _ _, right_le_add _ _⟩
+    rcases lt_or_eq_of_le a_le_o with a_lt_o | rfl <;>
+    rcases lt_or_eq_of_le b_le_o with b_lt_o | rfl
+    · induction o with | type r =>
+      rw [lt_type_iff] at a_lt_o b_lt_o
+      obtain ⟨a, rfl⟩ := a_lt_o
+      obtain ⟨b, rfl⟩ := b_lt_o
+      simp [←map_rel_iff (rank_hom r), (rank_hom r).inj.eq_iff]
+      apply connected
+    · left; assumption
+    · right; right ;assumption
+    · right; left; rfl
+
+public instance [LEM] : IsLinearOrder Ordinal where
+
+end
+
 structure min_ty (r: α -> α -> Prop) (s: β -> β -> Prop) [IsWellOrder r] [IsWellOrder s] where
   left: α
   right: β

@@ -67,6 +67,34 @@ end Syntax
 public theorem iSup_inter (f: ι -> Set α) (b: Set α) : (⨆i, f i) ∩ b = ⨆i, f i ∩ b := by
   ext i; simp
 
+section
+
+variable [LEM] (U: Set α) (r: α -> α -> Prop) [IsWelFounded r] [IsConnected r (· = ·)] (h: ∃x, x ∈ U)
+
+public theorem exists_unique_min (h: ∃x, x ∈ U) : exists_unique fun x => x ∈ U ∧ ∀y ∈ U, ¬r y x := by
+  obtain ⟨x, hx⟩ := h
+  induction x using (wf (R := r)).induction with
+  | _ x ih =>
+  rcases em (∃y ∈ U, r y x) with h | h
+  obtain ⟨y, mem, hy⟩ := h
+  apply ih; assumption; assumption
+  refine ⟨x, ⟨?_, ?_⟩, ?_⟩
+  assumption
+  intro y mem hy
+  exact h ⟨y, mem, hy⟩
+  intro b hb
+  obtain ⟨mem, hb⟩ := hb
+  rcases connected (R := r) x b with hx | hx | hx
+  · exfalso; apply hb _ _ hx
+    assumption
+  · assumption
+  · exfalso; apply h; exists b
+public noncomputable def unique_min : α := Classical.unique_choose (exists_unique_min U r h)
+public theorem unique_min_mem : unique_min U r h ∈ U := (Classical.unique_choose_spec (exists_unique_min U r h)).left
+public theorem not_lt_unique_min : ∀x ∈ U, ¬r x (unique_min U r h) := (Classical.unique_choose_spec (exists_unique_min U r h)).right
+
+end
+
 variable [LE α]
 
 public def upperBounds (U: Set α) : Set α where
