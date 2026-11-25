@@ -414,7 +414,7 @@ structure min_ty (r: α -> α -> Prop) (s: β -> β -> Prop) [IsWellOrder r] [Is
 def min_ty_rel (r: α -> α -> Prop) (s: β -> β -> Prop) [IsWellOrder r] [IsWellOrder s] (x y: min_ty r s) : Prop :=
   r x.left y.left
 
-def min_ty_emb [IsWellOrder r] [IsWellOrder s] : min_ty_rel r s ↪r r where
+def min_ty_emb_left [IsWellOrder r] [IsWellOrder s] : min_ty_rel r s ↪r r where
   toFun := min_ty.left
   map_rel_iff := Iff.rfl
   injective := by
@@ -423,8 +423,20 @@ def min_ty_emb [IsWellOrder r] [IsWellOrder s] : min_ty_rel r s ↪r r where
     apply (rank_hom s).inj
     rw [←x.rank_eq, ←y.rank_eq, h]
 
+def min_ty_emb_right [IsWellOrder r] [IsWellOrder s] : min_ty_rel r s ↪r s where
+  toFun := min_ty.right
+  map_rel_iff {a b} := by
+    show r a.left b.left ↔ _
+    rw [map_rel_iff (rank_hom r), a.rank_eq, b.rank_eq,
+      ←map_rel_iff (rank_hom s)]
+  injective := by
+    intro x y h
+    suffices x.left = y.left by cases x <;> cases y; congr
+    apply (rank_hom r).inj
+    rw [x.rank_eq, y.rank_eq, h]
+
 instance [IsWellOrder r] [IsWellOrder s] : IsWellOrder (min_ty_rel r s) :=
-  min_ty_emb.liftWellOrder
+  min_ty_emb_left.liftWellOrder
 
 def min_helper
   [IsWellOrder r₀] [IsWellOrder s₀]
@@ -553,10 +565,104 @@ public def max [LEM] : Ordinal.{u} -> Ordinal.{u} -> Ordinal.{u} :=
     apply map_max_ty <;> assumption
     apply map_max_ty <;> (apply RelEquiv.symm; assumption)
 
-end
-
-public instance [LEM] : Min Ordinal where
+public instance : Min Ordinal where
   min := min
 
 public instance [LEM] : Max Ordinal where
   max := max
+
+theorem type_min_type : (type r) ⊓ (type s) = type (min_ty_rel r s) := by apply lift₂_type
+theorem type_max_type [LEM] : (type r) ⊔ (type s) = type (max_ty_rel r s) := by apply lift₂_type
+
+end
+
+@[simp] theorem quotient_lift_mk (f: α -> β) hf a : Quotient.lift f hf (Quotient.mk s a) = f a := rfl
+
+public instance [LEM] : IsLattice Ordinal.{u} where
+  left_le_max a b := by
+    induction a with | _ r =>
+    induction b with | _ s =>
+    rw [type_max_type]; apply type_le_type.mpr
+    refine ⟨?_⟩; apply InitialSeg.collapse
+    exact {
+      toFun a := Quotient.mk _ (.inl a)
+      map_rel_iff := map_rel_iff (rank_hom r)
+      injective := by
+        intro a b h; dsimp at h
+        exact (rank_hom r).inj (Quotient.exact h)
+    }
+  right_le_max a b := by
+    induction a with | _ r =>
+    induction b with | _ s =>
+    rw [type_max_type]; apply type_le_type.mpr
+    refine ⟨?_⟩; apply InitialSeg.collapse
+    exact {
+      toFun a := Quotient.mk _ (.inr a)
+      map_rel_iff := map_rel_iff (rank_hom s)
+      injective := by
+        intro a b h; dsimp at h
+        exact (rank_hom s).inj (Quotient.exact h)
+    }
+  max_le {k a b} := by
+    induction a with | @type A r =>
+    induction b with | @type B s =>
+    induction k with | @type K t =>
+    simp [type_max_type]
+    intro ⟨fr⟩ ⟨fs⟩; refine ⟨?_⟩; apply InitialSeg.collapse
+    exact {
+      toFun := Quotient.lift (fun x => x.elim fr fs) <| by
+        intro a b h
+        cases a <;> cases b <;> dsimp
+        all_goals
+        apply (rank_hom t).inj
+        simpa
+      map_rel_iff {a b} := by
+        induction a using Quotient.ind with | _ a =>
+        induction b using Quotient.ind with | _ b =>
+        cases a <;> cases b
+        all_goals show rank_hom _ _ < rank_hom _ _ ↔ t _ _; dsimp
+        all_goals
+          apply Iff.trans _ (map_rel_iff (rank_hom _)).symm
+          simp
+      injective := by
+        intro a b h
+        induction a using Quotient.ind with | _ a =>
+        induction b using Quotient.ind with | _ b =>
+        apply Quotient.sound
+        cases a <;> cases b
+        all_goals
+          simp at h
+          show rank_hom _ _ = rank_hom _ _
+          iterate 2 first|rw [←rank_hom_init fr]|rw [←rank_hom_init fs]
+          rw [h]
+    }
+  min_le_left a b := by
+    induction a with | @type A r =>
+    induction b with | @type B s =>
+    rw [type_min_type]; apply type_le_type.mpr
+    exact ⟨InitialSeg.collapse min_ty_emb_left⟩
+  min_le_right a b := by
+    induction a with | @type A r =>
+    induction b with | @type B s =>
+    rw [type_min_type]; apply type_le_type.mpr
+    exact ⟨InitialSeg.collapse min_ty_emb_right⟩
+  le_min {k a b} := by
+    induction a with | @type A r =>
+    induction b with | @type B s =>
+    induction k with | @type K t =>
+    simp [type_min_type]
+    intro ⟨fr⟩ ⟨fs⟩; refine ⟨?_⟩; apply InitialSeg.collapse
+    exact {
+      toFun k := {
+        left := fr k
+        right := fs k
+        rank_eq := by simp
+      }
+      map_rel_iff {a b} := by
+        show _ ↔ r _ _; simp
+        rw [map_rel_iff (rank_hom r)]
+        simp [map_rel_iff (rank_hom t)]
+      injective {a b} h := by
+        dsimp at h
+        exact (Embedding.coe fr).inj (min_ty.mk.inj h).left
+    }
