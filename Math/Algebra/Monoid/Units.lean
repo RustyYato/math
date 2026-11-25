@@ -18,6 +18,15 @@ public structure AddUnit (α: Type*) [Add α] [Zero α] where
   val_add_neg: val + neg = 0
   neg_add_val: neg + val = 0
 
+public class IsUnit {α: Type*} [Mul α] [One α] (a: α) where
+  exists_unit : ∃u: Unit α, u.val = a
+
+public class IsAddUnit {α: Type*} [Add α] [Zero α] (a: α) where
+  exists_add_unit : ∃u: AddUnit α, u.val = a
+
+export IsUnit (exists_unit)
+export IsAddUnit (exists_add_unit)
+
 namespace Unit
 
 @[ext]
