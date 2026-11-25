@@ -177,7 +177,7 @@ public def rank_hom (r: A -> A -> Prop) [IsWellOrder r] : r ↪r (· < ·: Ordin
       rw [eq] at this
       nomatch irrefl (of_rank_lt_rank this)
 
-public theorem rank_hom_init
+@[simp] public theorem rank_hom_init
   {A B: Type u} {r: A -> A -> Prop} {s: B -> B -> Prop}
   [IsWellOrder r] [IsWellOrder s]
   (f: r ≼i s) (top: A) : rank_hom s (f top) = rank_hom r top := by
@@ -205,6 +205,13 @@ public theorem rank_hom_init
       dsimp; ext; apply Embedding.inj (Embedding.coe f)
       apply hinv
   }
+
+@[simp] public theorem rank_hom_eqv
+  {A B: Type u} {r: A -> A -> Prop} {s: B -> B -> Prop}
+  [IsWellOrder r] [IsWellOrder s]
+  (f: r ≃r s) (top: A) : rank_hom s (f top) = rank_hom r top := by
+  show rank_hom s (InitialSeg.of_eqv f top) = _
+  rw [rank_hom_init]
 
 public theorem rank_lt_type (r: A -> A -> Prop) [IsWellOrder r] (a: A) : rank r a < type r := by
   apply type_lt_type.mpr
@@ -251,7 +258,7 @@ public theorem lt_type_iff (r: A -> A -> Prop) [IsWellOrder r] (o: Ordinal) : o 
   · intro ⟨a, ha⟩; rw [←ha]; clear ha
     apply rank_lt_type
 
-instance : IsWelFounded (· < ·: Ordinal -> Ordinal -> Prop) where
+public instance : IsWelFounded (· < ·: Ordinal -> Ordinal -> Prop) where
   wf := by
     apply WellFounded.intro
     intro a
@@ -451,3 +458,105 @@ public def min : Ordinal.{u} -> Ordinal.{u} -> Ordinal.{u} :=
     apply sound; apply RelEquiv.antisymm
     apply min_helper <;> assumption
     apply min_helper <;> (apply RelEquiv.symm; assumption)
+
+section
+
+variable {α β α' β': Type u}
+  (r: α -> α -> Prop) (s: β -> β -> Prop) [IsWellOrder r] [IsWellOrder s]
+  (r': α' -> α' -> Prop) (s': β' -> β' -> Prop) [IsWellOrder r'] [IsWellOrder s']
+
+def max_ty_get : α ⊕ β -> Ordinal
+| .inl x => rank_hom r x
+| .inr x => rank_hom s x
+
+def max_setoid
+  (r: α -> α -> Prop) (s: β -> β -> Prop)
+  [IsWellOrder r] [IsWellOrder s]
+  : Setoid (α ⊕ β) := setoid (fun a b => max_ty_get r s a = max_ty_get r s b)
+
+def max_ty :=
+  Quotient (max_setoid r s)
+
+def max_ty.get : max_ty r s -> Ordinal :=
+  Quotient.lift (max_ty_get r s) <| by
+    intros; assumption
+
+def max_ty_rel (x y: max_ty r s) : Prop :=
+  x.get < y.get
+
+def max_ty_hom : max_ty_rel r s ↪r (· < ·: Ordinal.{u} -> Ordinal -> Prop) where
+  toFun x := x.get
+  map_rel_iff := Iff.rfl
+  injective := by
+    intro a b h; dsimp at h
+    induction a using Quotient.ind with | _ a =>
+    induction b using Quotient.ind with | _ b =>
+    apply Quotient.sound; assumption
+
+instance [LEM] : IsWellOrder (max_ty_rel r s) :=
+  (max_ty_hom r s).liftWellOrder
+
+def map_max_ty (h: r ≃r r') (g: s ≃r s') : max_ty_rel r s ≼i max_ty_rel r' s' where
+  toFun :=
+    Quotient.lift (fun x => Quotient.mk _ (x.map h g)) <| by
+      intro x y hx; apply Quotient.sound
+      cases x <;> cases y <;> dsimp
+      show rank_hom _ (InitialSeg.of_eqv h _) = rank_hom _ (InitialSeg.of_eqv h _)
+      rwa [rank_hom_init, rank_hom_init]
+      show rank_hom _ (InitialSeg.of_eqv g _) = rank_hom _ (InitialSeg.of_eqv h _)
+      rwa [rank_hom_init, rank_hom_init]
+      show rank_hom _ (InitialSeg.of_eqv h _) = rank_hom _ (InitialSeg.of_eqv g _)
+      rwa [rank_hom_init, rank_hom_init]
+      show rank_hom _ (InitialSeg.of_eqv g _) = rank_hom _ (InitialSeg.of_eqv g _)
+      rwa [rank_hom_init, rank_hom_init]
+  map_rel_iff {a b} := by
+    induction a using Quotient.ind with | _ a =>
+    induction b using Quotient.ind with | _ b =>
+    cases a <;> cases b
+    all_goals
+      apply Iff.intro
+      intro hx
+      show rank_hom _ _ < rank_hom _ _
+    any_goals simpa
+    all_goals
+      intro hx
+      replace hx : rank_hom _ _ < rank_hom _ _ := hx
+      simp at hx
+      assumption
+  isInitial := by
+    intro a b hx
+    induction a using Quotient.ind with | _ a =>
+    induction b using Quotient.ind with | _ b =>
+    cases a <;> cases b
+    all_goals
+      replace hx : rank_hom _ _ < rank_hom _ _ := hx
+      simp at hx
+    rw [←rank_hom_eqv h, ←map_rel_iff (rank_hom _)] at hx
+    · rename_i a a'
+      rw [←h.symm_apply a']
+      exists Quotient.mk _ (Sum.inl (h.symm a'))
+    · rename_i a a'
+      exists Quotient.mk _ (Sum.inr (g.symm a'))
+      apply Quotient.sound
+      simp; rfl
+    · rename_i a a'
+      rw [←h.symm_apply a']
+      exists Quotient.mk _ (Sum.inl (h.symm a'))
+    · rename_i a a'
+      rw [←g.symm_apply a']
+      exists Quotient.mk _ (Sum.inr (g.symm a'))
+
+public def max [LEM] : Ordinal.{u} -> Ordinal.{u} -> Ordinal.{u} :=
+  lift₂ (fun r s => type (max_ty_rel r s)) <| by
+    intro A B C D r s r' s' _ _ _ _ h g
+    apply sound; apply RelEquiv.antisymm
+    apply map_max_ty <;> assumption
+    apply map_max_ty <;> (apply RelEquiv.symm; assumption)
+
+end
+
+public instance [LEM] : Min Ordinal where
+  min := min
+
+public instance [LEM] : Max Ordinal where
+  max := max
