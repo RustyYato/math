@@ -152,7 +152,7 @@ public theorem mem_insert {a: α} {s: Set α} : ∀{x}, x ∈ insert a s ↔ a =
 
 @[simp] public theorem mem_preimage {s: Set β} {f: α -> β} : ∀{x}, x ∈ s.preimage f ↔ f x ∈ s := Iff.rfl
 
-public def image (f: ι -> α) (s: Set ι) : Set α where
+@[expose] public def image (f: ι -> α) (s: Set ι) : Set α where
   Mem a := ∃i ∈ s, f i = a
 
 @[simp] public theorem mem_image {s: Set ι} {f: ι -> α} : ∀{x}, x ∈ s.image f ↔ ∃i ∈ s, f i = x := Iff.rfl
@@ -161,7 +161,7 @@ public def image (f: ι -> α) (s: Set ι) : Set α where
   intro h
   simp; exists x
 
-public def range (f: ι -> α) : Set α where
+@[expose] public def range (f: ι -> α) : Set α where
   Mem a := ∃i, f i = a
 
 @[simp] public theorem mem_range {f: ι -> α} : ∀{x}, x ∈ range f ↔ ∃i, f i = x := Iff.rfl

@@ -598,3 +598,18 @@ end Lift
 
 public instance : IsWelFounded (α := ℕ) (· < ·) where
   wf := Nat.lt_wfRel.wf
+
+@[expose, coe] public def RelEmbedding.coe
+  {r: α -> α -> Prop}
+  {s: β  -> β -> Prop}
+  [EmbeddingLike F α β]
+  [IsRelHom F r s] (f: F) : r ↪r s where
+  toEmbedding := f
+  map_rel_iff := map_rel_iff f
+
+public instance
+  {r: α -> α -> Prop}
+  {s: β  -> β -> Prop}
+  [EmbeddingLike F α β]
+  [IsRelHom F r s] : CoeOut F (r ↪r s) where
+  coe := RelEmbedding.coe
