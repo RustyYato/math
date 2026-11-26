@@ -34,8 +34,6 @@ public theorem unique_choose_unique (h: exists_unique P) : ∀a: α, P a -> uniq
   have := exists_unique.subsingleton P
   (unique_choice h.nonempty).property.right
 
-#print Classical.axiomOfChoice
-
 public theorem axiomOfUniqueChoice :
   ∀ {α : Sort u} {β : α → Sort v} {r : (x : α) → β x → Prop},
   (∀ (x : α), exists_unique (r x)) →

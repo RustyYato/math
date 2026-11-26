@@ -9,6 +9,6 @@ namespace Math
 variable [RelLike C α] [IsCon C α]
 
 public instance [RingOps α] [IsRing α] [IsAddCon C α] [IsMulCon C α] (r: C) : RingOps (AlgQuot r) :=
-  instRingOpsOfAddGroupOpsOfMonoidOpsOfNatCastOfIntCast
+  instRingOps
 
 public instance [RingOps α] [IsRing α] [IsAddCon C α] [IsMulCon C α] (r: C) : IsRing (AlgQuot r) where

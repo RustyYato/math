@@ -284,7 +284,7 @@ def report (root : Name) : CoreM MessageData := do
     let mut indent := ""
     for n in buildPath imp res root h.ax do
       let k := match penv.find? n with
-        | some ci@(.axiomInfo _) =>
+        | some (.axiomInfo _) =>
           if (axiomsOf penv n).contains n then "axiom"
           else "def, body hidden by module system; axioms taken from core's cache"
         | some ci => kindOf ci

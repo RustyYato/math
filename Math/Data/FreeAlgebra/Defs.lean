@@ -288,8 +288,6 @@ public def lift : (α -> A) ≃ (FreeAlgebra R α →ₐ[R] A) where
     dsimp; ext a
     rfl
 
-#print lift
-
 @[simp] public theorem lift_ι (f: α -> A) : lift R f (ι R a) = f a := by rfl
 
 end Lift

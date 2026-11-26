@@ -22,9 +22,3 @@ public instance : IsAddGroup (LinearCombo ι α) :=
 end
 
 variable {ι α: Type*} [RingOps α] [IsRing α]
-
-public theorem get_inj [DecidableEq ι] : Function.Injective fun lc: LinearCombo ι α => (LinearCombo.get · lc) := by
-  intro a b h;
-  dsimp at h
-  replace h (i: ι) := congrFun h i
-  sorry
