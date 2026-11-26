@@ -167,3 +167,19 @@ public theorem union_inter (a b k: Set α) : (a ∪ b) ∩ k = a ∩ k ∪ b ∩
 public theorem sdiff_inter (a b: Set α) : a \ b ∩ b = ⊥ := by
   ext i; simp
 public theorem sdiff_sub (a b: Set α) : a \ b ⊆ a := fun _ => And.left
+
+public theorem sUnion_preimage (U: Set (Set β)) (f: α -> β) :
+  (⋃ U).preimage f = ⋃ (U.image (Set.preimage f)) := by
+  ext a; simp
+
+public theorem sInter_preimage (U: Set (Set β)) (f: α -> β) :
+  (⋂ U).preimage f = ⋂ (U.image (Set.preimage f)) := by
+  ext a; simp
+
+public theorem inter_preimage (a b: Set β) (f: α -> β) :
+  (a ∩ b).preimage f = a.preimage f ∩ b.preimage f := by
+  ext a; simp
+
+public theorem union_preimage (a b: Set β) (f: α -> β) :
+  (a ∪ b).preimage f = a.preimage f ∪ b.preimage f := by
+  ext a; simp

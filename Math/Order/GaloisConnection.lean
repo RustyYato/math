@@ -139,7 +139,7 @@ public theorem l_unique {l₀ l₁: α -> β} {u₀ u₁: β -> α}
 
 end PartialOrder
 
-section Structures
+@[expose] section Structures
 
 variable (α: Type*) [LE α] [LT α]
 
@@ -164,6 +164,8 @@ public protected class CompleteLattice extends
   GaloisConnection.LawfulTop α,
   GaloisConnection.LawfulBot α,
   IsCompleteLattice α where
+
+@[instance_reducible] public def CompleteLattice.dual (h: GaloisConnection.CompleteLattice α) : GaloisConnection.CompleteLattice αᵒᵖ where
 
 end Structures
 
