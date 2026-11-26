@@ -138,6 +138,13 @@ public class IsContinuous (ta: Topology α) (tb: Topology β) (f: α -> β) wher
 public theorem open_preimage (ta: Topology α) (tb: Topology β) (f: α -> β) [IsContinuous ta tb f] {s: Set β} (hs: s ∈ tb.OpenSets) : s.preimage f ∈ ta.OpenSets :=
   IsContinuous.isOpen_preimage s hs
 
+public theorem IsContinuous.comp (f: β -> γ) (g: α -> β) (c₉: IsContinuous u v f) (c₁: IsContinuous t u g) : IsContinuous t v (f ∘ g) where
+  isOpen_preimage s hs := by
+    show Set.preimage g (Set.preimage f s) ∈ _
+    apply open_preimage t u g
+    apply open_preimage u v f
+    assumption
+
 public instance cont_from_top : IsContinuous ⊥ t f where
   isOpen_preimage := by intros; trivial
 public instance cont_to_bot : IsContinuous t ⊤ f where
@@ -266,6 +273,67 @@ public instance cont_sigma_mk : IsContinuous (t i) (sigma t) (Sigma.mk i) := by
 
 end
 
+public structure TopologyEquiv (ta: Topology α) (tb: Topology β) extends α ≃ β where
+  toFun_continuous : IsContinuous ta tb toFun
+  invFun_continuous : IsContinuous tb ta invFun
+
+infixr:50 " ≃ᵗ " => TopologyEquiv
+
+namespace TopologyEquiv
+
+public instance {ta: Topology α} {tb: Topology β} : EquivLike (ta ≃ᵗ tb) α β where
+
+@[expose] public def id (ta: Topology α) : ta ≃ᵗ ta where
+  toEquiv := .id _
+  toFun_continuous := cont_id _
+  invFun_continuous := cont_id _
+
+variable {ta: Topology α} {tb: Topology β} {tc: Topology γ}
+
+@[expose] public def symm (f: TopologyEquiv ta tb) : tb ≃ᵗ ta where
+  toEquiv := f.toEquiv.symm
+  toFun_continuous := f.invFun_continuous
+  invFun_continuous := f.toFun_continuous
+
+@[expose] public def trans (f: ta ≃ᵗ tb) (g: tb ≃ᵗ tc) : ta ≃ᵗ tc where
+  toEquiv := f.toEquiv.trans g.toEquiv
+  toFun_continuous := by
+    apply IsContinuous.comp g f
+    exact g.toFun_continuous
+    exact f.toFun_continuous
+  invFun_continuous := by
+    apply IsContinuous.comp f.symm g.symm
+    exact f.invFun_continuous
+    exact g.invFun_continuous
+
+variable {ta: Topology α} {tb: Topology β}
+
+@[ext] theorem ext (a b: ta ≃ᵗ tb) (h: ∀i, a i = b i) : a = b := DFunlike.ext _ _ h
+@[simp] theorem apply_id (ta: Topology α) (x: α) : TopologyEquiv.id ta x = x := rfl
+@[simp] theorem apply_comp (f: tb ≃ᵗ tc) (g: ta ≃ᵗ tb) (x: α) : (f.comp g) x = f (g x) := rfl
+@[simp] theorem apply_trans (f: tb ≃ᵗ tc) (g: ta ≃ᵗ tb) (x: α) : (g.trans f) x = f (g x) := rfl
+
+@[simp] theorem symm_apply (f: ta ≃ᵗ tb) (x: β) : f (f.symm x) = x := f.toEquiv.symm_apply _
+@[simp] theorem apply_symm (f: ta ≃ᵗ tb) (x: α) : f.symm (f x) = x := f.toEquiv.apply_symm _
+
+@[simp] theorem symm_symm (f: ta ≃ᵗ tb) : f.symm.symm = f := rfl
+
+@[simp] theorem trans_assoc (f: ta ≃ᵗ tb) (g: tb ≃ᵗ tc) (h: tc ≃ᵗ tc') :
+  f.trans (g.trans h) = (f.trans g).trans h := rfl
+
+@[simp] theorem symm_trans (f: ta ≃ᵗ tb) : f.symm.trans f = .id _ := by
+  ext x; simp
+@[simp] theorem trans_symm (f: ta ≃ᵗ tb) : f.trans f.symm = .id _ := by
+  ext x; simp
+@[simp] theorem id_symm : (TopologyEquiv.id _).symm = (TopologyEquiv.id ta) := rfl
+@[simp] theorem id_trans (f: ta ≃ᵗ tb) : (TopologyEquiv.id _).trans f = f := rfl
+@[simp] theorem trans_id (f: ta ≃ᵗ tb) : f.trans (TopologyEquiv.id _) = f := rfl
+
+public theorem inj (f: ta ≃ᵗ tb) : Function.Injective f := f.rightInv.injective
+public theorem surj (f: ta ≃ᵗ tb) : Function.Surjective f := f.symm.rightInv.surjective
+
+end TopologyEquiv
+
 end Topology
 
 namespace TopologicalSpace
@@ -327,3 +395,54 @@ public instance : IsContinuous (Sigma.mk i: γ i -> Sigma γ) :=
 end
 
 end TopologicalSpace
+
+open TopologicalSpace
+
+@[expose] public def TopologyEquiv (α β: Type*) [TopologicalSpace α] [TopologicalSpace β] :=
+  (toTopology: Topology α) ≃ᵗ (toTopology: Topology β)
+
+infixr:50 " ≃ₜ " => TopologyEquiv
+
+namespace TopologyEquiv
+
+variable {α β γ y': Type*} [TopologicalSpace α] [TopologicalSpace β] [TopologicalSpace γ] [TopologicalSpace γ']
+
+public instance : EquivLike (α ≃ₜ β) α β :=
+  Topology.TopologyEquiv.instEquivLike
+    (α := α) (β := β)
+    (ta := toTopology) (tb := toTopology)
+
+@[expose] public def id (α: Type*) [TopologicalSpace α] : α ≃ₜ α :=
+  Topology.TopologyEquiv.id _
+
+@[expose] public def symm : α ≃ₜ β -> β ≃ₜ α :=
+  Topology.TopologyEquiv.symm
+
+@[expose] public def trans : α ≃ₜ β -> β ≃ₜ γ -> α ≃ₜ γ :=
+  Topology.TopologyEquiv.trans
+
+@[ext] theorem ext (a b: α ≃ₜ β) (h: ∀i, a i = b i) : a = b := DFunlike.ext _ _ h
+@[simp] theorem apply_id (x: α) : TopologyEquiv.id α x = x := rfl
+@[simp] theorem apply_comp (f: β ≃ₜ γ) (g: α ≃ₜ β) (x: α) : (f.comp g) x = f (g x) := rfl
+@[simp] theorem apply_trans (f: β ≃ₜ γ) (g: α ≃ₜ β) (x: α) : (g.trans f) x = f (g x) := rfl
+
+@[simp] theorem symm_apply (f: α ≃ₜ β) (x: β) : f (f.symm x) = x := f.toEquiv.symm_apply _
+@[simp] theorem apply_symm (f: α ≃ₜ β) (x: α) : f.symm (f x) = x := f.toEquiv.apply_symm _
+
+@[simp] theorem symm_symm (f: α ≃ₜ β) : f.symm.symm = f := rfl
+
+@[simp] theorem trans_assoc (f: α ≃ₜ β) (g: β ≃ₜ γ) (h: γ ≃ₜ γ') :
+  f.trans (g.trans h) = (f.trans g).trans h := rfl
+
+@[simp] theorem symm_trans (f: α ≃ₜ β) : f.symm.trans f = .id _ := by
+  ext x; simp
+@[simp] theorem trans_symm (f: α ≃ₜ β) : f.trans f.symm = .id _ := by
+  ext x; simp
+@[simp] theorem id_symm : (TopologyEquiv.id _).symm = (TopologyEquiv.id α) := rfl
+@[simp] theorem id_trans (f: α ≃ₜ β) : (TopologyEquiv.id _).trans f = f := rfl
+@[simp] theorem trans_id (f: α ≃ₜ β) : f.trans (TopologyEquiv.id _) = f := rfl
+
+public theorem inj (f: α ≃ₜ β) : Function.Injective f := f.rightInv.injective
+public theorem surj (f: α ≃ₜ β) : Function.Surjective f := f.symm.rightInv.surjective
+
+end TopologyEquiv
