@@ -1,6 +1,7 @@
 module
 
 import Math.Tactic.TypeStar
+import Math.Tactic.AxiomBlame
 
 namespace Nat
 
@@ -13,8 +14,44 @@ structure findMeasure (h: ∃i, f i) where
   toNat : ℕ
   spec : ∀i < toNat, ¬f i
 
+theorem lt_of_sub_pos' {n m : ℕ} (h : 0 < n - m) : m < n := by
+  induction n generalizing m with
+  | zero => rw [Nat.zero_sub] at h; nomatch h
+  | succ n ih =>
+    cases m with
+    | zero => apply Nat.zero_lt_succ
+    | succ m =>
+      apply Nat.succ_lt_succ; apply ih
+      rwa [Nat.succ_sub_succ] at h
+
+theorem sub_lt_sub_left' {k m n : ℕ} : k < m → k < n → m - n < m - k := by
+  intro k_lt_m k_lt_n
+  induction k generalizing n m with
+  | zero =>
+    rw [Nat.sub_zero]
+    cases n with
+    | zero => contradiction
+    | succ n =>
+      cases m with
+    | zero => contradiction
+    | succ m =>
+      rw [Nat.succ_sub_succ]
+      apply Nat.lt_succ_of_le
+      apply Nat.sub_le
+  | succ k ih =>
+    cases m with
+    | zero => contradiction
+    | succ m =>
+    cases n with
+    | zero => contradiction
+    | succ n =>
+    rw [Nat.succ_sub_succ, Nat.succ_sub_succ]
+    apply ih
+    apply Nat.lt_of_succ_lt_succ; assumption
+    apply Nat.lt_of_succ_lt_succ; assumption
+
 instance : WellFoundedRelation (findMeasure f h) where
-  rel a b := a.toNat > b.toNat
+  rel a b := b.toNat < a.toNat
   wf := by
     obtain ⟨i, hi⟩ := h
     apply WellFounded.intro
@@ -34,8 +71,8 @@ instance : WellFoundedRelation (findMeasure f h) where
         intro ⟨b, hb⟩ g; dsimp at g
         apply ih _ _ _ _ rfl
         rw [←h]
-        apply Nat.sub_lt_sub_left _ g
-        apply Nat.lt_of_sub_pos
+        apply Nat.sub_lt_sub_left' _ g
+        apply Nat.lt_of_sub_pos'
         rw [h]; apply Nat.zero_lt_succ
 
 def findAux (i: ℕ) (hi: ∀j < i, ¬f j) : { i: ℕ // f i ∧ ∀j < i, ¬ f j } :=
@@ -45,6 +82,9 @@ def findAux (i: ℕ) (hi: ∀j < i, ¬f j) : { i: ℕ // f i ∧ ∀j < i, ¬ f 
     rcases Nat.lt_or_eq_of_le (Nat.le_of_lt_succ hj) with h | h
     apply hi; assumption; subst i; assumption
 termination_by findMeasure.ofNat (h := h) i hi
+decreasing_by
+  apply Nat.lt_succ_of_le
+  apply Nat.le_refl
 
 variable {f: ℕ -> Bool} (h: ∃i, f i)
 
