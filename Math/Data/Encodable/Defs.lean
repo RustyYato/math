@@ -73,3 +73,34 @@ public def countableChoice
   { f: ∀i, α i // ∀i, P i (f i) } where
   val i := choose (h i)
   property i := choose_spec (h i)
+
+public abbrev Countable (α: Type*) : Prop := Nonempty (α ↪ ℕ)
+
+public instance [Encodable α] : Countable α := ⟨encode⟩
+
+public instance : Encodable (Fin n) where
+  encode := Fin.val
+  decode i := if h:i < n then .some ⟨i, h⟩ else .none
+  encode_decode a := by rw [dite_eq_left]
+
+public instance [Encodable α] [Encodable β] : Encodable (α ⊕ β) where
+  encode
+  | .inl a => 2 * encode a
+  | .inr a => 2 * encode a + 1
+  decode i :=
+    bif i % 2 == 0 then
+      (decode _ (i / 2)).map .inl
+    else
+      (decode _ (i / 2)).map .inr
+  encode_decode a := by
+    cases a with
+    | inl =>
+      dsimp
+      rw [Nat.mul_mod_right]; dsimp; rw [Bool.cond_true]
+      rw [Nat.mul_div_cancel_left, encode_decode]; rfl
+      decide
+    | inr =>
+      dsimp
+      rw [Nat.mul_add_mod]; dsimp; rw [Bool.cond_false]
+      rw [Nat.mul_add_div]; dsimp; rw [encode_decode]; rfl
+      decide
