@@ -14,13 +14,17 @@ public class IsNotUnit [Mul α] [One α] (p: α) : Prop where
 public class IsPrime [Dvd α] [Mul α] [One α] (p: α) : Prop extends IsNotUnit p where
   dvd_of_dvd_mul: ∀a b: α, p ∣ a * b -> p ∣ a ∨ p ∣ b
 
-public class IsIrreducible [Dvd α] [Mul α] [One α] (p: α) : Prop extends IsNotUnit p where
+public class IsIrreducible [Mul α] [One α] (p: α) : Prop extends IsNotUnit p where
   unit_of_eq_mul: ∀a b: α, p = a * b -> IsUnit a ∨ IsUnit b
+
+public class IsComposite [Mul α] [One α] (x: α) : Prop extends IsNotUnit x where
+  exists_eq_prod : ∃a b: α, IsNotUnit a ∧ IsNotUnit b ∧ x = a * b
 
 export IsNotUnit (not_unit)
 export IsLawfulDvd (dvd_iff)
 export IsPrime (dvd_of_dvd_mul)
 export IsIrreducible (unit_of_eq_mul)
+export IsComposite (exists_eq_prod)
 
 public instance : IsLawfulDvd ℕ where
 public instance : IsLawfulDvd ℤ where
@@ -75,6 +79,10 @@ public theorem dvd_mul_left (a b: α) [IsCommAt a b] : a ∣ b * a := by
 public theorem dvd_refl [One α] [IsLawfulOne α] (a: α) : a ∣ a := by
   apply dvd_iff.mpr
   exists 1; rw [mul_one]
+
+public theorem dvd_zero [Zero α] [IsLawfulZeroMul α] (a: α) : a ∣ 0 := by
+  apply dvd_iff.mpr
+  exists 0; rw [mul_zero]
 
 public theorem dvd_trans [IsSemigroup α] {a b c: α} : a ∣ b -> b ∣ c -> a ∣ c := by
   intro h g

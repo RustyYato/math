@@ -132,3 +132,9 @@ public instance [AddMonoidOps α] [IsAddMonoid α] : IsAddMonoid (AddUnit α) wh
   succ_nsmul a n := by ext <;> dsimp; apply succ_nsmul
 
 end AddUnit
+
+public instance  [Mul α] [One α] [IsLawfulOne α] : IsUnit (α := α) 1 where
+  exists_unit := ⟨1, rfl⟩
+
+public instance  [Add α] [Zero α] [IsLawfulZero α] : IsAddUnit (α := α) 0 where
+  exists_add_unit := ⟨0, rfl⟩

@@ -46,11 +46,13 @@ def findAux (i: ℕ) (hi: ∀j < i, ¬f j) : { i: ℕ // f i ∧ ∀j < i, ¬ f 
     apply hi; assumption; subst i; assumption
 termination_by findMeasure.ofNat (h := h) i hi
 
-public def find (f: ℕ -> Bool) (h: ∃i, f i) : ℕ := findAux f h 0 nofun
-public theorem find_spec (f: ℕ -> Bool) (h: ∃i, f i) : f (find f h) := (findAux f h 0 nofun).property.left
-public theorem of_lt_find (f: ℕ -> Bool) (h: ∃i, f i) : ∀i < find f h, ¬f i := (findAux f h 0 nofun).property.right
+variable {f: ℕ -> Bool} (h: ∃i, f i)
 
-variable (P: ℕ -> Prop) [DecidablePred P] (h: ∃i, P i)
+public def find : ℕ := findAux f h 0 nofun
+public theorem find_spec : f (find h) := (findAux f h 0 nofun).property.left
+public theorem of_lt_find : ∀i < find h, ¬f i := (findAux f h 0 nofun).property.right
+
+variable {P: ℕ -> Prop} [DecidablePred P] (h: ∃i, P i)
 
 def findPAux : { i: ℕ // P i ∧ ∀j < i, ¬ P j } :=
   let x := findAux (fun i => decide (P i)) (by
@@ -66,8 +68,8 @@ def findPAux : { i: ℕ // P i ∧ ∀j < i, ¬ P j } :=
       apply decide_eq_true
       assumption
   }
-public def findP : ℕ := findPAux P h
-public theorem findP_spec : P (findP P h) := (findPAux P h).property.left
-public theorem of_lt_findP : ∀i < findP P h, ¬P i := (findPAux P h).property.right
+public def findP : ℕ := findPAux h
+public theorem findP_spec : P (findP h) := (findPAux h).property.left
+public theorem of_lt_findP : ∀i < findP h, ¬P i := (findPAux h).property.right
 
 end
