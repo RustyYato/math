@@ -207,17 +207,120 @@ public instance cont_to_bot : IsContinuous t ⊤ f where
     rintro _ ⟨s, s_in_U, rfl⟩
     apply hU; assumption
 
-instance cont_from_induced (tb: Topology β) (f: α -> β) : IsContinuous (tb.induced f) tb f where
+instance cont_induced_dom (tb: Topology β) (f: α -> β) : IsContinuous (tb.induced f) tb f where
   isOpen_preimage s hs := by exists s
-instance cont_to_coinduced (ta: Topology α) (f: α -> β) : IsContinuous ta (ta.coinduced f) f where
+instance cont_coinduced_rng (ta: Topology α) (f: α -> β) : IsContinuous ta (ta.coinduced f) f where
   isOpen_preimage _ hs := hs
 
-public theorem cont_le_src (ta ta': Topology α) {tb: Topology β} {f: α -> β} (h: IsContinuous ta tb f) (h: ta' ≤ ta) : IsContinuous ta' tb f where
+public theorem cont_le_dom (ta ta': Topology α) {tb: Topology β} {f: α -> β} (h: ta' ≤ ta) (hcont: IsContinuous ta tb f) : IsContinuous ta' tb f where
   isOpen_preimage s hs := by apply h; apply open_preimage ta tb; assumption
-public theorem cont_dst_le {ta: Topology α} (tb tb': Topology β) {f: α -> β} (h: IsContinuous ta tb f) (h: tb ≤ tb') : IsContinuous ta tb' f where
+public theorem cont_rng_le {ta: Topology α} (tb tb': Topology β) {f: α -> β} (h: tb ≤ tb') (hcont: IsContinuous ta tb f) : IsContinuous ta tb' f where
   isOpen_preimage s hs := by
     apply open_preimage ta tb
     apply h; assumption
+
+section
+
+public theorem cont_iff_le_induced {t₁ : Topology α} {t₂ : Topology β} :
+  IsContinuous t₁ t₂ f ↔ t₁ ≤ induced f t₂ := by
+  apply Iff.intro
+  intro h
+  rintro _ ⟨s, _, rfl⟩
+  apply h.isOpen_preimage
+  assumption
+  intro h; refine ⟨?_⟩
+  intro s hs
+  apply h
+  exists s
+
+public theorem cont_iff_coinduced_le {t₁ : Topology α} {t₂ : Topology β} :
+  IsContinuous t₁ t₂ f ↔ coinduced f t₁ ≤ t₂ := by
+  apply Iff.intro
+  intro h s hs; apply h.isOpen_preimage
+  assumption
+  intro h; refine ⟨?_⟩
+  intro s hs; apply h; assumption
+
+public theorem cont_sup_dom {t₁ t₂ : Topology α} {t₃ : Topology β} :
+    IsContinuous (t₁ ⊔ t₂) t₃ f ↔ IsContinuous t₁ t₃ f ∧ IsContinuous t₂ t₃ f := by
+  iterate 3 rw [cont_iff_le_induced]
+  apply Iff.intro
+  intro h; apply And.intro
+  apply le_trans _ h; apply left_le_max
+  apply le_trans _ h; apply right_le_max
+  intro ⟨h, g⟩; apply max_le <;> assumption
+
+public theorem cont_sup_rng_left {t₁ : Topology α} {t₃ t₂ : Topology β} :
+    IsContinuous t₁ t₂ f → IsContinuous t₁ (t₂ ⊔ t₃) f := by
+  apply cont_rng_le; apply left_le_max
+
+public theorem cont_sup_rng_right {t₁ : Topology α} {t₃ t₂ : Topology β} :
+    IsContinuous t₁ t₃ f → IsContinuous t₁ (t₂ ⊔ t₃) f :=by
+  apply cont_rng_le; apply right_le_max
+
+public theorem cont_sSup_dom {T : Set (Topology α)} {t₂ : Topology β} :
+    IsContinuous (⨆ T) t₂ f ↔ ∀ t ∈ T, IsContinuous t t₂ f := by
+  simp only [cont_iff_le_induced]
+  apply Iff.intro
+  intro h t ht; apply le_trans _ h
+  apply le_sSup; assumption
+  intro h; apply sSup_le; apply h
+
+public theorem cont_sSup_rng {t₁ : Topology α} {t₂ : Set (Topology β)}
+    {t : Topology β} (h₁ : t ∈ t₂) (hf : IsContinuous t₁ t f) :
+    IsContinuous t₁ (⨆ t₂) f := by
+    apply cont_iff_coinduced_le.mpr
+    apply le_trans
+    apply cont_iff_coinduced_le.mp hf
+    apply le_sSup; assumption
+
+public theorem cont_iSup_dom {t₁ : ι → Topology α} {t₂ : Topology β} :
+    IsContinuous (⨆i, t₁ i) t₂ f ↔ ∀ i, IsContinuous (t₁ i) t₂ f := by
+  apply Iff.trans cont_sSup_dom; simp
+
+public theorem cont_iSup_rng {t₁ : Topology α} {t₂ : ι → Topology β} {i : ι}
+    (h : IsContinuous t₁ (t₂ i) f) : IsContinuous t₁ (⨆i, t₂ i) f :=
+  cont_sSup_rng ⟨i, rfl⟩ h
+
+public theorem cont_inf_rng {t₁ : Topology α} {t₂ t₃ : Topology β} :
+    IsContinuous t₁ (t₂ ⊓ t₃) f ↔ IsContinuous t₁ t₂ f ∧ IsContinuous t₁ t₃ f := by
+  simp only [cont_iff_coinduced_le]
+  apply Iff.intro
+  intro h; apply And.intro <;> apply le_trans h
+  apply min_le_left; apply min_le_right
+  intro ⟨h, g⟩; apply le_min <;> assumption
+
+public theorem cont_inf_dom_left {t₁ t₂ : Topology α} {t₃ : Topology β} :
+    IsContinuous t₁ t₃ f → IsContinuous (t₁ ⊓ t₂) t₃ f :=
+  cont_le_dom _ _ (min_le_left _ _)
+
+public theorem cont_inf_dom_right {t₁ t₂ : Topology α} {t₃ : Topology β} :
+    IsContinuous t₂ t₃ f → IsContinuous (t₁ ⊓ t₂) t₃ f :=
+  cont_le_dom _ _ (min_le_right _ _)
+
+public theorem cont_sInf_dom {t₁ : Set (Topology α)} {t₂ : Topology β}
+    {t : Topology α} (h₁ : t ∈ t₁) :
+    IsContinuous t t₂ f → IsContinuous (⨅ t₁) t₂ f :=
+  cont_le_dom _ _ (sInf_le _ _ h₁)
+
+public theorem cont_sInf_rng {t₁ : Topology α} {T : Set (Topology β)} :
+    IsContinuous t₁ (⨅ T) f ↔ ∀ t ∈ T, IsContinuous t₁ t f := by
+  simp only [cont_iff_coinduced_le]; apply Iff.intro
+  intro h t ht
+  apply le_trans h; apply sInf_le; assumption
+  intro h; apply le_sInf; apply h
+
+public theorem cont_iInf_dom {t₁ : ι → Topology α} {t₂ : Topology β} {i : ι} :
+    IsContinuous (t₁ i) t₂ f → IsContinuous (⨅ i, t₁ i) t₂ f := by
+  apply cont_sInf_dom
+  apply Set.mem_range'
+
+public theorem cont_iInf_rng {t₁ : Topology α} {t₂ : ι → Topology β} :
+    IsContinuous t₁ (⨅ i, t₂ i) f ↔ ∀ i, IsContinuous t₁ (t₂ i) f := by
+  apply Iff.trans cont_sInf_rng
+  simp
+
+end
 
 section
 
@@ -240,34 +343,28 @@ public instance cont_id : IsContinuous ta ta id where
   ⨆i, coinduced (Sigma.mk i) (t i)
 
 public instance cont_prod_fst : IsContinuous (ta.prod tb) ta Prod.fst := by
-  apply cont_le_src (ta.induced Prod.fst)
-  infer_instance
+  apply cont_le_dom (ta.induced Prod.fst) _ _ inferInstance
   apply min_le_left
 
 public instance cont_prod_snd : IsContinuous (ta.prod tb) tb Prod.snd := by
-  apply cont_le_src (tb.induced Prod.snd)
-  infer_instance
+  apply cont_le_dom (tb.induced Prod.snd) _ _ inferInstance
   apply min_le_right
 
 public instance cont_sum_inl : IsContinuous ta (ta.sum tb) Sum.inl := by
-  apply cont_dst_le (ta.coinduced Sum.inl)
-  infer_instance
+  apply cont_rng_le (ta.coinduced Sum.inl) _ _ inferInstance
   apply left_le_max
 
 public instance cont_sum_inr : IsContinuous tb (ta.sum tb) Sum.inr := by
-  apply cont_dst_le (tb.coinduced Sum.inr)
-  infer_instance
+  apply cont_rng_le (tb.coinduced Sum.inr) _ _ inferInstance
   apply right_le_max
 
 public instance cont_pi_apply : IsContinuous (pi t) (t i) (fun f => f i) := by
-  apply cont_le_src ((t i).induced (fun f => f i))
-  infer_instance
+  apply cont_le_dom ((t i).induced (fun f => f i)) _ _ inferInstance
   apply sInf_le
   apply Set.mem_range'
 
 public instance cont_sigma_mk : IsContinuous (t i) (sigma t) (Sigma.mk i) := by
-  apply cont_dst_le ((t i).coinduced (Sigma.mk i))
-  infer_instance
+  apply cont_rng_le ((t i).coinduced (Sigma.mk i)) _ _ inferInstance
   apply le_sSup
   apply Set.mem_range'
 
