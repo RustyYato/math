@@ -3,6 +3,8 @@ module
 public import Math.Algebra.Module.Set.Defs
 public import Math.Algebra.LinearCombo.Defs
 
+import Math.Algebra.Monoid.Defs.Lemmas
+
 namespace Math
 
 namespace IsModule

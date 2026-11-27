@@ -3,6 +3,8 @@ module
 public import Math.Algebra.AddMonoidWithOne.Set.Defs
 public import Math.Algebra.Semiring.Defs.Basic
 
+import Math.Algebra.Semiring.Defs.Lemmas
+
 namespace Math
 
 public structure Subsemiring (α: Type*) [Zero α] [One α] [Add α] [Mul α] extends AddSubmonoidWithOne α, Submonoid α where
@@ -101,24 +103,6 @@ variable [SetLike S α] [IsMemZero S α] [IsMemOne S α] [IsMemAdd S α] [IsMemM
 @[simp] public theorem mem_copy {s: S} {u: Set α} {hu} : ∀{x}, x ∈ copy s u hu ↔ x ∈ s := (hu _).symm
 
 end
-
-variable [Zero β] [One β] [Add β] [Mul β] [Funlike F α β] [IsZeroHom F α β] [IsOneHom F α β] [IsAddHom F α β] [IsMulHom F α β]
-
-@[expose] public def preimage (f: F) (s: Subsemiring β) : Subsemiring α where
-  toSet := Set.preimage f s
-  mem_zero := MemZero.preimage f s
-  mem_one := MemOne.preimage f s
-  mem_add := MemAdd.preimage f s
-  mem_mul := MemMul.preimage f s
-@[expose] public def image (f: F) (s: Subsemiring α) : Subsemiring β where
-  toSet := Set.image f s
-  mem_zero := MemZero.image f s
-  mem_one := MemOne.image f s
-  mem_add := MemAdd.image f s
-  mem_mul := MemMul.image f s
-
-@[simp] public theorem mem_preimage {f: F} {s: Subsemiring β} : ∀{x}, x ∈ s.preimage f ↔ f x ∈ s := Iff.rfl
-@[simp] public theorem mem_image {f: F} {s: Subsemiring α} : ∀{x}, x ∈ s.image f ↔ ∃i, i ∈ s ∧ f i = x := Set.mem_image
 
 end Subsemiring
 

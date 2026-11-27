@@ -3,6 +3,9 @@ module
 public import Math.Algebra.Module.Set.Basis.Defs
 public import Math.Algebra.LinearCombo.Group
 
+import Math.Algebra.Group.Defs.Lemmas
+import Math.Algebra.Group.Defs.Hom
+
 namespace Math.IsModule
 
 variable {α: Type*} (R: Type*)

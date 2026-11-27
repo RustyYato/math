@@ -4,6 +4,8 @@ public import Math.Algebra.AddGroupWithOne.Set.Defs
 public import Math.Algebra.Semiring.Set.Defs
 public import Math.Algebra.Ring.Defs.Basic
 
+import Math.Algebra.Ring.Defs.Lemmas
+
 namespace Math
 
 public structure Subring (α: Type*) [Zero α] [One α] [Neg α] [Add α] [Mul α] extends AddSubgroupWithOne α, Subsemiring α where
@@ -113,29 +115,6 @@ variable [SetLike S α] [IsMemZero S α] [IsMemOne S α] [IsMemNeg S α] [IsMemA
 @[simp] public theorem mem_copy {s: S} {u: Set α} {hu} : ∀{x}, x ∈ copy s u hu ↔ x ∈ s := (hu _).symm
 
 end
-
-variable
-  {α β: Type*}
-  [RingOps α] [IsRing α] [RingOps β] [IsRing β]
-  [Funlike F α β] [IsZeroHom F α β] [IsOneHom F α β] [IsAddHom F α β] [IsMulHom F α β]
-
-@[expose] public def preimage (f: F) (s: Subring β) : Subring α where
-  toSet := Set.preimage f s
-  mem_zero := MemZero.preimage f s
-  mem_one := MemOne.preimage f s
-  mem_neg := MemNeg.preimage f s
-  mem_add := MemAdd.preimage f s
-  mem_mul := MemMul.preimage f s
-@[expose] public def image (f: F) (s: Subring α) : Subring β where
-  toSet := Set.image f s
-  mem_zero := MemZero.image f s
-  mem_one := MemOne.image f s
-  mem_neg := MemNeg.image f s
-  mem_add := MemAdd.image f s
-  mem_mul := MemMul.image f s
-
-@[simp] public theorem mem_preimage {f: F} {s: Subring β} : ∀{x}, x ∈ s.preimage f ↔ f x ∈ s := Iff.rfl
-@[simp] public theorem mem_image {f: F} {s: Subring α} : ∀{x}, x ∈ s.image f ↔ ∃i, i ∈ s ∧ f i = x := Set.mem_image
 
 end Subring
 

@@ -54,27 +54,7 @@ end Instances
 
 namespace MemMulLeft
 
-variable [Mul α] [Mul β]
-
-public theorem preimage
-  [Funlike F α β] [IsMulHom F α β]
-  [SetLike S β] [IsMemMulLeft S β] (f: F) (s: S) : MemMulLeft (Set.preimage f s) := by
-  intro k a ha
-  show f (k * a) ∈ s
-  rw [map_mul]; apply mem_mul_left s
-  assumption
-
-public theorem image
-  [SurjectionLike F α β] [IsMulHom F α β]
-  [SetLike S α] [IsMemMulLeft S α] (f: F) (s: S) : MemMulLeft (Set.image f s) := by
-  intro k _ ha; simp at ha
-  obtain ⟨a, ha, rfl⟩ := ha
-  obtain ⟨k, rfl⟩ := SurjectionLike.coeSurjection f k
-  rw [←map_mul]; apply Set.mem_image'
-  apply mem_mul_left s
-  assumption
-
-variable [SetLike S α] [IsMemMulLeft S α]
+variable [Mul α] [Mul β] [SetLike S α] [IsMemMulLeft S α]
 
 public theorem copy (u: Set α) (h: ∃s: S, u = s) : MemMulLeft u := by
   obtain ⟨s, rfl⟩ := h
@@ -92,27 +72,7 @@ end MemMulLeft
 
 namespace MemMulRight
 
-variable [Mul α] [Mul β]
-
-public theorem preimage
-  [Funlike F α β] [IsMulHom F α β]
-  [SetLike S β] [IsMemMulRight S β] (f: F) (s: S) : MemMulRight (Set.preimage f s) := by
-  intro k a ha
-  show f (a * k) ∈ s
-  rw [map_mul]; apply mem_mul_right s
-  assumption
-
-public theorem image
-  [SurjectionLike F α β] [IsMulHom F α β]
-  [SetLike S α] [IsMemMulRight S α] (f: F) (s: S) : MemMulRight (Set.image f s) := by
-  intro k _ ha; simp at ha
-  obtain ⟨a, ha, rfl⟩ := ha
-  obtain ⟨k, rfl⟩ := SurjectionLike.coeSurjection f k
-  rw [←map_mul]; apply Set.mem_image'
-  apply mem_mul_right s
-  assumption
-
-variable [SetLike S α] [IsMemMulRight S α]
+variable [Mul α] [Mul β] [SetLike S α] [IsMemMulRight S α]
 
 public theorem copy (u: Set α) (h: ∃s: S, u = s) : MemMulRight u := by
   obtain ⟨s, rfl⟩ := h
@@ -167,35 +127,6 @@ public theorem of_mem_closure (U: Set α) (s: S) (h: U ⊆ s) : ∀x ∈ closure
   mem_zero := MemZero.copy' hu
   mem_add := MemAdd.copy' hu
   mem_mul_left := MemMulLeft.copy' hu
-
-section
-
-variable {β: Type*} [Zero β] [Add β] [Mul β]
-
-@[expose] public def preimage
-  [Funlike F α β] [IsZeroHom F α β] [IsAddHom F α β] [IsMulHom F α β]
-  (f: F) (s: IdealLeft β) : IdealLeft α where
-  toSet := s.toSet.preimage f
-  mem_zero := MemZero.preimage f s
-  mem_add := MemAdd.preimage f s
-  mem_mul_left := MemMulLeft.preimage f s
-
-@[expose] public def image
-  [SurjectionLike F α β] [IsZeroHom F α β] [IsAddHom F α β] [IsMulHom F α β]
-  (f: F) (s: IdealLeft α) : IdealLeft β where
-  toSet := s.toSet.image f
-  mem_zero := MemZero.image f s
-  mem_add := MemAdd.image f s
-  mem_mul_left := MemMulLeft.image f s
-
-@[simp] public theorem mem_preimage
-  [Funlike F α β] [IsZeroHom F α β] [IsAddHom F α β] [IsMulHom F α β]
-  {f: F} {s: IdealLeft β} : ∀{x}, x ∈ s.preimage f ↔ f x ∈ s := Iff.rfl
-@[simp] public theorem mem_image
-  [SurjectionLike F α β] [IsZeroHom F α β] [IsAddHom F α β] [IsMulHom F α β]
-  {f: F} {s: IdealLeft α} : ∀{x}, x ∈ s.image f ↔ ∃i, i ∈ s ∧ f i = x := Set.mem_image
-
-end
 
 variable {α: Type*} [AddMonoidOps α] [Mul α] [IsNonUnitalNonAssocSemiring α]
 
@@ -258,35 +189,6 @@ public theorem of_mem_closure (U: Set α) (s: S) (h: U ⊆ s) : ∀x ∈ closure
   mem_zero := MemZero.copy' hu
   mem_add := MemAdd.copy' hu
   mem_mul_right := MemMulRight.copy' hu
-
-section
-
-variable {β: Type*} [Zero β] [Add β] [Mul β]
-
-@[expose] public def preimage
-  [Funlike F α β] [IsZeroHom F α β] [IsAddHom F α β] [IsMulHom F α β]
-  (f: F) (s: IdealRight β) : IdealRight α where
-  toSet := s.toSet.preimage f
-  mem_zero := MemZero.preimage f s
-  mem_add := MemAdd.preimage f s
-  mem_mul_right := MemMulRight.preimage f s
-
-@[expose] public def image
-  [SurjectionLike F α β] [IsZeroHom F α β] [IsAddHom F α β] [IsMulHom F α β]
-  (f: F) (s: IdealRight α) : IdealRight β where
-  toSet := s.toSet.image f
-  mem_zero := MemZero.image f s
-  mem_add := MemAdd.image f s
-  mem_mul_right := MemMulRight.image f s
-
-@[simp] public theorem mem_preimage
-  [Funlike F α β] [IsZeroHom F α β] [IsAddHom F α β] [IsMulHom F α β]
-  {f: F} {s: IdealRight β} : ∀{x}, x ∈ s.preimage f ↔ f x ∈ s := Iff.rfl
-@[simp] public theorem mem_image
-  [SurjectionLike F α β] [IsZeroHom F α β] [IsAddHom F α β] [IsMulHom F α β]
-  {f: F} {s: IdealRight α} : ∀{x}, x ∈ s.image f ↔ ∃i, i ∈ s ∧ f i = x := Set.mem_image
-
-end
 
 variable {α: Type*} [AddMonoidOps α] [Mul α] [IsNonUnitalNonAssocSemiring α]
 
@@ -354,37 +256,6 @@ public theorem of_mem_closure (U: Set α) (s: S) (h: U ⊆ s) : ∀x ∈ closure
   mem_add := MemAdd.copy' hu
   mem_mul_left := MemMulLeft.copy' hu
   mem_mul_right := MemMulRight.copy' hu
-
-section
-
-variable {β: Type*} [Zero β] [Add β] [Mul β]
-
-@[expose] public def preimage
-  [Funlike F α β] [IsZeroHom F α β] [IsAddHom F α β] [IsMulHom F α β]
-  (f: F) (s: Ideal β) : Ideal α where
-  toSet := s.toSet.preimage f
-  mem_zero := MemZero.preimage f s
-  mem_add := MemAdd.preimage f s
-  mem_mul_left := MemMulLeft.preimage f s
-  mem_mul_right := MemMulRight.preimage f s
-
-@[expose] public def image
-  [SurjectionLike F α β] [IsZeroHom F α β] [IsAddHom F α β] [IsMulHom F α β]
-  (f: F) (s: Ideal α) : Ideal β where
-  toSet := s.toSet.image f
-  mem_zero := MemZero.image f s
-  mem_add := MemAdd.image f s
-  mem_mul_left := MemMulLeft.image f s
-  mem_mul_right := MemMulRight.image f s
-
-@[simp] public theorem mem_preimage
-  [Funlike F α β] [IsZeroHom F α β] [IsAddHom F α β] [IsMulHom F α β]
-  {f: F} {s: Ideal β} : ∀{x}, x ∈ s.preimage f ↔ f x ∈ s := Iff.rfl
-@[simp] public theorem mem_image
-  [SurjectionLike F α β] [IsZeroHom F α β] [IsAddHom F α β] [IsMulHom F α β]
-  {f: F} {s: Ideal α} : ∀{x}, x ∈ s.image f ↔ ∃i, i ∈ s ∧ f i = x := Set.mem_image
-
-end
 
 variable {α: Type*} [AddMonoidOps α] [Mul α] [IsNonUnitalNonAssocSemiring α]
 

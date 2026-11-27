@@ -127,22 +127,6 @@ variable [SetLike S α] [IsMemZero S α] [IsMemAdd S α] [IsMemSMul S R α]
 
 end
 
-variable [Zero β] [Add β] [SMul R β] [Funlike F α β] [IsZeroHom F α β] [IsAddHom F α β] [IsSMulHom F R α β]
-
-@[expose] public def preimage (f: F) (s: Submodule R β) : Submodule R α where
-  toSet := Set.preimage f s
-  mem_zero := MemZero.preimage f s
-  mem_smul := MemSMul.preimage f s
-  mem_add := MemAdd.preimage f s
-@[expose] public def image (f: F) (s: Submodule R α) : Submodule R β where
-  toSet := Set.image f s
-  mem_zero := MemZero.image f s
-  mem_smul := MemSMul.image f s
-  mem_add := MemAdd.image f s
-
-@[simp] public theorem mem_preimage {f: F} {s: Submodule R β} : ∀{x}, x ∈ s.preimage f ↔ f x ∈ s := Iff.rfl
-@[simp] public theorem mem_image {f: F} {s: Submodule R α} : ∀{x}, x ∈ s.image f ↔ ∃i, i ∈ s ∧ f i = x := Set.mem_image
-
 end Submodule
 
 instance [SetLike S α] [AddMonoidOps α] [IsAddMonoid α] [IsMemZero S α] [IsMemAdd S α] : IsMemSMul S ℕ α where

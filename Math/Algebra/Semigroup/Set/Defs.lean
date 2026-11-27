@@ -34,24 +34,6 @@ public instance [Add α] : IsMemAdd (AddSubsemigroup α) α where
 
 namespace MemMul
 
-public theorem preimage
-  [Mul α] [Mul β] [Funlike F α β] [IsMulHom F α β]
-  [SetLike S β] [IsMemMul S β] (f: F) (s: S) : MemMul (Set.preimage f s) := by
-  intro a b ha hb
-  show f _ ∈ s; rw [map_mul]
-  apply mem_mul <;> assumption
-
-public theorem image
-  [Mul α] [Mul β] [Funlike F α β] [IsMulHom F α β]
-  [SetLike S α] [IsMemMul S α] (f: F) (s: S) : MemMul (Set.image f s) := by
-  intro a b ha hb; simp at *
-  obtain ⟨a, ha, rfl⟩ := ha
-  obtain ⟨b, hb, rfl⟩ := hb
-  exists a * b
-  apply And.intro
-  exact mem_mul s ha hb
-  rw [map_mul]
-
 public theorem copy [Mul α] [SetLike S α] [IsMemMul S α]
   (u: Set α) (h: ∃s: S, u = s) : MemMul u:= by
   obtain ⟨s, rfl⟩ := h
@@ -68,24 +50,6 @@ public theorem copy' [Mul α] [SetLike S α] [IsMemMul S α]
 end MemMul
 
 namespace MemAdd
-
-public theorem preimage
-  [Add α] [Add β] [Funlike F α β] [IsAddHom F α β]
-  [SetLike S β] [IsMemAdd S β] (f: F) (s: S) : MemAdd (Set.preimage f s) := by
-  intro a b ha hb
-  show f _ ∈ s; rw [map_add]
-  apply mem_add <;> assumption
-
-public theorem image
-  [Add α] [Add β] [Funlike F α β] [IsAddHom F α β]
-  [SetLike S α] [IsMemAdd S α] (f: F) (s: S) : MemAdd (Set.image f s) := by
-  intro a b ha hb; simp at *
-  obtain ⟨a, ha, rfl⟩ := ha
-  obtain ⟨b, hb, rfl⟩ := hb
-  exists a + b
-  apply And.intro
-  exact mem_add s ha hb
-  rw [map_add]
 
 public theorem copy [Add α] [SetLike S α] [IsMemAdd S α]
   (u: Set α) (h: ∃s: S, u = s) : MemAdd u:= by
@@ -148,18 +112,6 @@ public theorem sub_top (a: Subsemigroup α) : a ⊆ ⊤ := fun _ _ => True.intro
 @[simp] public theorem mem_of [SetLike S α] [IsMemMul S α] {s: S} : ∀{x}, x ∈ of s ↔ x ∈ s := Iff.rfl
 @[simp] public theorem mem_copy [SetLike S α] [IsMemMul S α] {s: S} {u: Set α} {hu} : ∀{x}, x ∈ copy s u hu ↔ x ∈ s := (hu _).symm
 
-variable [Mul β] [Funlike F α β] [IsMulHom F α β]
-
-@[expose] public def preimage (f: F) (s: Subsemigroup β) : Subsemigroup α where
-  toSet := Set.preimage f s
-  mem_mul := MemMul.preimage f s
-@[expose] public def image (f: F) (s: Subsemigroup α) : Subsemigroup β where
-  toSet := Set.image f s
-  mem_mul := MemMul.image f s
-
-@[simp] public theorem mem_preimage {f: F} {s: Subsemigroup β} : ∀{x}, x ∈ s.preimage f ↔ f x ∈ s := Iff.rfl
-@[simp] public theorem mem_image {f: F} {s: Subsemigroup α} : ∀{x}, x ∈ s.image f ↔ ∃i, i ∈ s ∧ f i = x := Set.mem_image
-
 end Subsemigroup
 
 namespace AddSubsemigroup
@@ -207,18 +159,6 @@ public theorem sub_top (a: AddSubsemigroup α) : a ⊆ ⊤ := fun _ _ => True.in
 
 @[simp] public theorem mem_of [SetLike S α] [IsMemAdd S α] {s: S} : ∀{x}, x ∈ of s ↔ x ∈ s := Iff.rfl
 @[simp] public theorem mem_copy [SetLike S α] [IsMemAdd S α] {s: S} {u: Set α} {hu} : ∀{x}, x ∈ copy s u hu ↔ x ∈ s := (hu _).symm
-
-variable [Add β] [Funlike F α β] [IsAddHom F α β]
-
-@[expose] public def preimage (f: F) (s: AddSubsemigroup β) : AddSubsemigroup α where
-  toSet := Set.preimage f s
-  mem_add := MemAdd.preimage f s
-@[expose] public def image (f: F) (s: AddSubsemigroup α) : AddSubsemigroup β where
-  toSet := Set.image f s
-  mem_add := MemAdd.image f s
-
-@[simp] public theorem mem_preimage {f: F} {s: AddSubsemigroup β} : ∀{x}, x ∈ s.preimage f ↔ f x ∈ s := Iff.rfl
-@[simp] public theorem mem_image {f: F} {s: AddSubsemigroup α} : ∀{x}, x ∈ s.image f ↔ ∃i, i ∈ s ∧ f i = x := Set.mem_image
 
 end AddSubsemigroup
 
