@@ -2,7 +2,7 @@ module
 
 public import Math.Data.Set.Nonempty
 public import Math.Algebra.Monoid.Set.Defs
-public import Math.Algebra.AddMonoidWithOne.Defs
+public import Math.Algebra.AddMonoidWithOne.Defs.Basic
 
 namespace Math
 

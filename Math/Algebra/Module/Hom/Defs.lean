@@ -1,7 +1,7 @@
 module
 
-public import Math.Algebra.Semigroup.Defs
-public import Math.Algebra.Monoid.Action.Defs
+public import Math.Algebra.Semigroup.Defs.Basic
+public import Math.Algebra.Monoid.Action.Defs.Basic
 
 namespace Math
 

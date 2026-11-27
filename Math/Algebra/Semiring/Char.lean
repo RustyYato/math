@@ -1,7 +1,7 @@
 module
 
 public import Math.Algebra.Monoid.Char
-public import Math.Algebra.Semiring.Defs
+public import Math.Algebra.Semiring.Defs.Basic
 public import Math.Tactic.Invert
 
 namespace Math

@@ -1,8 +1,8 @@
 module
 
-public import Math.Algebra.Module.Defs
-public import Math.Algebra.Ring.Defs
-public import Math.Algebra.Group.Action.Defs
+public import Math.Algebra.Module.Defs.Basic
+public import Math.Algebra.Ring.Defs.Basic
+public import Math.Algebra.Group.Action.Defs.Basic
 
 namespace Math
 

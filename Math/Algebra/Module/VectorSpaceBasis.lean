@@ -1,7 +1,7 @@
 module
 
 public import Math.Algebra.Module.Set.Basis.Group
-public import Math.Algebra.Field.Defs
+public import Math.Algebra.Field.Defs.Basic
 import Math.Order.Zorn
 
 namespace Math

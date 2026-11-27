@@ -2,7 +2,7 @@ module
 
 public import Math.Data.FreeMonoid.Defs
 import Math.Data.FreeMonoid.Basic
-public import Math.Algebra.Group.Defs
+public import Math.Algebra.Group.Defs.Basic
 public import Math.Algebra.GroupQuot.Defs
 
 namespace Math

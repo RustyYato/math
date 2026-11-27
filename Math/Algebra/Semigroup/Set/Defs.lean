@@ -1,7 +1,7 @@
 module
 
 public import Math.Data.Set.Defs
-public import Math.Algebra.Semigroup.Defs
+public import Math.Algebra.Semigroup.Defs.Basic
 
 namespace Math
 

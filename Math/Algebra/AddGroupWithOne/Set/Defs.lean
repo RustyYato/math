@@ -3,7 +3,7 @@ module
 public import Math.Data.Set.Nonempty
 public import Math.Algebra.AddMonoidWithOne.Set.Defs
 public import Math.Algebra.Group.Set.Defs
-public import Math.Algebra.AddGroupWithOne.Defs
+public import Math.Algebra.AddGroupWithOne.Defs.Basic
 
 namespace Math
 

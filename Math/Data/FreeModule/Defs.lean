@@ -1,6 +1,6 @@
 module
 
-public import Math.Algebra.Module.Defs
+public import Math.Algebra.Module.Defs.Basic
 public import Math.Algebra.Module.Hom.Defs
 
 namespace Math

@@ -1,7 +1,7 @@
 module
 
 public import Math.Algebra.Module.Ring
-public import Math.Algebra.Algebra.Defs
+public import Math.Algebra.Algebra.Defs.Basic
 
 namespace Math
 

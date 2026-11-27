@@ -1,7 +1,7 @@
 module
 
-public import Math.Algebra.AddMonoidWithOne.Defs
-public import Math.Algebra.MonoidWithZero.Defs
+public import Math.Algebra.AddMonoidWithOne.Defs.Basic
+public import Math.Algebra.MonoidWithZero.Defs.Basic
 
 namespace Math
 

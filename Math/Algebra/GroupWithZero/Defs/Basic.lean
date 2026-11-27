@@ -1,6 +1,6 @@
 module
 
-public import Math.Algebra.MonoidWithZero.Defs
+public import Math.Algebra.MonoidWithZero.Defs.Basic
 public import Math.Algebra.Group.Units
 public import Math.Algebra.GroupWithZero.Syntax
 public import Math.Data.Int.Defs

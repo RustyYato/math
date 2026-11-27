@@ -1,7 +1,7 @@
 module
 
-public import Math.Algebra.Monoid.Action.Defs
-public import Math.Algebra.Group.Defs
+public import Math.Algebra.Monoid.Action.Defs.Basic
+public import Math.Algebra.Group.Defs.Basic
 
 namespace Math
 

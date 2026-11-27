@@ -2,7 +2,7 @@ module
 
 public import Math.Algebra.AddGroupWithOne.Set.Defs
 public import Math.Algebra.Semiring.Set.Defs
-public import Math.Algebra.Ring.Defs
+public import Math.Algebra.Ring.Defs.Basic
 
 namespace Math
 

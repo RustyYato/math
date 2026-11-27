@@ -1,6 +1,6 @@
 module
 
-public import Math.Algebra.Field.Defs
+public import Math.Algebra.Field.Defs.Basic
 
 namespace Math
 

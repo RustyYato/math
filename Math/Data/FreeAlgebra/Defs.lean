@@ -1,6 +1,6 @@
 module
 
-public import Math.Algebra.Algebra.Defs
+public import Math.Algebra.Algebra.Defs.Basic
 import Math.Algebra.RingQuot.Defs
 import Math.Logic.UniqueChoice
 

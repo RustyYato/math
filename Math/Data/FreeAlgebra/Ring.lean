@@ -2,7 +2,7 @@ module
 
 public import Math.Data.FreeAlgebra.Defs
 public import Math.Algebra.Algebra.Ring
-public import Math.Algebra.Ring.Defs
+public import Math.Algebra.Ring.Defs.Basic
 
 namespace Math
 

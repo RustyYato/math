@@ -1,7 +1,7 @@
 module
 
 public import Math.Data.Multiset.Defs
-public import Math.Algebra.Monoid.Defs
+public import Math.Algebra.Monoid.Defs.Basic
 
 namespace Math.Multiset
 

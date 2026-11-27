@@ -1,6 +1,6 @@
 module
 
-public import Math.Algebra.Semigroup.Defs
+public import Math.Algebra.Semigroup.Defs.Basic
 public import Math.Logic.Nontrivial
 public import Math.Logic.LEM
 public import Math.Data.Equiv.Ext

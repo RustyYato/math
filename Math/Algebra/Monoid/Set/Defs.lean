@@ -2,7 +2,7 @@ module
 
 public import Math.Data.Set.Nonempty
 public import Math.Algebra.Semigroup.Set.Defs
-public import Math.Algebra.Monoid.Defs
+public import Math.Algebra.Monoid.Defs.Basic
 
 namespace Math
 

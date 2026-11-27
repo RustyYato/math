@@ -2,7 +2,7 @@ module
 
 public import Math.Algebra.AddMonoidWithOne.Congruence
 public import Math.Algebra.Group.Congruence
-public import Math.Algebra.AddGroupWithOne.Defs
+public import Math.Algebra.AddGroupWithOne.Defs.Basic
 
 namespace Math
 

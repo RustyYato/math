@@ -1,6 +1,6 @@
 module
 
-public import Math.Algebra.Ring.Defs
+public import Math.Algebra.Ring.Defs.Basic
 public import Math.Algebra.Semiring.Char
 
 namespace Math

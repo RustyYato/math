@@ -1,7 +1,7 @@
 module
 
 public import Math.Algebra.Monoid.Congruence
-public import Math.Algebra.MonoidWithZero.Defs
+public import Math.Algebra.MonoidWithZero.Defs.Basic
 
 namespace Math
 

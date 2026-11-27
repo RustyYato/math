@@ -1,7 +1,7 @@
 module
 
-public import Math.Algebra.GroupWithZero.Defs
-public import Math.Algebra.Semiring.Defs
+public import Math.Algebra.GroupWithZero.Defs.Basic
+public import Math.Algebra.Semiring.Defs.Basic
 
 namespace Math
 

@@ -1,6 +1,6 @@
 module
 
-public import Math.Algebra.Semiring.Defs
+public import Math.Algebra.Semiring.Defs.Basic
 public import Math.Algebra.Monoid.Units
 
 namespace Math
