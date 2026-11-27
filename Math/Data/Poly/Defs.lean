@@ -2,6 +2,9 @@ module
 
 public import Math.Algebra.Algebra.Defs.Basic
 public import Math.Algebra.Monoid.Action.Defs.Basic
+public import Math.Algebra.Monoid.Hom
+
+import Math.Algebra.Semiring.Defs.Lemmas
 
 namespace Math
 

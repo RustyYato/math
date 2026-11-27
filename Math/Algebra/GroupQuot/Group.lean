@@ -2,6 +2,7 @@ module
 
 public import Math.Algebra.GroupQuot.Defs
 public import Math.Algebra.Group.Congruence
+public import Math.Algebra.Group.Defs.OfEquiv
 
 namespace Math.GroupQuot
 

@@ -4,6 +4,8 @@ public import Math.Data.FreeAlgebra.Defs
 public import Math.Algebra.Algebra.Ring
 public import Math.Algebra.Ring.Defs.Basic
 
+import Math.Algebra.Ring.Defs.Lemmas
+
 namespace Math
 
 section

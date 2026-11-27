@@ -1,8 +1,10 @@
 module
 
 public import Math.Algebra.Monoid.Char
-public import Math.Algebra.Semiring.Defs.Basic
+public import Math.Algebra.Semiring.Defs.Hom
 public import Math.Tactic.Invert
+
+import Math.Algebra.Semiring.Defs.Lemmas
 
 namespace Math
 

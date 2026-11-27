@@ -21,14 +21,3 @@ public instance [Add α] [Mul α] [IsRightDistrib α] : IsLeftDistribSMul α α 
 public instance [Add α] [Mul α] [IsLeftDistrib α] : IsRightDistribSMul α α where
   smul_add _ _ _ := mul_add _ _ _
 public instance [SemiringOps α] [IsSemiring α] : IsModule α α where
-
-namespace OfEquiv
-
-variable (f: α ≃ β)
-  [SemiringOps R] [IsSemiring R]
-  [AddMonoidOps α] [IsAddMonoid α]
-  [SMul R α] [IsModule R α]
-
-public instance : IsModule R (OfEquiv f) where
-
-end OfEquiv

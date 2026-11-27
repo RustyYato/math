@@ -2,6 +2,7 @@ module
 
 public import Math.Algebra.RingQuot.Defs
 public import Math.Algebra.Ring.Congruence
+public import Math.Algebra.Ring.Defs.OfEquiv
 
 namespace Math.RingQuot
 

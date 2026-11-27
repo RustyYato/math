@@ -2,6 +2,7 @@ module
 
 public import Math.Data.FreeModule.Defs
 public import Math.Algebra.Ring.Defs.Basic
+import Math.Algebra.Ring.Defs.Lemmas
 
 namespace Math.FreeModule
 

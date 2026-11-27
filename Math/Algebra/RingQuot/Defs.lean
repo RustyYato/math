@@ -1,6 +1,7 @@
 module
 
 public import Math.Algebra.Semiring.Congruence
+public import Math.Algebra.Semiring.Defs.OfEquiv
 
 namespace Math
 

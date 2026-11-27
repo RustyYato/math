@@ -2,6 +2,9 @@ module
 
 public import Math.Algebra.DirectSum.Defs
 public import Math.Algebra.Algebra.Defs.Basic
+public import Math.Algebra.Semiring.Defs.OfEquiv
+
+import Math.Algebra.Semiring.Defs.Lemmas
 
 namespace Math
 

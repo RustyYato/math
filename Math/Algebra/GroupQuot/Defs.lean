@@ -1,6 +1,7 @@
 module
 
 public import Math.Algebra.Monoid.Congruence
+public import Math.Algebra.Monoid.Defs.OfEquiv
 
 namespace Math
 

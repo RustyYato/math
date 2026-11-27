@@ -1,11 +1,12 @@
 module
 
 public import Math.Algebra.DirectSum.Defs
-public import Math.Algebra.Module.Defs.Basic
-public import Math.Algebra.Module.Hom.Defs
--- public import Math.Data.Finset.Defs
+public import Math.Algebra.Module.Defs.Hom
+public import Math.Algebra.Module.Defs.OfEquiv
 public import Math.Data.Finset.Algebra
+
 import Math.Data.List.Defs
+import Math.Algebra.Monoid.Defs.Lemmas
 
 namespace Math
 

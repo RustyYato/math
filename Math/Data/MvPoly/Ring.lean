@@ -2,6 +2,7 @@ module
 
 public import Math.Data.MvPoly.Defs
 public import Math.Algebra.DirectSum.Ring
+public import Math.Algebra.Ring.Defs.OfEquiv
 
 namespace Math
 

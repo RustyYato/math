@@ -2,7 +2,7 @@ module
 
 public import Math.Algebra.AddMonoidWithOne.Congruence
 public import Math.Algebra.MonoidWithZero.Congruence
-public import Math.Algebra.Semiring.Defs.Basic
+public import Math.Algebra.Semiring.Defs.Hom
 
 namespace Math
 

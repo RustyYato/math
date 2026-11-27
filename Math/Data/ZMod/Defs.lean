@@ -3,6 +3,8 @@ module
 public import Math.Algebra.Ring.Defs.Basic
 public import Math.Algebra.Semiring.Char
 
+import Math.Algebra.Ring.Defs.Lemmas
+
 namespace Math
 
 @[ext]

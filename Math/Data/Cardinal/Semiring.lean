@@ -4,6 +4,8 @@ public import Math.Data.Equiv.Basic
 public import Math.Data.Cardinal.Order
 public import Math.Algebra.Semiring.Char
 
+import Math.Algebra.AddMonoidWithOne.Defs.Lemmas
+
 namespace Math.Cardinal
 
 public def ofNat : ℕ ↪ Cardinal.{u} :=

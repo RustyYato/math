@@ -1,6 +1,7 @@
 module
 
-public import Math.Algebra.Monoid.Defs.Basic
+public import Math.Algebra.Monoid.Defs.Hom
+import Math.Algebra.Monoid.Defs.Lemmas
 import Math.Order.Relation.Defs
 
 namespace Math

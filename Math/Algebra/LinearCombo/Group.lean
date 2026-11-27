@@ -2,6 +2,7 @@ module
 
 public import Math.Algebra.LinearCombo.Defs
 public import Math.Algebra.DirectSum.Ring
+public import Math.Algebra.Group.Defs.OfEquiv
 
 namespace Math.LinearCombo
 

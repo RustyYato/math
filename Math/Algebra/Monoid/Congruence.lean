@@ -1,7 +1,7 @@
 module
 
 public import Math.Algebra.Semigroup.Congruence
-public import Math.Algebra.Monoid.Defs.Basic
+public import Math.Algebra.Monoid.Defs.Hom
 
 namespace Math
 

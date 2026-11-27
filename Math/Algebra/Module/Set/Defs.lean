@@ -3,7 +3,7 @@ module
 public import Math.Data.Set.Nonempty
 public import Math.Algebra.Monoid.Set.Defs
 public import Math.Algebra.Module.Defs.Basic
-public import Math.Algebra.Module.Hom.Defs
+public import Math.Algebra.Module.Defs.Hom
 
 namespace Math
 

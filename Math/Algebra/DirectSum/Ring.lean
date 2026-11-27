@@ -4,6 +4,8 @@ public import Math.Algebra.DirectSum.Defs
 public import Math.Algebra.Ring.Defs.Basic
 public import Math.Algebra.Group.Action.Defs.Basic
 
+import Math.Algebra.Group.Defs.Lemmas
+
 namespace Math
 
 namespace DirectSum

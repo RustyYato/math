@@ -1,6 +1,7 @@
 module
 
 public import Math.Algebra.Monoid.Defs.Basic
+import Math.Algebra.Monoid.Defs.Lemmas
 
 namespace Math
 

@@ -2,6 +2,7 @@ module
 
 public import Math.Algebra.Monoid.Units
 public import Math.Algebra.Group.Defs.Basic
+import Math.Algebra.Group.Defs.Lemmas
 
 namespace Math
 

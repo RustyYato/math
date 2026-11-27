@@ -3,6 +3,7 @@ module
 public import Math.Data.FreeMonoid.Defs
 public import Math.Algebra.GroupQuot.Defs
 public import Math.Algebra.Monoid.Action.Defs.Basic
+public import Math.Algebra.Monoid.Hom
 public import Math.Algebra.Module.Defs.Basic
 public import Math.Algebra.GradedMonoid.Defs
 public import Math.Algebra.Semiring.Defs.Basic

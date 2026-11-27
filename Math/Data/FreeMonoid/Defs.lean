@@ -1,6 +1,7 @@
 module
 
-public import Math.Algebra.Monoid.Defs.Basic
+public import Math.Algebra.Monoid.Defs.Hom
+public import Math.Algebra.Monoid.Defs.OfEquiv
 
 namespace Math
 

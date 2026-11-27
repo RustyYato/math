@@ -2,6 +2,9 @@ module
 
 public import Math.Algebra.Module.Ring
 public import Math.Algebra.Algebra.Defs.Basic
+public import Math.Algebra.Ring.Defs.Hom
+
+import Math.Algebra.Ring.Defs.Lemmas
 
 namespace Math
 

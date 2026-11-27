@@ -3,6 +3,8 @@ module
 public import Math.Algebra.Monoid.Action.Defs.Basic
 public import Math.Algebra.Group.Defs.Basic
 
+import Math.Algebra.Group.Defs.Lemmas
+
 namespace Math
 
 section Basic

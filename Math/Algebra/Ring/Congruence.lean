@@ -2,7 +2,7 @@ module
 
 public import Math.Algebra.Semiring.Congruence
 public import Math.Algebra.AddGroupWithOne.Congruence
-public import Math.Algebra.Ring.Defs.Basic
+public import Math.Algebra.Ring.Defs.Hom
 
 namespace Math
 

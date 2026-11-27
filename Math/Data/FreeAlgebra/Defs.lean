@@ -1,7 +1,8 @@
 module
 
 public import Math.Algebra.Algebra.Defs.Basic
-import Math.Algebra.RingQuot.Defs
+
+import Math.Algebra.AddMonoidWithOne.Defs.Lemmas
 import Math.Logic.UniqueChoice
 
 namespace Math
