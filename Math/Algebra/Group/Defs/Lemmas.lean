@@ -49,7 +49,7 @@ public theorem neg_add_neg_rev [AddGroupOps α] [IsAddGroup α] (a b: α) : -a +
   rw [add_assoc, ←add_assoc (-b), neg_add_cancel, zero_add, neg_add_cancel]
 public theorem neg_add_neg [AddGroupOps α] [IsAddGroup α] (a b: α) [IsAddCommAt a b] : -a + -b = -(a + b) := by
   rw [neg_add_neg_rev, add_comm]
-public theorem inv_mul_inv_neg_rev [GroupOps α] [IsGroup α] (a b: α) : a⁻¹ * b⁻¹ = (b * a)⁻¹ :=
+public theorem inv_mul_inv_rev [GroupOps α] [IsGroup α] (a b: α) : a⁻¹ * b⁻¹ = (b * a)⁻¹ :=
   neg_add_neg_rev (α := AddOfMul α) _ _
 public theorem inv_mul_inv [GroupOps α] [IsGroup α] (a b: α) [IsCommAt a b] : a⁻¹ * b⁻¹ = (a * b)⁻¹ :=
   neg_add_neg (α := AddOfMul α) (AddOfMul.mk a) (AddOfMul.mk b)
@@ -116,3 +116,8 @@ public theorem add_sub_assoc [AddGroupOps α] [IsAddGroup α] (a b c: α) : a + 
   rw [sub_eq_add_neg, sub_eq_add_neg, add_assoc]
 public theorem mul_div_assoc [GroupOps α] [IsGroup α] (a b c: α) : a * b / c = a * (b / c) :=
   add_sub_assoc (α := AddOfMul α) _ _ _
+
+public theorem sub_add_cancel [AddGroupOps α] [IsAddGroup α] (a b: α) : a - b + b = a := by
+  rw [sub_eq_add_neg, add_assoc, neg_add_cancel, add_zero]
+public theorem div_mul_cancel [GroupOps α] [IsGroup α] (a b: α) : a / b * b = a :=
+  sub_add_cancel (α := AddOfMul α) _ _
