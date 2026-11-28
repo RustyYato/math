@@ -597,6 +597,44 @@ end AddGroupEquiv
 
 end Theorems.AddGroup
 
+namespace Automorphism
+
+variable [MonoidOps α] [IsMonoid α] [AddMonoidOps α] [IsAddMonoid α]
+
+public scoped instance : One (α ≃* α) where
+  one := .id _
+public scoped instance : Mul (α ≃* α) where
+  mul := .comp
+
+public scoped instance : IsLawfulOne (α ≃* α) where
+  mul_one _ := rfl
+  one_mul _ := rfl
+
+public scoped instance : IsSemigroup (α ≃* α) where
+  mul_assoc _ _ _ := rfl
+
+public scoped instance : Pow (α ≃* α) ℕ := DefaultPowN.instPowNat
+public scoped instance : IsLawfulPowN (α ≃* α) := DefaultPowN.instIsLawfulPowN
+public scoped instance : IsMonoid (α ≃* α) where
+
+public scoped instance : One (α ≃+ α) where
+  one := .id _
+public scoped instance : Mul (α ≃+ α) where
+  mul := .comp
+
+public scoped instance : IsLawfulOne (α ≃+ α) where
+  mul_one _ := rfl
+  one_mul _ := rfl
+
+public scoped instance : IsSemigroup (α ≃+ α) where
+  mul_assoc _ _ _ := rfl
+
+public scoped instance : Pow (α ≃+ α) ℕ := DefaultPowN.instPowNat
+public scoped instance : IsLawfulPowN (α ≃+ α) := DefaultPowN.instIsLawfulPowN
+public scoped instance : IsMonoid (α ≃+ α) where
+
+end Automorphism
+
 public theorem map_pown [Funlike F α β]
   [MonoidOps α] [MonoidOps β]
   [IsLawfulPowN α] [IsLawfulPowN β]

@@ -6,6 +6,44 @@ import Math.Algebra.Monoid.Defs.Lemmas
 
 namespace Math
 
+namespace Automorphism
+
+variable [MonoidOps α] [IsMonoid α] [AddMonoidOps α] [IsAddMonoid α]
+
+public scoped instance : Inv (α ≃* α) where
+  inv := .symm
+public scoped instance : Div (α ≃* α) where
+  div a b := a * b⁻¹
+
+public scoped instance : Pow (α ≃* α) ℤ where
+  pow a z := match z with
+    | .ofNat z => a ^ z
+    | .negSucc z => (a ^ (z + 1))⁻¹
+
+public scoped instance : IsGroup (α ≃* α) where
+  div_eq_mul_inv _ _ := rfl
+  powz_ofNat _ _ := rfl
+  powz_negSucc _ _ := rfl
+  inv_mul_cancel _ := by ext; apply GroupEquiv.apply_symm
+
+public scoped instance : Inv (α ≃+ α) where
+  inv := .symm
+public scoped instance : Div (α ≃+ α) where
+  div a b := a * b⁻¹
+
+public scoped instance : Pow (α ≃+ α) ℤ where
+  pow a z := match z with
+    | .ofNat z => a ^ z
+    | .negSucc z => (a ^ (z + 1))⁻¹
+
+public scoped instance : IsGroup (α ≃+ α) where
+  div_eq_mul_inv _ _ := rfl
+  powz_ofNat _ _ := rfl
+  powz_negSucc _ _ := rfl
+  inv_mul_cancel _ := by ext; apply AddGroupEquiv.apply_symm
+
+end Automorphism
+
 section
 
 public theorem map_inv
